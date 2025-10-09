@@ -46,10 +46,14 @@ class SettingsController extends BaseController {
             }
         }
         
+        // Initialize language manager
+        global $lang;
+        
         $data = [
-            'title' => 'Ρυθμίσεις - ' . APP_NAME,
+            'title' => __('settings.title') . ' - ' . APP_NAME,
             'user' => $user,
-            'settings' => $settings
+            'settings' => $settings,
+            'lang' => $lang
         ];
         
         $this->view('settings/index', $data);
@@ -219,5 +223,70 @@ class SettingsController extends BaseController {
         ];
         
         $this->view('settings/reset-data', $data);
+    }
+    
+    /**
+     * Change user language
+     */
+    public function changeLanguage() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/settings');
+        }
+
+        $language = $_POST['language'] ?? 'el';
+
+        // Validate language exists
+        $languagesPath = APP_ROOT . '/languages/';
+        if (file_exists($languagesPath . $language . '.json')) {
+            $_SESSION['language'] = $language;
+
+            // Reload global language manager with new language
+            global $lang;
+            $lang = new LanguageManager($language);
+
+            // If user is logged in, save to database
+            if (isset($_SESSION['user_id'])) {
+                $database = new Database();
+                $db = $database->connect();
+
+                try {
+                    $stmt = $db->prepare("UPDATE users SET language = ? WHERE id = ?");
+                    $stmt->execute([$language, $_SESSION['user_id']]);
+                } catch (Exception $e) {
+                    error_log("Error saving language preference: " . $e->getMessage());
+                }
+            }
+
+            $_SESSION['success'] = __('settings.success');
+        } else {
+            $_SESSION['error'] = __('settings.error');
+        }
+
+        $this->redirect('/settings');
+    }
+    
+    /**
+     * Show translations management page
+     */
+    public function translations() {
+        $selectedLanguage = $_GET['lang'] ?? 'el';
+
+        $data = [
+            'title' => __('settings.translations') . ' - ' . APP_NAME,
+            'selectedLanguage' => $selectedLanguage
+        ];
+
+        $this->view('settings/translations', $data);
+    }
+    
+    /**
+     * Show updates page
+     */
+    public function updates() {
+        $data = [
+            'title' => __('settings.updates') . ' - ' . APP_NAME,
+        ];
+
+        $this->view('settings/update', $data);
     }
 }

@@ -77,6 +77,7 @@ class AuthController extends BaseController {
                 $_SESSION['last_name'] = $user['last_name'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
+                $_SESSION['language'] = $user['language'] ?? 'el'; // Load user's language preference
                 $_SESSION['last_activity'] = time();
                 
                 // Set remember me cookie if requested

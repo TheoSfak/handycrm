@@ -473,6 +473,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     } elseif ($currentRoute === '/settings/update') {
         // Update checker page - already handled separately
         require_once 'views/settings/update.php';
+    } elseif ($currentRoute === '/settings/translations') {
+        $controller->translations();
+    } elseif ($currentRoute === '/settings/change-language') {
+        $controller->changeLanguage();
     } else {
         // 404 for settings
         header('HTTP/1.0 404 Not Found');

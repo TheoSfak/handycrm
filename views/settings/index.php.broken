@@ -21,12 +21,12 @@
         <!-- Language Settings (Outside main form) -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-language"></i> <?= __('settings.language_section') ?></h5>
+                <h5 class="mb-0"><i class="fas fa-language"></i> Γλώσσα / Language</h5>
             </div>
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <label for="languageSelect" class="form-label"><?= __('settings.language_select_label') ?></label>
+                        <label for="languageSelect" class="form-label">Επιλογή Γλώσσας / Select Language</label>
                         <select class="form-select form-select-lg" id="languageSelect" onchange="changeLanguage(this.value)">
                             <?php
                             $currentLang = $_SESSION['language'] ?? 'el';
@@ -38,11 +38,11 @@
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="text-muted"><?= __('settings.language_changes_immediate') ?></small>
+                        <small class="text-muted">Changes apply immediately / Οι αλλαγές εφαρμόζονται άμεσα</small>
                     </div>
                     <div class="col-md-6 text-end">
                         <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-primary">
-                            <i class="fas fa-globe"></i> <?= __('settings.manage_translations_btn') ?>
+                            <i class="fas fa-globe"></i> Manage Translations / Διαχείριση Μεταφράσεων
                         </a>
                     </div>
                 </div>
@@ -55,17 +55,17 @@
             <!-- Company Information -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-building"></i> <?= __('settings.company_info') ?></h5>
+                    <h5 class="mb-0"><i class="fas fa-building"></i> Company Information</h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="company_name" class="form-label"><?= __('settings.company_name') ?></label>
+                        <label for="company_name" class="form-label">Company Name</label>
                         <input type="text" class="form-control" id="company_name" name="company_name" 
                                value="<?= htmlspecialchars($settings['company_name']) ?>">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="company_address" class="form-label"><?= __('settings.company_address') ?></label>
+                        <label for="company_address" class="form-label">Address</label>
                         <input type="text" class="form-control" id="company_address" name="company_address" 
                                value="<?= htmlspecialchars($settings['company_address']) ?>">
                     </div>
@@ -73,21 +73,21 @@
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="company_phone" class="form-label"><?= __('settings.company_phone') ?></label>
+                                <label for="company_phone" class="form-label">Phone</label>
                                 <input type="text" class="form-control" id="company_phone" name="company_phone" 
                                        value="<?= htmlspecialchars($settings['company_phone']) ?>">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="company_email" class="form-label"><?= __('settings.company_email') ?></label>
+                                <label for="company_email" class="form-label">Email</label>
                                 <input type="email" class="form-control" id="company_email" name="company_email" 
                                        value="<?= htmlspecialchars($settings['company_email']) ?>">
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="company_tax_id" class="form-label"><?= __('settings.company_tax_id') ?></label>
+                                <label for="company_tax_id" class="form-label">Tax ID</label>
                                 <input type="text" class="form-control" id="company_tax_id" name="company_tax_id" 
                                        value="<?= htmlspecialchars($settings['company_tax_id']) ?>">
                             </div>
@@ -95,7 +95,7 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="company_website" class="form-label"><?= __('settings.company_website') ?></label>
+                        <label for="company_website" class="form-label">Website</label>
                         <input type="url" class="form-control" id="company_website" name="company_website" 
                                value="<?= htmlspecialchars($settings['company_website']) ?>">
                     </div>
@@ -105,13 +105,13 @@
             <!-- Financial Settings -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-calculator"></i> <?= __('settings.financial_settings') ?></h5>
+                    <h5 class="mb-0"><i class="fas fa-calculator"></i> Financial Settings</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="default_vat_rate" class="form-label"><?= __('settings.default_vat') ?></label>
+                                <label for="default_vat_rate" class="form-label">Default VAT (%)</label>
                                 <input type="number" class="form-control" id="default_vat_rate" name="default_vat_rate" 
                                        value="<?= htmlspecialchars($settings['default_vat_rate']) ?>" 
                                        min="0" max="100" step="0.01">
@@ -119,7 +119,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="currency" class="form-label"><?= __('settings.currency') ?></label>
+                                <label for="currency" class="form-label">Currency</label>
                                 <select class="form-select" id="currency" name="currency">
                                     <option value="EUR" <?= $settings['currency'] === 'EUR' ? 'selected' : '' ?>>EUR (Euro)</option>
                                     <option value="USD" <?= $settings['currency'] === 'USD' ? 'selected' : '' ?>>USD (Dollar)</option>
@@ -128,7 +128,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="currency_symbol" class="form-label"><?= __('settings.currency_symbol') ?></label>
+                                <label for="currency_symbol" class="form-label">Currency Symbol</label>
                                 <input type="text" class="form-control" id="currency_symbol" name="currency_symbol" 
                                        value="<?= htmlspecialchars($settings['currency_symbol']) ?>">
                             </div>
@@ -146,27 +146,28 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- System Settings -->
+        </form>
+
+        <!-- System Settings (kept separate from company/financial settings form) -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-sliders-h"></i> <?= __('settings.system_settings') ?></h5>
+                    <h5 class="mb-0"><i class="fas fa-sliders-h"></i> System Settings</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="date_format" class="form-label"><?= __('settings.date_format') ?></label>
+                                <label for="date_format" class="form-label">Date Format</label>
                                 <select class="form-select" id="date_format" name="date_format">
-                                    <option value="d/m/Y" <?= $settings['date_format'] === 'd/m/Y' ? 'selected' : '' ?>><?= __('settings.date_format_greek') ?></option>
-                                    <option value="Y-m-d" <?= $settings['date_format'] === 'Y-m-d' ? 'selected' : '' ?>><?= __('settings.date_format_iso') ?></option>
-                                    <option value="m/d/Y" <?= $settings['date_format'] === 'm/d/Y' ? 'selected' : '' ?>><?= __('settings.date_format_us') ?></option>
+                                    <option value="d/m/Y" <?= $settings['date_format'] === 'd/m/Y' ? 'selected' : '' ?>>DD/MM/YYYY (Ελληνική)</option>
+                                    <option value="Y-m-d" <?= $settings['date_format'] === 'Y-m-d' ? 'selected' : '' ?>>YYYY-MM-DD (ISO)</option>
+                                    <option value="m/d/Y" <?= $settings['date_format'] === 'm/d/Y' ? 'selected' : '' ?>>MM/DD/YYYY (US)</option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="items_per_page" class="form-label"><?= __('settings.items_per_page') ?></label>
+                                <label for="items_per_page" class="form-label">Items Per Page</label>
                                 <input type="number" class="form-control" id="items_per_page" name="items_per_page" 
                                        value="<?= htmlspecialchars($settings['items_per_page']) ?>" 
                                        min="10" max="100">
@@ -190,19 +191,20 @@
         <!-- Danger Zone -->
         <div class="card border-danger mt-4">
             <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> <?= __('settings.danger_zone') ?></h5>
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
             </div>
             <div class="card-body">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h6 class="mb-1"><strong><?= __('settings.reset_database') ?></strong></h6>
+                        <h6 class="mb-1"><strong>Reset Database</strong></h6>
                         <p class="text-muted mb-0">
-                            <?= __('settings.reset_database_desc') ?>
+                            Deletes ALL customers, projects, invoices, quotes, appointments, etc. 
+                            Keeps only users and settings.
                         </p>
                     </div>
                     <div class="col-md-4 text-end">
                         <a href="<?= BASE_URL ?>/settings/reset-data" class="btn btn-danger">
-                            <i class="fas fa-trash-alt"></i> <?= __('settings.reset_database_btn') ?>
+                            <i class="fas fa-trash-alt"></i> Reset Database
                         </a>
                     </div>
                 </div>
@@ -212,43 +214,19 @@
         <!-- Quick Links -->
         <div class="card mt-4">
             <div class="card-body">
-                <h6 class="mb-3"><i class="fas fa-link"></i> <?= __('settings.quick_links') ?></h6>
+                <h6 class="mb-3"><i class="fas fa-link"></i> Quick Links</h6>
                 <div class="d-flex gap-2">
                     <a href="<?= BASE_URL ?>/settings/update" class="btn btn-outline-primary">
-                        <i class="fas fa-sync-alt"></i> <?= __('settings.system_updates') ?>
+                        <i class="fas fa-sync-alt"></i> <?= __('settings.updates') ?>
                     </a>
                     <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-success">
                         <i class="fas fa-language"></i> <?= __('settings.translations') ?>
                     </a>
                     <a href="<?= BASE_URL ?>/users" class="btn btn-outline-secondary">
-                        <i class="fas fa-users"></i> <?= __('settings.user_management') ?>
+                        <i class="fas fa-users"></i> User Management
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-function changeLanguage(languageCode) {
-    // Create form and submit
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '<?= BASE_URL ?>/settings/change-language';
-    
-    const langInput = document.createElement('input');
-    langInput.type = 'hidden';
-    langInput.name = 'language';
-    langInput.value = languageCode;
-    
-    const redirectInput = document.createElement('input');
-    redirectInput.type = 'hidden';
-    redirectInput.name = 'redirect';
-    redirectInput.value = '/settings';
-    
-    form.appendChild(langInput);
-    form.appendChild(redirectInput);
-    document.body.appendChild(form);
-    form.submit();
-}
-</script>

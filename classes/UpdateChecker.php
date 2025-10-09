@@ -5,7 +5,7 @@
  */
 
 class UpdateChecker {
-    private $currentVersion = '1.0.2';
+    private $currentVersion = '1.0.3';
     public $githubRepo = 'TheoSfak/handycrm'; // GitHub repository
     private $updateCheckInterval = 86400; // 24 hours in seconds
     
