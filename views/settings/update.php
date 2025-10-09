@@ -19,6 +19,13 @@ if (isset($_POST['create_backup'])) {
     $actionType = $result['success'] ? 'success' : 'danger';
 }
 
+// Delete backup
+if (isset($_POST['delete_backup']) && isset($_POST['backup_name'])) {
+    $result = $backupManager->deleteBackup($_POST['backup_name']);
+    $actionMessage = $result['message'];
+    $actionType = $result['success'] ? 'success' : 'danger';
+}
+
 // Restore from backup
 if (isset($_POST['restore_backup']) && isset($_POST['backup_name'])) {
     $result = $backupManager->restoreBackup($_POST['backup_name']);
@@ -693,10 +700,23 @@ $availableBackups = $backupManager->getBackups();
 
 .backup-actions {
     margin-top: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.backup-actions form {
+    flex: 1;
 }
 
 .backup-actions .btn {
     font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.backup-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Loading Overlay */
@@ -1065,12 +1085,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
                 
-                <form method="POST" class="backup-actions" onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να επαναφέρετε αυτό το backup? Η τρέχουσα κατάσταση θα αντικατασταθεί.');">
-                    <input type="hidden" name="backup_name" value="<?= htmlspecialchars($backup['name']) ?>">
-                    <button type="submit" name="restore_backup" class="btn btn-warning btn-sm w-100">
-                        <i class="fas fa-undo me-1"></i> Επαναφορά
-                    </button>
-                </form>
+                <div class="backup-actions">
+                    <form method="POST" style="display: inline-block; width: 48%;" onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να επαναφέρετε αυτό το backup? Η τρέχουσα κατάσταση θα αντικατασταθεί.');">
+                        <input type="hidden" name="backup_name" value="<?= htmlspecialchars($backup['name']) ?>">
+                        <button type="submit" name="restore_backup" class="btn btn-warning btn-sm w-100">
+                            <i class="fas fa-undo me-1"></i> Επαναφορά
+                        </button>
+                    </form>
+                    <form method="POST" style="display: inline-block; width: 48%; margin-left: 4%;" onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το backup? Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.');">
+                        <input type="hidden" name="backup_name" value="<?= htmlspecialchars($backup['name']) ?>">
+                        <button type="submit" name="delete_backup" class="btn btn-danger btn-sm w-100">
+                            <i class="fas fa-trash me-1"></i> Διαγραφή
+                        </button>
+                    </form>
+                </div>
             </div>
             <?php endforeach; ?>
         </div>

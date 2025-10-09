@@ -293,6 +293,40 @@ class BackupManager {
     }
     
     /**
+     * Delete a specific backup
+     */
+    public function deleteBackup($backupName) {
+        try {
+            $backupPath = $this->backupDir . '/' . $backupName;
+            
+            if (!file_exists($backupPath)) {
+                throw new Exception('Backup not found');
+            }
+            
+            // Don't allow deleting if it's the only backup
+            $allBackups = glob($this->backupDir . '/backup_*');
+            if (count($allBackups) <= 1) {
+                throw new Exception('Cannot delete the last backup');
+            }
+            
+            // Delete the backup directory
+            $this->recursiveDelete($backupPath);
+            
+            return [
+                'success' => true,
+                'message' => 'Το backup διαγράφηκε επιτυχώς'
+            ];
+            
+        } catch (Exception $e) {
+            error_log('Backup deletion failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Αποτυχία διαγραφής: ' . $e->getMessage()
+            ];
+        }
+    }
+    
+    /**
      * Get all available backups
      */
     public function getBackups() {

@@ -159,13 +159,79 @@
             });
         });
         
+        // Check for updates
+        function checkForUpdates() {
+            $.ajax({
+                url: '<?= BASE_URL ?>/api/check-updates.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success && data.update_available) {
+                        // Add update notification to the bell
+                        addUpdateNotification(data.update_info);
+                    }
+                },
+                error: function() {
+                    console.log('Failed to check for updates');
+                }
+            });
+        }
+        
+        // Add update notification to notification list
+        function addUpdateNotification(updateInfo) {
+            const notificationsList = $('#notifications-list');
+            const notificationCount = $('#notification-count');
+            
+            // Check if update notification already exists
+            if ($('.update-notification').length > 0) {
+                return;
+            }
+            
+            // Remove "no notifications" message if exists
+            notificationsList.find('.text-muted').parent().remove();
+            
+            // Add update notification at the top
+            const updateNotification = $(`
+                <li>
+                    <a class="dropdown-item notification-item update-notification" 
+                       href="<?= BASE_URL ?>/settings/update" 
+                       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; margin: 0.5rem;">
+                        <div class="d-flex align-items-start">
+                            <div class="me-3">
+                                <i class="fas fa-rocket fa-2x"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1"><i class="fas fa-star"></i> Νέα Έκδοση Διαθέσιμη!</h6>
+                                <p class="mb-1 small">v${updateInfo.version} - Κάντε κλικ για ενημέρωση</p>
+                                <small>${new Date(updateInfo.published_at).toLocaleDateString('el-GR')}</small>
+                            </div>
+                        </div>
+                    </a>
+                </li>
+            `);
+            
+            // Insert after header and divider
+            notificationsList.find('.dropdown-divider').after(updateNotification);
+            
+            // Update notification count
+            let currentCount = parseInt(notificationCount.text()) || 0;
+            currentCount += 1;
+            notificationCount.text(currentCount).show();
+        }
+        
         // Load notifications on page load
         $(document).ready(function() {
             <?php if (isset($_SESSION['user_id'])): ?>
             loadNotifications();
             
+            // Check for updates on load
+            checkForUpdates();
+            
             // Refresh notifications every 5 minutes
             setInterval(loadNotifications, 300000);
+            
+            // Check for updates every hour
+            setInterval(checkForUpdates, 3600000);
             <?php endif; ?>
         });
         

@@ -186,6 +186,34 @@
         .app-footer i {
             margin-right: 5px;
         }
+        
+        /* Update Notification Styling */
+        .update-notification {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+            }
+        }
+        
+        .update-notification:hover {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+        
+        #notification-count {
+            animation: bounce 0.5s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
     </style>
 </head>
 <body>
