@@ -1,0 +1,373 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fas fa-users"></i> Πελάτες</h2>
+    <a href="?route=/customers/create" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Νέος Πελάτης
+    </a>
+</div>
+
+<!-- Search and Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Αναζήτηση</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="search" 
+                       name="search" 
+                       placeholder="Όνομα, τηλέφωνο, email..." 
+                       value="<?= htmlspecialchars($search) ?>">
+            </div>
+            
+            <div class="col-md-4">
+                <label for="type" class="form-label">Τύπος Πελάτη</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="">Όλοι</option>
+                    <option value="individual" <?= $type === 'individual' ? 'selected' : '' ?>>Ιδιώτης</option>
+                    <option value="company" <?= $type === 'company' ? 'selected' : '' ?>>Εταιρεία</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search"></i> Αναζήτηση
+                </button>
+                <a href="?route=/customers" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results Summary -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <p class="text-muted mb-0">
+            Εμφανίζονται <?= count($customers['data']) ?> από <?= $customers['total_records'] ?> πελάτες
+            <?php if (!empty($search)): ?>
+                (αναζήτηση για: "<?= htmlspecialchars($search) ?>")
+            <?php endif; ?>
+        </p>
+    </div>
+    <div class="col-md-6 text-end">
+        <div class="btn-group btn-group-sm" role="group">
+            <input type="radio" class="btn-check" name="view" id="card-view" checked>
+            <label class="btn btn-outline-secondary" for="card-view">
+                <i class="fas fa-th"></i> Κάρτες
+            </label>
+            
+            <input type="radio" class="btn-check" name="view" id="table-view">
+            <label class="btn btn-outline-secondary" for="table-view">
+                <i class="fas fa-list"></i> Λίστα
+            </label>
+        </div>
+    </div>
+</div>
+
+<!-- Customers Grid View -->
+<div id="customers-grid" class="row">
+    <?php if (!empty($customers['data'])): ?>
+        <?php foreach ($customers['data'] as $customer): ?>
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 customer-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-grow-1">
+                            <!-- Customer Type Badge -->
+                            <div class="mb-2">
+                                <span class="badge <?= $customer['customer_type'] === 'company' ? 'bg-info' : 'bg-primary' ?>">
+                                    <i class="fas fa-<?= $customer['customer_type'] === 'company' ? 'building' : 'user' ?>"></i>
+                                    <?= $customer['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+                                </span>
+                            </div>
+                            
+                            <!-- Customer Name -->
+                            <h5 class="card-title mb-1">
+                                <a href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>" class="text-decoration-none">
+                                    <?php 
+                                    if ($customer['customer_type'] === 'company' && !empty($customer['company_name'])) {
+                                        echo htmlspecialchars($customer['company_name']);
+                                    } else {
+                                        echo htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']);
+                                    }
+                                    ?>
+                                </a>
+                            </h5>
+                            
+                            <!-- Contact Info -->
+                            <div class="mb-2">
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-phone"></i> <?= htmlspecialchars($customer['phone']) ?>
+                                </small>
+                                <?php if (!empty($customer['email'])): ?>
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-envelope"></i> <?= htmlspecialchars($customer['email']) ?>
+                                </small>
+                                <?php endif; ?>
+                            </div>
+                            
+                            <!-- Created Date -->
+                            <small class="text-muted">
+                                <i class="fas fa-calendar"></i> 
+                                Δημιουργήθηκε: <?= date('d/m/Y', strtotime($customer['created_at'])) ?>
+                            </small>
+                        </div>
+                        
+                        <!-- Actions Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>">
+                                        <i class="fas fa-eye"></i> Προβολή
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?= BASE_URL ?>/customers/edit/<?= $customer['id'] ?>">
+                                        <i class="fas fa-edit"></i> Επεξεργασία
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="?route=/projects/create&customer_id=<?= $customer['id'] ?>">
+                                        <i class="fas fa-project-diagram"></i> Νέο Έργο
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="?route=/appointments/create&customer_id=<?= $customer['id'] ?>">
+                                        <i class="fas fa-calendar-plus"></i> Νέο Ραντεβού
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="?route=/customers/delete&id=<?= $customer['id'] ?>" 
+                                          onsubmit="return confirm('Είστε σίγουρος ότι θέλετε να διαγράψετε αυτόν τον πελάτη;')" 
+                                          class="d-inline">
+                                        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-trash"></i> Διαγραφή
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-users fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">Δεν βρέθηκαν πελάτες</h4>
+                    <?php if (!empty($search) || !empty($type)): ?>
+                        <p class="text-muted">Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης</p>
+                        <a href="?route=/customers" class="btn btn-outline-primary">
+                            <i class="fas fa-times"></i> Καθαρισμός Φίλτρων
+                        </a>
+                    <?php else: ?>
+                        <p class="text-muted">Ξεκινήστε προσθέτοντας τον πρώτο σας πελάτη</p>
+                        <a href="?route=/customers/create" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Νέος Πελάτης
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+</div>
+
+<!-- Customers Table View (Hidden by default) -->
+<div id="customers-table" style="display: none;">
+    <?php if (!empty($customers['data'])): ?>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Πελάτης</th>
+                        <th>Τύπος</th>
+                        <th>Τηλέφωνο</th>
+                        <th>Email</th>
+                        <th>Πόλη</th>
+                        <th>Δημιουργήθηκε</th>
+                        <th>Ενέργειες</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($customers['data'] as $customer): ?>
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <div class="avatar bg-<?= $customer['customer_type'] === 'company' ? 'info' : 'primary' ?> text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-<?= $customer['customer_type'] === 'company' ? 'building' : 'user' ?>"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">
+                                        <a href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>" class="text-decoration-none">
+                                            <?php 
+                                            if ($customer['customer_type'] === 'company' && !empty($customer['company_name'])) {
+                                                echo htmlspecialchars($customer['company_name']);
+                                            } else {
+                                                echo htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']);
+                                            }
+                                            ?>
+                                        </a>
+                                    </h6>
+                                    <?php if ($customer['customer_type'] === 'company' && !empty($customer['company_name'])): ?>
+                                    <small class="text-muted">
+                                        <?= htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']) ?>
+                                    </small>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge <?= $customer['customer_type'] === 'company' ? 'bg-info' : 'bg-primary' ?>">
+                                <?= $customer['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+                            </span>
+                        </td>
+                        <td><?= htmlspecialchars($customer['phone']) ?></td>
+                        <td><?= htmlspecialchars($customer['email'] ?? '-') ?></td>
+                        <td><?= htmlspecialchars($customer['city'] ?? '-') ?></td>
+                        <td><?= date('d/m/Y', strtotime($customer['created_at'])) ?></td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>" class="btn btn-outline-primary" title="Προβολή">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="<?= BASE_URL ?>/customers/edit/<?= $customer['id'] ?>" class="btn btn-outline-secondary" title="Επεξεργασία">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" title="Περισσότερα">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="?route=/projects/create&customer_id=<?= $customer['id'] ?>">
+                                                <i class="fas fa-project-diagram"></i> Νέο Έργο
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="?route=/appointments/create&customer_id=<?= $customer['id'] ?>">
+                                                <i class="fas fa-calendar-plus"></i> Νέο Ραντεβού
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="?route=/quotes/create&customer_id=<?= $customer['id'] ?>">
+                                                <i class="fas fa-file-invoice"></i> Νέα Προσφορά
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+
+<!-- Pagination -->
+<?php if (!empty($pagination)): ?>
+<div class="d-flex justify-content-center mt-4">
+    <?= $pagination ?>
+</div>
+<?php endif; ?>
+
+<script>
+// Toggle between card and table view
+document.addEventListener('DOMContentLoaded', function() {
+    const cardViewBtn = document.getElementById('card-view');
+    const tableViewBtn = document.getElementById('table-view');
+    const customersGrid = document.getElementById('customers-grid');
+    const customersTable = document.getElementById('customers-table');
+    
+    cardViewBtn.addEventListener('change', function() {
+        if (this.checked) {
+            customersGrid.style.display = 'block';
+            customersTable.style.display = 'none';
+        }
+    });
+    
+    tableViewBtn.addEventListener('change', function() {
+        if (this.checked) {
+            customersGrid.style.display = 'none';
+            customersTable.style.display = 'block';
+        }
+    });
+    
+    // Save view preference
+    const savedView = localStorage.getItem('customers_view');
+    if (savedView === 'table') {
+        tableViewBtn.checked = true;
+        customersGrid.style.display = 'none';
+        customersTable.style.display = 'block';
+    }
+    
+    cardViewBtn.addEventListener('change', function() {
+        if (this.checked) {
+            localStorage.setItem('customers_view', 'card');
+        }
+    });
+    
+    tableViewBtn.addEventListener('change', function() {
+        if (this.checked) {
+            localStorage.setItem('customers_view', 'table');
+        }
+    });
+});
+
+// Auto-submit search form on type change
+document.getElementById('type').addEventListener('change', function() {
+    this.form.submit();
+});
+
+// Customer card hover effects
+document.querySelectorAll('.customer-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+        this.style.transition = 'all 0.3s ease';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '';
+    });
+});
+</script>
+
+<style>
+.customer-card {
+    transition: all 0.3s ease;
+    border: 1px solid #dee2e6;
+}
+
+.customer-card:hover {
+    border-color: #007bff;
+}
+
+.avatar {
+    font-size: 16px;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+</style>

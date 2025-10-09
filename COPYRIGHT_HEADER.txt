@@ -1,0 +1,8 @@
+/**
+ * HandyCRM - Database Class
+ * 
+ * @author Theodore Sfakianakis
+ * @email theodore.sfakianakis@gmail.com
+ * @copyright 2025 Theodore Sfakianakis. All rights reserved.
+ * @license See LICENSE file - Cannot be modified or sold
+ */

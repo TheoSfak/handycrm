@@ -1,0 +1,43 @@
+# HandyCRM .gitignore
+
+# Configuration files (contains sensitive data)
+config/config.php
+
+# User uploads
+uploads/*
+!uploads/.htaccess
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Temporary files
+tmp/
+temp/
+cache/
+
+# Database dumps (except the template)
+*.sql
+!database/handycrm.sql
+
+# Composer (if you add it later)
+/vendor/
+
+# Node modules (if you add frontend build tools)
+node_modules/
