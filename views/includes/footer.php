@@ -3,15 +3,25 @@
         <!-- Application Footer -->
         <footer class="app-footer mt-auto py-3 border-top">
             <div class="container-fluid">
-                <div class="row">
-                    <div class="col-md-6 text-center text-md-start mb-2 mb-md-0">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
+                        <span class="text-muted">
+                            <i class="fas fa-briefcase"></i> <strong>HandyCRM</strong> 
+                            <span class="badge bg-primary ms-1">v<?php 
+                                require_once 'classes/UpdateChecker.php';
+                                $versionChecker = new UpdateChecker();
+                                echo $versionChecker->getCurrentVersion();
+                            ?></span>
+                        </span>
+                    </div>
+                    <div class="col-md-4 text-center mb-2 mb-md-0">
                         <span class="text-muted">
                             <i class="fas fa-code"></i> Created by <strong>Theodore Sfakianakis</strong>
                         </span>
                     </div>
-                    <div class="col-md-6 text-center text-md-end">
+                    <div class="col-md-4 text-center text-md-end">
                         <span class="text-muted">
-                            <i class="fas fa-envelope"></i> For suggestions or new ideas: 
+                            <i class="fas fa-envelope"></i>
                             <a href="mailto:theodore.sfakianakis@gmail.com" class="text-decoration-none">
                                 theodore.sfakianakis@gmail.com
                             </a>
