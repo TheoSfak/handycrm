@@ -107,7 +107,7 @@ class CustomerController extends BaseController {
                 );
                 
                 $this->flash('success', 'Ο πελάτης δημιουργήθηκε επιτυχώς');
-                $this->redirect('/customers/' . $slug);
+                $this->redirect('/customers/show?id=' . $customerId);
             } else {
                 throw new Exception('Αποτυχία δημιουργίας πελάτη');
             }
