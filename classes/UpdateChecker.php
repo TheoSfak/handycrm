@@ -5,9 +5,13 @@
  */
 
 class UpdateChecker {
-    private $currentVersion = '1.0.3';
+    private $currentVersion;
     public $githubRepo = 'TheoSfak/handycrm'; // GitHub repository
     private $updateCheckInterval = 86400; // 24 hours in seconds
+    
+    public function __construct() {
+        $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
+    }
     
     /**
      * Check if update is available
