@@ -3,8 +3,8 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h2><i class="fas fa-chart-line"></i> Αναφορές & Στατιστικά</h2>
-        <p class="text-muted mb-0">Ανάλυση δεδομένων και insights</p>
+        <h2><i class="fas fa-chart-line"></i> <?= __('menu.reports') ?></h2>
+        <p class="text-muted mb-0"><?= __('reports.subtitle') ?></p>
     </div>
     <div>
         <!-- Date Range Filter -->
@@ -13,7 +13,7 @@
             <input type="date" name="start_date" class="form-control" value="<?= $start_date ?>" required>
             <input type="date" name="end_date" class="form-control" value="<?= $end_date ?>" required>
             <button type="submit" class="btn btn-primary">
-                <i class="fas fa-filter"></i> Φίλτρο
+                <i class="fas fa-filter"></i> <?= __('reports.filter') ?>
             </button>
         </form>
     </div>
@@ -31,7 +31,7 @@
                         </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <div class="text-muted small fw-bold">ΣΥΝΟΛΙΚΑ ΕΣΟΔΑ</div>
+                        <div class="text-muted small fw-bold"><?= strtoupper(__('reports.total_revenue')) ?></div>
                         <div class="h4 mb-0 text-success"><?= formatCurrency($summary['total_revenue']) ?></div>
                     </div>
                 </div>
@@ -49,7 +49,7 @@
                         </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <div class="text-muted small fw-bold">ΣΥΝΟΛΟ ΕΡΓΩΝ</div>
+                        <div class="text-muted small fw-bold"><?= strtoupper(__('reports.total_projects')) ?></div>
                         <div class="h4 mb-0"><?= number_format($summary['total_projects']) ?></div>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <div class="text-muted small fw-bold">ΕΝΕΡΓΟΙ ΠΕΛΑΤΕΣ</div>
+                        <div class="text-muted small fw-bold"><?= strtoupper(__('reports.active_customers')) ?></div>
                         <div class="h4 mb-0"><?= number_format($summary['active_customers']) ?></div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
     <div class="col-lg-8 mb-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-gradient-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-area"></i> Έσοδα ανά Μήνα</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-area"></i> <?= __('reports.revenue_by_month') ?></h5>
             </div>
             <div class="card-body">
                 <canvas id="revenueChart" height="80"></canvas>
@@ -112,7 +112,7 @@
     <div class="col-lg-4 mb-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-gradient-info text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Κατάσταση Έργων</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> <?= __('reports.project_status') ?></h5>
             </div>
             <div class="card-body">
                 <canvas id="projectStatusChart"></canvas>
@@ -127,7 +127,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-gradient-success text-white">
-                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> Έσοδα ανά Κατηγορία</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-bar"></i> <?= __('reports.revenue_by_category') ?></h5>
             </div>
             <div class="card-body">
                 <canvas id="categoryChart" height="80"></canvas>
@@ -139,7 +139,7 @@
     <div class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-gradient-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Νέοι Πελάτες</h5>
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> <?= __('reports.new_customers') ?></h5>
             </div>
             <div class="card-body">
                 <canvas id="customerGrowthChart" height="80"></canvas>
@@ -153,13 +153,13 @@
     <div class="col-12">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-trophy"></i> Top 10 Πελάτες (ανά Έσοδα)</h5>
+                <h5 class="mb-0"><i class="fas fa-trophy"></i> <?= __('reports.top_customers') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (empty($customer_data['top_customers'])): ?>
                     <div class="text-center py-4 text-muted">
                         <i class="fas fa-inbox fa-3x mb-3"></i>
-                        <p>Δεν υπάρχουν δεδομένα πελατών για την επιλεγμένη περίοδο</p>
+                        <p><?= __('reports.no_customer_data') ?></p>
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
@@ -167,10 +167,10 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Πελάτης</th>
-                                    <th>Τύπος</th>
-                                    <th class="text-center">Τιμολόγια</th>
-                                    <th class="text-end">Συνολικά Έσοδα</th>
+                                    <th><?= __('reports.customer') ?></th>
+                                    <th><?= __('reports.type') ?></th>
+                                    <th class="text-center"><?= __('reports.invoices') ?></th>
+                                    <th class="text-end"><?= __('reports.total_revenue') ?></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -196,7 +196,7 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-<?= $customer['customer_type'] === 'company' ? 'info' : 'primary' ?>">
-                                            <?= $customer['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+                                            <?= $customer['customer_type'] === 'company' ? __('customers.company') : __('customers.individual') ?>
                                         </span>
                                     </td>
                                     <td class="text-center">

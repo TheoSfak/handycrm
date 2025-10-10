@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-file-invoice"></i> Προσφορές</h2>
+    <h2><i class="fas fa-file-invoice"></i> <?= __('menu.quotes') ?></h2>
     <a href="?route=/quotes/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Νέα Προσφορά
+        <i class="fas fa-plus"></i> <?= __('quotes.new_quote') ?>
     </a>
 </div>
 
@@ -26,9 +26,9 @@
             <input type="hidden" name="route" value="/quotes">
             
             <div class="col-md-4">
-                <label class="form-label">Κατάσταση</label>
+                <label class="form-label"><?= __('quotes.status') ?></label>
                 <select name="status" class="form-select">
-                    <option value="">Όλα</option>
+                    <option value=""><?= __('quotes.all') ?></option>
                     <?php foreach ($statuses as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['status'] === $key) ? 'selected' : '' ?>>
                         <?= $label ?>
@@ -38,10 +38,10 @@
             </div>
             
             <div class="col-md-6">
-                <label class="form-label">Αναζήτηση</label>
+                <label class="form-label"><?= __('quotes.search') ?></label>
                 <div class="input-group">
                     <input type="text" name="search" class="form-control" 
-                           placeholder="Αριθμός προσφοράς, τίτλος, πελάτης..." 
+                           placeholder="<?= __('quotes.search_placeholder') ?>" 
                            value="<?= htmlspecialchars($filters['search']) ?>">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i>
@@ -51,7 +51,7 @@
             
             <div class="col-md-2 d-flex align-items-end">
                 <a href="?route=/quotes" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Καθαρισμός
+                    <i class="fas fa-times"></i> <?= __('quotes.clear') ?>
                 </a>
             </div>
         </form>
@@ -64,9 +64,9 @@
         <?php if (empty($quotes)): ?>
         <div class="text-center py-5">
             <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
-            <p class="text-muted">Δεν βρέθηκαν προσφορές</p>
+            <p class="text-muted"><?= __('quotes.no_quotes_found') ?></p>
             <a href="?route=/quotes/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Δημιουργία Νέας Προσφοράς
+                <i class="fas fa-plus"></i> <?= __('quotes.create_new_quote') ?>
             </a>
         </div>
         <?php else: ?>
@@ -74,14 +74,14 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Αριθμός</th>
-                        <th>Τίτλος</th>
-                        <th>Πελάτης</th>
-                        <th>Ημ/νία Δημιουργίας</th>
-                        <th>Ισχύει Έως</th>
-                        <th>Ποσό</th>
-                        <th>Κατάσταση</th>
-                        <th>Ενέργειες</th>
+                        <th><?= __('quotes.quote_number') ?></th>
+                        <th><?= __('quotes.quote_title') ?></th>
+                        <th><?= __('quotes.customer') ?></th>
+                        <th><?= __('quotes.issue_date') ?></th>
+                        <th><?= __('quotes.valid_until') ?></th>
+                        <th><?= __('quotes.amount') ?></th>
+                        <th><?= __('quotes.status') ?></th>
+                        <th><?= __('quotes.actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -119,7 +119,7 @@
                         <td>
                             <?= date('d/m/Y', strtotime($quote['valid_until'])) ?>
                             <?php if ($isExpired): ?>
-                            <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Ληγμένο</small>
+                            <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> <?= __('quotes.expired') ?></small>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -133,17 +133,17 @@
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="<?= BASE_URL ?>/quotes/<?= $quote['slug'] ?>" 
-                                   class="btn btn-sm btn-info" title="Προβολή">
+                                   class="btn btn-sm btn-info" title="<?= __('quotes.view') ?>">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="<?= BASE_URL ?>/quotes/edit/<?= $quote['id'] ?>" 
-                                   class="btn btn-sm btn-warning" title="Επεξεργασία">
+                                   class="btn btn-sm btn-warning" title="<?= __('quotes.edit') ?>">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <a href="<?= BASE_URL ?>/quotes/delete/<?= $quote['id'] ?>" 
                                    class="btn btn-sm btn-danger" 
-                                   onclick="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτήν την προσφορά;')" 
-                                   title="Διαγραφή">
+                                   onclick="return confirm('<?= __('quotes.confirm_delete') ?>')" 
+                                   title="<?= __('quotes.delete') ?>">
                                     <i class="fas fa-trash"></i>
                                 </a>
                             </div>

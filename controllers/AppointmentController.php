@@ -47,7 +47,7 @@ class AppointmentController extends BaseController {
         ];
         
         $data = [
-            'title' => 'Ραντεβού - ' . APP_NAME,
+            'title' => __('appointments.title') . ' - ' . APP_NAME,
             'user' => $user,
             'appointments' => $result['data'],
             'pagination' => $result['pagination'],
@@ -81,7 +81,7 @@ class AppointmentController extends BaseController {
         }
         
         $data = [
-            'title' => 'Ραντεβού: ' . $appointment['title'] . ' - ' . APP_NAME,
+            'title' => __('appointments.title') . ': ' . $appointment['title'] . ' - ' . APP_NAME,
             'user' => $user,
             'appointment' => $appointment
         ];
@@ -120,7 +120,7 @@ class AppointmentController extends BaseController {
         $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
-            'title' => 'Νέο Ραντεβού - ' . APP_NAME,
+            'title' => __('appointments.new_appointment') . ' - ' . APP_NAME,
             'user' => $user,
             'customers' => $customers,
             'technicians' => $technicians,
@@ -243,7 +243,7 @@ class AppointmentController extends BaseController {
         $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
-            'title' => 'Επεξεργασία Ραντεβού - ' . APP_NAME,
+            'title' => __('appointments.edit') . ' ' . __('appointments.title') . ' - ' . APP_NAME,
             'user' => $user,
             'appointment' => $appointment,
             'customers' => $customers,
@@ -354,7 +354,7 @@ class AppointmentController extends BaseController {
         $user = $this->getCurrentUser();
         
         $data = [
-            'title' => 'Ημερολόγιο Ραντεβού - ' . APP_NAME,
+            'title' => __('appointments.calendar') . ' - ' . APP_NAME,
             'user' => $user
         ];
         

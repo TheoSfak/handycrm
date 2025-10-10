@@ -1,5 +1,6 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Ηλεκτρολόγους & Υδραυλικούς
 
+**Version:** 1.0.6  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.

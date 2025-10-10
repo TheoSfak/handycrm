@@ -298,13 +298,13 @@ class LanguageManager {
     }
     
     /**
-     * Get all translation keys from base language (English)
+     * Get all translation keys from current language
      */
     public function getAllKeys() {
-        $basePath = $this->languagesPath . 'en.json';
+        $filePath = $this->languagesPath . $this->currentLanguage . '.json';
         
-        if (file_exists($basePath)) {
-            $translations = json_decode(file_get_contents($basePath), true);
+        if (file_exists($filePath)) {
+            $translations = json_decode(file_get_contents($filePath), true);
             return $this->flattenArray($translations);
         }
         

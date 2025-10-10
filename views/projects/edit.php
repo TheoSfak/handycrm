@@ -1,11 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-project-diagram"></i> Επεξεργασία Έργου</h2>
+    <h2><i class="fas fa-project-diagram"></i> <?= __('projects.edit_project') ?></h2>
     <div>
         <a href="?route=/projects" class="btn btn-secondary me-2">
-            <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+            <i class="fas fa-arrow-left"></i> <?= __('projects.back_to_list') ?>
         </a>
         <a href="?route=/projects/show&id=<?= $project['id'] ?>" class="btn btn-info">
-            <i class="fas fa-eye"></i> Προβολή
+            <i class="fas fa-eye"></i> <?= __('projects.view') ?>
         </a>
     </div>
 </div>
@@ -25,7 +25,7 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
-                        <label for="title" class="form-label">Τίτλος Έργου <span class="text-danger">*</span></label>
+                        <label for="title" class="form-label"><?= __('projects.project_title') ?> <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title" 
                                value="<?= htmlspecialchars($project['title']) ?>" required>
                     </div>
@@ -33,19 +33,19 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="priority" class="form-label">Προτεραιότητα</label>
+                        <label for="priority" class="form-label"><?= __('projects.priority') ?></label>
                         <select class="form-select" id="priority" name="priority">
                             <option value="low" <?= ($project['priority'] === 'low') ? 'selected' : '' ?>>
-                                Χαμηλή
+                                <?= __('projects.low') ?>
                             </option>
                             <option value="medium" <?= ($project['priority'] === 'medium') ? 'selected' : '' ?>>
-                                Κανονική
+                                <?= __('projects.normal') ?>
                             </option>
                             <option value="high" <?= ($project['priority'] === 'high') ? 'selected' : '' ?>>
-                                Υψηλή
+                                <?= __('projects.high') ?>
                             </option>
                             <option value="urgent" <?= ($project['priority'] === 'urgent') ? 'selected' : '' ?>>
-                                Επείγουσα
+                                <?= __('projects.urgent') ?>
                             </option>
                         </select>
                     </div>
@@ -53,16 +53,16 @@
             </div>
             
             <div class="mb-3">
-                <label for="description" class="form-label">Περιγραφή</label>
+                <label for="description" class="form-label"><?= __('projects.description') ?></label>
                 <textarea class="form-control" id="description" name="description" rows="4"><?= htmlspecialchars($project['description'] ?? '') ?></textarea>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="customer_id" class="form-label">Πελάτης <span class="text-danger">*</span></label>
+                        <label for="customer_id" class="form-label"><?= __('projects.customer') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="customer_id" name="customer_id" required>
-                            <option value="">Επιλέξτε πελάτη...</option>
+                            <option value=""><?= __('projects.select_customer') ?></option>
                             <?php foreach ($customers as $customer): ?>
                                 <?php
                                     $customerName = $customer['customer_type'] === 'company' && !empty($customer['company_name']) 
@@ -80,19 +80,19 @@
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="category" class="form-label">Κατηγορία <span class="text-danger">*</span></label>
+                        <label for="category" class="form-label"><?= __('projects.category') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="category" name="category" required>
                             <option value="electrical" <?= ($project['category'] === 'electrical') ? 'selected' : '' ?>>
-                                Ηλεκτρολογικά
+                                <?= __('projects.electrical') ?>
                             </option>
                             <option value="plumbing" <?= ($project['category'] === 'plumbing') ? 'selected' : '' ?>>
-                                Υδραυλικά
+                                <?= __('projects.plumbing') ?>
                             </option>
                             <option value="maintenance" <?= ($project['category'] === 'maintenance') ? 'selected' : '' ?>>
-                                Συντήρηση
+                                <?= __('projects.maintenance') ?>
                             </option>
                             <option value="emergency" <?= ($project['category'] === 'emergency') ? 'selected' : '' ?>>
-                                Έκτακτη Ανάγκη
+                                <?= __('projects.emergency') ?>
                             </option>
                         </select>
                     </div>
@@ -102,9 +102,9 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="assigned_technician" class="form-label">Τεχνικός <span class="text-danger">*</span></label>
+                        <label for="assigned_technician" class="form-label"><?= __('projects.assigned_technician') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="assigned_technician" name="assigned_technician" required>
-                            <option value="">Επιλέξτε τεχνικό...</option>
+                            <option value=""><?= __('projects.select_technician') ?></option>
                             <?php foreach ($technicians as $tech): ?>
                                 <option value="<?= $tech['id'] ?>" 
                                         <?= ($project['assigned_technician'] == $tech['id']) ? 'selected' : '' ?>>
@@ -117,22 +117,22 @@
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="status" class="form-label">Κατάσταση <span class="text-danger">*</span></label>
+                        <label for="status" class="form-label"><?= __('projects.status') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="status" name="status" required>
                             <option value="new" <?= ($project['status'] === 'new') ? 'selected' : '' ?>>
-                                Νέο
+                                <?= __('projects.new') ?>
                             </option>
                             <option value="in_progress" <?= ($project['status'] === 'in_progress') ? 'selected' : '' ?>>
-                                Σε Εξέλιξη
+                                <?= __('projects.in_progress') ?>
                             </option>
                             <option value="completed" <?= ($project['status'] === 'completed') ? 'selected' : '' ?>>
-                                Ολοκληρωμένο
+                                <?= __('projects.completed') ?>
                             </option>
                             <option value="invoiced" <?= ($project['status'] === 'invoiced') ? 'selected' : '' ?>>
-                                Τιμολογημένο
+                                <?= __('projects.invoiced') ?>
                             </option>
                             <option value="cancelled" <?= ($project['status'] === 'cancelled') ? 'selected' : '' ?>>
-                                Ακυρωμένο
+                                <?= __('projects.cancelled') ?>
                             </option>
                         </select>
                     </div>
@@ -142,7 +142,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="start_date" class="form-label">Ημερομηνία Έναρξης</label>
+                        <label for="start_date" class="form-label"><?= __('projects.start_date_label') ?></label>
                         <input type="date" class="form-control" id="start_date" name="start_date" 
                                value="<?= htmlspecialchars($project['start_date'] ?? '') ?>">
                     </div>
@@ -150,7 +150,7 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="completion_date" class="form-label">Ημερομηνία Ολοκλήρωσης</label>
+                        <label for="completion_date" class="form-label"><?= __('projects.completion_date') ?></label>
                         <input type="date" class="form-control" id="completion_date" name="completion_date" 
                                value="<?= htmlspecialchars($project['completion_date'] ?? '') ?>">
                     </div>
@@ -158,7 +158,7 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="estimated_hours" class="form-label">Εκτιμώμενες Ώρες</label>
+                        <label for="estimated_hours" class="form-label"><?= __('projects.estimated_hours') ?></label>
                         <input type="number" step="0.5" class="form-control" id="estimated_hours" name="estimated_hours" 
                                value="<?= htmlspecialchars($project['estimated_hours'] ?? '') ?>">
                     </div>
@@ -168,7 +168,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="material_cost" class="form-label">Κόστος Υλικών (€)</label>
+                        <label for="material_cost" class="form-label"><?= __('projects.material_cost') ?> (€)</label>
                         <input type="number" step="0.01" class="form-control" id="material_cost" name="material_cost" 
                                value="<?= htmlspecialchars($project['material_cost'] ?? '0.00') ?>">
                     </div>
@@ -176,7 +176,7 @@
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="labor_cost" class="form-label">Κόστος Εργασίας (€)</label>
+                        <label for="labor_cost" class="form-label"><?= __('projects.labor_cost') ?> (€)</label>
                         <input type="number" step="0.01" class="form-control" id="labor_cost" name="labor_cost" 
                                value="<?= htmlspecialchars($project['labor_cost'] ?? '0.00') ?>">
                     </div>
@@ -184,16 +184,16 @@
             </div>
             
             <div class="mb-3">
-                <label for="notes" class="form-label">Σημειώσεις</label>
+                <label for="notes" class="form-label"><?= __('projects.notes') ?></label>
                 <textarea class="form-control" id="notes" name="notes" rows="3"><?= htmlspecialchars($project['notes'] ?? '') ?></textarea>
             </div>
             
             <div class="d-flex justify-content-between">
                 <a href="?route=/projects" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Ακύρωση
+                    <i class="fas fa-times"></i> <?= __('projects.cancel') ?>
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Αποθήκευση Αλλαγών
+                    <i class="fas fa-save"></i> <?= __('projects.save_changes') ?>
                 </button>
             </div>
         </form>

@@ -1,11 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-calendar-edit"></i> Επεξεργασία Ραντεβού</h2>
+    <h2><i class="fas fa-calendar-edit"></i> <?= __('appointments.edit_appointment') ?></h2>
     <div>
         <a href="?route=/appointments/details&id=<?= $appointment['id'] ?>" class="btn btn-info me-2">
-            <i class="fas fa-eye"></i> Προβολή
+            <i class="fas fa-eye"></i> <?= __('common.view') ?>
         </a>
         <a href="?route=/appointments" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+            <i class="fas fa-arrow-left"></i> <?= __('appointments.back_to_list') ?>
         </a>
     </div>
 </div>
@@ -26,7 +26,7 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
-                        <label for="title" class="form-label">Τίτλος Ραντεβού <span class="text-danger">*</span></label>
+                        <label for="title" class="form-label"><?= __('appointments.appointment_title') ?> <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title" 
                                value="<?= htmlspecialchars($appointment['title']) ?>" required>
                     </div>
@@ -34,25 +34,25 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="status" class="form-label">Κατάσταση</label>
+                        <label for="status" class="form-label"><?= __('appointments.status') ?></label>
                         <select class="form-select" id="status" name="status">
                             <option value="scheduled" <?= $appointment['status'] === 'scheduled' ? 'selected' : '' ?>>
-                                Προγραμματισμένο
+                                <?= __('appointments.scheduled') ?>
                             </option>
                             <option value="confirmed" <?= $appointment['status'] === 'confirmed' ? 'selected' : '' ?>>
-                                Επιβεβαιωμένο
+                                <?= __('appointments.confirmed') ?>
                             </option>
                             <option value="in_progress" <?= $appointment['status'] === 'in_progress' ? 'selected' : '' ?>>
-                                Σε Εξέλιξη
+                                <?= __('appointments.in_progress') ?>
                             </option>
                             <option value="completed" <?= $appointment['status'] === 'completed' ? 'selected' : '' ?>>
-                                Ολοκληρωμένο
+                                <?= __('appointments.completed') ?>
                             </option>
                             <option value="cancelled" <?= $appointment['status'] === 'cancelled' ? 'selected' : '' ?>>
-                                Ακυρωμένο
+                                <?= __('appointments.cancelled') ?>
                             </option>
                             <option value="no_show" <?= $appointment['status'] === 'no_show' ? 'selected' : '' ?>>
-                                Δεν Εμφανίστηκε
+                                <?= __('appointments.no_show') ?>
                             </option>
                         </select>
                     </div>
@@ -60,16 +60,16 @@
             </div>
             
             <div class="mb-3">
-                <label for="description" class="form-label">Περιγραφή</label>
+                <label for="description" class="form-label"><?= __('appointments.description') ?></label>
                 <textarea class="form-control" id="description" name="description" rows="3"><?= htmlspecialchars($appointment['description'] ?? '') ?></textarea>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="customer_id" class="form-label">Πελάτης <span class="text-danger">*</span></label>
+                        <label for="customer_id" class="form-label"><?= __('appointments.customer') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="customer_id" name="customer_id" required onchange="loadCustomerProjects(this.value)">
-                            <option value="">Επιλέξτε πελάτη...</option>
+                            <option value=""><?= __('appointments.select_customer') ?></option>
                             <?php foreach ($customers as $customer): ?>
                                 <?php
                                     $customerName = $customer['customer_type'] === 'company' && !empty($customer['company_name']) 
@@ -87,9 +87,9 @@
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="technician_id" class="form-label">Τεχνικός <span class="text-danger">*</span></label>
+                        <label for="technician_id" class="form-label"><?= __('appointments.technician') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="technician_id" name="technician_id" required>
-                            <option value="">Επιλέξτε τεχνικό...</option>
+                            <option value=""><?= __('appointments.select_technician') ?></option>
                             <?php foreach ($technicians as $tech): ?>
                             <option value="<?= $tech['id'] ?>" 
                                     <?= $appointment['technician_id'] == $tech['id'] ? 'selected' : '' ?>>
@@ -104,9 +104,9 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="project_id" class="form-label">Έργο (Προαιρετικό)</label>
+                        <label for="project_id" class="form-label"><?= __('appointments.project_optional') ?></label>
                         <select class="form-select" id="project_id" name="project_id">
-                            <option value="">Χωρίς έργο</option>
+                            <option value=""><?= __('appointments.no_project') ?></option>
                             <?php foreach ($projects as $project): ?>
                             <option value="<?= $project['id'] ?>" 
                                     data-customer="<?= $project['customer_id'] ?>"
@@ -120,9 +120,9 @@
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="address" class="form-label">Τοποθεσία</label>
+                        <label for="address" class="form-label"><?= __('appointments.location') ?></label>
                         <input type="text" class="form-control" id="address" name="address" 
-                               placeholder="Διεύθυνση ή τοποθεσία"
+                               placeholder="<?= __('appointments.location_placeholder') ?>"
                                value="<?= htmlspecialchars($appointment['address'] ?? '') ?>">
                     </div>
                 </div>
@@ -131,7 +131,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="appointment_date" class="form-label">Ημερομηνία <span class="text-danger">*</span></label>
+                        <label for="appointment_date" class="form-label"><?= __('appointments.date') ?> <span class="text-danger">*</span></label>
                         <?php
                         // Extract date from appointment_date (which is datetime)
                         $dateOnly = date('Y-m-d', strtotime($appointment['appointment_date']));
@@ -143,7 +143,7 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="appointment_time" class="form-label">Ώρα <span class="text-danger">*</span></label>
+                        <label for="appointment_time" class="form-label"><?= __('appointments.time') ?> <span class="text-danger">*</span></label>
                         <?php
                         // Extract time from appointment_date (which is datetime)
                         $timeOnly = date('H:i', strtotime($appointment['appointment_date']));
@@ -155,7 +155,7 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="duration_minutes" class="form-label">Διάρκεια (λεπτά)</label>
+                        <label for="duration_minutes" class="form-label"><?= __('appointments.duration_minutes_label') ?></label>
                         <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" 
                                value="<?= htmlspecialchars($appointment['duration_minutes'] ?? 60) ?>" 
                                min="15" step="15">
@@ -164,17 +164,17 @@
             </div>
             
             <div class="mb-3">
-                <label for="notes" class="form-label">Σημειώσεις</label>
+                <label for="notes" class="form-label"><?= __('appointments.notes') ?></label>
                 <textarea class="form-control" id="notes" name="notes" rows="3" 
-                          placeholder="Επιπλέον σημειώσεις ή οδηγίες..."><?= htmlspecialchars($appointment['notes'] ?? '') ?></textarea>
+                          placeholder="<?= __('appointments.notes_placeholder') ?>"><?= htmlspecialchars($appointment['notes'] ?? '') ?></textarea>
             </div>
             
             <div class="d-flex justify-content-between">
                 <a href="?route=/appointments/details&id=<?= $appointment['id'] ?>" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Ακύρωση
+                    <i class="fas fa-times"></i> <?= __('appointments.cancel') ?>
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Αποθήκευση Αλλαγών
+                    <i class="fas fa-save"></i> <?= __('appointments.save_changes') ?>
                 </button>
             </div>
         </form>

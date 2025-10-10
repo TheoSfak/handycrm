@@ -1,40 +1,40 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-file-invoice-dollar"></i> Τιμολόγιο #<?= $invoice['invoice_number'] ?></h2>
+    <h2><i class="fas fa-file-invoice-dollar"></i> <?= __('invoices.invoice') ?> #<?= $invoice['invoice_number'] ?></h2>
     <div>
         <!-- Quick Status Change Dropdown -->
         <div class="btn-group me-2" role="group">
             <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="fas fa-sync-alt"></i> Αλλαγή Status
+                <i class="fas fa-sync-alt"></i> <?= __('invoices.change_status') ?>
             </button>
             <ul class="dropdown-menu">
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('draft', <?= $invoice['id'] ?>); return false;">
-                    <i class="fas fa-file text-secondary"></i> Πρόχειρο
+                    <i class="fas fa-file text-secondary"></i> <?= __('invoices.draft') ?>
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('sent', <?= $invoice['id'] ?>); return false;">
-                    <i class="fas fa-paper-plane text-info"></i> Απεσταλμένο
+                    <i class="fas fa-paper-plane text-info"></i> <?= __('invoices.sent') ?>
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('paid', <?= $invoice['id'] ?>); return false;">
-                    <i class="fas fa-check-circle text-success"></i> Πληρωμένο
+                    <i class="fas fa-check-circle text-success"></i> <?= __('invoices.paid') ?>
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('overdue', <?= $invoice['id'] ?>); return false;">
-                    <i class="fas fa-exclamation-triangle text-warning"></i> Ληξιπρόθεσμο
+                    <i class="fas fa-exclamation-triangle text-warning"></i> <?= __('invoices.overdue') ?>
                 </a></li>
                 <li><a class="dropdown-item" href="#" onclick="changeStatus('cancelled', <?= $invoice['id'] ?>); return false;">
-                    <i class="fas fa-ban text-danger"></i> Ακυρωμένο
+                    <i class="fas fa-ban text-danger"></i> <?= __('invoices.cancelled') ?>
                 </a></li>
             </ul>
         </div>
         
         <?php if ($invoice['status'] !== 'paid'): ?>
         <a href="<?= BASE_URL ?>/invoices/edit/<?= $invoice['id'] ?>" class="btn btn-warning">
-            <i class="fas fa-edit"></i> Επεξεργασία
+            <i class="fas fa-edit"></i> <?= __('common.edit') ?>
         </a>
         <?php endif; ?>
         <button type="button" class="btn btn-primary" onclick="window.print()">
-            <i class="fas fa-print"></i> Εκτύπωση
+            <i class="fas fa-print"></i> <?= __('common.print') ?>
         </button>
         <a href="?route=/invoices" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Πίσω
+            <i class="fas fa-arrow-left"></i> <?= __('common.back') ?>
         </a>
     </div>
 </div>
@@ -51,10 +51,10 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h6 class="text-muted mb-2">Κατάσταση Τιμολογίου</h6>
+                <h6 class="text-muted mb-2"><?= __('invoices.invoice_status') ?></h6>
                 <?php
                     $statusColors = ['draft' => 'secondary', 'sent' => 'info', 'paid' => 'success', 'overdue' => 'danger', 'cancelled' => 'dark'];
-                    $statusLabels = ['draft' => 'Πρόχειρο', 'sent' => 'Απεσταλμένο', 'paid' => 'Πληρωμένο', 'overdue' => 'Ληξιπρόθεσμο', 'cancelled' => 'Ακυρωμένο'];
+                    $statusLabels = ['draft' => __('invoices.draft'), 'sent' => __('invoices.sent'), 'paid' => __('invoices.paid'), 'overdue' => __('invoices.overdue'), 'cancelled' => __('invoices.cancelled')];
                 ?>
                 <span class="badge bg-<?= $statusColors[$invoice['status']] ?? 'secondary' ?> fs-6">
                     <?= $statusLabels[$invoice['status']] ?? $invoice['status'] ?>
@@ -65,7 +65,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h6 class="text-muted mb-2">Συνολικό Ποσό</h6>
+                <h6 class="text-muted mb-2"><?= __('invoices.total_amount') ?></h6>
                 <h4 class="mb-0 text-primary"><?= formatCurrency($invoice['total_amount']) ?></h4>
             </div>
         </div>
@@ -73,12 +73,12 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-body">
-                <h6 class="text-muted mb-2">Πληρωμένο Ποσό</h6>
+                <h6 class="text-muted mb-2"><?= __('invoices.paid_amount') ?></h6>
                 <h4 class="mb-0 <?= $invoice['paid_amount'] >= $invoice['total_amount'] ? 'text-success' : 'text-warning' ?>">
                     <?= formatCurrency($invoice['paid_amount']) ?>
                 </h4>
                 <?php if ($invoice['paid_date']): ?>
-                    <small class="text-muted">Πληρώθηκε: <?= formatDate($invoice['paid_date']) ?></small>
+                    <small class="text-muted"><?= __('invoices.paid_on') ?>: <?= formatDate($invoice['paid_date']) ?></small>
                 <?php endif; ?>
             </div>
         </div>
@@ -90,7 +90,7 @@
         <!-- Invoice Details Card -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Στοιχεία Τιμολογίου</h5>
+                <h5 class="mb-0"><?= __('invoices.invoice_details') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($invoice['title'])): ?>
@@ -102,10 +102,10 @@
                 
                 <div class="row mt-3">
                     <div class="col-md-6">
-                        <p><strong>Ημ/νία Έκδοσης:</strong> <?= formatDate($invoice['issue_date']) ?></p>
+                        <p><strong><?= __('invoices.issue_date_short') ?>:</strong> <?= formatDate($invoice['issue_date']) ?></p>
                     </div>
                     <div class="col-md-6">
-                        <p><strong>Ημ/νία Λήξης:</strong> <?= formatDate($invoice['due_date']) ?></p>
+                        <p><strong><?= __('invoices.due_date_short') ?>:</strong> <?= formatDate($invoice['due_date']) ?></p>
                     </div>
                 </div>
             </div>
@@ -114,7 +114,7 @@
         <!-- Customer Info -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Στοιχεία Πελάτη</h5>
+                <h5 class="mb-0"><?= __('invoices.customer_details') ?></h5>
             </div>
             <div class="card-body">
                 <h6>
@@ -139,7 +139,7 @@
                     </p>
                 <?php endif; ?>
                 <?php if (!empty($invoice['customer_tax_id'])): ?>
-                    <p class="mb-0"><i class="fas fa-id-card"></i> ΑΦΜ: <?= htmlspecialchars($invoice['customer_tax_id']) ?></p>
+                    <p class="mb-0"><i class="fas fa-id-card"></i> <?= __('customers.tax_id') ?>: <?= htmlspecialchars($invoice['customer_tax_id']) ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -147,17 +147,17 @@
         <!-- Invoice Items -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Στοιχεία Τιμολογίου</h5>
+                <h5 class="mb-0"><?= __('invoices.invoice_items') ?></h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Περιγραφή</th>
-                                <th width="15%">Ποσότητα</th>
-                                <th width="18%">Τιμή</th>
-                                <th width="18%">Σύνολο</th>
+                                <th><?= __('invoices.description') ?></th>
+                                <th width="15%"><?= __('invoices.quantity') ?></th>
+                                <th width="18%"><?= __('invoices.price') ?></th>
+                                <th width="18%"><?= __('invoices.total') ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -172,15 +172,15 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="3" class="text-end"><strong>Υποσύνολο:</strong></td>
+                                <td colspan="3" class="text-end"><strong><?= __('invoices.subtotal') ?>:</strong></td>
                                 <td><strong><?= formatCurrency($invoice['subtotal']) ?></strong></td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end">ΦΠΑ <?= number_format($invoice['vat_rate'], 0) ?>%:</td>
+                                <td colspan="3" class="text-end"><?= __('invoices.vat') ?> <?= number_format($invoice['vat_rate'], 0) ?>%:</td>
                                 <td><?= formatCurrency($invoice['vat_amount']) ?></td>
                             </tr>
                             <tr class="table-primary">
-                                <td colspan="3" class="text-end"><h5 class="mb-0">Σύνολο:</h5></td>
+                                <td colspan="3" class="text-end"><h5 class="mb-0"><?= __('invoices.total') ?>:</h5></td>
                                 <td><h5 class="mb-0"><?= formatCurrency($invoice['total_amount']) ?></h5></td>
                             </tr>
                         </tfoot>
@@ -192,7 +192,7 @@
         <?php if (!empty($invoice['notes'])): ?>
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Σημειώσεις</h5>
+                <h5 class="mb-0"><?= __('invoices.notes') ?></h5>
             </div>
             <div class="card-body">
                 <p class="mb-0"><?= nl2br(htmlspecialchars($invoice['notes'])) ?></p>
@@ -206,20 +206,20 @@
         <!-- Actions -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Ενέργειες</h5>
+                <h5 class="mb-0"><?= __('common.actions') ?></h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <?php if ($invoice['status'] !== 'paid'): ?>
                     <a href="<?= BASE_URL ?>/invoices/edit/<?= $invoice['id'] ?>" class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Επεξεργασία
+                        <i class="fas fa-edit"></i> <?= __('common.edit') ?>
                     </a>
                     <button type="button" class="btn btn-danger" onclick="confirmDelete()">
-                        <i class="fas fa-trash"></i> Διαγραφή
+                        <i class="fas fa-trash"></i> <?= __('common.delete') ?>
                     </button>
                     <?php endif; ?>
                     <button type="button" class="btn btn-secondary" onclick="window.print()">
-                        <i class="fas fa-print"></i> Εκτύπωση
+                        <i class="fas fa-print"></i> <?= __('common.print') ?>
                     </button>
                 </div>
             </div>
@@ -229,7 +229,7 @@
         <?php if ($invoice['project_title']): ?>
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Έργο</h5>
+                <h5 class="mb-0"><?= __('invoices.project') ?></h5>
             </div>
             <div class="card-body">
                 <p class="mb-0">
@@ -250,24 +250,24 @@
 
 <script>
 function confirmDelete() {
-    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το τιμολόγιο;')) {
+    if (confirm('<?= __('invoices.confirm_delete') ?>')) {
         document.getElementById('deleteForm').submit();
     }
 }
 
 function changeStatus(newStatus, invoiceId) {
     const statusLabels = {
-        'draft': 'Πρόχειρο',
-        'sent': 'Απεσταλμένο',
-        'paid': 'Πληρωμένο',
-        'overdue': 'Ληξιπρόθεσμο',
-        'cancelled': 'Ακυρωμένο'
+        'draft': '<?= __('invoices.draft') ?>',
+        'sent': '<?= __('invoices.sent') ?>',
+        'paid': '<?= __('invoices.paid') ?>',
+        'overdue': '<?= __('invoices.overdue') ?>',
+        'cancelled': '<?= __('invoices.cancelled') ?>'
     };
     
-    let message = 'Θέλετε να αλλάξετε το status του τιμολογίου σε "' + statusLabels[newStatus] + '";';
+    let message = '<?= __('invoices.confirm_change_status') ?> "' + statusLabels[newStatus] + '"?';
     
     if (newStatus === 'paid') {
-        message += '\n\nΗ ημερομηνία πληρωμής και το ποσό θα ενημερωθούν αυτόματα.';
+        message += '\n\n<?= __('invoices.paid_auto_update') ?>';
     }
     
     if (confirm(message)) {

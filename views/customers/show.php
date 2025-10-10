@@ -11,20 +11,20 @@
             ?>
         </h2>
         <span class="badge <?= $customer['customer_type'] === 'company' ? 'bg-info' : 'bg-primary' ?>">
-            <?= $customer['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+            <?= $customer['customer_type'] === 'company' ? __('customers.company') : __('customers.individual') ?>
         </span>
         <?php if ($customer['is_active']): ?>
-            <span class="badge bg-success">Ενεργός</span>
+            <span class="badge bg-success"><?= __('customers.active') ?></span>
         <?php else: ?>
-            <span class="badge bg-danger">Ανενεργός</span>
+            <span class="badge bg-danger"><?= __('customers.inactive') ?></span>
         <?php endif; ?>
     </div>
     <div>
         <a href="?route=/customers/edit&id=<?= $customer['id'] ?>" class="btn btn-primary">
-            <i class="fas fa-edit"></i> Επεξεργασία
+            <i class="fas fa-edit"></i> <?= __('customers.edit') ?>
         </a>
         <a href="?route=/customers" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Πίσω
+            <i class="fas fa-arrow-left"></i> <?= __('common.back') ?>
         </a>
     </div>
 </div>
@@ -34,27 +34,27 @@
     <div class="col-lg-4">
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Πληροφορίες Πελάτη</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> <?= __('customers.customer_info') ?></h5>
             </div>
             <div class="card-body">
                 <?php if ($customer['customer_type'] === 'company'): ?>
                     <div class="mb-3">
-                        <label class="text-muted small">Επωνυμία Εταιρείας</label>
+                        <label class="text-muted small"><?= __('customers.company_name') ?></label>
                         <div><?= htmlspecialchars($customer['company_name']) ?></div>
                     </div>
                     <div class="mb-3">
-                        <label class="text-muted small">Υπεύθυνος</label>
+                        <label class="text-muted small"><?= __('customers.contact_person') ?></label>
                         <div><?= htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']) ?></div>
                     </div>
                 <?php else: ?>
                     <div class="mb-3">
-                        <label class="text-muted small">Ονοματεπώνυμο</label>
+                        <label class="text-muted small"><?= __('customers.full_name') ?></label>
                         <div><?= htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']) ?></div>
                     </div>
                 <?php endif; ?>
                 
                 <div class="mb-3">
-                    <label class="text-muted small">Τηλέφωνο</label>
+                    <label class="text-muted small"><?= __('customers.phone') ?></label>
                     <div>
                         <a href="tel:<?= htmlspecialchars($customer['phone']) ?>">
                             <i class="fas fa-phone"></i> <?= htmlspecialchars($customer['phone']) ?>
@@ -64,7 +64,7 @@
                 
                 <?php if (!empty($customer['mobile'])): ?>
                 <div class="mb-3">
-                    <label class="text-muted small">Κινητό</label>
+                    <label class="text-muted small"><?= __('customers.mobile') ?></label>
                     <div>
                         <a href="tel:<?= htmlspecialchars($customer['mobile']) ?>">
                             <i class="fas fa-mobile-alt"></i> <?= htmlspecialchars($customer['mobile']) ?>
@@ -85,40 +85,40 @@
                 <?php endif; ?>
                 
                 <div class="mb-3">
-                    <label class="text-muted small">Διεύθυνση</label>
+                    <label class="text-muted small"><?= __('customers.address') ?></label>
                     <div><?= nl2br(htmlspecialchars($customer['address'])) ?></div>
                 </div>
                 
                 <?php if (!empty($customer['city'])): ?>
                 <div class="mb-3">
-                    <label class="text-muted small">Πόλη</label>
+                    <label class="text-muted small"><?= __('customers.city') ?></label>
                     <div><?= htmlspecialchars($customer['city']) ?></div>
                 </div>
                 <?php endif; ?>
                 
                 <?php if (!empty($customer['postal_code'])): ?>
                 <div class="mb-3">
-                    <label class="text-muted small">Τ.Κ.</label>
+                    <label class="text-muted small"><?= __('customers.postal_code') ?></label>
                     <div><?= htmlspecialchars($customer['postal_code']) ?></div>
                 </div>
                 <?php endif; ?>
                 
                 <?php if (!empty($customer['tax_id'])): ?>
                 <div class="mb-3">
-                    <label class="text-muted small">ΑΦΜ</label>
+                    <label class="text-muted small"><?= __('customers.tax_id') ?></label>
                     <div><?= htmlspecialchars($customer['tax_id']) ?></div>
                 </div>
                 <?php endif; ?>
                 
                 <?php if (!empty($customer['notes'])): ?>
                 <div class="mb-3">
-                    <label class="text-muted small">Σημειώσεις</label>
+                    <label class="text-muted small"><?= __('common.notes') ?></label>
                     <div><?= nl2br(htmlspecialchars($customer['notes'])) ?></div>
                 </div>
                 <?php endif; ?>
                 
                 <div class="mb-0">
-                    <label class="text-muted small">Δημιουργήθηκε</label>
+                    <label class="text-muted small"><?= __('common.created') ?></label>
                     <div><?= formatDate($customer['created_at'], true) ?></div>
                 </div>
             </div>
@@ -127,20 +127,20 @@
         <!-- Quick Actions -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-bolt"></i> Γρήγορες Ενέργειες</h5>
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> <?= __('customers.quick_actions') ?></h5>
             </div>
             <div class="list-group list-group-flush">
                 <a href="?route=/projects/create&customer_id=<?= $customer['id'] ?>" class="list-group-item list-group-item-action">
-                    <i class="fas fa-project-diagram text-primary"></i> Νέο Έργο
+                    <i class="fas fa-project-diagram text-primary"></i> <?= __('customers.new_project') ?>
                 </a>
                 <a href="?route=/appointments/create&customer_id=<?= $customer['id'] ?>" class="list-group-item list-group-item-action">
-                    <i class="fas fa-calendar-plus text-success"></i> Νέο Ραντεβού
+                    <i class="fas fa-calendar-plus text-success"></i> <?= __('customers.new_appointment') ?>
                 </a>
                 <a href="?route=/quotes/create&customer_id=<?= $customer['id'] ?>" class="list-group-item list-group-item-action">
-                    <i class="fas fa-file-invoice text-info"></i> Νέα Προσφορά
+                    <i class="fas fa-file-invoice text-info"></i> <?= __('customers.new_quote') ?>
                 </a>
                 <a href="?route=/invoices/create&customer_id=<?= $customer['id'] ?>" class="list-group-item list-group-item-action">
-                    <i class="fas fa-file-invoice-dollar text-warning"></i> Νέο Τιμολόγιο
+                    <i class="fas fa-file-invoice-dollar text-warning"></i> <?= __('customers.new_invoice') ?>
                 </a>
             </div>
         </div>
@@ -151,9 +151,9 @@
         <!-- Projects -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> Έργα</h5>
+                <h5 class="mb-0"><i class="fas fa-project-diagram"></i> <?= __('projects.projects') ?></h5>
                 <a href="?route=/projects/create&customer_id=<?= $customer['id'] ?>" class="btn btn-sm btn-primary">
-                    <i class="fas fa-plus"></i> Νέο
+                    <i class="fas fa-plus"></i> <?= __('common.new') ?>
                 </a>
             </div>
             <div class="card-body">
@@ -162,10 +162,10 @@
                         <table class="table table-sm table-hover">
                             <thead>
                                 <tr>
-                                    <th>Τίτλος</th>
-                                    <th>Κατηγορία</th>
-                                    <th>Κατάσταση</th>
-                                    <th>Ημ/νία</th>
+                                    <th><?= __('common.title') ?></th>
+                                    <th><?= __('projects.category') ?></th>
+                                    <th><?= __('common.status') ?></th>
+                                    <th><?= __('common.date') ?></th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -180,10 +180,10 @@
                                     <td>
                                         <?php
                                         $categories = [
-                                            'electrical' => 'Ηλεκτρολογικά',
-                                            'plumbing' => 'Υδραυλικά',
-                                            'maintenance' => 'Συντήρηση',
-                                            'emergency' => 'Επείγον'
+                                            'electrical' => __('projects.electrical'),
+                                            'plumbing' => __('projects.plumbing'),
+                                            'maintenance' => __('projects.maintenance'),
+                                            'emergency' => __('projects.emergency')
                                         ];
                                         echo $categories[$project['category']] ?? $project['category'];
                                         ?>
@@ -198,11 +198,11 @@
                                             'cancelled' => 'danger'
                                         ];
                                         $statusLabels = [
-                                            'new' => 'Νέο',
-                                            'in_progress' => 'Σε Εξέλιξη',
-                                            'completed' => 'Ολοκληρωμένο',
-                                            'invoiced' => 'Τιμολογημένο',
-                                            'cancelled' => 'Ακυρωμένο'
+                                            'new' => __('projects.new'),
+                                            'in_progress' => __('projects.in_progress'),
+                                            'completed' => __('projects.completed'),
+                                            'invoiced' => __('projects.invoiced'),
+                                            'cancelled' => __('projects.cancelled')
                                         ];
                                         ?>
                                         <span class="badge bg-<?= $statusClasses[$project['status']] ?? 'secondary' ?>">
@@ -221,7 +221,7 @@
                         </table>
                     </div>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Δεν υπάρχουν έργα για αυτόν τον πελάτη</p>
+                    <p class="text-muted mb-0"><?= __('customers.no_projects') ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -229,9 +229,9 @@
         <!-- Appointments -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Ραντεβού</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> <?= __('appointments.appointments') ?></h5>
                 <a href="?route=/appointments/create&customer_id=<?= $customer['id'] ?>" class="btn btn-sm btn-success">
-                    <i class="fas fa-plus"></i> Νέο
+                    <i class="fas fa-plus"></i> <?= __('common.new') ?>
                 </a>
             </div>
             <div class="card-body">
@@ -240,10 +240,10 @@
                         <table class="table table-sm table-hover">
                             <thead>
                                 <tr>
-                                    <th>Τίτλος</th>
-                                    <th>Ημερομηνία</th>
-                                    <th>Τεχνικός</th>
-                                    <th>Κατάσταση</th>
+                                    <th><?= __('common.title') ?></th>
+                                    <th><?= __('common.date') ?></th>
+                                    <th><?= __('appointments.technician') ?></th>
+                                    <th><?= __('common.status') ?></th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -268,12 +268,12 @@
                                             'no_show' => 'warning'
                                         ];
                                         $statusLabels = [
-                                            'scheduled' => 'Προγραμματισμένο',
-                                            'confirmed' => 'Επιβεβαιωμένο',
-                                            'in_progress' => 'Σε Εξέλιξη',
-                                            'completed' => 'Ολοκληρωμένο',
-                                            'cancelled' => 'Ακυρωμένο',
-                                            'no_show' => 'Δεν Εμφανίστηκε'
+                                            'scheduled' => __('appointments.scheduled'),
+                                            'confirmed' => __('appointments.confirmed'),
+                                            'in_progress' => __('appointments.in_progress'),
+                                            'completed' => __('appointments.completed'),
+                                            'cancelled' => __('appointments.cancelled'),
+                                            'no_show' => __('appointments.no_show')
                                         ];
                                         ?>
                                         <span class="badge bg-<?= $statusClasses[$appointment['status']] ?? 'secondary' ?>">
@@ -291,7 +291,7 @@
                         </table>
                     </div>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Δεν υπάρχουν ραντεβού για αυτόν τον πελάτη</p>
+                    <p class="text-muted mb-0"><?= __('customers.no_appointments') ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -299,9 +299,9 @@
         <!-- Quotes -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-file-invoice"></i> Προσφορές</h5>
+                <h5 class="mb-0"><i class="fas fa-file-invoice"></i> <?= __('quotes.quotes') ?></h5>
                 <a href="?route=/quotes/create&customer_id=<?= $customer['id'] ?>" class="btn btn-sm btn-info">
-                    <i class="fas fa-plus"></i> Νέα
+                    <i class="fas fa-plus"></i> <?= __('common.new') ?>
                 </a>
             </div>
             <div class="card-body">
@@ -310,11 +310,11 @@
                         <table class="table table-sm table-hover">
                             <thead>
                                 <tr>
-                                    <th>Αριθμός</th>
-                                    <th>Τίτλος</th>
-                                    <th>Ποσό</th>
-                                    <th>Κατάσταση</th>
-                                    <th>Ημ/νία</th>
+                                    <th><?= __('quotes.number') ?></th>
+                                    <th><?= __('common.title') ?></th>
+                                    <th><?= __('quotes.amount') ?></th>
+                                    <th><?= __('common.status') ?></th>
+                                    <th><?= __('common.date') ?></th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -338,11 +338,11 @@
                                             'expired' => 'warning'
                                         ];
                                         $statusLabels = [
-                                            'draft' => 'Πρόχειρο',
-                                            'sent' => 'Απεσταλμένη',
-                                            'accepted' => 'Αποδεκτή',
-                                            'rejected' => 'Απορριφθείσα',
-                                            'expired' => 'Ληγμένη'
+                                            'draft' => __('quotes.draft'),
+                                            'sent' => __('quotes.sent'),
+                                            'accepted' => __('quotes.accepted'),
+                                            'rejected' => __('quotes.rejected'),
+                                            'expired' => __('quotes.expired')
                                         ];
                                         ?>
                                         <span class="badge bg-<?= $statusClasses[$quote['status']] ?? 'secondary' ?>">
@@ -361,7 +361,7 @@
                         </table>
                     </div>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Δεν υπάρχουν προσφορές για αυτόν τον πελάτη</p>
+                    <p class="text-muted mb-0"><?= __('customers.no_quotes') ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -369,9 +369,9 @@
         <!-- Invoices -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> Τιμολόγια</h5>
+                <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> <?= __('invoices.invoices') ?></h5>
                 <a href="?route=/invoices/create&customer_id=<?= $customer['id'] ?>" class="btn btn-sm btn-warning">
-                    <i class="fas fa-plus"></i> Νέο
+                    <i class="fas fa-plus"></i> <?= __('common.new') ?>
                 </a>
             </div>
             <div class="card-body">
@@ -380,11 +380,11 @@
                         <table class="table table-sm table-hover">
                             <thead>
                                 <tr>
-                                    <th>Αριθμός</th>
-                                    <th>Τίτλος</th>
-                                    <th>Ποσό</th>
-                                    <th>Κατάσταση</th>
-                                    <th>Ημ/νία</th>
+                                    <th><?= __('invoices.number') ?></th>
+                                    <th><?= __('common.title') ?></th>
+                                    <th><?= __('invoices.amount') ?></th>
+                                    <th><?= __('common.status') ?></th>
+                                    <th><?= __('common.date') ?></th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -408,11 +408,11 @@
                                             'cancelled' => 'dark'
                                         ];
                                         $statusLabels = [
-                                            'draft' => 'Πρόχειρο',
-                                            'sent' => 'Απεσταλμένο',
-                                            'paid' => 'Πληρωμένο',
-                                            'overdue' => 'Ληξιπρόθεσμο',
-                                            'cancelled' => 'Ακυρωμένο'
+                                            'draft' => __('invoices.draft'),
+                                            'sent' => __('invoices.sent'),
+                                            'paid' => __('invoices.paid'),
+                                            'overdue' => __('invoices.overdue'),
+                                            'cancelled' => __('invoices.cancelled')
                                         ];
                                         ?>
                                         <span class="badge bg-<?= $statusClasses[$invoice['status']] ?? 'secondary' ?>">
@@ -431,7 +431,7 @@
                         </table>
                     </div>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Δεν υπάρχουν τιμολόγια για αυτόν τον πελάτη</p>
+                    <p class="text-muted mb-0"><?= __('customers.no_invoices') ?></p>
                 <?php endif; ?>
             </div>
         </div>

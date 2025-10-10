@@ -1,11 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-calendar-alt"></i> Ημερολόγιο Ραντεβού</h2>
+    <h2><i class="fas fa-calendar-alt"></i> <?= __('appointments.calendar') ?></h2>
     <div>
         <a href="?route=/appointments" class="btn btn-secondary me-2">
-            <i class="fas fa-list"></i> Λίστα Ραντεβού
+            <i class="fas fa-list"></i> <?= __('appointments.appointment_list') ?>
         </a>
         <a href="?route=/appointments/create" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Νέο Ραντεβού
+            <i class="fas fa-plus"></i> <?= __('appointments.new_appointment') ?>
         </a>
     </div>
 </div>
@@ -25,22 +25,22 @@
                     <!-- Calendar will be rendered here -->
                     <div class="calendar-header d-flex justify-content-between align-items-center mb-3">
                         <button class="btn btn-outline-secondary" id="prevMonth">
-                            <i class="fas fa-chevron-left"></i> Προηγούμενος
+                            <i class="fas fa-chevron-left"></i> <?= __('appointments.previous') ?>
                         </button>
                         <h4 id="currentMonth" class="mb-0"></h4>
                         <button class="btn btn-outline-secondary" id="nextMonth">
-                            Επόμενος <i class="fas fa-chevron-right"></i>
+                            <?= __('appointments.next') ?> <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                     
                     <div class="row mb-2 text-center fw-bold">
-                        <div class="col">ΔΕΥ</div>
-                        <div class="col">ΤΡΙ</div>
-                        <div class="col">ΤΕΤ</div>
-                        <div class="col">ΠΕΜ</div>
-                        <div class="col">ΠΑΡ</div>
-                        <div class="col">ΣΑΒ</div>
-                        <div class="col">ΚΥΡ</div>
+                        <div class="col"><?= __('appointments.mon') ?></div>
+                        <div class="col"><?= __('appointments.tue') ?></div>
+                        <div class="col"><?= __('appointments.wed') ?></div>
+                        <div class="col"><?= __('appointments.thu') ?></div>
+                        <div class="col"><?= __('appointments.fri') ?></div>
+                        <div class="col"><?= __('appointments.sat') ?></div>
+                        <div class="col"><?= __('appointments.sun') ?></div>
                     </div>
                     
                     <div id="calendarDays"></div>
@@ -51,31 +51,31 @@
                 <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-filter"></i> Φίλτρα
+                            <i class="fas fa-filter"></i> <?= __('appointments.filters') ?>
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label">Τεχνικός</label>
+                            <label class="form-label"><?= __('appointments.technician') ?></label>
                             <select class="form-select" id="filterTechnician">
-                                <option value="">Όλοι</option>
+                                <option value=""><?= __('appointments.all_technicians') ?></option>
                                 <!-- Will be populated via AJAX or PHP -->
                             </select>
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Κατάσταση</label>
+                            <label class="form-label"><?= __('appointments.status') ?></label>
                             <select class="form-select" id="filterStatus">
-                                <option value="">Όλα</option>
-                                <option value="scheduled">Προγραμματισμένο</option>
-                                <option value="confirmed">Επιβεβαιωμένο</option>
-                                <option value="in_progress">Σε εξέλιξη</option>
-                                <option value="completed">Ολοκληρωμένο</option>
+                                <option value=""><?= __('appointments.all_statuses') ?></option>
+                                <option value="scheduled"><?= __('appointments.scheduled') ?></option>
+                                <option value="confirmed"><?= __('appointments.confirmed') ?></option>
+                                <option value="in_progress"><?= __('appointments.in_progress') ?></option>
+                                <option value="completed"><?= __('appointments.completed') ?></option>
                             </select>
                         </div>
                         
                         <button class="btn btn-primary w-100" onclick="refreshCalendar()">
-                            <i class="fas fa-sync"></i> Ανανέωση
+                            <i class="fas fa-sync"></i> <?= __('appointments.refresh') ?>
                         </button>
                     </div>
                 </div>
@@ -83,34 +83,34 @@
                 <div class="card mt-3">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="fas fa-info-circle"></i> Επιλεγμένη Ημέρα
+                            <i class="fas fa-info-circle"></i> <?= __('appointments.selected_day') ?>
                         </h5>
                     </div>
                     <div class="card-body" id="selectedDayInfo">
-                        <p class="text-muted">Επιλέξτε μια ημέρα για να δείτε τα ραντεβού</p>
+                        <p class="text-muted"><?= __('appointments.select_day_info') ?></p>
                     </div>
                 </div>
                 
                 <div class="card mt-3">
                     <div class="card-header">
-                        <h5 class="mb-0">Υπόμνημα</h5>
+                        <h5 class="mb-0"><?= __('appointments.legend') ?></h5>
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge bg-info me-2">●</span>
-                            <small>Προγραμματισμένο</small>
+                            <small><?= __('appointments.scheduled') ?></small>
                         </div>
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge bg-success me-2">●</span>
-                            <small>Επιβεβαιωμένο</small>
+                            <small><?= __('appointments.confirmed') ?></small>
                         </div>
                         <div class="d-flex align-items-center mb-2">
                             <span class="badge bg-primary me-2">●</span>
-                            <small>Σε εξέλιξη</small>
+                            <small><?= __('appointments.in_progress') ?></small>
                         </div>
                         <div class="d-flex align-items-center">
                             <span class="badge bg-secondary me-2">●</span>
-                            <small>Ολοκληρωμένο</small>
+                            <small><?= __('appointments.completed') ?></small>
                         </div>
                     </div>
                 </div>
@@ -168,10 +168,20 @@
 let currentDate = new Date();
 let appointments = [];
 
-// Month names in Greek
+// Month names - dynamically loaded from translations
 const monthNames = [
-    'Ιανουάριος', 'Φεβρουάριος', 'Μάρτιος', 'Απρίλιος', 'Μάιος', 'Ιούνιος',
-    'Ιούλιος', 'Αύγουστος', 'Σεπτέμβριος', 'Οκτώβριος', 'Νοέμβριος', 'Δεκέμβριος'
+    '<?= __('appointments.january') ?>',
+    '<?= __('appointments.february') ?>',
+    '<?= __('appointments.march') ?>',
+    '<?= __('appointments.april') ?>',
+    '<?= __('appointments.may') ?>',
+    '<?= __('appointments.june') ?>',
+    '<?= __('appointments.july') ?>',
+    '<?= __('appointments.august') ?>',
+    '<?= __('appointments.september') ?>',
+    '<?= __('appointments.october') ?>',
+    '<?= __('appointments.november') ?>',
+    '<?= __('appointments.december') ?>'
 ];
 
 // Status colors

@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-file-invoice-dollar"></i> Νέο Τιμολόγιο</h2>
+    <h2><i class="fas fa-file-invoice-dollar"></i> <?= __('invoices.new_invoice') ?></h2>
     <a href="?route=/invoices" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+        <i class="fas fa-arrow-left"></i> <?= __('invoices.back_to_list') ?>
     </a>
 </div>
 
@@ -23,31 +23,31 @@
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Βασικές Πληροφορίες</h5>
+                    <h5 class="mb-0"><?= __('invoices.basic_info') ?></h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Αριθμός Τιμολογίου</label>
+                                <label class="form-label"><?= __('invoices.invoice_number') ?></label>
                                 <input type="text" class="form-control" value="<?= $invoiceNumber ?>" disabled>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="status" class="form-label">Κατάσταση</label>
+                                <label for="status" class="form-label"><?= __('invoices.status') ?></label>
                                 <select class="form-select" id="status" name="status">
-                                    <option value="draft" selected>Πρόχειρο</option>
-                                    <option value="sent">Απεσταλμένο</option>
+                                    <option value="draft" selected><?= __('invoices.draft') ?></option>
+                                    <option value="sent"><?= __('invoices.sent') ?></option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="customer_id" class="form-label">Πελάτης <span class="text-danger">*</span></label>
+                        <label for="customer_id" class="form-label"><?= __('invoices.customer') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="customer_id" name="customer_id" required>
-                            <option value="">Επιλέξτε πελάτη...</option>
+                            <option value=""><?= __('invoices.select_customer') ?></option>
                             <?php foreach ($customers as $customer): ?>
                                 <?php
                                     $customerName = $customer['customer_type'] === 'company' && !empty($customer['company_name']) 
@@ -62,9 +62,9 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="project_id" class="form-label">Έργο (προαιρετικό)</label>
+                        <label for="project_id" class="form-label"><?= __('invoices.project_optional') ?></label>
                         <select class="form-select" id="project_id" name="project_id">
-                            <option value="">Χωρίς έργο</option>
+                            <option value=""><?= __('invoices.no_project') ?></option>
                             <?php foreach ($projects as $project): ?>
                                 <option value="<?= $project['id'] ?>">
                                     <?= htmlspecialchars($project['title']) ?>
@@ -74,26 +74,26 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="title" class="form-label">Τίτλος</label>
+                        <label for="title" class="form-label"><?= __('invoices.invoice_title') ?></label>
                         <input type="text" class="form-control" id="title" name="title">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="description" class="form-label">Περιγραφή</label>
+                        <label for="description" class="form-label"><?= __('projects.description') ?></label>
                         <textarea class="form-control" id="description" name="description" rows="2"></textarea>
                     </div>
                     
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="issue_date" class="form-label">Ημερομηνία Τιμολογίου <span class="text-danger">*</span></label>
+                                <label for="issue_date" class="form-label"><?= __('invoices.issue_date') ?> <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="issue_date" name="issue_date" 
                                        value="<?= date('Y-m-d') ?>" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="due_date" class="form-label">Ημερομηνία Λήξης <span class="text-danger">*</span></label>
+                                <label for="due_date" class="form-label"><?= __('invoices.due_date') ?> <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="due_date" name="due_date" 
                                        value="<?= date('Y-m-d', strtotime('+30 days')) ?>" required>
                             </div>
@@ -105,9 +105,9 @@
             <!-- Invoice Items -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Στοιχεία Τιμολογίου</h5>
+                    <h5 class="mb-0"><?= __('invoices.invoice_items') ?></h5>
                     <button type="button" class="btn btn-sm btn-primary" onclick="addItem()">
-                        <i class="fas fa-plus"></i> Προσθήκη Γραμμής
+                        <i class="fas fa-plus"></i> <?= __('invoices.add_line') ?>
                     </button>
                 </div>
                 <div class="card-body">
@@ -115,10 +115,10 @@
                         <table class="table" id="itemsTable">
                             <thead>
                                 <tr>
-                                    <th width="45%">Περιγραφή</th>
-                                    <th width="15%">Ποσότητα</th>
-                                    <th width="18%">Τιμή</th>
-                                    <th width="18%">Σύνολο</th>
+                                    <th width="45%"><?= __('invoices.description') ?></th>
+                                    <th width="15%"><?= __('invoices.quantity') ?></th>
+                                    <th width="18%"><?= __('invoices.price') ?></th>
+                                    <th width="18%"><?= __('invoices.total') ?></th>
                                     <th width="4%"></th>
                                 </tr>
                             </thead>
@@ -156,11 +156,11 @@
         <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Σύνοψη</h5>
+                    <h5 class="mb-0"><?= __('invoices.summary') ?></h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="vat_rate" class="form-label">ΦΠΑ %</label>
+                        <label for="vat_rate" class="form-label"><?= __('invoices.vat') ?> %</label>
                         <input type="number" class="form-control" id="vat_rate" name="vat_rate" 
                                value="24" min="0" max="100" step="0.01" onchange="calculateTotals()">
                     </div>
@@ -168,30 +168,30 @@
                     <hr>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Υποσύνολο:</span>
+                        <span><?= __('invoices.subtotal') ?>:</span>
                         <strong id="display_subtotal">0,00 €</strong>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span>ΦΠΑ <span id="display_vat_rate">24</span>%:</span>
+                        <span><?= __('invoices.vat') ?> <span id="display_vat_rate">24</span>%:</span>
                         <strong id="display_vat_amount">0,00 €</strong>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between mb-3">
-                        <span class="h5">Σύνολο:</span>
+                        <span class="h5"><?= __('invoices.total') ?>:</span>
                         <strong class="h5 text-primary" id="display_total">0,00 €</strong>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Σημειώσεις</label>
+                        <label for="notes" class="form-label"><?= __('invoices.notes') ?></label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                     </div>
                     
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Αποθήκευση
+                            <i class="fas fa-save"></i> <?= __('invoices.save') ?>
                         </button>
                         <a href="?route=/invoices" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Ακύρωση
+                            <i class="fas fa-times"></i> <?= __('common.cancel') ?>
                         </a>
                     </div>
                 </div>
@@ -239,7 +239,7 @@ function removeItem(button) {
         button.closest('tr').remove();
         calculateTotals();
     } else {
-        alert('Πρέπει να υπάρχει τουλάχιστον μία γραμμή');
+        alert('<?= __('invoices.min_one_line') ?>');
     }
 }
 

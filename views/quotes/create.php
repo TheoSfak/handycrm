@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-file-invoice"></i> Νέα Προσφορά</h2>
+    <h2><i class="fas fa-file-invoice"></i> <?= __('quotes.new_quote') ?></h2>
     <a href="?route=/quotes" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+        <i class="fas fa-arrow-left"></i> <?= __('quotes.back_to_list') ?>
     </a>
 </div>
 
@@ -24,31 +24,31 @@
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Βασικές Πληροφορίες</h5>
+                    <h5 class="mb-0"><?= __('quotes.basic_info') ?></h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Αριθμός Προσφοράς</label>
+                                <label class="form-label"><?= __('quotes.quote_number') ?></label>
                                 <input type="text" class="form-control" value="<?= $quote_number ?>" disabled>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="status" class="form-label">Κατάσταση</label>
+                                <label for="status" class="form-label"><?= __('quotes.status') ?></label>
                                 <select class="form-select" id="status" name="status">
-                                    <option value="draft" selected>Πρόχειρο</option>
-                                    <option value="sent">Απεσταλμένο</option>
+                                    <option value="draft" selected><?= __('quotes.draft') ?></option>
+                                    <option value="sent"><?= __('quotes.sent') ?></option>
                                 </select>
                             </div>
                         </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="customer_id" class="form-label">Πελάτης <span class="text-danger">*</span></label>
+                        <label for="customer_id" class="form-label"><?= __('quotes.customer') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="customer_id" name="customer_id" required>
-                            <option value="">Επιλέξτε πελάτη...</option>
+                            <option value=""><?= __('quotes.select_customer') ?></option>
                             <?php foreach ($customers as $customer): ?>
                                 <?php
                                     $customerName = $customer['customer_type'] === 'company' && !empty($customer['company_name']) 
@@ -63,20 +63,20 @@
                     </div>
                     
                     <div class="mb-3">
-                        <label for="title" class="form-label">Τίτλος <span class="text-danger">*</span></label>
+                        <label for="title" class="form-label"><?= __('quotes.quote_title') ?> <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title" required>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="description" class="form-label">Περιγραφή</label>
+                        <label for="description" class="form-label"><?= __('quotes.description') ?></label>
                         <textarea class="form-control" id="description" name="description" rows="3"></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="valid_until" class="form-label">Ισχύει Έως</label>
+                        <label for="valid_until" class="form-label"><?= __('quotes.valid_until') ?></label>
                         <input type="date" class="form-control" id="valid_until" name="valid_until" 
                                value="<?= date('Y-m-d', strtotime('+30 days')) ?>">
-                        <small class="text-muted">Η ημερομηνία έκδοσης θα καταγραφεί αυτόματα</small>
+                        <small class="text-muted"><?= __('quotes.issue_date_note') ?></small>
                     </div>
                 </div>
             </div>
@@ -84,9 +84,9 @@
             <!-- Quote Items -->
             <div class="card mb-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Στοιχεία Προσφοράς</h5>
+                    <h5 class="mb-0"><?= __('quotes.quote_items') ?></h5>
                     <button type="button" class="btn btn-sm btn-primary" onclick="addItem()">
-                        <i class="fas fa-plus"></i> Προσθήκη Γραμμής
+                        <i class="fas fa-plus"></i> <?= __('quotes.add_line') ?>
                     </button>
                 </div>
                 <div class="card-body">
@@ -94,10 +94,10 @@
                         <table class="table" id="itemsTable">
                             <thead>
                                 <tr>
-                                    <th width="40%">Περιγραφή</th>
-                                    <th width="15%">Ποσότητα</th>
-                                    <th width="15%">Τιμή Μονάδας</th>
-                                    <th width="20%">Σύνολο</th>
+                                    <th width="40%"><?= __('quotes.item_description') ?></th>
+                                    <th width="15%"><?= __('quotes.quantity') ?></th>
+                                    <th width="15%"><?= __('quotes.unit_price') ?></th>
+                                    <th width="20%"><?= __('quotes.total') ?></th>
                                     <th width="10%"></th>
                                 </tr>
                             </thead>
@@ -112,16 +112,16 @@
             <!-- Notes and Terms -->
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0">Σημειώσεις & Όροι</h5>
+                    <h5 class="mb-0"><?= __('quotes.notes_terms') ?></h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Σημειώσεις</label>
+                        <label for="notes" class="form-label"><?= __('quotes.notes') ?></label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="terms" class="form-label">Όροι και Προϋποθέσεις</label>
+                        <label for="terms" class="form-label"><?= __('quotes.terms_conditions') ?></label>
                         <textarea class="form-control" id="terms" name="terms" rows="3"></textarea>
                     </div>
                 </div>
@@ -132,38 +132,38 @@
         <div class="col-md-4">
             <div class="card sticky-top" style="top: 20px;">
                 <div class="card-header">
-                    <h5 class="mb-0">Σύνοψη</h5>
+                    <h5 class="mb-0"><?= __('quotes.summary') ?></h5>
                 </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
-                        <span>Υποσύνολο:</span>
+                        <span><?= __('quotes.subtotal') ?>:</span>
                         <strong id="subtotal_display">0.00€</strong>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="tax_rate" class="form-label">ΦΠΑ (%)</label>
+                        <label for="tax_rate" class="form-label"><?= __('quotes.vat') ?> (%)</label>
                         <input type="number" step="0.01" class="form-control" id="tax_rate" name="tax_rate" 
                                value="24" onchange="calculateTotals()">
                     </div>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span>ΦΠΑ:</span>
+                        <span><?= __('quotes.vat') ?>:</span>
                         <strong id="tax_display">0.00€</strong>
                     </div>
                     
                     <hr>
                     
                     <div class="d-flex justify-content-between mb-3">
-                        <span class="h5">Σύνολο:</span>
+                        <span class="h5"><?= __('quotes.total') ?>:</span>
                         <strong class="h5" id="total_display">0.00€</strong>
                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100 mb-2">
-                        <i class="fas fa-save"></i> Αποθήκευση
+                        <i class="fas fa-save"></i> <?= __('quotes.save') ?>
                     </button>
                     
                     <a href="?route=/quotes" class="btn btn-secondary w-100">
-                        <i class="fas fa-times"></i> Ακύρωση
+                        <i class="fas fa-times"></i> <?= __('quotes.cancel') ?>
                     </a>
                 </div>
             </div>

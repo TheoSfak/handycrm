@@ -4,7 +4,7 @@
             <div class="card-header">
                 <h4 class="mb-0">
                     <i class="fas fa-user-plus"></i> 
-                    <?= isset($customer) ? 'Επεξεργασία Πελάτη' : 'Νέος Πελάτης' ?>
+                    <?= isset($customer) ? __('customers.edit_customer') : __('customers.new_customer') ?>
                 </h4>
             </div>
             
@@ -15,18 +15,18 @@
                     <!-- Customer Type Selection -->
                     <div class="row mb-4">
                         <div class="col-12">
-                            <label class="form-label">Τύπος Πελάτη <span class="text-danger">*</span></label>
+                            <label class="form-label"><?= __('customers.customer_type') ?> <span class="text-danger">*</span></label>
                             <div class="btn-group w-100" role="group" aria-label="Customer Type">
                                 <input type="radio" class="btn-check" name="customer_type" id="individual" value="individual" 
                                        <?= (!isset($customer) || $customer['customer_type'] === 'individual') ? 'checked' : '' ?>>
                                 <label class="btn btn-outline-primary" for="individual">
-                                    <i class="fas fa-user"></i> Ιδιώτης
+                                    <i class="fas fa-user"></i> <?= __('customers.individual') ?>
                                 </label>
                                 
                                 <input type="radio" class="btn-check" name="customer_type" id="company" value="company"
                                        <?= (isset($customer) && $customer['customer_type'] === 'company') ? 'checked' : '' ?>>
                                 <label class="btn btn-outline-primary" for="company">
-                                    <i class="fas fa-building"></i> Εταιρεία
+                                    <i class="fas fa-building"></i> <?= __('customers.company') ?>
                                 </label>
                             </div>
                         </div>
@@ -35,7 +35,7 @@
                     <div class="row">
                         <!-- Individual Fields -->
                         <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label">Όνομα <span class="text-danger">*</span></label>
+                            <label for="first_name" class="form-label"><?= __('customers.first_name') ?> <span class="text-danger">*</span></label>
                             <input type="text" 
                                    class="form-control <?= isset($_SESSION['form_errors']['first_name']) ? 'is-invalid' : '' ?>" 
                                    id="first_name" 
@@ -48,7 +48,7 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="last_name" class="form-label">Επώνυμο <span class="text-danger">*</span></label>
+                            <label for="last_name" class="form-label"><?= __('customers.last_name') ?> <span class="text-danger">*</span></label>
                             <input type="text" 
                                    class="form-control <?= isset($_SESSION['form_errors']['last_name']) ? 'is-invalid' : '' ?>" 
                                    id="last_name" 
@@ -64,7 +64,7 @@
                     <!-- Company Fields -->
                     <div class="row" id="company-fields" style="display: none;">
                         <div class="col-md-8 mb-3">
-                            <label for="company_name" class="form-label">Επωνυμία Εταιρείας</label>
+                            <label for="company_name" class="form-label"><?= __('customers.company_name') ?></label>
                             <input type="text" 
                                    class="form-control" 
                                    id="company_name" 
@@ -73,7 +73,7 @@
                         </div>
                         
                         <div class="col-md-4 mb-3">
-                            <label for="tax_id" class="form-label">ΑΦΜ</label>
+                            <label for="tax_id" class="form-label"><?= __('customers.tax_id') ?></label>
                             <input type="text" 
                                    class="form-control" 
                                    id="tax_id" 
@@ -85,7 +85,7 @@
                     <!-- Contact Information -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="phone" class="form-label">Τηλέφωνο <span class="text-danger">*</span></label>
+                            <label for="phone" class="form-label"><?= __('customers.phone') ?> <span class="text-danger">*</span></label>
                             <input type="tel" 
                                    class="form-control <?= isset($_SESSION['form_errors']['phone']) ? 'is-invalid' : '' ?>" 
                                    id="phone" 
@@ -98,7 +98,7 @@
                         </div>
                         
                         <div class="col-md-6 mb-3">
-                            <label for="mobile" class="form-label">Κινητό</label>
+                            <label for="mobile" class="form-label"><?= __('customers.mobile') ?></label>
                             <input type="tel" 
                                    class="form-control" 
                                    id="mobile" 
@@ -122,11 +122,11 @@
                     </div>
                     
                     <!-- Address Information -->
-                    <h6 class="mt-4 mb-3"><i class="fas fa-map-marker-alt"></i> Στοιχεία Διεύθυνσης</h6>
+                    <h6 class="mt-4 mb-3"><i class="fas fa-map-marker-alt"></i> <?= __('customers.address_details') ?></h6>
                     
                     <div class="row">
                         <div class="col-12 mb-3">
-                            <label for="address" class="form-label">Διεύθυνση <span class="text-danger">*</span></label>
+                            <label for="address" class="form-label"><?= __('customers.address') ?> <span class="text-danger">*</span></label>
                             <textarea class="form-control <?= isset($_SESSION['form_errors']['address']) ? 'is-invalid' : '' ?>" 
                                       id="address" 
                                       name="address" 
@@ -140,7 +140,7 @@
                     
                     <div class="row">
                         <div class="col-md-8 mb-3">
-                            <label for="city" class="form-label">Πόλη</label>
+                            <label for="city" class="form-label"><?= __('customers.city') ?></label>
                             <input type="text" 
                                    class="form-control" 
                                    id="city" 
@@ -149,7 +149,7 @@
                         </div>
                         
                         <div class="col-md-4 mb-3">
-                            <label for="postal_code" class="form-label">Τ.Κ.</label>
+                            <label for="postal_code" class="form-label"><?= __('customers.postal_code') ?></label>
                             <input type="text" 
                                    class="form-control" 
                                    id="postal_code" 
@@ -161,12 +161,12 @@
                     <!-- Notes -->
                     <div class="row">
                         <div class="col-12 mb-3">
-                            <label for="notes" class="form-label">Σημειώσεις</label>
+                            <label for="notes" class="form-label"><?= __('common.notes') ?></label>
                             <textarea class="form-control" 
                                       id="notes" 
                                       name="notes" 
                                       rows="3" 
-                                      placeholder="Προαιρετικές σημειώσεις για τον πελάτη..."><?= htmlspecialchars($customer['notes'] ?? $_SESSION['form_data']['notes'] ?? '') ?></textarea>
+                                      placeholder="<?= __('customers.notes_placeholder') ?>"><?= htmlspecialchars($customer['notes'] ?? $_SESSION['form_data']['notes'] ?? '') ?></textarea>
                         </div>
                     </div>
                     
@@ -175,13 +175,13 @@
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
                                 <a href="/customers" class="btn btn-outline-secondary">
-                                    <i class="fas fa-arrow-left"></i> Επιστροφή
+                                    <i class="fas fa-arrow-left"></i> <?= __('customers.return') ?>
                                 </a>
                                 
                                 <div>
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save"></i> 
-                                        <?= isset($customer) ? 'Ενημέρωση' : 'Δημιουργία' ?>
+                                        <?= isset($customer) ? __('common.update') : __('common.create') ?>
                                     </button>
                                 </div>
                             </div>

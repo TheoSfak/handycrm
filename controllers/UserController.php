@@ -19,7 +19,7 @@ class UserController extends BaseController {
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
-            'title' => 'Χρήστες - ' . APP_NAME,
+            'title' => __('users.title') . ' - ' . APP_NAME,
             'user' => $user,
             'users' => $users
         ];
@@ -34,7 +34,7 @@ class UserController extends BaseController {
         $user = $this->getCurrentUser();
         
         $data = [
-            'title' => 'Νέος Χρήστης - ' . APP_NAME,
+            'title' => __('users.new_user') . ' - ' . APP_NAME,
             'user' => $user
         ];
         
@@ -125,7 +125,7 @@ class UserController extends BaseController {
         }
         
         $data = [
-            'title' => 'Επεξεργασία Χρήστη - ' . APP_NAME,
+            'title' => __('users.edit') . ' ' . __('users.title') . ' - ' . APP_NAME,
             'user' => $user,
             'editUser' => $editUser
         ];

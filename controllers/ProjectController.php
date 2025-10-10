@@ -56,7 +56,7 @@ class ProjectController extends BaseController {
         ];
         
         $data = [
-            'title' => 'Έργα - ' . APP_NAME,
+            'title' => __('projects.title') . ' - ' . APP_NAME,
             'user' => $user,
             'projects' => $result['data'],
             'pagination' => $result['pagination'],

@@ -17,7 +17,7 @@ class ReportsController extends BaseController {
         $endDate = $_GET['end_date'] ?? date('Y-m-t');
         
         $data = [
-            'title' => 'Αναφορές & Στατιστικά - ' . APP_NAME,
+            'title' => __('reports.title') . ' - ' . APP_NAME,
             'user' => $user,
             'start_date' => $startDate,
             'end_date' => $endDate,

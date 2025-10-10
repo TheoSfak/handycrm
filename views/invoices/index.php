@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-file-invoice-dollar"></i> Τιμολόγια</h2>
+    <h2><i class="fas fa-file-invoice-dollar"></i> <?= __('menu.invoices') ?></h2>
     <a href="?route=/invoices/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Νέο Τιμολόγιο
+        <i class="fas fa-plus"></i> <?= __('invoices.new_invoice') ?>
     </a>
 </div>
 
@@ -26,9 +26,9 @@
             <input type="hidden" name="route" value="/invoices">
             
             <div class="col-md-2">
-                <label class="form-label">Κατάσταση</label>
+                <label class="form-label"><?= __('invoices.status') ?></label>
                 <select name="status" class="form-select">
-                    <option value="">Όλα</option>
+                    <option value=""><?= __('invoices.all') ?></option>
                     <?php foreach ($statuses as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['status'] === $key) ? 'selected' : '' ?>>
                         <?= $label ?>
@@ -38,9 +38,9 @@
             </div>
             
             <div class="col-md-2">
-                <label class="form-label">Πληρωμή</label>
+                <label class="form-label"><?= __('invoices.payment') ?></label>
                 <select name="payment_status" class="form-select">
-                    <option value="">Όλα</option>
+                    <option value=""><?= __('invoices.all') ?></option>
                     <?php foreach ($paymentStatuses as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['payment_status'] === $key) ? 'selected' : '' ?>>
                         <?= $label ?>
@@ -50,9 +50,9 @@
             </div>
             
             <div class="col-md-2">
-                <label class="form-label">Πελάτης</label>
+                <label class="form-label"><?= __('invoices.customer') ?></label>
                 <select name="customer" class="form-select">
-                    <option value="">Όλοι</option>
+                    <option value=""><?= __('invoices.all') ?></option>
                     <?php foreach ($customers as $customer): ?>
                     <?php
                         $customerName = $customer['customer_type'] === 'company' && !empty($customer['company_name']) 
@@ -67,22 +67,22 @@
             </div>
             
             <div class="col-md-2">
-                <label class="form-label">Από</label>
+                <label class="form-label"><?= __('invoices.from') ?></label>
                 <input type="date" name="date_from" class="form-control" 
                        value="<?= htmlspecialchars($filters['date_from']) ?>">
             </div>
             
             <div class="col-md-2">
-                <label class="form-label">Έως</label>
+                <label class="form-label"><?= __('invoices.to') ?></label>
                 <input type="date" name="date_to" class="form-control" 
                        value="<?= htmlspecialchars($filters['date_to']) ?>">
             </div>
             
             <div class="col-md-2">
-                <label class="form-label">Αναζήτηση</label>
+                <label class="form-label"><?= __('invoices.search') ?></label>
                 <div class="input-group">
                     <input type="text" name="search" class="form-control" 
-                           placeholder="Αριθμός..." 
+                           placeholder="<?= __('invoices.search_placeholder') ?>" 
                            value="<?= htmlspecialchars($filters['search']) ?>">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i>
@@ -99,9 +99,9 @@
         <?php if (empty($invoices)): ?>
         <div class="text-center py-5">
             <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
-            <p class="text-muted">Δεν βρέθηκαν τιμολόγια</p>
+            <p class="text-muted"><?= __('invoices.no_invoices_found') ?></p>
             <a href="?route=/invoices/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Δημιουργία Νέου Τιμολογίου
+                <i class="fas fa-plus"></i> <?= __('invoices.create_new_invoice') ?>
             </a>
         </div>
         <?php else: ?>
@@ -109,15 +109,15 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Αριθμός</th>
-                        <th>Ημ/νία</th>
-                        <th>Πελάτης</th>
-                        <th>Έργο</th>
-                        <th>Ποσό</th>
-                        <th>Λήξη</th>
-                        <th>Κατάσταση</th>
-                        <th>Πληρωμή</th>
-                        <th>Ενέργειες</th>
+                        <th><?= __('invoices.number') ?></th>
+                        <th><?= __('invoices.date') ?></th>
+                        <th><?= __('invoices.customer') ?></th>
+                        <th><?= __('invoices.project') ?></th>
+                        <th><?= __('invoices.amount') ?></th>
+                        <th><?= __('invoices.due_date') ?></th>
+                        <th><?= __('invoices.status') ?></th>
+                        <th><?= __('invoices.payment') ?></th>
+                        <th><?= __('invoices.actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -172,7 +172,7 @@
                         <td>
                             <?= formatDate($invoice['due_date']) ?>
                             <?php if ($isOverdue): ?>
-                            <br><span class="badge bg-danger">Εκπρόθεσμο</span>
+                            <br><span class="badge bg-danger"><?= __('invoices.overdue') ?></span>
                             <?php endif; ?>
                         </td>
                         <td>
@@ -188,16 +188,16 @@
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="<?= BASE_URL ?>/invoices/<?= $invoice['slug'] ?>" 
-                                   class="btn btn-sm btn-info" title="Προβολή">
+                                   class="btn btn-sm btn-info" title="<?= __('invoices.view') ?>">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <?php if ($invoice['payment_status'] !== 'paid'): ?>
                                 <a href="<?= BASE_URL ?>/invoices/edit/<?= $invoice['id'] ?>" 
-                                   class="btn btn-sm btn-warning" title="Επεξεργασία">
+                                   class="btn btn-sm btn-warning" title="<?= __('invoices.edit') ?>">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-danger" 
-                                        onclick="confirmDelete(<?= $invoice['id'] ?>)" title="Διαγραφή">
+                                        onclick="confirmDelete(<?= $invoice['id'] ?>)" title="<?= __('invoices.delete') ?>">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <?php endif; ?>
@@ -251,7 +251,7 @@
 
 <script>
 function confirmDelete(invoiceId) {
-    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το τιμολόγιο;')) {
+    if (confirm('<?= __('invoices.confirm_delete') ?>')) {
         document.getElementById('deleteInvoiceId').value = invoiceId;
         document.getElementById('deleteForm').submit();
     }

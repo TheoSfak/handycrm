@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-users"></i> Πελάτες</h2>
+    <h2><i class="fas fa-users"></i> <?= __('customers.title') ?></h2>
     <a href="?route=/customers/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Νέος Πελάτης
+        <i class="fas fa-plus"></i> <?= __('customers.new_customer') ?>
     </a>
 </div>
 
@@ -10,27 +10,27 @@
     <div class="card-body">
         <form method="GET" class="row g-3">
             <div class="col-md-6">
-                <label for="search" class="form-label">Αναζήτηση</label>
+                <label for="search" class="form-label"><?= __('customers.search') ?></label>
                 <input type="text" 
                        class="form-control" 
                        id="search" 
                        name="search" 
-                       placeholder="Όνομα, τηλέφωνο, email..." 
+                       placeholder="<?= __('customers.search_placeholder') ?>" 
                        value="<?= htmlspecialchars($search) ?>">
             </div>
             
             <div class="col-md-4">
-                <label for="type" class="form-label">Τύπος Πελάτη</label>
+                <label for="type" class="form-label"><?= __('customers.customer_type') ?></label>
                 <select class="form-select" id="type" name="type">
-                    <option value="">Όλοι</option>
-                    <option value="individual" <?= $type === 'individual' ? 'selected' : '' ?>>Ιδιώτης</option>
-                    <option value="company" <?= $type === 'company' ? 'selected' : '' ?>>Εταιρεία</option>
+                    <option value=""><?= __('customers.all') ?></option>
+                    <option value="individual" <?= $type === 'individual' ? 'selected' : '' ?>><?= __('customers.individual') ?></option>
+                    <option value="company" <?= $type === 'company' ? 'selected' : '' ?>><?= __('customers.company') ?></option>
                 </select>
             </div>
             
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-search"></i> Αναζήτηση
+                    <i class="fas fa-search"></i> <?= __('customers.search') ?>
                 </button>
                 <a href="?route=/customers" class="btn btn-outline-secondary">
                     <i class="fas fa-times"></i>
@@ -44,9 +44,9 @@
 <div class="row mb-3">
     <div class="col-md-6">
         <p class="text-muted mb-0">
-            Εμφανίζονται <?= count($customers['data']) ?> από <?= $customers['total_records'] ?> πελάτες
+            <?= str_replace(['{count}', '{total}'], [count($customers['data']), $customers['total_records']], __('customers.showing_results')) ?>
             <?php if (!empty($search)): ?>
-                (αναζήτηση για: "<?= htmlspecialchars($search) ?>")
+                (<?= __('customers.search_for') ?>: "<?= htmlspecialchars($search) ?>")
             <?php endif; ?>
         </p>
     </div>
@@ -54,12 +54,12 @@
         <div class="btn-group btn-group-sm" role="group">
             <input type="radio" class="btn-check" name="view" id="card-view" checked>
             <label class="btn btn-outline-secondary" for="card-view">
-                <i class="fas fa-th"></i> Κάρτες
+                <i class="fas fa-th"></i> <?= __('customers.cards_view') ?>
             </label>
             
             <input type="radio" class="btn-check" name="view" id="table-view">
             <label class="btn btn-outline-secondary" for="table-view">
-                <i class="fas fa-list"></i> Λίστα
+                <i class="fas fa-list"></i> <?= __('customers.list_view') ?>
             </label>
         </div>
     </div>
@@ -78,7 +78,7 @@
                             <div class="mb-2">
                                 <span class="badge <?= $customer['customer_type'] === 'company' ? 'bg-info' : 'bg-primary' ?>">
                                     <i class="fas fa-<?= $customer['customer_type'] === 'company' ? 'building' : 'user' ?>"></i>
-                                    <?= $customer['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+                                    <?= $customer['customer_type'] === 'company' ? __('customers.company') : __('customers.individual') ?>
                                 </span>
                             </div>
                             
@@ -110,7 +110,7 @@
                             <!-- Created Date -->
                             <small class="text-muted">
                                 <i class="fas fa-calendar"></i> 
-                                Δημιουργήθηκε: <?= date('d/m/Y', strtotime($customer['created_at'])) ?>
+                                <?= __('customers.created') ?>: <?= date('d/m/Y', strtotime($customer['created_at'])) ?>
                             </small>
                         </div>
                         
@@ -122,32 +122,32 @@
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
                                     <a class="dropdown-item" href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>">
-                                        <i class="fas fa-eye"></i> Προβολή
+                                        <i class="fas fa-eye"></i> <?= __('customers.view') ?>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="<?= BASE_URL ?>/customers/edit/<?= $customer['id'] ?>">
-                                        <i class="fas fa-edit"></i> Επεξεργασία
+                                        <i class="fas fa-edit"></i> <?= __('customers.edit') ?>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="?route=/projects/create&customer_id=<?= $customer['id'] ?>">
-                                        <i class="fas fa-project-diagram"></i> Νέο Έργο
+                                        <i class="fas fa-project-diagram"></i> <?= __('customers.new_project') ?>
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="?route=/appointments/create&customer_id=<?= $customer['id'] ?>">
-                                        <i class="fas fa-calendar-plus"></i> Νέο Ραντεβού
+                                        <i class="fas fa-calendar-plus"></i> <?= __('customers.new_appointment') ?>
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="POST" action="?route=/customers/delete&id=<?= $customer['id'] ?>" 
-                                          onsubmit="return confirm('Είστε σίγουρος ότι θέλετε να διαγράψετε αυτόν τον πελάτη;')" 
+                                          onsubmit="return confirm('<?= __('customers.confirm_delete') ?>')" 
                                           class="d-inline">
                                         <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                         <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-trash"></i> Διαγραφή
+                                            <i class="fas fa-trash"></i> <?= __('customers.delete') ?>
                                         </button>
                                     </form>
                                 </li>
@@ -163,16 +163,16 @@
             <div class="card">
                 <div class="card-body text-center py-5">
                     <i class="fas fa-users fa-4x text-muted mb-3"></i>
-                    <h4 class="text-muted">Δεν βρέθηκαν πελάτες</h4>
+                    <h4 class="text-muted"><?= __('customers.no_customers') ?></h4>
                     <?php if (!empty($search) || !empty($type)): ?>
-                        <p class="text-muted">Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης</p>
+                        <p class="text-muted"><?= __('customers.try_different_search') ?></p>
                         <a href="?route=/customers" class="btn btn-outline-primary">
-                            <i class="fas fa-times"></i> Καθαρισμός Φίλτρων
+                            <i class="fas fa-times"></i> <?= __('customers.clear_filters') ?>
                         </a>
                     <?php else: ?>
-                        <p class="text-muted">Ξεκινήστε προσθέτοντας τον πρώτο σας πελάτη</p>
+                        <p class="text-muted"><?= __('customers.no_customers_message') ?></p>
                         <a href="?route=/customers/create" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Νέος Πελάτης
+                            <i class="fas fa-plus"></i> <?= __('customers.new_customer') ?>
                         </a>
                     <?php endif; ?>
                 </div>
@@ -189,13 +189,13 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th>Πελάτης</th>
-                        <th>Τύπος</th>
-                        <th>Τηλέφωνο</th>
-                        <th>Email</th>
-                        <th>Πόλη</th>
-                        <th>Δημιουργήθηκε</th>
-                        <th>Ενέργειες</th>
+                        <th><?= __('customers.name') ?></th>
+                        <th><?= __('customers.customer_type') ?></th>
+                        <th><?= __('customers.phone') ?></th>
+                        <th><?= __('customers.email') ?></th>
+                        <th><?= __('customers.city') ?></th>
+                        <th><?= __('customers.created_at') ?></th>
+                        <th><?= __('customers.actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -230,7 +230,7 @@
                         </td>
                         <td>
                             <span class="badge <?= $customer['customer_type'] === 'company' ? 'bg-info' : 'bg-primary' ?>">
-                                <?= $customer['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+                                <?= $customer['customer_type'] === 'company' ? __('customers.company') : __('customers.individual') ?>
                             </span>
                         </td>
                         <td><?= htmlspecialchars($customer['phone']) ?></td>
@@ -239,30 +239,30 @@
                         <td><?= date('d/m/Y', strtotime($customer['created_at'])) ?></td>
                         <td>
                             <div class="btn-group btn-group-sm" role="group">
-                                <a href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>" class="btn btn-outline-primary" title="Προβολή">
+                                <a href="<?= BASE_URL ?>/customers/<?= $customer['slug'] ?>" class="btn btn-outline-primary" title="<?= __('customers.view') ?>">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="<?= BASE_URL ?>/customers/edit/<?= $customer['id'] ?>" class="btn btn-outline-secondary" title="Επεξεργασία">
+                                <a href="<?= BASE_URL ?>/customers/edit/<?= $customer['id'] ?>" class="btn btn-outline-secondary" title="<?= __('customers.edit') ?>">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" title="Περισσότερα">
+                                    <button type="button" class="btn btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" title="<?= __('common.more') ?>">
                                         <i class="fas fa-plus"></i>
                                     </button>
                                     <ul class="dropdown-menu">
                                         <li>
                                             <a class="dropdown-item" href="?route=/projects/create&customer_id=<?= $customer['id'] ?>">
-                                                <i class="fas fa-project-diagram"></i> Νέο Έργο
+                                                <i class="fas fa-project-diagram"></i> <?= __('customers.new_project') ?>
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item" href="?route=/appointments/create&customer_id=<?= $customer['id'] ?>">
-                                                <i class="fas fa-calendar-plus"></i> Νέο Ραντεβού
+                                                <i class="fas fa-calendar-plus"></i> <?= __('customers.new_appointment') ?>
                                             </a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item" href="?route=/quotes/create&customer_id=<?= $customer['id'] ?>">
-                                                <i class="fas fa-file-invoice"></i> Νέα Προσφορά
+                                                <i class="fas fa-file-invoice"></i> <?= __('customers.new_quote') ?>
                                             </a>
                                         </li>
                                     </ul>

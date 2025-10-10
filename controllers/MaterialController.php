@@ -29,7 +29,7 @@ class MaterialController extends BaseController {
         $categories = ['electrical' => 'Ηλεκτρολογικά', 'plumbing' => 'Υδραυλικά', 'tools' => 'Εργαλεία', 'other' => 'Άλλα'];
         
         $data = [
-            'title' => 'Υλικά - ' . APP_NAME,
+            'title' => __('materials.title') . ' - ' . APP_NAME,
             'user' => $user,
             'materials' => $result['data'],
             'pagination' => $result['pagination'],
@@ -50,7 +50,7 @@ class MaterialController extends BaseController {
         $categories = ['electrical' => 'Ηλεκτρολογικά', 'plumbing' => 'Υδραυλικά', 'tools' => 'Εργαλεία', 'other' => 'Άλλα'];
         
         $data = [
-            'title' => 'Νέο Υλικό - ' . APP_NAME,
+            'title' => __('materials.new_material') . ' - ' . APP_NAME,
             'user' => $user,
             'categories' => $categories
         ];
@@ -134,7 +134,7 @@ class MaterialController extends BaseController {
         $categories = ['electrical' => 'Ηλεκτρολογικά', 'plumbing' => 'Υδραυλικά', 'tools' => 'Εργαλεία', 'other' => 'Άλλα'];
         
         $data = [
-            'title' => 'Επεξεργασία Υλικού - ' . APP_NAME,
+            'title' => __('materials.edit') . ' ' . __('materials.title') . ' - ' . APP_NAME,
             'user' => $user,
             'material' => $material,
             'categories' => $categories

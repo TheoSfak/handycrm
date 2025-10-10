@@ -1,14 +1,14 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-calendar-check"></i> Προβολή Ραντεβού</h2>
+    <h2><i class="fas fa-calendar-check"></i> <?= __('appointments.view_appointment') ?></h2>
     <div>
         <a href="?route=/appointments" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+            <i class="fas fa-arrow-left"></i> <?= __('appointments.back_to_list') ?>
         </a>
         <a href="?route=/appointments/edit&id=<?= $appointment['id'] ?>" class="btn btn-warning">
-            <i class="fas fa-edit"></i> Επεξεργασία
+            <i class="fas fa-edit"></i> <?= __('common.edit') ?>
         </a>
         <button type="button" class="btn btn-danger" onclick="confirmDeleteAppointment()">
-            <i class="fas fa-trash"></i> Διαγραφή
+            <i class="fas fa-trash"></i> <?= __('common.delete') ?>
         </button>
     </div>
 </div>
@@ -32,17 +32,17 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="fas fa-info-circle"></i> Στοιχεία Ραντεβού
+                    <i class="fas fa-info-circle"></i> <?= __('appointments.appointment_details') ?>
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="text-muted small">Τίτλος</label>
+                        <label class="text-muted small"><?= __('appointments.appointment_title') ?></label>
                         <p class="mb-0"><strong><?= htmlspecialchars($appointment['title']) ?></strong></p>
                     </div>
                     <div class="col-md-6">
-                        <label class="text-muted small">Κατάσταση</label>
+                        <label class="text-muted small"><?= __('appointments.status') ?></label>
                         <p class="mb-0">
                             <?php
                             $statusColors = [
@@ -54,12 +54,12 @@
                                 'no_show' => 'dark'
                             ];
                             $statuses = [
-                                'scheduled' => 'Προγραμματισμένο',
-                                'confirmed' => 'Επιβεβαιωμένο',
-                                'in_progress' => 'Σε εξέλιξη',
-                                'completed' => 'Ολοκληρωμένο',
-                                'cancelled' => 'Ακυρωμένο',
-                                'no_show' => 'Δεν εμφανίστηκε'
+                                'scheduled' => __('appointments.scheduled'),
+                                'confirmed' => __('appointments.confirmed'),
+                                'in_progress' => __('appointments.in_progress'),
+                                'completed' => __('appointments.completed'),
+                                'cancelled' => __('appointments.cancelled'),
+                                'no_show' => __('appointments.no_show')
                             ];
                             $statusColor = $statusColors[$appointment['status']] ?? 'secondary';
                             ?>
@@ -72,24 +72,24 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="text-muted small">Ημερομηνία & Ώρα</label>
+                        <label class="text-muted small"><?= __('appointments.date_time') ?></label>
                         <p class="mb-0">
                             <i class="fas fa-calendar"></i> 
                             <?= formatDate($appointment['appointment_date'], true) ?>
                         </p>
                     </div>
                     <div class="col-md-6">
-                        <label class="text-muted small">Διάρκεια</label>
+                        <label class="text-muted small"><?= __('appointments.duration') ?></label>
                         <p class="mb-0">
                             <i class="fas fa-clock"></i> 
-                            <?= $appointment['duration_minutes'] ?> λεπτά
+                            <?= $appointment['duration_minutes'] ?> <?= __('appointments.minutes') ?>
                         </p>
                     </div>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label class="text-muted small">Περιγραφή</label>
+                        <label class="text-muted small"><?= __('appointments.description') ?></label>
                         <p class="mb-0"><?= nl2br(htmlspecialchars($appointment['description'] ?? '-')) ?></p>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
                 <?php if (!empty($appointment['address'])): ?>
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label class="text-muted small">Διεύθυνση</label>
+                        <label class="text-muted small"><?= __('appointments.address') ?></label>
                         <p class="mb-0">
                             <i class="fas fa-map-marker-alt"></i> 
                             <?= nl2br(htmlspecialchars($appointment['address'])) ?>
@@ -109,7 +109,7 @@
                 <?php if (!empty($appointment['notes'])): ?>
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <label class="text-muted small">Σημειώσεις</label>
+                        <label class="text-muted small"><?= __('appointments.notes') ?></label>
                         <p class="mb-0"><?= nl2br(htmlspecialchars($appointment['notes'])) ?></p>
                     </div>
                 </div>
@@ -117,11 +117,11 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <label class="text-muted small">Υπενθύμιση</label>
+                        <label class="text-muted small"><?= __('appointments.reminder') ?></label>
                         <p class="mb-0">
                             <?php if ($appointment['reminder_sent']): ?>
                                 <span class="badge bg-success">
-                                    <i class="fas fa-check"></i> Στάλθηκε
+                                    <i class="fas fa-check"></i> <?= __('appointments.sent') ?>
                                 </span>
                                 <?php if ($appointment['reminder_date']): ?>
                                     <br><small class="text-muted">
@@ -129,7 +129,7 @@
                                     </small>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <span class="badge bg-secondary">Δεν στάλθηκε</span>
+                                <span class="badge bg-secondary"><?= __('appointments.not_sent') ?></span>
                             <?php endif; ?>
                         </p>
                     </div>
@@ -143,7 +143,7 @@
         <div class="card mb-3">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-user"></i> Πελάτης
+                    <i class="fas fa-user"></i> <?= __('appointments.customer') ?>
                 </h6>
             </div>
             <div class="card-body">
@@ -168,10 +168,10 @@
                     </p>
                     <?php endif; ?>
                     <a href="?route=/customers/view&id=<?= $appointment['customer_id'] ?>" class="btn btn-sm btn-outline-primary mt-2">
-                        <i class="fas fa-eye"></i> Προβολή Πελάτη
+                        <i class="fas fa-eye"></i> <?= __('appointments.view_customer') ?>
                     </a>
                 <?php else: ?>
-                    <p class="text-muted">Δεν έχει οριστεί πελάτης</p>
+                    <p class="text-muted"><?= __('appointments.no_customer') ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -180,7 +180,7 @@
         <div class="card mb-3">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-user-cog"></i> Τεχνικός
+                    <i class="fas fa-user-cog"></i> <?= __('appointments.technician') ?>
                 </h6>
             </div>
             <div class="card-body">
@@ -197,7 +197,7 @@
                     </p>
                     <?php endif; ?>
                 <?php else: ?>
-                    <p class="text-muted">Δεν έχει οριστεί τεχνικός</p>
+                    <p class="text-muted"><?= __('appointments.no_technician') ?></p>
                 <?php endif; ?>
             </div>
         </div>
@@ -207,7 +207,7 @@
         <div class="card mb-3">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-project-diagram"></i> Έργο
+                    <i class="fas fa-project-diagram"></i> <?= __('appointments.project') ?>
                 </h6>
             </div>
             <div class="card-body">
@@ -221,7 +221,7 @@
                 </p>
                 <?php endif; ?>
                 <a href="?route=/projects/show&id=<?= $appointment['project_id'] ?>" class="btn btn-sm btn-outline-primary mt-2">
-                    <i class="fas fa-eye"></i> Προβολή Έργου
+                    <i class="fas fa-eye"></i> <?= __('appointments.view_project') ?>
                 </a>
             </div>
         </div>
@@ -231,16 +231,16 @@
         <div class="card">
             <div class="card-header">
                 <h6 class="mb-0">
-                    <i class="fas fa-info-circle"></i> Πληροφορίες
+                    <i class="fas fa-info-circle"></i> <?= __('appointments.information') ?>
                 </h6>
             </div>
             <div class="card-body">
                 <p class="mb-2 small">
-                    <span class="text-muted">Δημιουργήθηκε:</span><br>
+                    <span class="text-muted"><?= __('appointments.created') ?>:</span><br>
                     <?= formatDate($appointment['created_at'], true) ?>
                 </p>
                 <p class="mb-0 small">
-                    <span class="text-muted">Τελευταία ενημέρωση:</span><br>
+                    <span class="text-muted"><?= __('appointments.last_updated') ?>:</span><br>
                     <?= formatDate($appointment['updated_at'], true) ?>
                 </p>
             </div>
@@ -256,7 +256,7 @@
 
 <script>
 function confirmDeleteAppointment() {
-    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το ραντεβού;')) {
+    if (confirm('<?= __('appointments.confirm_delete') ?>')) {
         document.getElementById('deleteAppointmentForm').submit();
     }
 }

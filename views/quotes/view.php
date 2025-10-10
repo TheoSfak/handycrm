@@ -1,11 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-file-invoice"></i> Προσφορά #<?= $quote['quote_number'] ?></h2>
+    <h2><i class="fas fa-file-invoice"></i> <?= __('quotes.title') ?> #<?= $quote['quote_number'] ?></h2>
     <div>
         <a href="<?= BASE_URL ?>/quotes/edit/<?= $quote['id'] ?>" class="btn btn-primary">
-            <i class="fas fa-edit"></i> Επεξεργασία
+            <i class="fas fa-edit"></i> <?= __('quotes.edit') ?>
         </a>
         <a href="<?= BASE_URL ?>/quotes" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Πίσω
+            <i class="fas fa-arrow-left"></i> <?= __('common.back') ?>
         </a>
     </div>
 </div>
@@ -24,7 +24,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
-                        <h6 class="text-muted mb-2">Κατάσταση</h6>
+                        <h6 class="text-muted mb-2"><?= __('quotes.status') ?></h6>
                         <?php
                             $statusColors = [
                                 'draft' => 'secondary',
@@ -34,11 +34,11 @@
                                 'expired' => 'warning'
                             ];
                             $statusLabels = [
-                                'draft' => 'Πρόχειρο',
-                                'sent' => 'Απεσταλμένο',
-                                'accepted' => 'Αποδεκτό',
-                                'rejected' => 'Απορριφθέν',
-                                'expired' => 'Ληγμένο'
+                                'draft' => __('quotes.draft'),
+                                'sent' => __('quotes.status_sent'),
+                                'accepted' => __('quotes.status_accepted'),
+                                'rejected' => __('quotes.status_rejected'),
+                                'expired' => __('quotes.expired')
                             ];
                             $badgeColor = $statusColors[$quote['status']] ?? 'secondary';
                             $statusLabel = $statusLabels[$quote['status']] ?? $quote['status'];
@@ -46,15 +46,15 @@
                         <span class="badge bg-<?= $badgeColor ?> fs-6"><?= $statusLabel ?></span>
                     </div>
                     <div class="col-md-3">
-                        <h6 class="text-muted mb-2">Ημ. Δημιουργίας</h6>
+                        <h6 class="text-muted mb-2"><?= __('quotes.created_date') ?></h6>
                         <p class="mb-0"><?= date('d/m/Y', strtotime($quote['created_at'])) ?></p>
                     </div>
                     <div class="col-md-3">
-                        <h6 class="text-muted mb-2">Ισχύει Έως</h6>
+                        <h6 class="text-muted mb-2"><?= __('quotes.valid_until') ?></h6>
                         <p class="mb-0"><?= date('d/m/Y', strtotime($quote['valid_until'])) ?></p>
                     </div>
                     <div class="col-md-3">
-                        <h6 class="text-muted mb-2">Δημιούργησε</h6>
+                        <h6 class="text-muted mb-2"><?= __('quotes.created_by') ?></h6>
                         <p class="mb-0"><?= htmlspecialchars($quote['creator_first_name'] . ' ' . $quote['creator_last_name']) ?></p>
                     </div>
                 </div>
@@ -70,7 +70,7 @@
         <!-- Basic Info -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Στοιχεία Προσφοράς</h5>
+                <h5 class="mb-0"><?= __('quotes.quote_details') ?></h5>
             </div>
             <div class="card-body">
                 <h4><?= htmlspecialchars($quote['title']) ?></h4>
@@ -83,7 +83,7 @@
         <!-- Customer Info -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Στοιχεία Πελάτη</h5>
+                <h5 class="mb-0"><?= __('quotes.customer_details') ?></h5>
             </div>
             <div class="card-body">
                 <h6>
@@ -109,17 +109,17 @@
         <!-- Quote Items -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Στοιχεία Προσφοράς</h5>
+                <h5 class="mb-0"><?= __('quotes.quote_items') ?></h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th width="50%">Περιγραφή</th>
-                                <th width="15%" class="text-center">Ποσότητα</th>
-                                <th width="17.5%" class="text-end">Τιμή Μονάδας</th>
-                                <th width="17.5%" class="text-end">Σύνολο</th>
+                                <th width="50%"><?= __('quotes.item_description') ?></th>
+                                <th width="15%" class="text-center"><?= __('quotes.quantity') ?></th>
+                                <th width="17.5%" class="text-end"><?= __('quotes.unit_price') ?></th>
+                                <th width="17.5%" class="text-end"><?= __('quotes.total') ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -134,7 +134,7 @@
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted">Δεν υπάρχουν στοιχεία</td>
+                                    <td colspan="4" class="text-center text-muted"><?= __('quotes.no_items') ?></td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -147,16 +147,16 @@
         <?php if (!empty($quote['notes']) || !empty($quote['terms'])): ?>
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Σημειώσεις & Όροι</h5>
+                <h5 class="mb-0"><?= __('quotes.notes_terms') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($quote['notes'])): ?>
-                    <h6>Σημειώσεις</h6>
+                    <h6><?= __('quotes.notes') ?></h6>
                     <p><?= nl2br(htmlspecialchars($quote['notes'])) ?></p>
                 <?php endif; ?>
                 
                 <?php if (!empty($quote['terms_conditions'])): ?>
-                    <h6 class="mt-3">Όροι και Προϋποθέσεις</h6>
+                    <h6 class="mt-3"><?= __('quotes.terms_conditions') ?></h6>
                     <p><?= nl2br(htmlspecialchars($quote['terms_conditions'])) ?></p>
                 <?php endif; ?>
             </div>
@@ -168,23 +168,23 @@
     <div class="col-md-4">
         <div class="card sticky-top" style="top: 20px;">
             <div class="card-header">
-                <h5 class="mb-0">Σύνοψη</h5>
+                <h5 class="mb-0"><?= __('quotes.summary') ?></h5>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Υποσύνολο:</span>
+                    <span><?= __('quotes.subtotal') ?>:</span>
                     <strong><?= number_format($quote['subtotal'], 2) ?>€</strong>
                 </div>
                 
                 <div class="d-flex justify-content-between mb-2">
-                    <span>ΦΠΑ (<?= number_format($quote['vat_rate'], 0) ?>%):</span>
+                    <span><?= __('quotes.vat') ?> (<?= number_format($quote['vat_rate'], 0) ?>%):</span>
                     <strong><?= number_format($quote['vat_amount'], 2) ?>€</strong>
                 </div>
                 
                 <hr>
                 
                 <div class="d-flex justify-content-between mb-3">
-                    <span class="h5">Σύνολο:</span>
+                    <span class="h5"><?= __('quotes.total') ?>:</span>
                     <strong class="h5"><?= number_format($quote['total_amount'], 2) ?>€</strong>
                 </div>
                 
@@ -192,21 +192,21 @@
                 
                 <div class="d-grid gap-2">
                     <button class="btn btn-primary" onclick="window.print()">
-                        <i class="fas fa-print"></i> Εκτύπωση
+                        <i class="fas fa-print"></i> <?= __('quotes.print') ?>
                     </button>
                     
                     <button class="btn btn-success" onclick="exportToPDF()">
-                        <i class="fas fa-file-pdf"></i> Εξαγωγή PDF
+                        <i class="fas fa-file-pdf"></i> <?= __('quotes.export_pdf') ?>
                     </button>
                     
                     <a href="<?= BASE_URL ?>/quotes/edit/<?= $quote['id'] ?>" class="btn btn-warning">
-                        <i class="fas fa-edit"></i> Επεξεργασία
+                        <i class="fas fa-edit"></i> <?= __('quotes.edit') ?>
                     </a>
                     
                     <a href="<?= BASE_URL ?>/quotes/delete/<?= $quote['id'] ?>" 
                        class="btn btn-danger"
-                       onclick="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτήν την προσφορά;')">
-                        <i class="fas fa-trash"></i> Διαγραφή
+                       onclick="return confirm('<?= __('quotes.confirm_delete') ?>')">
+                        <i class="fas fa-trash"></i> <?= __('quotes.delete') ?>
                     </a>
                 </div>
             </div>
@@ -216,7 +216,7 @@
 
 <script>
 function exportToPDF() {
-    alert('Η λειτουργία εξαγωγής PDF θα προστεθεί σύντομα');
+    alert('<?= __('quotes.pdf_coming_soon') ?>');
 }
 
 // Print styles

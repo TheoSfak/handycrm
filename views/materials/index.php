@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-boxes"></i> Υλικά</h2>
+    <h2><i class="fas fa-boxes"></i> <?= __('menu.materials') ?></h2>
     <a href="?route=/materials/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Νέο Υλικό
+        <i class="fas fa-plus"></i> <?= __('materials.new_material') ?>
     </a>
 </div>
 
@@ -24,7 +24,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="text-muted">Σύνολο Υλικών</h6>
+                <h6 class="text-muted"><?= __('materials.total_materials') ?></h6>
                 <h3><?= $stats['total_materials'] ?></h3>
             </div>
         </div>
@@ -32,7 +32,7 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h6 class="text-muted">Συνολική Αξία</h6>
+                <h6 class="text-muted"><?= __('materials.total_value') ?></h6>
                 <h3><?= formatCurrency($stats['total_value']) ?></h3>
             </div>
         </div>
@@ -40,7 +40,7 @@
     <div class="col-md-3">
         <div class="card border-warning">
             <div class="card-body">
-                <h6 class="text-muted">Χαμηλό Stock</h6>
+                <h6 class="text-muted"><?= __('materials.low_stock') ?></h6>
                 <h3 class="text-warning"><?= $stats['low_stock_count'] ?></h3>
             </div>
         </div>
@@ -48,7 +48,7 @@
     <div class="col-md-3">
         <div class="card border-danger">
             <div class="card-body">
-                <h6 class="text-muted">Εξαντλημένα</h6>
+                <h6 class="text-muted"><?= __('materials.out_of_stock') ?></h6>
                 <h3 class="text-danger"><?= $stats['out_of_stock_count'] ?></h3>
             </div>
         </div>
@@ -62,9 +62,9 @@
             <input type="hidden" name="route" value="/materials">
             
             <div class="col-md-3">
-                <label class="form-label">Κατηγορία</label>
+                <label class="form-label"><?= __('materials.category') ?></label>
                 <select name="category" class="form-select">
-                    <option value="">Όλες</option>
+                    <option value=""><?= __('common.all') ?></option>
                     <?php foreach ($categories as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['category'] === $key) ? 'selected' : '' ?>>
                         <?= $label ?>
@@ -74,17 +74,17 @@
             </div>
             
             <div class="col-md-3">
-                <label class="form-label">Χαμηλό Stock</label>
+                <label class="form-label"><?= __('materials.low_stock') ?></label>
                 <select name="low_stock" class="form-select">
-                    <option value="">Όλα</option>
-                    <option value="1" <?= $filters['low_stock'] ? 'selected' : '' ?>>Μόνο χαμηλά</option>
+                    <option value=""><?= __('common.all') ?></option>
+                    <option value="1" <?= $filters['low_stock'] ? 'selected' : '' ?>><?= __('materials.only_low') ?></option>
                 </select>
             </div>
             
             <div class="col-md-6">
-                <label class="form-label">Αναζήτηση</label>
+                <label class="form-label"><?= __('common.search') ?></label>
                 <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Όνομα, περιγραφή, προμηθευτής..." 
+                    <input type="text" name="search" class="form-control" placeholder="<?= __('materials.search_placeholder') ?>" 
                            value="<?= htmlspecialchars($filters['search']) ?>">
                     <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
                 </div>
@@ -99,9 +99,9 @@
         <?php if (empty($materials)): ?>
         <div class="text-center py-5">
             <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
-            <p class="text-muted">Δεν βρέθηκαν υλικά</p>
+            <p class="text-muted"><?= __('materials.no_materials_found') ?></p>
             <a href="?route=/materials/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Προσθήκη Υλικού
+                <i class="fas fa-plus"></i> <?= __('materials.new_material') ?>
             </a>
         </div>
         <?php else: ?>
@@ -109,13 +109,13 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Όνομα</th>
-                        <th>Κατηγορία</th>
-                        <th>Τιμή</th>
-                        <th>Stock</th>
-                        <th>Μονάδα</th>
-                        <th>Προμηθευτής</th>
-                        <th>Ενέργειες</th>
+                        <th><?= __('materials.name') ?></th>
+                        <th><?= __('materials.category') ?></th>
+                        <th><?= __('common.price') ?></th>
+                        <th><?= __('materials.stock') ?></th>
+                        <th><?= __('materials.unit') ?></th>
+                        <th><?= __('materials.supplier') ?></th>
+                        <th><?= __('common.actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -136,9 +136,9 @@
                         <td>
                             <strong><?= number_format($material['current_stock'], 2, ',', '.') ?></strong>
                             <?php if ($isOutOfStock): ?>
-                            <br><span class="badge bg-danger">Εξαντλημένο</span>
+                            <br><span class="badge bg-danger"><?= __('materials.out_of_stock') ?></span>
                             <?php elseif ($isLowStock): ?>
-                            <br><span class="badge bg-warning">Χαμηλό</span>
+                            <br><span class="badge bg-warning"><?= __('materials.low') ?></span>
                             <?php endif; ?>
                         </td>
                         <td><?= htmlspecialchars($material['unit']) ?></td>
@@ -146,11 +146,11 @@
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="?route=/materials/edit&id=<?= $material['id'] ?>" 
-                                   class="btn btn-sm btn-warning" title="Επεξεργασία">
+                                   class="btn btn-sm btn-warning" title="<?= __('common.edit') ?>">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <button type="button" class="btn btn-sm btn-danger" 
-                                        onclick="confirmDelete(<?= $material['id'] ?>)" title="Διαγραφή">
+                                        onclick="confirmDelete(<?= $material['id'] ?>)" title="<?= __('common.delete') ?>">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -203,7 +203,7 @@
 
 <script>
 function confirmDelete(materialId) {
-    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το υλικό;')) {
+    if (confirm('<?= __('materials.confirm_delete') ?>')) {
         document.getElementById('deleteMaterialId').value = materialId;
         document.getElementById('deleteForm').submit();
     }

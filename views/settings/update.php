@@ -74,6 +74,24 @@ if (isset($_POST['install_update']) && isset($_POST['update_url']) && isset($_PO
     }
 }
 
+// Clear update cache
+if (isset($_POST['clear_cache'])) {
+    unset($_SESSION['last_update_check']);
+    unset($_SESSION['update_available']);
+    unset($_SESSION['update_info']);
+    
+    // Clear PHP opcode cache if available
+    if (function_exists('opcache_reset')) {
+        opcache_reset();
+    }
+    
+    $actionMessage = 'Η cache ενημερώσεων διαγράφηκε επιτυχώς! Το σύστημα θα ελέγξει για νέες ενημερώσεις.';
+    $actionType = 'success';
+    
+    // Force immediate reload to re-check
+    echo '<meta http-equiv="refresh" content="1">';
+}
+
 // Only check for updates if explicitly requested
 $updateAvailable = false;
 $updateInfo = null;
@@ -886,11 +904,17 @@ document.addEventListener('DOMContentLoaded', function() {
             <i class="fas fa-search pulse-animation"></i>
             <h2>Έλεγχος για Ενημερώσεις</h2>
             <p>Ελέγξτε αν υπάρχουν νέες εκδόσεις διαθέσιμες στο GitHub repository</p>
-            <form method="POST">
+            <form method="POST" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button type="submit" name="check_update" class="btn-check">
                     <i class="fas fa-sync-alt me-2"></i> Έλεγχος Τώρα
                 </button>
+                <button type="submit" name="clear_cache" class="btn-check" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);">
+                    <i class="fas fa-trash-alt me-2"></i> Καθαρισμός Cache
+                </button>
             </form>
+            <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                <i class="fas fa-info-circle"></i> Χρησιμοποιήστε "Καθαρισμός Cache" αν το σύστημα δείχνει λάθος κατάσταση ενημερώσεων
+            </p>
         </div>
     <?php endif; ?>
 
@@ -960,9 +984,12 @@ document.addEventListener('DOMContentLoaded', function() {
             <p style="font-size: 1.2rem; color: #6c757d; margin-bottom: 2rem;">
                 Χρησιμοποιείτε την πιο πρόσφατη έκδοση του HandyCRM
             </p>
-            <form method="POST" class="d-inline-block">
+            <form method="POST" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button type="submit" name="check_update" class="btn-check" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
                     <i class="fas fa-redo me-2"></i> Έλεγχος Ξανά
+                </button>
+                <button type="submit" name="clear_cache" class="btn-check" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);">
+                    <i class="fas fa-trash-alt me-2"></i> Καθαρισμός Cache
                 </button>
             </form>
         </div>

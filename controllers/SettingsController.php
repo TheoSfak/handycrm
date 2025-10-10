@@ -108,12 +108,12 @@ class SettingsController extends BaseController {
             }
             
             $db->commit();
-            $_SESSION['success'] = 'Οι ρυθμίσεις ενημερώθηκαν με επιτυχία';
+            $_SESSION['success'] = __('settings.success');
             
         } catch (Exception $e) {
             $db->rollBack();
             error_log("Settings update error: " . $e->getMessage());
-            $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση των ρυθμίσεων';
+            $_SESSION['error'] = __('settings.error');
         }
         
         $this->redirect('/settings');

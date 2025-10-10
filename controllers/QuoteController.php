@@ -36,7 +36,7 @@ class QuoteController extends BaseController {
         ];
         
         $data = [
-            'title' => 'Προσφορές - ' . APP_NAME,
+            'title' => __('quotes.title') . ' - ' . APP_NAME,
             'user' => $user,
             'quotes' => $result['data'],
             'pagination' => $result['pagination'],
@@ -76,7 +76,7 @@ class QuoteController extends BaseController {
         }
         
         $data = [
-            'title' => 'Προσφορά: ' . $quote['quote_number'] . ' - ' . APP_NAME,
+            'title' => __('quotes.title') . ': ' . $quote['quote_number'] . ' - ' . APP_NAME,
             'user' => $user,
             'quote' => $quote
         ];
@@ -105,7 +105,7 @@ class QuoteController extends BaseController {
         $quoteNumber = $quoteModel->generateQuoteNumber();
         
         $data = [
-            'title' => 'Νέα Προσφορά - ' . APP_NAME,
+            'title' => __('quotes.new_quote') . ' - ' . APP_NAME,
             'user' => $user,
             'customers' => $customers,
             'quote_number' => $quoteNumber,
@@ -235,7 +235,7 @@ class QuoteController extends BaseController {
         $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
-            'title' => 'Επεξεργασία Προσφοράς - ' . APP_NAME,
+            'title' => __('quotes.edit') . ' ' . __('quotes.title') . ' - ' . APP_NAME,
             'user' => $user,
             'quote' => $quote,
             'customers' => $customers,

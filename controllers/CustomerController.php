@@ -24,7 +24,7 @@ class CustomerController extends BaseController {
         $customers = $this->customerModel->getPaginated($page, ITEMS_PER_PAGE, $search, $type);
         
         $data = [
-            'title' => 'Πελάτες - ' . APP_NAME,
+            'title' => __('customers.title') . ' - ' . APP_NAME,
             'customers' => $customers,
             'search' => $search,
             'type' => $type,
@@ -39,7 +39,7 @@ class CustomerController extends BaseController {
      */
     public function create() {
         $data = [
-            'title' => 'Νέος Πελάτης - ' . APP_NAME,
+            'title' => __('customers.new_customer') . ' - ' . APP_NAME,
             'csrf_token' => $this->generateCsrfToken(),
             'customer' => null
         ];
@@ -137,7 +137,7 @@ class CustomerController extends BaseController {
         }
         
         $data = [
-            'title' => 'Πελάτης: ' . $this->customerModel->getFullName($customer) . ' - ' . APP_NAME,
+            'title' => __('customers.title') . ': ' . $this->customerModel->getFullName($customer) . ' - ' . APP_NAME,
             'customer' => $customer
         ];
         
@@ -156,7 +156,7 @@ class CustomerController extends BaseController {
         }
         
         $data = [
-            'title' => 'Επεξεργασία Πελάτη - ' . APP_NAME,
+            'title' => __('customers.edit') . ' ' . __('customers.title') . ' - ' . APP_NAME,
             'csrf_token' => $this->generateCsrfToken(),
             'customer' => $customer
         ];

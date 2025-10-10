@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-project-diagram"></i> Έργα</h2>
+    <h2><i class="fas fa-project-diagram"></i> <?= __('projects.title') ?></h2>
     <a href="?route=/projects/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Νέο Έργο
+        <i class="fas fa-plus"></i> <?= __('projects.new_project') ?>
     </a>
 </div>
 
@@ -26,9 +26,9 @@
             <input type="hidden" name="route" value="/projects">
             
             <div class="col-md-3">
-                <label class="form-label">Κατάσταση</label>
+                <label class="form-label"><?= __('projects.status') ?></label>
                 <select name="status" class="form-select">
-                    <option value="">Όλα</option>
+                    <option value=""><?= __('projects.all') ?></option>
                     <?php foreach ($statuses as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['status'] === $key) ? 'selected' : '' ?>>
                         <?= $label ?>
@@ -38,9 +38,9 @@
             </div>
             
             <div class="col-md-3">
-                <label class="form-label">Κατηγορία</label>
+                <label class="form-label"><?= __('projects.category') ?></label>
                 <select name="category" class="form-select">
-                    <option value="">Όλες</option>
+                    <option value=""><?= __('projects.all_categories') ?></option>
                     <?php foreach ($categories as $key => $label): ?>
                     <option value="<?= $key ?>" <?= ($filters['category'] === $key) ? 'selected' : '' ?>>
                         <?= $label ?>
@@ -50,9 +50,9 @@
             </div>
             
             <div class="col-md-3">
-                <label class="form-label">Τεχνικός</label>
+                <label class="form-label"><?= __('projects.technician') ?></label>
                 <select name="technician" class="form-select">
-                    <option value="">Όλοι</option>
+                    <option value=""><?= __('projects.all_technicians') ?></option>
                     <?php foreach ($technicians as $tech): ?>
                     <option value="<?= $tech['id'] ?>" <?= ($filters['technician'] == $tech['id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($tech['first_name'] . ' ' . $tech['last_name']) ?>
@@ -62,10 +62,10 @@
             </div>
             
             <div class="col-md-3">
-                <label class="form-label">Αναζήτηση</label>
+                <label class="form-label"><?= __('projects.search') ?></label>
                 <div class="input-group">
                     <input type="text" name="search" class="form-control" 
-                           placeholder="Τίτλος, περιγραφή, πελάτης..." 
+                           placeholder="<?= __('projects.search_placeholder') ?>" 
                            value="<?= htmlspecialchars($filters['search']) ?>">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i>
@@ -82,9 +82,9 @@
         <?php if (empty($projects)): ?>
         <div class="text-center py-5">
             <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
-            <p class="text-muted">Δεν βρέθηκαν έργα</p>
+            <p class="text-muted"><?= __('projects.no_projects') ?></p>
             <a href="?route=/projects/create" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Δημιουργία Νέου Έργου
+                <i class="fas fa-plus"></i> <?= __('projects.create_new_project') ?>
             </a>
         </div>
         <?php else: ?>
@@ -92,14 +92,14 @@
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Τίτλος</th>
-                        <th>Πελάτης</th>
-                        <th>Κατηγορία</th>
-                        <th>Τεχνικός</th>
-                        <th>Κατάσταση</th>
-                        <th>Έναρξη</th>
-                        <th>Κόστος</th>
-                        <th>Ενέργειες</th>
+                        <th><?= __('projects.title_column') ?></th>
+                        <th><?= __('projects.customer_column') ?></th>
+                        <th><?= __('projects.category_column') ?></th>
+                        <th><?= __('projects.technician_column') ?></th>
+                        <th><?= __('projects.status_column') ?></th>
+                        <th><?= __('projects.start_date_column') ?></th>
+                        <th><?= __('projects.cost_column') ?></th>
+                        <th><?= __('projects.actions_column') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -126,7 +126,7 @@
                                 <?= htmlspecialchars($project['title']) ?>
                             </a>
                             <?php if ($project['priority'] === 'urgent'): ?>
-                            <span class="badge bg-danger ms-2">Επείγον</span>
+                            <span class="badge bg-danger ms-2"><?= __('projects.urgent') ?></span>
                             <?php endif; ?>
                         </td>
                         <td><?= htmlspecialchars($customerName) ?></td>
@@ -153,16 +153,16 @@
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="<?= BASE_URL ?>/projects/<?= $project['slug'] ?>" 
-                                   class="btn btn-sm btn-info" title="Προβολή">
+                                   class="btn btn-sm btn-info" title="<?= __('projects.view') ?>">
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 <a href="<?= BASE_URL ?>/projects/edit/<?= $project['id'] ?>" 
-                                   class="btn btn-sm btn-warning" title="Επεξεργασία">
+                                   class="btn btn-sm btn-warning" title="<?= __('projects.edit') ?>">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <?php if ($user['role'] === 'admin'): ?>
                                 <button type="button" class="btn btn-sm btn-danger" 
-                                        onclick="confirmDelete(<?= $project['id'] ?>)" title="Διαγραφή">
+                                        onclick="confirmDelete(<?= $project['id'] ?>)" title="<?= __('projects.delete') ?>">
                                     <i class="fas fa-trash"></i>
                                 </button>
                                 <?php endif; ?>
@@ -215,7 +215,7 @@
 
 <script>
 function confirmDelete(projectId) {
-    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτό το έργο;')) {
+    if (confirm('<?= __('projects.confirm_delete') ?>')) {
         document.getElementById('deleteProjectId').value = projectId;
         document.getElementById('deleteForm').submit();
     }

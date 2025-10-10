@@ -54,7 +54,7 @@ class InvoiceController extends BaseController {
         ];
         
         $data = [
-            'title' => 'Τιμολόγια - ' . APP_NAME,
+            'title' => __('invoices.title') . ' - ' . APP_NAME,
             'user' => $user,
             'invoices' => $result['data'],
             'pagination' => $result['pagination'],
@@ -97,7 +97,7 @@ class InvoiceController extends BaseController {
         $invoiceNumber = $invoiceModel->generateInvoiceNumber();
         
         $data = [
-            'title' => 'Νέο Τιμολόγιο - ' . APP_NAME,
+            'title' => __('invoices.new_invoice') . ' - ' . APP_NAME,
             'user' => $user,
             'customers' => $customers,
             'projects' => $projects,
@@ -227,7 +227,7 @@ class InvoiceController extends BaseController {
         }
         
         $data = [
-            'title' => 'Προβολή Τιμολογίου - ' . APP_NAME,
+            'title' => __('invoices.view') . ' ' . __('invoices.title') . ' - ' . APP_NAME,
             'user' => $user,
             'invoice' => $invoice
         ];
@@ -274,7 +274,7 @@ class InvoiceController extends BaseController {
         $projects = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
-            'title' => 'Επεξεργασία Τιμολογίου - ' . APP_NAME,
+            'title' => __('invoices.edit') . ' ' . __('invoices.title') . ' - ' . APP_NAME,
             'user' => $user,
             'invoice' => $invoice,
             'customers' => $customers,

@@ -12,10 +12,10 @@
                         <div>
                             <?php
                             $statusLabels = [
-                                'new' => 'Νέο',
-                                'in_progress' => 'Σε Εξέλιξη',
-                                'completed' => 'Ολοκληρωμένο',
-                                'cancelled' => 'Ακυρωμένο'
+                                'new' => __('projects.new'),
+                                'in_progress' => __('projects.in_progress'),
+                                'completed' => __('projects.completed'),
+                                'cancelled' => __('projects.cancelled')
                             ];
                             $statusColors = [
                                 'new' => 'info',
@@ -24,10 +24,10 @@
                                 'cancelled' => 'danger'
                             ];
                             $priorityLabels = [
-                                'low' => 'Χαμηλή',
-                                'medium' => 'Μεσαία',
-                                'high' => 'Υψηλή',
-                                'urgent' => 'Επείγον'
+                                'low' => __('projects.low'),
+                                'medium' => __('projects.medium'),
+                                'high' => __('projects.high'),
+                                'urgent' => __('projects.urgent')
                             ];
                             $priorityColors = [
                                 'low' => 'secondary',
@@ -50,50 +50,50 @@
                 <!-- Quick Status Change -->
                 <div class="btn-group mb-1 me-1">
                     <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="fas fa-sync-alt"></i> Αλλαγή Status
+                        <i class="fas fa-sync-alt"></i> <?= __('projects.change_status') ?>
                     </button>
                     <ul class="dropdown-menu">
                         <li>
                             <a class="dropdown-item" href="#" onclick="changeStatus('new', <?= $project['id'] ?>)">
-                                <i class="fas fa-circle text-info"></i> Νέο
+                                <i class="fas fa-circle text-info"></i> <?= __('projects.new') ?>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="#" onclick="changeStatus('in_progress', <?= $project['id'] ?>)">
-                                <i class="fas fa-circle text-warning"></i> Σε Εξέλιξη
+                                <i class="fas fa-circle text-warning"></i> <?= __('projects.in_progress') ?>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="#" onclick="changeStatus('completed', <?= $project['id'] ?>)">
-                                <i class="fas fa-circle text-success"></i> Ολοκληρωμένο
+                                <i class="fas fa-circle text-success"></i> <?= __('projects.completed') ?>
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="#" onclick="changeStatus('invoiced', <?= $project['id'] ?>)">
-                                <i class="fas fa-circle text-primary"></i> Τιμολογημένο
+                                <i class="fas fa-circle text-primary"></i> <?= __('projects.invoiced') ?>
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item text-danger" href="#" onclick="changeStatus('cancelled', <?= $project['id'] ?>)">
-                                <i class="fas fa-circle text-danger"></i> Ακυρωμένο
+                                <i class="fas fa-circle text-danger"></i> <?= __('projects.cancelled') ?>
                             </a>
                         </li>
                     </ul>
                 </div>
                 
                 <a href="<?= BASE_URL ?>/projects/edit/<?= $project['id'] ?>" class="btn btn-primary mb-1">
-                    <i class="fas fa-edit"></i> Επεξεργασία
+                    <i class="fas fa-edit"></i> <?= __('projects.edit') ?>
                 </a>
                 <a href="?route=/projects" class="btn btn-outline-secondary mb-1">
-                    <i class="fas fa-arrow-left"></i> Πίσω
+                    <i class="fas fa-arrow-left"></i> <?= __('projects.back_to_list') ?>
                 </a>
             </div>
         </div>
 
         <?php if (!empty($project['description'])): ?>
         <div class="alert alert-light border-start border-primary border-4 mb-0">
-            <h6 class="text-muted mb-2"><i class="fas fa-file-alt"></i> Περιγραφή</h6>
+            <h6 class="text-muted mb-2"><i class="fas fa-file-alt"></i> <?= __('projects.description') ?></h6>
             <p class="mb-0"><?= nl2br(htmlspecialchars($project['description'])) ?></p>
         </div>
         <?php endif; ?>
@@ -106,7 +106,7 @@
         <!-- Customer Card -->
         <div class="card mb-4 shadow-sm border-0">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="fas fa-user-tie"></i> Πελάτης</h5>
+                <h5 class="mb-0"><i class="fas fa-user-tie"></i> <?= __('projects.customer') ?></h5>
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
@@ -126,7 +126,7 @@
                             </a>
                         </h6>
                         <small class="text-muted">
-                            <?= $project['customer_type'] === 'company' ? 'Εταιρεία' : 'Ιδιώτης' ?>
+                            <?= $project['customer_type'] === 'company' ? __('customers.company') : __('customers.individual') ?>
                         </small>
                     </div>
                 </div>
@@ -165,14 +165,14 @@
         <!-- Project Details Card -->
         <div class="card mb-4 shadow-sm border-0">
             <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Λεπτομέρειες</h5>
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> <?= __('projects.details') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($project['project_address'])): ?>
                 <div class="mb-3 pb-3 border-bottom">
                     <div class="d-flex align-items-center mb-2">
                         <i class="fas fa-map-marker-alt text-danger me-2"></i>
-                        <small class="text-muted fw-bold">ΤΟΠΟΘΕΣΙΑ ΕΡΓΟΥ</small>
+                        <small class="text-muted fw-bold"><?= strtoupper(__('projects.project_location')) ?></small>
                     </div>
                     <div class="ps-4"><?= nl2br(htmlspecialchars($project['project_address'])) ?></div>
                 </div>
@@ -181,16 +181,16 @@
                 <div class="mb-3 pb-3 border-bottom">
                     <div class="d-flex align-items-center mb-2">
                         <i class="fas fa-calendar-check text-success me-2"></i>
-                        <small class="text-muted fw-bold">ΗΜΕΡΟΜΗΝΙΕΣ</small>
+                        <small class="text-muted fw-bold"><?= strtoupper(__('projects.dates')) ?></small>
                     </div>
                     <div class="ps-4">
                         <div class="mb-1">
-                            <small class="text-muted">Έναρξη:</small>
+                            <small class="text-muted"><?= __('projects.start') ?>:</small>
                             <strong><?= formatDate($project['start_date']) ?></strong>
                         </div>
                         <?php if (!empty($project['completion_date'])): ?>
                         <div>
-                            <small class="text-muted">Ολοκλήρωση:</small>
+                            <small class="text-muted"><?= __('projects.completion') ?>:</small>
                             <strong><?= formatDate($project['completion_date']) ?></strong>
                         </div>
                         <?php endif; ?>
@@ -200,7 +200,7 @@
                 <div class="mb-3 pb-3 border-bottom">
                     <div class="d-flex align-items-center mb-2">
                         <i class="fas fa-euro-sign text-success me-2"></i>
-                        <small class="text-muted fw-bold">ΚΟΣΤΟΣ</small>
+                        <small class="text-muted fw-bold"><?= strtoupper(__('projects.cost')) ?></small>
                     </div>
                     <div class="ps-4">
                         <h4 class="mb-0 text-success"><?= formatCurrency($project['total_cost']) ?></h4>
@@ -210,7 +210,7 @@
                 <div class="mb-0">
                     <div class="d-flex align-items-center mb-2">
                         <i class="fas fa-user-cog text-primary me-2"></i>
-                        <small class="text-muted fw-bold">ΤΕΧΝΙΚΟΣ</small>
+                        <small class="text-muted fw-bold"><?= strtoupper(__('projects.technician')) ?></small>
                     </div>
                     <div class="ps-4">
                         <div class="d-flex align-items-center">
@@ -231,7 +231,7 @@
             </div>
             <div class="card-footer bg-light">
                 <small class="text-muted">
-                    <i class="fas fa-user"></i> Δημιουργήθηκε από 
+                    <i class="fas fa-user"></i> <?= __('projects.created_by') ?> 
                     <strong><?= htmlspecialchars($project['creator_first_name'] . ' ' . $project['creator_last_name']) ?></strong>
                     <br>
                     <i class="fas fa-clock"></i> <?= formatDate($project['created_at']) ?>
@@ -242,21 +242,21 @@
         <!-- Quick Actions -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-bolt"></i> Γρήγορες Ενέργειες</h5>
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> <?= __('projects.quick_actions') ?></h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="?route=/appointments/create&project_id=<?= $project['id'] ?>&customer_id=<?= $project['customer_id'] ?>" 
                        class="btn btn-outline-primary">
-                        <i class="fas fa-calendar-plus"></i> Νέο Ραντεβού
+                        <i class="fas fa-calendar-plus"></i> <?= __('projects.new_appointment') ?>
                     </a>
                     <a href="?route=/quotes/create&project_id=<?= $project['id'] ?>&customer_id=<?= $project['customer_id'] ?>" 
                        class="btn btn-outline-info">
-                        <i class="fas fa-file-invoice"></i> Νέα Προσφορά
+                        <i class="fas fa-file-invoice"></i> <?= __('projects.new_quote') ?>
                     </a>
                     <a href="?route=/invoices/create&project_id=<?= $project['id'] ?>&customer_id=<?= $project['customer_id'] ?>" 
                        class="btn btn-outline-success">
-                        <i class="fas fa-file-invoice-dollar"></i> Νέο Τιμολόγιο
+                        <i class="fas fa-file-invoice-dollar"></i> <?= __('projects.new_invoice') ?>
                     </a>
                 </div>
             </div>
@@ -268,20 +268,20 @@
         <!-- Appointments -->
         <div class="card mb-4 shadow-sm border-0">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Ραντεβού</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> <?= __('menu.appointments') ?></h5>
                 <a href="?route=/appointments/create&project_id=<?= $project['id'] ?>&customer_id=<?= $project['customer_id'] ?>" 
                    class="btn btn-light btn-sm">
-                    <i class="fas fa-plus"></i> Νέο Ραντεβού
+                    <i class="fas fa-plus"></i> <?= __('projects.new_appointment') ?>
                 </a>
             </div>
             <div class="card-body">
                 <?php if (empty($project['appointments'])): ?>
                     <div class="text-center py-5">
                         <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Δεν υπάρχουν ραντεβού για αυτό το έργο.</p>
+                        <p class="text-muted"><?= __('projects.no_appointments') ?></p>
                         <a href="?route=/appointments/create&project_id=<?= $project['id'] ?>&customer_id=<?= $project['customer_id'] ?>" 
                            class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Δημιουργία Ραντεβού
+                            <i class="fas fa-plus"></i> <?= __('projects.create_appointment') ?>
                         </a>
                     </div>
                 <?php else: ?>
@@ -344,13 +344,13 @@
         <!-- Materials / Notes Section -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-sticky-note"></i> Σημειώσεις & Υλικά</h5>
+                <h5 class="mb-0"><i class="fas fa-sticky-note"></i> <?= __('projects.notes_and_materials') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (empty($project['notes'])): ?>
                     <div class="text-center py-4">
                         <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
-                        <p class="text-muted mb-0">Δεν υπάρχουν σημειώσεις ή υλικά για αυτό το έργο.</p>
+                        <p class="text-muted mb-0"><?= __('projects.no_notes') ?></p>
                     </div>
                 <?php else: ?>
                     <div class="border-start border-warning border-4 ps-3">
@@ -372,7 +372,7 @@
                         <i class="fas fa-calendar-check fa-2x text-primary"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <div class="text-muted small">Ραντεβού</div>
+                        <div class="text-muted small"><?= __('menu.appointments') ?></div>
                         <div class="h4 mb-0"><?= count($project['appointments'] ?? []) ?></div>
                     </div>
                 </div>
@@ -388,7 +388,7 @@
                         <i class="fas fa-euro-sign fa-2x text-success"></i>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <div class="text-muted small">Κόστος Υλικών</div>
+                        <div class="text-muted small"><?= __('projects.material_cost') ?></div>
                         <div class="h4 mb-0"><?= formatCurrency($project['material_cost'] ?? 0) ?></div>
                     </div>
                 </div>

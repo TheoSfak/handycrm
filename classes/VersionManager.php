@@ -57,7 +57,13 @@ class VersionManager {
                 throw new Exception('Failed to install files');
             }
             
-            // Step 5: Cleanup
+            // Step 5: Update version in config.php
+            $versionUpdateResult = $this->updateConfigVersion($version);
+            if (!$versionUpdateResult) {
+                error_log('Warning: Failed to update version in config.php');
+            }
+            
+            // Step 6: Cleanup
             $this->cleanup($zipFile, $extractPath);
             
             return [
@@ -326,6 +332,56 @@ class VersionManager {
         require_once __DIR__ . '/UpdateChecker.php';
         $checker = new UpdateChecker();
         return $checker->getCurrentVersion();
+    }
+    
+    /**
+     * Update APP_VERSION in config.php
+     */
+    private function updateConfigVersion($newVersion) {
+        try {
+            $configFile = $this->rootDir . '/config/config.php';
+            
+            if (!file_exists($configFile)) {
+                error_log('Config file not found: ' . $configFile);
+                return false;
+            }
+            
+            // Read the config file
+            $configContent = file_get_contents($configFile);
+            
+            if ($configContent === false) {
+                error_log('Failed to read config file');
+                return false;
+            }
+            
+            // Update APP_VERSION constant
+            // Match: define('APP_VERSION', '1.0.3');
+            $pattern = "/(define\s*\(\s*['\"]APP_VERSION['\"]\s*,\s*['\"])([^'\"]+)(['\"])/";
+            $replacement = '${1}' . $newVersion . '${3}';
+            
+            $newContent = preg_replace($pattern, $replacement, $configContent);
+            
+            if ($newContent === null || $newContent === $configContent) {
+                // Pattern didn't match, log warning but don't fail
+                error_log('Could not find APP_VERSION pattern in config.php');
+                return false;
+            }
+            
+            // Write the updated config
+            $result = file_put_contents($configFile, $newContent);
+            
+            if ($result === false) {
+                error_log('Failed to write updated config file');
+                return false;
+            }
+            
+            error_log('Successfully updated APP_VERSION to ' . $newVersion);
+            return true;
+            
+        } catch (Exception $e) {
+            error_log('Failed to update config version: ' . $e->getMessage());
+            return false;
+        }
     }
     
     /**

@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="fas fa-calendar-plus"></i> Νέο Ραντεβού</h2>
+    <h2><i class="fas fa-calendar-plus"></i> <?= __('appointments.new_appointment') ?></h2>
     <a href="?route=/appointments" class="btn btn-secondary">
-        <i class="fas fa-arrow-left"></i> Πίσω στη Λίστα
+        <i class="fas fa-arrow-left"></i> <?= __('appointments.back_to_list') ?>
     </a>
 </div>
 
@@ -20,7 +20,7 @@
             <div class="row">
                 <div class="col-md-8">
                     <div class="mb-3">
-                        <label for="title" class="form-label">Τίτλος Ραντεβού <span class="text-danger">*</span></label>
+                        <label for="title" class="form-label"><?= __('appointments.title') ?> <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title" 
                                value="<?= htmlspecialchars($_SESSION['old_input']['title'] ?? '') ?>" required>
                     </div>
@@ -28,13 +28,13 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="status" class="form-label">Κατάσταση</label>
+                        <label for="status" class="form-label"><?= __('appointments.status') ?></label>
                         <select class="form-select" id="status" name="status">
                             <option value="scheduled" <?= (($_SESSION['old_input']['status'] ?? 'scheduled') === 'scheduled') ? 'selected' : '' ?>>
-                                Προγραμματισμένο
+                                <?= __('appointments.scheduled') ?>
                             </option>
                             <option value="confirmed" <?= (($_SESSION['old_input']['status'] ?? '') === 'confirmed') ? 'selected' : '' ?>>
-                                Επιβεβαιωμένο
+                                <?= __('appointments.confirmed') ?>
                             </option>
                         </select>
                     </div>
@@ -42,16 +42,16 @@
             </div>
             
             <div class="mb-3">
-                <label for="description" class="form-label">Περιγραφή</label>
+                <label for="description" class="form-label"><?= __('appointments.description') ?></label>
                 <textarea class="form-control" id="description" name="description" rows="3"><?= htmlspecialchars($_SESSION['old_input']['description'] ?? '') ?></textarea>
             </div>
             
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="customer_id" class="form-label">Πελάτης <span class="text-danger">*</span></label>
+                        <label for="customer_id" class="form-label"><?= __('appointments.customer') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="customer_id" name="customer_id" required onchange="loadCustomerProjects(this.value)">
-                            <option value="">Επιλέξτε πελάτη...</option>
+                            <option value=""><?= __('appointments.select_customer') ?></option>
                             <?php foreach ($customers as $customer): ?>
                                 <?php
                                     $customerName = $customer['customer_type'] === 'company' && !empty($customer['company_name']) 
@@ -73,7 +73,7 @@
                         </select>
                         <div class="form-text">
                             <a href="?route=/customers/create" target="_blank">
-                                <i class="fas fa-plus"></i> Προσθήκη νέου πελάτη
+                                <i class="fas fa-plus"></i> <?= __('appointments.add_new_customer') ?>
                             </a>
                         </div>
                     </div>
@@ -81,9 +81,9 @@
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="technician_id" class="form-label">Τεχνικός <span class="text-danger">*</span></label>
+                        <label for="technician_id" class="form-label"><?= __('appointments.technician') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="technician_id" name="technician_id" required>
-                            <option value="">Επιλέξτε τεχνικό...</option>
+                            <option value=""><?= __('appointments.select_technician') ?></option>
                             <?php foreach ($technicians as $tech): ?>
                             <option value="<?= $tech['id'] ?>" 
                                     <?= (($_SESSION['old_input']['technician_id'] ?? '') == $tech['id']) ? 'selected' : '' ?>>
@@ -98,9 +98,9 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="project_id" class="form-label">Έργο (Προαιρετικό)</label>
+                        <label for="project_id" class="form-label"><?= __('appointments.project_optional') ?></label>
                         <select class="form-select" id="project_id" name="project_id">
-                            <option value="">Χωρίς έργο</option>
+                            <option value=""><?= __('appointments.no_project') ?></option>
                             <?php foreach ($projects as $project): ?>
                             <option value="<?= $project['id'] ?>" 
                                     data-customer="<?= $project['customer_id'] ?>"
@@ -110,16 +110,16 @@
                             <?php endforeach; ?>
                         </select>
                         <div class="form-text">
-                            Συνδέστε το ραντεβού με ένα υπάρχον έργο
+                            <?= __('appointments.link_to_project') ?>
                         </div>
                     </div>
                 </div>
                 
                 <div class="col-md-6">
                     <div class="mb-3">
-                        <label for="address" class="form-label">Τοποθεσία</label>
+                        <label for="address" class="form-label"><?= __('appointments.location') ?></label>
                         <input type="text" class="form-control" id="address" name="address" 
-                               placeholder="Διεύθυνση ή τοποθεσία"
+                               placeholder="<?= __('appointments.location_placeholder') ?>"
                                value="<?= htmlspecialchars($_SESSION['old_input']['address'] ?? '') ?>">
                     </div>
                 </div>
@@ -128,7 +128,7 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="appointment_date" class="form-label">Ημερομηνία <span class="text-danger">*</span></label>
+                        <label for="appointment_date" class="form-label"><?= __('appointments.date') ?> <span class="text-danger">*</span></label>
                         <input type="date" class="form-control" id="appointment_date" name="appointment_date" 
                                value="<?= htmlspecialchars($_SESSION['old_input']['appointment_date'] ?? date('Y-m-d')) ?>" 
                                required>
@@ -137,7 +137,7 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="appointment_time" class="form-label">Ώρα <span class="text-danger">*</span></label>
+                        <label for="appointment_time" class="form-label"><?= __('appointments.time') ?> <span class="text-danger">*</span></label>
                         <input type="time" class="form-control" id="appointment_time" name="appointment_time" 
                                value="<?= htmlspecialchars($_SESSION['old_input']['appointment_time'] ?? '09:00') ?>" 
                                required>
@@ -146,7 +146,7 @@
                 
                 <div class="col-md-4">
                     <div class="mb-3">
-                        <label for="duration_minutes" class="form-label">Διάρκεια (λεπτά)</label>
+                        <label for="duration_minutes" class="form-label"><?= __('appointments.duration_minutes_label') ?></label>
                         <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" 
                                value="<?= htmlspecialchars($_SESSION['old_input']['duration_minutes'] ?? '60') ?>" 
                                min="15" step="15">
@@ -155,17 +155,17 @@
             </div>
             
             <div class="mb-3">
-                <label for="notes" class="form-label">Σημειώσεις</label>
+                <label for="notes" class="form-label"><?= __('appointments.notes') ?></label>
                 <textarea class="form-control" id="notes" name="notes" rows="3" 
-                          placeholder="Επιπλέον σημειώσεις ή οδηγίες..."><?= htmlspecialchars($_SESSION['old_input']['notes'] ?? '') ?></textarea>
+                          placeholder="<?= __('appointments.notes_placeholder') ?>"><?= htmlspecialchars($_SESSION['old_input']['notes'] ?? '') ?></textarea>
             </div>
             
             <div class="d-flex justify-content-between">
                 <a href="?route=/appointments" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Ακύρωση
+                    <i class="fas fa-times"></i> <?= __('appointments.cancel') ?>
                 </a>
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> Αποθήκευση
+                    <i class="fas fa-save"></i> <?= __('appointments.save') ?>
                 </button>
             </div>
         </form>
