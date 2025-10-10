@@ -12,9 +12,9 @@ echo $updateChecker->getUpdateNotification();
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <h6 class="card-title mb-0">Πελάτες</h6>
+                        <h6 class="card-title mb-0"><?= __('dashboard.customers') ?></h6>
                         <h3 class="mb-0"><?= $stats['total_customers'] ?? 0 ?></h3>
-                        <small>+<?= $stats['new_customers_month'] ?? 0 ?> αυτόν τον μήνα</small>
+                        <small>+<?= $stats['new_customers_month'] ?? 0 ?> <?= __('dashboard.new_this_month') ?></small>
                     </div>
                     <div class="text-end">
                         <i class="fas fa-users fa-2x opacity-75"></i>
@@ -29,9 +29,9 @@ echo $updateChecker->getUpdateNotification();
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <h6 class="card-title mb-0">Ενεργά Έργα</h6>
+                        <h6 class="card-title mb-0"><?= __('dashboard.active_projects') ?></h6>
                         <h3 class="mb-0"><?= $stats['active_projects'] ?? 0 ?></h3>
-                        <small>Σε εξέλιξη</small>
+                        <small><?= __('dashboard.in_progress') ?></small>
                     </div>
                     <div class="text-end">
                         <i class="fas fa-project-diagram fa-2x opacity-75"></i>
@@ -46,9 +46,9 @@ echo $updateChecker->getUpdateNotification();
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <h6 class="card-title mb-0">Ραντεβού Σήμερα</h6>
+                        <h6 class="card-title mb-0"><?= __('dashboard.appointments_today') ?></h6>
                         <h3 class="mb-0"><?= $stats['appointments_today'] ?? 0 ?></h3>
-                        <small>Προγραμματισμένα</small>
+                        <small><?= __('dashboard.scheduled') ?></small>
                     </div>
                     <div class="text-end">
                         <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
@@ -63,9 +63,9 @@ echo $updateChecker->getUpdateNotification();
             <div class="card-body">
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
-                        <h6 class="card-title mb-0">Έσοδα Μήνα</h6>
+                        <h6 class="card-title mb-0"><?= __('dashboard.revenue_month') ?></h6>
                         <h3 class="mb-0"><?= number_format($stats['revenue_month'] ?? 0, 2) ?>€</h3>
-                        <small>Ολοκληρωμένα έργα</small>
+                        <small><?= __('dashboard.completed_projects') ?></small>
                     </div>
                     <div class="text-end">
                         <i class="fas fa-euro-sign fa-2x opacity-75"></i>
@@ -81,7 +81,7 @@ echo $updateChecker->getUpdateNotification();
     <div class="col-lg-8 mb-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-clock"></i> Πρόσφατη Δραστηριότητα</h5>
+                <h5 class="mb-0"><i class="fas fa-clock"></i> <?= __('dashboard.recent_activity') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($recent_activities)): ?>
@@ -109,7 +109,7 @@ echo $updateChecker->getUpdateNotification();
                 <?php else: ?>
                 <div class="text-center text-muted py-4">
                     <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
-                    <p>Δεν υπάρχει πρόσφατη δραστηριότητα</p>
+                    <p><?= __('dashboard.no_recent_activity') ?></p>
                 </div>
                 <?php endif; ?>
             </div>
@@ -120,7 +120,7 @@ echo $updateChecker->getUpdateNotification();
     <div class="col-lg-4 mb-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-calendar-check"></i> Επόμενα Ραντεβού</h5>
+                <h5 class="mb-0"><i class="fas fa-calendar-check"></i> <?= __('dashboard.upcoming_appointments') ?></h5>
             </div>
             <div class="card-body">
                 <?php if (!empty($upcoming_appointments)): ?>
@@ -154,15 +154,15 @@ echo $updateChecker->getUpdateNotification();
                 </div>
                 <div class="text-center mt-3">
                     <a href="/appointments" class="btn btn-outline-primary btn-sm">
-                        Όλα τα Ραντεβού <i class="fas fa-arrow-right"></i>
+                        <?= __('dashboard.all_appointments') ?> <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
                 <?php else: ?>
                 <div class="text-center text-muted py-4">
                     <i class="fas fa-calendar-times fa-3x mb-3 opacity-50"></i>
-                    <p>Δεν υπάρχουν προγραμματισμένα ραντεβού</p>
+                    <p><?= __('dashboard.no_upcoming_appointments') ?></p>
                     <a href="/appointments/create" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus"></i> Νέο Ραντεβού
+                        <i class="fas fa-plus"></i> <?= __('dashboard.new_appointment') ?>
                     </a>
                 </div>
                 <?php endif; ?>
@@ -176,49 +176,49 @@ echo $updateChecker->getUpdateNotification();
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-bolt"></i> Γρήγορες Ενέργειες</h5>
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> <?= __('dashboard.quick_actions') ?></h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/customers/create" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-user-plus fa-2x mb-2"></i>
-                            <span>Νέος Πελάτης</span>
+                            <span><?= __('dashboard.new_customer') ?></span>
                         </a>
                     </div>
                     
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/projects/create" class="btn btn-outline-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-project-diagram fa-2x mb-2"></i>
-                            <span>Νέο Έργο</span>
+                            <span><?= __('dashboard.new_project') ?></span>
                         </a>
                     </div>
                     
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/appointments/create" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-calendar-plus fa-2x mb-2"></i>
-                            <span>Νέο Ραντεβού</span>
+                            <span><?= __('dashboard.new_appointment') ?></span>
                         </a>
                     </div>
                     
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/quotes/create" class="btn btn-outline-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-file-invoice fa-2x mb-2"></i>
-                            <span>Νέα Προσφορά</span>
+                            <span><?= __('dashboard.new_quote') ?></span>
                         </a>
                     </div>
                     
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/invoices/create" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-receipt fa-2x mb-2"></i>
-                            <span>Νέο Τιμολόγιο</span>
+                            <span><?= __('dashboard.new_invoice') ?></span>
                         </a>
                     </div>
                     
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/appointments/calendar" class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-calendar fa-2x mb-2"></i>
-                            <span>Ημερολόγιο</span>
+                            <span><?= __('dashboard.calendar') ?></span>
                         </a>
                     </div>
                 </div>
@@ -233,7 +233,7 @@ echo $updateChecker->getUpdateNotification();
     <div class="col-12">
         <div class="card border-warning">
             <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0"><i class="fas fa-bell"></i> Ειδοποιήσεις</h5>
+                <h5 class="mb-0"><i class="fas fa-bell"></i> <?= __('dashboard.notifications') ?></h5>
             </div>
             <div class="card-body">
                 <?php foreach ($notifications as $notification): ?>

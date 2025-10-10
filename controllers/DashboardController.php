@@ -25,7 +25,7 @@ class DashboardController extends BaseController {
         $notifications = $this->getNotifications($user['id']);
         
         $data = [
-            'title' => 'Dashboard - ' . APP_NAME,
+            'title' => __('dashboard.title') . ' - ' . APP_NAME,
             'user' => $user,
             'stats' => $stats,
             'recent_activities' => $recentActivities,
