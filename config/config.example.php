@@ -18,7 +18,7 @@ define('DB_CHARSET', 'utf8mb4');
 
 // Application Configuration
 define('APP_NAME', 'HandyCRM');
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '1.0.4');
 define('APP_URL', 'https://yourdomain.com'); // Update for production
 define('APP_ROOT', dirname(__FILE__, 2));
 
@@ -120,16 +120,16 @@ if (!defined('BASE_URL')) {
 }
 
 // Currency Settings
-define('CURRENCY', 'EUR');
-define('CURRENCY_SYMBOL', '€');
-define('DEFAULT_VAT_RATE', 24.00);
+if (!defined('CURRENCY')) define('CURRENCY', 'EUR');
+if (!defined('CURRENCY_SYMBOL')) define('CURRENCY_SYMBOL', '€');
+if (!defined('DEFAULT_VAT_RATE')) define('DEFAULT_VAT_RATE', 24.00);
 
 // Language Settings
-define('DEFAULT_LANGUAGE', 'el'); // Default language (Greek)
-define('LANGUAGES_PATH', APP_ROOT . '/languages/');
+if (!defined('DEFAULT_LANGUAGE')) define('DEFAULT_LANGUAGE', 'el'); // Default language (Greek)
+if (!defined('LANGUAGES_PATH')) define('LANGUAGES_PATH', APP_ROOT . '/languages/');
 
 // Installation marker
-define('INSTALLATION_COMPLETED', true);
+if (!defined('INSTALLATION_COMPLETED')) define('INSTALLATION_COMPLETED', true);
 
 // Initialize Language Manager
 require_once APP_ROOT . '/classes/LanguageManager.php';
@@ -139,14 +139,18 @@ $lang = new LanguageManager($currentLang);
 /**
  * Helper function for translations
  */
-function __($key, $default = null) {
-    global $lang;
-    return $lang->get($key, $default);
+if (!function_exists('__')) {
+    function __($key, $default = null) {
+        global $lang;
+        return $lang->get($key, $default);
+    }
 }
 
 /**
  * Alias for translation function
  */
-function trans($key, $default = null) {
-    return __($key, $default);
+if (!function_exists('trans')) {
+    function trans($key, $default = null) {
+        return __($key, $default);
+    }
 }
