@@ -41,3 +41,6 @@ cache/
 
 # Node modules (if you add frontend build tools)
 node_modules/
+
+# Deployment packages
+deployment-packages/
