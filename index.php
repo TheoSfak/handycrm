@@ -36,31 +36,14 @@ try {
     // Check if tables exist
     $stmt = $connection->query("SHOW TABLES LIKE 'users'");
     if ($stmt->rowCount() === 0) {
-        // Database not properly set up
-        die('
-            <div style="padding: 20px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin: 20px; font-family: Arial;">
-                <h3>Database Error</h3>
-                <p>The database tables are not properly set up. Please run the installation again.</p>
-                <a href="install.php" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Go to Installation</a>
-            </div>
-        ');
+        // Database not properly set up - redirect to installation
+        header('Location: install.php');
+        exit;
     }
 } catch (Exception $e) {
-    // Database connection failed - show detailed error
-    die('
-        <div style="padding: 20px; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 5px; margin: 20px; font-family: Arial;">
-            <h3>Database Connection Error</h3>
-            <p><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</p>
-            <p>Please check your database configuration in <code>config/config.php</code></p>
-            <p><strong>Common issues:</strong></p>
-            <ul>
-                <li>Wrong database host, username, or password</li>
-                <li>Database server is not running</li>
-                <li>Database does not exist</li>
-            </ul>
-            <a href="install.php" style="display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">Reinstall</a>
-        </div>
-    ');
+    // Database connection failed - redirect to installation
+    header('Location: install.php');
+    exit;
 }
 
 // System is properly installed, load the application

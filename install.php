@@ -63,12 +63,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step == 1) {
         // Create config file
         $configTemplate = file_get_contents('config/config.example.php');
         
+        // Generate random secret key
+        $secretKey = bin2hex(random_bytes(32));
+        
         // Replace database configuration - using regex for better matching
         $config = preg_replace("/define\('DB_HOST', '.*?'\);/", "define('DB_HOST', '$dbHost');", $configTemplate);
         $config = preg_replace("/define\('DB_NAME', '.*?'\);/", "define('DB_NAME', '$dbName');", $config);
         $config = preg_replace("/define\('DB_USER', '.*?'\);/", "define('DB_USER', '$dbUser');", $config);
         $config = preg_replace("/define\('DB_PASS', '.*?'\);/", "define('DB_PASS', '$dbPass');", $config);
         $config = preg_replace("/define\('APP_URL', '.*?'\);/", "define('APP_URL', '$appUrl');", $config);
+        $config = preg_replace("/define\('SECRET_KEY', '.*?'\);/", "define('SECRET_KEY', '$secretKey');", $config);
         
         file_put_contents('config/config.php', $config);
         
