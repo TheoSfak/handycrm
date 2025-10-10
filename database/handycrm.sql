@@ -408,6 +408,7 @@ CREATE TABLE `users` (
   `company_phone` varchar(20) DEFAULT NULL,
   `company_email` varchar(100) DEFAULT NULL,
   `company_tax_id` varchar(50) DEFAULT NULL,
+  `language` varchar(2) DEFAULT 'el',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),

@@ -1,0 +1,97 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║                 HandyCRM v1.0.3 - QUICK START                  ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+📦 WHAT'S IN THIS PACKAGE?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Complete HandyCRM application
+✓ Automatic installation wizard
+✓ Multi-language support (English + Greek)
+✓ All features enabled
+✓ Ready for production use
+
+
+🚀 3-STEP INSTALLATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+STEP 1: UPLOAD
+   Extract this ZIP file
+   Upload all files to your web server
+   (FTP, cPanel File Manager, or any file upload method)
+
+STEP 2: CREATE DATABASE
+   Create a MySQL database in your hosting panel
+   Write down: database name, username, password
+
+STEP 3: VISIT YOUR URL
+   Open your browser and go to your HandyCRM URL
+   Example: https://yourdomain.com/handycrm/
+   
+   ⭐ The installation wizard will start AUTOMATICALLY!
+   
+   Just fill in:
+   - Database details (from Step 2)
+   - Admin username & password
+   - Company information
+   
+   Click install and you're done! 🎉
+
+
+📖 FULL INSTRUCTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For detailed installation steps, troubleshooting, and configuration
+options, please read:
+
+   📄 DEPLOYMENT_README.txt
+
+
+⚠️  IMPORTANT SECURITY NOTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After installation completes successfully:
+
+1. DELETE the install.php file from your server
+2. Change the default admin password
+3. Set proper folder permissions (755 for uploads/ and backups/)
+
+
+🌍 LANGUAGE SETTINGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After logging in:
+- Go to Settings
+- Select your preferred language (English or Greek)
+- Visit Settings > Translations to add more languages
+
+
+💡 FEATURES INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ Customer Management (CRM)        ✓ User Management (Multi-user)
+✓ Project Tracking                 ✓ Automated Backups
+✓ Invoice Generation               ✓ Auto-Update System
+✓ Quotes & Estimates               ✓ Multi-Language Support
+✓ Appointment Calendar             ✓ Translation Manager
+✓ Material/Inventory Management
+
+
+📞 SUPPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Need help? Contact:
+   Email: theodore.sfakianakis@gmail.com
+   GitHub: https://github.com/TheoSfak/handycrm
+
+
+═══════════════════════════════════════════════════════════════
+
+Your friend sent you this package because they trust HandyCRM
+to help manage your business. We hope you'll enjoy using it!
+
+Happy organizing! 🚀
+
+═══════════════════════════════════════════════════════════════
