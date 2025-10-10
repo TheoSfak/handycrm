@@ -1,0 +1,14 @@
+.git
+.gitignore
+.vscode
+node_modules
+temp_language_fix.txt
+MULTI_LANGUAGE_GUIDE.md
+ΠΑΡΑΔΟΣΗ_HANDYCRM.md
+view_session.php
+test_session.php
+test_lang.php
+debug_lang.php
+direct_test.php
+views/settings/index.php.broken
+controllers/SettingsController.php.backup

@@ -227,68 +227,68 @@
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link <?= $currentRoute === '/' || $currentRoute === '' || $currentRoute === '/dashboard' ? 'active' : '' ?>" href="<?= BASE_URL ?>/dashboard">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                    <i class="fas fa-tachometer-alt"></i> <?= __('menu.dashboard') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/customers') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/customers">
-                    <i class="fas fa-users"></i> Πελάτες
+                    <i class="fas fa-users"></i> <?= __('menu.customers') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/projects') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/projects">
-                    <i class="fas fa-project-diagram"></i> Έργα
+                    <i class="fas fa-project-diagram"></i> <?= __('menu.projects') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/appointments') !== false && strpos($currentRoute, '/calendar') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/appointments">
-                    <i class="fas fa-calendar-alt"></i> Ραντεβού
+                    <i class="fas fa-calendar-alt"></i> <?= __('menu.appointments') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/appointments/calendar') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/appointments/calendar">
-                    <i class="fas fa-calendar"></i> Ημερολόγιο
+                    <i class="fas fa-calendar"></i> <?= __('menu.calendar') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/quotes') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/quotes">
-                    <i class="fas fa-file-invoice"></i> Προσφορές
+                    <i class="fas fa-file-invoice"></i> <?= __('menu.quotes') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/invoices') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/invoices">
-                    <i class="fas fa-receipt"></i> Τιμολόγια
+                    <i class="fas fa-receipt"></i> <?= __('menu.invoices') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/materials') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/materials">
-                    <i class="fas fa-boxes"></i> Υλικά
+                    <i class="fas fa-boxes"></i> <?= __('menu.materials') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/reports') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/reports">
-                    <i class="fas fa-chart-line"></i> Αναφορές
+                    <i class="fas fa-chart-line"></i> <?= __('menu.reports') ?>
                 </a>
             </li>
             
             <?php if ($_SESSION['role'] === 'admin'): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/users') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/users">
-                    <i class="fas fa-user-cog"></i> Χρήστες
+                    <i class="fas fa-user-cog"></i> <?= __('menu.users') ?>
                 </a>
             </li>
             
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/settings') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/settings">
-                    <i class="fas fa-cogs"></i> Ρυθμίσεις
+                    <i class="fas fa-cogs"></i> <?= __('menu.settings') ?>
                 </a>
             </li>
             <?php endif; ?>
@@ -316,15 +316,15 @@
                     <?php 
                     $breadcrumb = '';
                     $uri = $_SERVER['REQUEST_URI'];
-                    if (strpos($uri, '/customers') !== false) $breadcrumb = 'Πελάτες';
-                    elseif (strpos($uri, '/projects') !== false) $breadcrumb = 'Έργα';
-                    elseif (strpos($uri, '/appointments') !== false) $breadcrumb = 'Ραντεβού';
-                    elseif (strpos($uri, '/quotes') !== false) $breadcrumb = 'Προσφορές';
-                    elseif (strpos($uri, '/invoices') !== false) $breadcrumb = 'Τιμολόγια';
-                    elseif (strpos($uri, '/materials') !== false) $breadcrumb = 'Υλικά';
-                    elseif (strpos($uri, '/users') !== false) $breadcrumb = 'Χρήστες';
-                    elseif (strpos($uri, '/settings') !== false) $breadcrumb = 'Ρυθμίσεις';
-                    else $breadcrumb = 'Dashboard';
+                    if (strpos($uri, '/customers') !== false) $breadcrumb = __('menu.customers');
+                    elseif (strpos($uri, '/projects') !== false) $breadcrumb = __('menu.projects');
+                    elseif (strpos($uri, '/appointments') !== false) $breadcrumb = __('menu.appointments');
+                    elseif (strpos($uri, '/quotes') !== false) $breadcrumb = __('menu.quotes');
+                    elseif (strpos($uri, '/invoices') !== false) $breadcrumb = __('menu.invoices');
+                    elseif (strpos($uri, '/materials') !== false) $breadcrumb = __('menu.materials');
+                    elseif (strpos($uri, '/users') !== false) $breadcrumb = __('menu.users');
+                    elseif (strpos($uri, '/settings') !== false) $breadcrumb = __('menu.settings');
+                    else $breadcrumb = __('menu.dashboard');
                     echo $breadcrumb;
                     ?>
                 </h5>
@@ -338,23 +338,23 @@
                         <span class="badge bg-danger" id="notification-count">0</span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" id="notifications-list">
-                        <li><h6 class="dropdown-header">Ειδοποιήσεις</h6></li>
+                        <li><h6 class="dropdown-header"><?= __('common.notifications') ?></h6></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-muted" href="#">Δεν υπάρχουν νέες ειδοποιήσεις</a></li>
+                        <li><a class="dropdown-item text-muted" href="#"><?= __('common.no_notifications') ?></a></li>
                     </ul>
                 </div>
                 
                 <!-- User Dropdown -->
                 <div class="dropdown">
                     <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> <?= $_SESSION['first_name'] ?? 'Χρήστης' ?>
+                        <i class="fas fa-user"></i> <?= $_SESSION['first_name'] ?? __('common.user') ?>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><h6 class="dropdown-header"><?= ($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '') ?></h6></li>
                         <li><small class="dropdown-item-text text-muted"><?= ucfirst($_SESSION['role'] ?? 'user') ?></small></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="?route=/profile"><i class="fas fa-user-edit"></i> Προφίλ</a></li>
-                        <li><a class="dropdown-item" href="?route=/logout"><i class="fas fa-sign-out-alt"></i> Αποσύνδεση</a></li>
+                        <li><a class="dropdown-item" href="?route=/profile"><i class="fas fa-user-edit"></i> <?= __('common.profile') ?></a></li>
+                        <li><a class="dropdown-item" href="?route=/logout"><i class="fas fa-sign-out-alt"></i> <?= __('menu.logout') ?></a></li>
                     </ul>
                 </div>
             </div>
