@@ -257,4 +257,45 @@ class Customer extends BaseModel {
         
         return $slug;
     }
+    
+    /**
+     * Check for duplicate customers by email or mobile
+     * Returns array of potential duplicates
+     */
+    public function findDuplicates($email = null, $mobile = null, $excludeId = null) {
+        $conditions = [];
+        $params = [];
+        
+        if (!empty($email)) {
+            $conditions[] = "email = ?";
+            $params[] = $email;
+        }
+        
+        if (!empty($mobile)) {
+            $conditions[] = "mobile = ?";
+            $params[] = $mobile;
+        }
+        
+        // If no email or mobile provided, return empty
+        if (empty($conditions)) {
+            return [];
+        }
+        
+        // Build query with OR conditions
+        $whereClause = '(' . implode(' OR ', $conditions) . ') AND is_active = 1';
+        
+        // Exclude specific customer ID if provided (for updates)
+        if ($excludeId) {
+            $whereClause .= ' AND id != ?';
+            $params[] = $excludeId;
+        }
+        
+        $sql = "SELECT id, first_name, last_name, company_name, customer_type, 
+                       phone, mobile, email, city, created_at
+                FROM {$this->table} 
+                WHERE {$whereClause}
+                ORDER BY created_at DESC";
+        
+        return $this->db->fetchAll($sql, $params);
+    }
 }

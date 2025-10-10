@@ -77,6 +77,32 @@ class CustomerController extends BaseController {
                 $this->redirect('/customers/create');
             }
             
+            // Check for duplicate customers
+            $duplicates = $this->customerModel->findDuplicates(
+                $data['email'] ?? null,
+                $data['mobile'] ?? null
+            );
+            
+            if (!empty($duplicates)) {
+                $duplicateInfo = [];
+                foreach ($duplicates as $dup) {
+                    $name = $dup['customer_type'] === 'company' ? $dup['company_name'] : ($dup['first_name'] . ' ' . $dup['last_name']);
+                    $matches = [];
+                    if (!empty($data['email']) && $dup['email'] === $data['email']) {
+                        $matches[] = 'email: ' . $dup['email'];
+                    }
+                    if (!empty($data['mobile']) && $dup['mobile'] === $data['mobile']) {
+                        $matches[] = 'κινητό: ' . $dup['mobile'];
+                    }
+                    $duplicateInfo[] = $name . ' (' . implode(', ', $matches) . ')';
+                }
+                
+                $_SESSION['form_data'] = $data;
+                $message = 'Βρέθηκαν υπάρχοντες πελάτες με τα ίδια στοιχεία: ' . implode(' | ', $duplicateInfo);
+                $this->flash('error', $message);
+                $this->redirect('/customers/create');
+            }
+            
             // Prepare data for insertion
             $customerData = [
                 'first_name' => $data['first_name'],
@@ -197,6 +223,33 @@ class CustomerController extends BaseController {
                 $_SESSION['form_data'] = $data;
                 $_SESSION['form_errors'] = $errors;
                 $this->flash('error', 'Παρακαλώ διορθώστε τα σφάλματα στη φόρμα');
+                $this->redirect('/customers/' . $id . '/edit');
+            }
+            
+            // Check for duplicate customers (excluding current customer)
+            $duplicates = $this->customerModel->findDuplicates(
+                $data['email'] ?? null,
+                $data['mobile'] ?? null,
+                $id  // Exclude current customer
+            );
+            
+            if (!empty($duplicates)) {
+                $duplicateInfo = [];
+                foreach ($duplicates as $dup) {
+                    $name = $dup['customer_type'] === 'company' ? $dup['company_name'] : ($dup['first_name'] . ' ' . $dup['last_name']);
+                    $matches = [];
+                    if (!empty($data['email']) && $dup['email'] === $data['email']) {
+                        $matches[] = 'email: ' . $dup['email'];
+                    }
+                    if (!empty($data['mobile']) && $dup['mobile'] === $data['mobile']) {
+                        $matches[] = 'κινητό: ' . $dup['mobile'];
+                    }
+                    $duplicateInfo[] = $name . ' (' . implode(', ', $matches) . ')';
+                }
+                
+                $_SESSION['form_data'] = $data;
+                $message = 'Βρέθηκαν υπάρχοντες πελάτες με τα ίδια στοιχεία: ' . implode(' | ', $duplicateInfo);
+                $this->flash('error', $message);
                 $this->redirect('/customers/' . $id . '/edit');
             }
             
