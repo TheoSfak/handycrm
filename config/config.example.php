@@ -37,6 +37,9 @@ define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls',
 // Timezone
 date_default_timezone_set('Europe/Athens');
 
+// Debug Mode
+define('DEBUG_MODE', false);
+
 // Error Reporting (Disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', '1');

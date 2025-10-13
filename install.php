@@ -130,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $config .= "define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx']);\n\n";
             $config .= "// Timezone\n";
             $config .= "date_default_timezone_set('Europe/Athens');\n\n";
+            $config .= "// Debug Mode\n";
+            $config .= "define('DEBUG_MODE', false);\n\n";
             $config .= "// Error Reporting (Disable in production)\n";
             $config .= "error_reporting(E_ALL);\n";
             $config .= "ini_set('display_errors', '1');\n";
