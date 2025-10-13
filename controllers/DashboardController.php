@@ -12,6 +12,12 @@ class DashboardController extends BaseController {
     public function index() {
         $user = $this->getCurrentUser();
         
+        // Ensure user is logged in and valid
+        if (!$user || !is_array($user)) {
+            $this->redirect('/login');
+            return;
+        }
+        
         // Get dashboard statistics
         $stats = $this->getDashboardStats($user);
         
@@ -25,7 +31,7 @@ class DashboardController extends BaseController {
         $notifications = $this->getNotifications($user['id']);
         
         $data = [
-            'title' => 'Dashboard - ' . APP_NAME,
+            'title' => __('dashboard.title') . ' - ' . APP_NAME,
             'user' => $user,
             'stats' => $stats,
             'recent_activities' => $recentActivities,
@@ -95,6 +101,11 @@ class DashboardController extends BaseController {
                 'pending_quotes' => 0,
                 'overdue_invoices' => 0
             ];
+        }
+        
+        // Check if user is valid before accessing role
+        if (!$user || !is_array($user) || !isset($user['role'])) {
+            return $stats;
         }
         
         if ($user['role'] === 'admin') {
@@ -188,7 +199,7 @@ class DashboardController extends BaseController {
                     'title' => 'Νέος πελάτης: ' . $customerName,
                     'description' => 'Τηλέφωνο: ' . $customer['phone'],
                     'date' => $customer['created_at'],
-                    'link' => '?route=/customers/view&id=' . $customer['id']
+                    'link' => '?route=/customers/show&id=' . $customer['id']
                 ];
             }
             
@@ -235,6 +246,11 @@ class DashboardController extends BaseController {
      */
     private function getRecentActivitiesOld($user) {
         $activities = [];
+        
+        // Safety check
+        if (!$user || !is_array($user) || !isset($user['role'])) {
+            return $activities;
+        }
         
         if ($user['role'] === 'admin') {
             // Technician's recent projects
