@@ -44,6 +44,19 @@ define('DEBUG_MODE', false);
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+// Start Session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check session timeout
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_LIFETIME)) {
+    session_unset();
+    session_destroy();
+    session_start();
+}
+$_SESSION['last_activity'] = time();
+
 // CSRF Token Generation
 if (!isset($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));

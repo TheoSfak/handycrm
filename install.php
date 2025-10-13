@@ -134,7 +134,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $config .= "define('DEBUG_MODE', false);\n\n";
             $config .= "// Error Reporting (Disable in production)\n";
             $config .= "error_reporting(E_ALL);\n";
-            $config .= "ini_set('display_errors', '1');\n";
+            $config .= "ini_set('display_errors', '1');\n\n";
+            $config .= "// Start Session\n";
+            $config .= "if (session_status() === PHP_SESSION_NONE) {\n";
+            $config .= "    session_start();\n";
+            $config .= "}\n\n";
+            $config .= "// Check session timeout\n";
+            $config .= "if (isset(\$_SESSION['last_activity']) && (time() - \$_SESSION['last_activity'] > SESSION_LIFETIME)) {\n";
+            $config .= "    session_unset();\n";
+            $config .= "    session_destroy();\n";
+            $config .= "    session_start();\n";
+            $config .= "}\n";
+            $config .= "\$_SESSION['last_activity'] = time();\n";
 
             $config_dir = __DIR__ . '/config';
             if (!is_dir($config_dir)) mkdir($config_dir, 0755, true);
