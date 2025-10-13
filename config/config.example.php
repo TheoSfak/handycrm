@@ -11,71 +11,35 @@
 
 // Database Configuration
 define('DB_HOST', 'localhost');
+define('DB_PORT', '3306');
 define('DB_NAME', 'handycrm');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 // Application Configuration
+define('APP_ROOT', __DIR__ . '/..');
 define('APP_NAME', 'HandyCRM');
-define('APP_VERSION', '1.0.4');
-define('APP_URL', 'https://yourdomain.com'); // Update for production
-define('APP_ROOT', dirname(__FILE__, 2));
+define('APP_VERSION', '1.0.6');
+define('BASE_URL', 'http://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'));
 
-// Security Configuration
-define('SECRET_KEY', 'REPLACE_WITH_RANDOM_STRING_ON_INSTALL');
-define('SESSION_LIFETIME', 3600); // 1 hour in seconds
+// Session Configuration
+define('SESSION_LIFETIME', 7200); // 2 hours
+
+// CSRF Token Configuration
 define('CSRF_TOKEN_NAME', 'csrf_token');
 
-// File Upload Configuration
-define('UPLOAD_PATH', APP_ROOT . '/uploads/');
-define('MAX_FILE_SIZE', 5242880); // 5MB in bytes
-define('ALLOWED_FILE_TYPES', 'jpg,jpeg,png,gif,pdf,doc,docx,xls,xlsx');
-
-// Pagination
-define('ITEMS_PER_PAGE', 10);
-
-// Email Configuration (Configure later if needed)
-define('SMTP_HOST', 'smtp.gmail.com');
-define('SMTP_PORT', 587);
-define('SMTP_USER', ''); // Set your email
-define('SMTP_PASS', ''); // Set your app password
-define('SMTP_FROM_EMAIL', 'noreply@handycrm.local');
-define('SMTP_FROM_NAME', 'HandyCRM System');
-
-// SMS Configuration (Configure later if needed)
-define('SMS_PROVIDER', 'none'); // none, cosmote, vodafone
-define('SMS_API_KEY', '');
-define('SMS_API_SECRET', '');
+// Upload Configuration
+define('UPLOAD_DIR', __DIR__ . '/../uploads/');
+define('MAX_FILE_SIZE', 10485760); // 10MB
+define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx']);
 
 // Timezone
-define('DEFAULT_TIMEZONE', 'Europe/Athens');
-date_default_timezone_set(DEFAULT_TIMEZONE);
+date_default_timezone_set('Europe/Athens');
 
-// Debug Mode (DISABLE in production)
-define('DEBUG_MODE', true); // Set to true for debugging
-
-// Error Reporting (for production)
-if (!DEBUG_MODE) {
-    error_reporting(0);
-    ini_set('display_errors', 0);
-} else {
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-}
-
-// Start session
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-    
-    // Set session timeout
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_LIFETIME)) {
-        session_unset();
-        session_destroy();
-        session_start();
-    }
-    $_SESSION['last_activity'] = time();
-}
+// Error Reporting (Disable in production)
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
 
 // CSRF Token Generation
 if (!isset($_SESSION['csrf_token'])) {
