@@ -73,7 +73,7 @@
     </div>
 </div>
 
-<form id="deleteForm" method="POST" action="?route=/users/delete">
+<form id="deleteForm" method="POST" action="index.php?route=/users/delete">
     <input type="hidden" name="id" id="deleteUserId">
     <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
 </form>

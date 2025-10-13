@@ -77,6 +77,9 @@ $router->add('/dashboard', 'DashboardController', 'index');
 // Customer routes
 $router->add('/customers', 'CustomerController', 'index');
 $router->add('/customers/create', 'CustomerController', 'create');
+$router->add('/customers/export-csv', 'CustomerController', 'exportCsv');
+$router->add('/customers/import-csv', 'CustomerController', 'importCsv');
+$router->add('/customers/demo-csv', 'CustomerController', 'downloadDemoCsv');
 $router->add('/customers/show/{id}', 'CustomerController', 'show');
 $router->add('/customers/edit/{id}', 'CustomerController', 'edit');
 $router->add('/customers/delete/{id}', 'CustomerController', 'delete');
@@ -162,6 +165,12 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         } else {
             $controller->create();
         }
+    } elseif ($currentRoute === '/customers/export-csv') {
+        $controller->exportCsv();
+    } elseif ($currentRoute === '/customers/import-csv') {
+        $controller->importCsv();
+    } elseif ($currentRoute === '/customers/demo-csv') {
+        $controller->downloadDemoCsv();
     } elseif ($currentRoute === '/customers/show') {
         $id = $_GET['id'] ?? 0;
         $controller->show($id);
@@ -183,6 +192,9 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         } else {
             $controller->edit($matches[1]);
         }
+    } elseif ($currentRoute === '/customers/delete') {
+        $id = $_GET['id'] ?? $_POST['id'] ?? 0;
+        $controller->delete($id);
     } elseif (preg_match('/\/customers\/delete\/(\d+)/', $currentRoute, $matches)) {
         $controller->delete($matches[1]);
     } else {
@@ -209,6 +221,12 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         } else {
             $controller->create();
         }
+    } elseif ($currentRoute === '/projects/export-csv') {
+        $controller->exportCsv();
+    } elseif ($currentRoute === '/projects/import-csv') {
+        $controller->importCsv();
+    } elseif ($currentRoute === '/projects/demo-csv') {
+        $controller->downloadDemoCsv();
     } elseif ($currentRoute === '/projects/show') {
         $controller->details();
     } elseif ($currentRoute === '/projects/details') {

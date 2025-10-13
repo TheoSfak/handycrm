@@ -188,7 +188,7 @@ class DashboardController extends BaseController {
                     'title' => 'Νέος πελάτης: ' . $customerName,
                     'description' => 'Τηλέφωνο: ' . $customer['phone'],
                     'date' => $customer['created_at'],
-                    'link' => '?route=/customers/view&id=' . $customer['id']
+                    'link' => '?route=/customers/show&id=' . $customer['id']
                 ];
             }
             

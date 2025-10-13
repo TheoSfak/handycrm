@@ -78,6 +78,14 @@
         "created": "Δημιουργήθηκε",
         "updated_at": "Ενημερώθηκε",
         "actions": "Ενέργειες",
+        "import_csv": "Εισαγωγή CSV",
+        "export_csv": "Εξαγωγή CSV",
+        "demo_csv": "Demo CSV",
+        "download_demo_csv": "Λήψη Δείγματος CSV",
+        "csv_import_success": "Επιτυχής εισαγωγή {count} πελατών",
+        "csv_import_error": "Σφάλμα κατά την εισαγωγή CSV",
+        "csv_file_required": "Παρακαλώ επιλέξτε αρχείο CSV",
+        "csv_invalid_format": "Μη έγκυρη μορφή CSV",
         "view": "Προβολή",
         "edit": "Επεξεργασία",
         "delete": "Διαγραφή",
@@ -109,6 +117,7 @@
         "no_invoices": "Δεν υπάρχουν τιμολόγια για αυτόν τον πελάτη"
     },
     "projects": {
+        "projects": "Έργα",
         "title": "Έργα",
         "new_project": "Νέο Έργο",
         "add_project": "Προσθήκη Έργου",
@@ -179,6 +188,14 @@
         "emergency": "Επείγον",
         "project_saved": "Το έργο αποθηκεύτηκε επιτυχώς",
         "project_updated": "Το έργο ενημερώθηκε επιτυχώς",
+        "import_csv": "Εισαγωγή CSV",
+        "export_csv": "Εξαγωγή CSV",
+        "demo_csv": "Demo CSV",
+        "download_demo_csv": "Λήψη Δείγματος CSV",
+        "csv_import_success": "Επιτυχής εισαγωγή {count} έργων",
+        "csv_import_error": "Σφάλμα κατά την εισαγωγή CSV",
+        "csv_file_required": "Παρακαλώ επιλέξτε αρχείο CSV",
+        "csv_invalid_format": "Μη έγκυρη μορφή CSV",
         "details": "Λεπτομέρειες",
         "project_location": "Τοποθεσία Έργου",
         "dates": "Ημερομηνίες",
@@ -272,6 +289,7 @@
         "paid_auto_update": "Η ημερομηνία πληρωμής και το ποσό θα ενημερωθούν αυτόματα."
     },
     "quotes": {
+        "quotes": "Προσφορές",
         "title": "Προσφορές",
         "new_quote": "Νέα Προσφορά",
         "status": "Κατάσταση",
@@ -403,6 +421,7 @@
         "invoices": "Τιμολόγια"
     },
     "appointments": {
+        "appointments": "Ραντεβού",
         "title": "Ραντεβού",
         "new_appointment": "Νέο Ραντεβού",
         "calendar": "Ημερολόγιο Ραντεβού",
@@ -616,6 +635,7 @@
         "total_translations": "Σύνολο μεταφράσεων"
     },
     "common": {
+        "new": "Νέο",
         "save": "Αποθήκευση",
         "cancel": "Ακύρωση",
         "delete": "Διαγραφή",

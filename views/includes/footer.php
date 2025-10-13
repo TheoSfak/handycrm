@@ -235,8 +235,8 @@
             <?php endif; ?>
         });
         
-        // Confirmation dialogs
-        function confirmDelete(message) {
+        // Confirmation dialogs helper (not used by index pages - they have their own confirmDelete)
+        function confirmAction(message) {
             return confirm(message || 'Είστε σίγουρος ότι θέλετε να διαγράψετε αυτό το στοιχείο;');
         }
         

@@ -122,6 +122,19 @@ class Customer extends BaseModel {
     }
     
     /**
+     * Get all customers without pagination
+     */
+    public function getAll() {
+        $sql = "SELECT c.*, u.first_name as created_by_name, u.last_name as created_by_lastname 
+                FROM {$this->table} c 
+                JOIN users u ON c.created_by = u.id 
+                WHERE c.is_active = 1 
+                ORDER BY c.first_name, c.last_name";
+        
+        return $this->db->fetchAll($sql);
+    }
+    
+    /**
      * Add communication record
      */
     public function addCommunication($customerId, $userId, $type, $subject, $description, $date = null) {

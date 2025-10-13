@@ -157,6 +157,25 @@ class Project extends BaseModel {
     }
     
     /**
+     * Get all projects without pagination
+     */
+    public function getAll() {
+        $sql = "SELECT p.*, 
+                       c.first_name as customer_first_name, 
+                       c.last_name as customer_last_name, 
+                       c.company_name as customer_company_name,
+                       c.customer_type,
+                       t.first_name as tech_first_name, 
+                       t.last_name as tech_last_name
+                FROM {$this->table} p 
+                LEFT JOIN customers c ON p.customer_id = c.id 
+                LEFT JOIN users t ON p.assigned_technician = t.id 
+                ORDER BY p.created_at DESC";
+        
+        return $this->db->fetchAll($sql);
+    }
+    
+    /**
      * Update project costs and calculate total
      */
     public function updateCosts($id, $materialCost, $laborCost, $vatRate = null) {

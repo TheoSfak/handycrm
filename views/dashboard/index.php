@@ -153,7 +153,7 @@ echo $updateChecker->getUpdateNotification();
                     <?php endforeach; ?>
                 </div>
                 <div class="text-center mt-3">
-                    <a href="/appointments" class="btn btn-outline-primary btn-sm">
+                    <a href="?route=/appointments" class="btn btn-outline-primary btn-sm">
                         <?= __('dashboard.all_appointments') ?> <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -161,7 +161,7 @@ echo $updateChecker->getUpdateNotification();
                 <div class="text-center text-muted py-4">
                     <i class="fas fa-calendar-times fa-3x mb-3 opacity-50"></i>
                     <p><?= __('dashboard.no_upcoming_appointments') ?></p>
-                    <a href="/appointments/create" class="btn btn-primary btn-sm">
+                    <a href="?route=/appointments/create" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus"></i> <?= __('dashboard.new_appointment') ?>
                     </a>
                 </div>

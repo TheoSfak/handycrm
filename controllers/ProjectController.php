@@ -221,7 +221,7 @@ class ProjectController extends BaseController {
             $slug = $projectModel->generateSlug($projectId, $projectData['title']);
             
             $_SESSION['success'] = 'Το έργο δημιουργήθηκε με επιτυχία';
-            $this->redirect('/projects/' . $slug);
+            $this->redirect('/projects/show?id=' . $projectId);
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά τη δημιουργία του έργου';
             $_SESSION['old_input'] = $_POST;
@@ -353,11 +353,11 @@ class ProjectController extends BaseController {
             $slug = $projectModel->generateSlug($id, $projectData['title']);
             
             $_SESSION['success'] = 'Το έργο ενημερώθηκε με επιτυχία';
-            $this->redirect('/projects/' . $slug);
+            $this->redirect('/projects/show?id=' . $id);
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση του έργου';
             $_SESSION['old_input'] = $_POST;
-            $this->redirect('/projects/edit/' . $id);
+            $this->redirect('/projects/edit?id=' . $id);
         }
     }
     
@@ -457,5 +457,267 @@ class ProjectController extends BaseController {
                 $this->redirect('/projects');
             }
         }
+    }
+    
+    /**
+     * Export all projects to CSV
+     */
+    public function exportCsv() {
+        $projectModel = new Project();
+        $projects = $projectModel->getAll();
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="projects_' . date('Y-m-d_H-i-s') . '.csv"');
+        
+        // Create output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add BOM for UTF-8 Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'ID',
+            'Title',
+            'Description',
+            'Customer',
+            'Technician',
+            'Category',
+            'Status',
+            'Priority',
+            'Start Date',
+            'Completion Date',
+            'Estimated Hours',
+            'Material Cost',
+            'Labor Cost',
+            'Total Cost',
+            'Location',
+            'Notes',
+            'Created At'
+        ]);
+        
+        // Add project data
+        foreach ($projects as $project) {
+            $customerName = $project['customer_type'] == 'company' 
+                ? $project['customer_company_name']
+                : $project['customer_first_name'] . ' ' . $project['customer_last_name'];
+            
+            $technicianName = ($project['tech_first_name'] ?? '') . ' ' . ($project['tech_last_name'] ?? '');
+            
+            fputcsv($output, [
+                $project['id'] ?? '',
+                $project['title'] ?? '',
+                $project['description'] ?? '',
+                $customerName,
+                trim($technicianName),
+                $project['category'] ?? '',
+                $project['status'] ?? '',
+                $project['priority'] ?? '',
+                $project['start_date'] ?? '',
+                $project['completion_date'] ?? '',
+                $project['estimated_hours'] ?? '',
+                $project['material_cost'] ?? '',
+                $project['labor_cost'] ?? '',
+                $project['total_cost'] ?? '',
+                $project['location'] ?? '',
+                $project['notes'] ?? '',
+                $project['created_at'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
+     * Download demo CSV file with sample project data
+     */
+    public function downloadDemoCsv() {
+        // Set headers for CSV download
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="projects_demo.csv"');
+        
+        // Create output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add BOM for UTF-8 Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Add CSV headers (without ID - will be auto-generated)
+        fputcsv($output, [
+            'Title',
+            'Description',
+            'Customer ID',
+            'Technician ID',
+            'Category',
+            'Status',
+            'Priority',
+            'Start Date',
+            'Completion Date',
+            'Estimated Hours',
+            'Material Cost',
+            'Labor Cost',
+            'Location',
+            'Notes'
+        ]);
+        
+        // Add sample data
+        $samples = [
+            [
+                'Εγκατάσταση Ηλεκτρικού Πίνακα',
+                'Εγκατάσταση νέου ηλεκτρικού πίνακα σε διαμέρισμα',
+                '1',
+                '1',
+                'electrical',
+                'in_progress',
+                'high',
+                date('Y-m-d'),
+                date('Y-m-d', strtotime('+7 days')),
+                '8',
+                '150.00',
+                '200.00',
+                'Αθήνα, Κολωνάκι',
+                'Απαιτείται ειδική άδεια'
+            ],
+            [
+                'Επισκευή Υδραυλικών',
+                'Αντικατάσταση σωληνώσεων νερού',
+                '1',
+                '1',
+                'plumbing',
+                'pending',
+                'medium',
+                date('Y-m-d', strtotime('+3 days')),
+                date('Y-m-d', strtotime('+5 days')),
+                '4',
+                '80.00',
+                '120.00',
+                'Θεσσαλονίκη',
+                ''
+            ],
+            [
+                'Συντήρηση Κλιματιστικών',
+                'Ετήσιο service κλιματιστικών μονάδων',
+                '2',
+                '1',
+                'maintenance',
+                'completed',
+                'low',
+                date('Y-m-d', strtotime('-10 days')),
+                date('Y-m-d', strtotime('-8 days')),
+                '3',
+                '50.00',
+                '90.00',
+                'Πειραιάς',
+                'Ολοκληρώθηκε επιτυχώς'
+            ]
+        ];
+        
+        foreach ($samples as $sample) {
+            fputcsv($output, $sample);
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
+     * Import projects from CSV file
+     */
+    public function importCsv() {
+        try {
+            // Check if file was uploaded
+            if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['error'] = __('projects.csv_file_required');
+                header('Location: ?route=/projects');
+                exit;
+            }
+            
+            $file = $_FILES['csv_file']['tmp_name'];
+            
+            // Open CSV file
+            $handle = fopen($file, 'r');
+            if ($handle === false) {
+                throw new Exception(__('projects.csv_invalid_format'));
+            }
+            
+            // Read header row
+            $headers = fgetcsv($handle);
+            
+            $projectModel = new Project();
+            $importCount = 0;
+            $errors = [];
+            
+            // Process each row
+            while (($row = fgetcsv($handle)) !== false) {
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+                
+                try {
+                    // Map CSV columns to data array
+                    $data = [
+                        'title' => $this->getCsvValue($row, $headers, 'Title'),
+                        'description' => $this->getCsvValue($row, $headers, 'Description'),
+                        'customer_id' => $this->getCsvValue($row, $headers, 'Customer ID'),
+                        'assigned_technician' => $this->getCsvValue($row, $headers, 'Technician ID'),
+                        'category' => $this->getCsvValue($row, $headers, 'Category', 'maintenance'),
+                        'status' => $this->getCsvValue($row, $headers, 'Status', 'pending'),
+                        'priority' => $this->getCsvValue($row, $headers, 'Priority', 'normal'),
+                        'start_date' => $this->getCsvValue($row, $headers, 'Start Date'),
+                        'completion_date' => $this->getCsvValue($row, $headers, 'Completion Date'),
+                        'estimated_hours' => $this->getCsvValue($row, $headers, 'Estimated Hours', '0'),
+                        'material_cost' => $this->getCsvValue($row, $headers, 'Material Cost', '0.00'),
+                        'labor_cost' => $this->getCsvValue($row, $headers, 'Labor Cost', '0.00'),
+                        'location' => $this->getCsvValue($row, $headers, 'Location'),
+                        'notes' => $this->getCsvValue($row, $headers, 'Notes'),
+                        'created_by' => $_SESSION['user_id']
+                    ];
+                    
+                    // Basic validation
+                    if (empty($data['title']) || empty($data['customer_id'])) {
+                        continue;
+                    }
+                    
+                    // Calculate total cost
+                    $data['total_cost'] = floatval($data['material_cost']) + floatval($data['labor_cost']);
+                    
+                    // Create project
+                    if ($projectModel->create($data)) {
+                        $importCount++;
+                    }
+                } catch (Exception $e) {
+                    $errors[] = $e->getMessage();
+                }
+            }
+            
+            fclose($handle);
+            
+            // Set success message
+            $_SESSION['success'] = str_replace('{count}', $importCount, __('projects.csv_import_success'));
+            
+            if (!empty($errors)) {
+                $_SESSION['warning'] = implode(', ', array_slice($errors, 0, 5));
+            }
+            
+        } catch (Exception $e) {
+            $_SESSION['error'] = __('projects.csv_import_error') . ': ' . $e->getMessage();
+        }
+        
+        header('Location: ?route=/projects');
+        exit;
+    }
+    
+    /**
+     * Helper function to get CSV value by column name
+     */
+    private function getCsvValue($row, $headers, $columnName, $default = '') {
+        $index = array_search($columnName, $headers);
+        if ($index === false) {
+            return $default;
+        }
+        return isset($row[$index]) && $row[$index] !== '' ? trim($row[$index]) : $default;
     }
 }

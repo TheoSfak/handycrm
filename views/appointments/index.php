@@ -217,7 +217,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<form id="deleteForm" method="POST" action="?route=/appointments/delete">
+<form id="deleteForm" method="POST" action="index.php?route=/appointments/delete">
     <input type="hidden" name="id" id="deleteAppointmentId">
     <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
 </form>

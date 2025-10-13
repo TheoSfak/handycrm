@@ -1,8 +1,19 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2><i class="fas fa-users"></i> <?= __('customers.title') ?></h2>
-    <a href="?route=/customers/create" class="btn btn-primary">
-        <i class="fas fa-plus"></i> <?= __('customers.new_customer') ?>
-    </a>
+    <div class="btn-group" role="group">
+        <a href="index.php?route=/customers/export-csv" class="btn btn-success">
+            <i class="fas fa-download"></i> <?= __('customers.export_csv') ?>
+        </a>
+        <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importCsvModal">
+            <i class="fas fa-upload"></i> <?= __('customers.import_csv') ?>
+        </button>
+        <a href="index.php?route=/customers/demo-csv" class="btn btn-secondary">
+            <i class="fas fa-file-csv"></i> <?= __('customers.demo_csv') ?>
+        </a>
+        <a href="?route=/customers/create" class="btn btn-primary">
+            <i class="fas fa-plus"></i> <?= __('customers.new_customer') ?>
+        </a>
+    </div>
 </div>
 
 <!-- Search and Filters -->
@@ -142,7 +153,7 @@
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="POST" action="?route=/customers/delete&id=<?= $customer['id'] ?>" 
+                                    <form method="POST" action="index.php?route=/customers/delete&id=<?= $customer['id'] ?>" 
                                           onsubmit="return confirm('<?= __('customers.confirm_delete') ?>')" 
                                           class="d-inline">
                                         <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
@@ -371,3 +382,38 @@ document.querySelectorAll('.customer-card').forEach(card => {
     font-size: 0.875rem;
 }
 </style>
+
+<!-- Import CSV Modal -->
+<div class="modal fade" id="importCsvModal" tabindex="-1" aria-labelledby="importCsvModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importCsvModalLabel">
+                    <i class="fas fa-upload"></i> <?= __('customers.import_csv') ?>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="index.php?route=/customers/import-csv" method="POST" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <?= __('customers.download_demo_csv') ?>: 
+                        <a href="index.php?route=/customers/demo-csv" target="_blank"><?= __('customers.demo_csv') ?></a>
+                    </div>
+                    <div class="mb-3">
+                        <label for="csv_file" class="form-label"><?= __('customers.csv_file_required') ?></label>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <?= __('common.cancel') ?>
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> <?= __('customers.import_csv') ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

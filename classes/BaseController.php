@@ -66,6 +66,12 @@ class BaseController {
      * Redirect to URL
      */
     protected function redirect($url) {
+        // Make sure session data is written before redirect
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            session_start(); // Restart to keep session available
+        }
+        
         if (strpos($url, 'http') !== 0) {
             // For PHP built-in server, use query parameter routing
             // Replace ? with & for additional query parameters

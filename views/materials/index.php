@@ -196,7 +196,7 @@
 </div>
 
 <!-- Delete Form -->
-<form id="deleteForm" method="POST" action="?route=/materials/delete">
+<form id="deleteForm" method="POST" action="index.php?route=/materials/delete">
     <input type="hidden" name="id" id="deleteMaterialId">
     <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
 </form>

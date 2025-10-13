@@ -195,7 +195,7 @@ class CustomerController extends BaseController {
      */
     public function update($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('/customers/' . $id . '/edit');
+            $this->redirect('/customers/edit?id=' . $id);
         }
         
         try {
@@ -223,7 +223,7 @@ class CustomerController extends BaseController {
                 $_SESSION['form_data'] = $data;
                 $_SESSION['form_errors'] = $errors;
                 $this->flash('error', 'Παρακαλώ διορθώστε τα σφάλματα στη φόρμα');
-                $this->redirect('/customers/' . $id . '/edit');
+                $this->redirect('/customers/edit?id=' . $id);
             }
             
             // Check for duplicate customers (excluding current customer)
@@ -250,7 +250,7 @@ class CustomerController extends BaseController {
                 $_SESSION['form_data'] = $data;
                 $message = 'Βρέθηκαν υπάρχοντες πελάτες με τα ίδια στοιχεία: ' . implode(' | ', $duplicateInfo);
                 $this->flash('error', $message);
-                $this->redirect('/customers/' . $id . '/edit');
+                $this->redirect('/customers/edit?id=' . $id);
             }
             
             // Prepare data for update
@@ -273,14 +273,14 @@ class CustomerController extends BaseController {
             
             if ($updated) {
                 $this->flash('success', 'Ο πελάτης ενημερώθηκε επιτυχώς');
-                $this->redirect('/customers/' . $id);
+                $this->redirect('/customers/show?id=' . $id);
             } else {
                 throw new Exception('Αποτυχία ενημέρωσης πελάτη');
             }
             
         } catch (Exception $e) {
             $this->flash('error', 'Σφάλμα: ' . $e->getMessage());
-            $this->redirect('/customers/' . $id . '/edit');
+            $this->redirect('/customers/edit?id=' . $id);
         }
     }
     
@@ -309,7 +309,7 @@ class CustomerController extends BaseController {
             
             if ($projectCount > 0) {
                 $this->flash('error', 'Δεν μπορείτε να διαγράψετε πελάτη που έχει συνδεδεμένα έργα');
-                $this->redirect('/customers/' . $id);
+                $this->redirect('/customers/show?id=' . $id);
             }
             
             // Soft delete - set is_active to 0
@@ -333,7 +333,7 @@ class CustomerController extends BaseController {
      */
     public function addCommunication($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            $this->redirect('/customers/' . $id);
+            $this->redirect('/customers/show?id=' . $id);
         }
         
         try {
@@ -352,7 +352,7 @@ class CustomerController extends BaseController {
             
             if (!empty($errors)) {
                 $this->flash('error', 'Παρακαλώ συμπληρώστε όλα τα υποχρεωτικά πεδία');
-                $this->redirect('/customers/' . $id);
+                $this->redirect('/customers/show?id=' . $id);
             }
             
             $this->customerModel->addCommunication(
@@ -370,7 +370,7 @@ class CustomerController extends BaseController {
             $this->flash('error', 'Σφάλμα: ' . $e->getMessage());
         }
         
-        $this->redirect('/customers/' . $id);
+        $this->redirect('/customers/show?id=' . $id);
     }
     
     /**
@@ -451,5 +451,268 @@ class CustomerController extends BaseController {
         $html .= '</ul></nav>';
         
         return $html;
+    }
+    
+    /**
+     * Export all customers to CSV
+     */
+    public function exportCsv() {
+        // Get all customers without pagination
+        $customers = $this->customerModel->getAll();
+        
+        // Set headers for CSV download
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="customers_' . date('Y-m-d_H-i-s') . '.csv"');
+        
+        // Create output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add BOM for UTF-8 Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'ID',
+            'Type',
+            'First Name',
+            'Last Name',
+            'Company Name',
+            'Email',
+            'Phone',
+            'Mobile',
+            'Address',
+            'City',
+            'Postal Code',
+            'Country',
+            'Tax ID',
+            'Status',
+            'Notes',
+            'Created At'
+        ]);
+        
+        // Add customer data
+        foreach ($customers as $customer) {
+            fputcsv($output, [
+                $customer['id'],
+                $customer['customer_type'] ?? '',
+                $customer['first_name'] ?? '',
+                $customer['last_name'] ?? '',
+                $customer['company_name'] ?? '',
+                $customer['email'] ?? '',
+                $customer['phone'] ?? '',
+                $customer['mobile'] ?? '',
+                $customer['address'] ?? '',
+                $customer['city'] ?? '',
+                $customer['postal_code'] ?? '',
+                $customer['country'] ?? '',
+                $customer['tax_id'] ?? '',
+                $customer['is_active'] == 1 ? 'active' : 'inactive',
+                $customer['notes'] ?? '',
+                $customer['created_at'] ?? ''
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
+     * Download demo CSV file with sample data
+     */
+    public function downloadDemoCsv() {
+        // Set headers for CSV download
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="customers_demo.csv"');
+        
+        // Create output stream
+        $output = fopen('php://output', 'w');
+        
+        // Add BOM for UTF-8 Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Add CSV headers
+        fputcsv($output, [
+            'Type',
+            'First Name',
+            'Last Name',
+            'Company Name',
+            'Email',
+            'Phone',
+            'Mobile',
+            'Address',
+            'City',
+            'Postal Code',
+            'Country',
+            'Tax ID',
+            'Status',
+            'Notes'
+        ]);
+        
+        // Add sample data
+        $samples = [
+            [
+                'individual',
+                'Γιάννης',
+                'Παπαδόπουλος',
+                '',
+                'giannis@example.com',
+                '2101234567',
+                '6971234567',
+                'Αθηνάς 10',
+                'Αθήνα',
+                '10552',
+                'Ελλάδα',
+                '',
+                'active',
+                'Σημειώσεις δοκιμής'
+            ],
+            [
+                'company',
+                'Μαρία',
+                'Κωνσταντίνου',
+                'Tech Solutions ΑΕ',
+                'info@techsolutions.gr',
+                '2109876543',
+                '6979876543',
+                'Συγγρού 50',
+                'Αθήνα',
+                '11742',
+                'Ελλάδα',
+                '123456789',
+                'active',
+                'Εταιρεία τεχνολογίας'
+            ],
+            [
+                'individual',
+                'Νίκος',
+                'Ιωάννου',
+                '',
+                'nikos@example.com',
+                '2310555666',
+                '6945555666',
+                'Τσιμισκή 100',
+                'Θεσσαλονίκη',
+                '54622',
+                'Ελλάδα',
+                '',
+                'inactive',
+                ''
+            ]
+        ];
+        
+        foreach ($samples as $sample) {
+            fputcsv($output, $sample);
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
+     * Import customers from CSV file
+     */
+    public function importCsv() {
+        try {
+            // Check if file was uploaded
+            if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['error'] = __('customers.csv_file_required');
+                header('Location: ?route=/customers');
+                exit;
+            }
+            
+            $file = $_FILES['csv_file']['tmp_name'];
+            
+            // Open CSV file
+            $handle = fopen($file, 'r');
+            if ($handle === false) {
+                throw new Exception(__('customers.csv_invalid_format'));
+            }
+            
+            // Read header row
+            $headers = fgetcsv($handle);
+            
+            // Validate headers (basic check)
+            $requiredHeaders = ['Type', 'First Name', 'Last Name', 'Email'];
+            $headerMap = array_flip(array_map('strtolower', $headers));
+            
+            $importCount = 0;
+            $errors = [];
+            
+            // Process each row
+            while (($row = fgetcsv($handle)) !== false) {
+                // Skip empty rows
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+                
+                try {
+                    // Map CSV columns to data array
+                    $status = $this->getCsvValue($row, $headers, 'Status', 'active');
+                    $data = [
+                        'customer_type' => $this->getCsvValue($row, $headers, 'Type', 'individual'),
+                        'first_name' => $this->getCsvValue($row, $headers, 'First Name'),
+                        'last_name' => $this->getCsvValue($row, $headers, 'Last Name'),
+                        'company_name' => $this->getCsvValue($row, $headers, 'Company Name'),
+                        'email' => $this->getCsvValue($row, $headers, 'Email'),
+                        'phone' => $this->getCsvValue($row, $headers, 'Phone'),
+                        'mobile' => $this->getCsvValue($row, $headers, 'Mobile'),
+                        'address' => $this->getCsvValue($row, $headers, 'Address'),
+                        'city' => $this->getCsvValue($row, $headers, 'City'),
+                        'postal_code' => $this->getCsvValue($row, $headers, 'Postal Code'),
+                        'country' => $this->getCsvValue($row, $headers, 'Country', 'Ελλάδα'),
+                        'tax_id' => $this->getCsvValue($row, $headers, 'Tax ID'),
+                        'is_active' => ($status === 'active' || $status === '1') ? 1 : 0,
+                        'notes' => $this->getCsvValue($row, $headers, 'Notes')
+                    ];
+                    
+                    // Basic validation
+                    if (empty($data['first_name']) || empty($data['last_name'])) {
+                        continue;
+                    }
+                    
+                    // Check for duplicates
+                    if (!empty($data['email']) || !empty($data['mobile'])) {
+                        $duplicates = $this->customerModel->findDuplicates($data['email'], $data['mobile'], null);
+                        if (!empty($duplicates)) {
+                            // Skip duplicate
+                            continue;
+                        }
+                    }
+                    
+                    // Create customer
+                    if ($this->customerModel->create($data)) {
+                        $importCount++;
+                    }
+                } catch (Exception $e) {
+                    $errors[] = $e->getMessage();
+                }
+            }
+            
+            fclose($handle);
+            
+            // Set success message
+            $_SESSION['success'] = str_replace('{count}', $importCount, __('customers.csv_import_success'));
+            
+            if (!empty($errors)) {
+                $_SESSION['warning'] = implode(', ', array_slice($errors, 0, 5));
+            }
+            
+        } catch (Exception $e) {
+            $_SESSION['error'] = __('customers.csv_import_error') . ': ' . $e->getMessage();
+        }
+        
+        header('Location: ?route=/customers');
+        exit;
+    }
+    
+    /**
+     * Helper function to get CSV value by column name
+     */
+    private function getCsvValue($row, $headers, $columnName, $default = '') {
+        $index = array_search($columnName, $headers);
+        if ($index === false) {
+            return $default;
+        }
+        return isset($row[$index]) && $row[$index] !== '' ? trim($row[$index]) : $default;
     }
 }
