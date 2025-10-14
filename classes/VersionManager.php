@@ -33,8 +33,10 @@ class VersionManager {
      */
     public function installVersion($downloadUrl, $version) {
         try {
+            $currentVersion = $this->getCurrentVersion();
+            
             // Step 1: Create backup first
-            $backupResult = $this->backupManager->createBackup($this->getCurrentVersion());
+            $backupResult = $this->backupManager->createBackup($currentVersion);
             if (!$backupResult['success']) {
                 throw new Exception('Failed to create backup: ' . $backupResult['message']);
             }
@@ -57,19 +59,34 @@ class VersionManager {
                 throw new Exception('Failed to install files');
             }
             
-            // Step 5: Update version in config.php
+            // Step 5: Run database migrations
+            require_once __DIR__ . '/MigrationManager.php';
+            $migrationManager = new MigrationManager();
+            $migrationResult = $migrationManager->runMigrations($currentVersion, $version);
+            
+            $migrationMessage = '';
+            if (count($migrationResult['migrations_run']) > 0) {
+                $migrationMessage = ' Εκτελέστηκαν ' . count($migrationResult['migrations_run']) . ' migrations.';
+            }
+            
+            if (!$migrationResult['success'] && count($migrationResult['errors']) > 0) {
+                error_log('Migration warnings: ' . implode('; ', $migrationResult['errors']));
+            }
+            
+            // Step 6: Update version in config.php
             $versionUpdateResult = $this->updateConfigVersion($version);
             if (!$versionUpdateResult) {
                 error_log('Warning: Failed to update version in config.php');
             }
             
-            // Step 6: Cleanup
+            // Step 7: Cleanup
             $this->cleanup($zipFile, $extractPath);
             
             return [
                 'success' => true,
-                'message' => "Η έκδοση v{$version} εγκαταστάθηκε επιτυχώς! Το backup αποθηκεύτηκε.",
-                'backup_name' => $backupResult['backup_name']
+                'message' => "Η έκδοση v{$version} εγκαταστάθηκε επιτυχώς!{$migrationMessage} Το backup αποθηκεύτηκε.",
+                'backup_name' => $backupResult['backup_name'],
+                'migrations' => $migrationResult
             ];
             
         } catch (Exception $e) {
