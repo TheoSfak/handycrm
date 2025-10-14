@@ -40,6 +40,10 @@ date_default_timezone_set('Europe/Athens');
 // Debug Mode
 define('DEBUG_MODE', false);
 
+// GitHub Token (Optional - Increases API rate limit from 60 to 5000 requests/hour)
+// Create token at: https://github.com/settings/tokens (needs 'public_repo' scope)
+define('GITHUB_TOKEN', ''); // Leave empty if not needed
+
 // Error Reporting (Disable in production)
 error_reporting(E_ALL);
 ini_set('display_errors', '1');

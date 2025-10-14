@@ -37,13 +37,20 @@ class UpdateChecker {
             // Fetch latest release from GitHub API
             $url = "https://api.github.com/repos/{$this->githubRepo}/releases/latest";
             
+            $headers = [
+                'User-Agent: HandyCRM-Update-Checker',
+                'Accept: application/json'
+            ];
+            
+            // Add GitHub token if available (increases rate limit from 60 to 5000/hour)
+            if (defined('GITHUB_TOKEN') && !empty(GITHUB_TOKEN)) {
+                $headers[] = 'Authorization: token ' . GITHUB_TOKEN;
+            }
+            
             $context = stream_context_create([
                 'http' => [
                     'method' => 'GET',
-                    'header' => [
-                        'User-Agent: HandyCRM-Update-Checker',
-                        'Accept: application/json'
-                    ],
+                    'header' => $headers,
                     'timeout' => 10
                 ]
             ]);
@@ -105,13 +112,20 @@ class UpdateChecker {
         try {
             $url = "https://api.github.com/repos/{$this->githubRepo}/releases";
             
+            $headers = [
+                'User-Agent: HandyCRM-Update-Checker',
+                'Accept: application/json'
+            ];
+            
+            // Add GitHub token if available
+            if (defined('GITHUB_TOKEN') && !empty(GITHUB_TOKEN)) {
+                $headers[] = 'Authorization: token ' . GITHUB_TOKEN;
+            }
+            
             $context = stream_context_create([
                 'http' => [
                     'method' => 'GET',
-                    'header' => [
-                        'User-Agent: HandyCRM-Update-Checker',
-                        'Accept: application/json'
-                    ],
+                    'header' => $headers,
                     'timeout' => 10
                 ]
             ]);
