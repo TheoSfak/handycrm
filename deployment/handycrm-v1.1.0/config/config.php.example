@@ -1,0 +1,242 @@
+<?php
+/**
+ * HandyCRM v1.1.0 Configuration File
+ * 
+ * @author Theodore Sfakianakis
+ * @email theodore.sfakianakis@gmail.com
+ * @copyright 2025 Theodore Sfakianakis. All rights reserved.
+ * 
+ * INSTALLATION INSTRUCTIONS:
+ * 1. Rename this file to config.php
+ * 2. Update database credentials below
+ * 3. Change APP_URL to match your domain
+ * 4. Set DEBUG_MODE to false for production
+ */
+
+// ============================================================================
+// DATABASE CONFIGURATION
+// ============================================================================
+
+define('DB_HOST', 'localhost');              // Usually 'localhost' for most hosts
+define('DB_PORT', '3306');                   // Default MySQL port
+define('DB_NAME', 'handycrm');               // Your database name
+define('DB_USER', 'root');                   // Your database username
+define('DB_PASS', '');                       // Your database password
+define('DB_CHARSET', 'utf8mb4');             // Character set (DO NOT CHANGE)
+
+// For cPanel hosting, use format: cpanelusername_databasename
+// Example:
+// define('DB_NAME', 'myuser_handycrm');
+// define('DB_USER', 'myuser_handycrmuser');
+
+// ============================================================================
+// APPLICATION CONFIGURATION
+// ============================================================================
+
+define('APP_ROOT', __DIR__ . '/..');
+define('APP_NAME', 'HandyCRM');
+define('APP_VERSION', '1.1.0');
+
+// IMPORTANT: Change this to your actual domain for production
+// Examples:
+// - https://yourdomain.com
+// - https://crm.yourdomain.com
+// - https://yourdomain.com/handycrm (if in subfolder)
+define('APP_URL', 'http://localhost/handycrm');
+
+// Auto-detect BASE_URL for routing
+if (!defined('BASE_URL')) {
+    $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+    define('BASE_URL', $scriptPath === '/' ? '' : $scriptPath);
+}
+
+// ============================================================================
+// SESSION CONFIGURATION
+// ============================================================================
+
+define('SESSION_LIFETIME', 7200);            // Session timeout: 2 hours (in seconds)
+define('CSRF_TOKEN_NAME', 'csrf_token');     // CSRF token name
+
+// ============================================================================
+// UPLOAD CONFIGURATION
+// ============================================================================
+
+define('UPLOAD_DIR', __DIR__ . '/../uploads/');
+define('MAX_FILE_SIZE', 10485760);           // Max file size: 10MB
+define('ALLOWED_EXTENSIONS', ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx', 'xls', 'xlsx']);
+
+// ============================================================================
+// LOCALE & TIMEZONE
+// ============================================================================
+
+date_default_timezone_set('Europe/Athens');   // Set your timezone
+define('DATE_FORMAT', 'd/m/Y');               // Greek date format
+define('DATETIME_FORMAT', 'd/m/Y H:i');
+define('DEFAULT_LANGUAGE', 'el');             // Default language (Greek)
+define('LANGUAGES_PATH', APP_ROOT . '/languages/');
+
+// ============================================================================
+// CURRENCY SETTINGS
+// ============================================================================
+
+define('CURRENCY', 'EUR');
+define('CURRENCY_SYMBOL', '€');
+define('DEFAULT_VAT_RATE', 24.00);            // Greek VAT rate: 24%
+
+// ============================================================================
+// DEBUG & ERROR HANDLING
+// ============================================================================
+
+define('DEBUG_MODE', false);                  // Set to false for production!
+
+if (DEBUG_MODE) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', '1');
+    ini_set('log_errors', '1');
+    ini_set('error_log', APP_ROOT . '/logs/php_errors.log');
+} else {
+    error_reporting(0);
+    ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+    ini_set('error_log', APP_ROOT . '/logs/php_errors.log');
+}
+
+// ============================================================================
+// SESSION INITIALIZATION
+// ============================================================================
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check session timeout
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > SESSION_LIFETIME)) {
+    session_unset();
+    session_destroy();
+    session_start();
+}
+$_SESSION['last_activity'] = time();
+
+// CSRF Token Generation
+if (!isset($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// ============================================================================
+// INSTALLATION STATUS
+// ============================================================================
+
+define('INSTALLATION_COMPLETED', true);
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Helper function to format dates in Greek format (DD/MM/YYYY)
+ * 
+ * @param string|int $date Date string or timestamp
+ * @param bool $includeTime Whether to include time
+ * @return string Formatted date
+ */
+function formatDate($date, $includeTime = false) {
+    if (empty($date) || $date === '0000-00-00' || $date === '0000-00-00 00:00:00') {
+        return '-';
+    }
+    
+    $timestamp = is_numeric($date) ? $date : strtotime($date);
+    if ($timestamp === false) {
+        return '-';
+    }
+    
+    $format = $includeTime ? DATETIME_FORMAT : DATE_FORMAT;
+    return date($format, $timestamp);
+}
+
+/**
+ * Helper function to format currency
+ * 
+ * @param float $amount Amount to format
+ * @return string Formatted currency
+ */
+function formatCurrency($amount) {
+    $amount = $amount ?? 0;
+    return number_format((float)$amount, 2, ',', '.') . ' ' . CURRENCY_SYMBOL;
+}
+
+/**
+ * Helper function to sanitize input
+ * 
+ * @param mixed $data Data to sanitize
+ * @return mixed Sanitized data
+ */
+function sanitize($data) {
+    if (is_array($data)) {
+        return array_map('sanitize', $data);
+    }
+    return htmlspecialchars(strip_tags($data), ENT_QUOTES, 'UTF-8');
+}
+
+/**
+ * Helper function to redirect
+ * 
+ * @param string $url URL to redirect to
+ */
+function redirect($url) {
+    header('Location: ' . $url);
+    exit;
+}
+
+// ============================================================================
+// LANGUAGE MANAGER
+// ============================================================================
+
+require_once APP_ROOT . '/classes/LanguageManager.php';
+$currentLang = $_SESSION['language'] ?? DEFAULT_LANGUAGE;
+$lang = new LanguageManager($currentLang);
+
+/**
+ * Translation helper function
+ * 
+ * @param string $key Translation key
+ * @param string|null $default Default value if key not found
+ * @return string Translated text
+ */
+if (!function_exists('__')) {
+    function __($key, $default = null) {
+        global $lang;
+        return $lang->get($key, $default);
+    }
+}
+
+/**
+ * Alias for translation function
+ */
+if (!function_exists('trans')) {
+    function trans($key, $default = null) {
+        return __($key, $default);
+    }
+}
+
+// ============================================================================
+// PRODUCTION SECURITY NOTES
+// ============================================================================
+
+/*
+ * PRODUCTION CHECKLIST:
+ * 
+ * 1. Change admin password immediately after first login
+ * 2. Set DEBUG_MODE to false
+ * 3. Use strong database passwords
+ * 4. Enable HTTPS (SSL certificate)
+ * 5. Set proper file permissions:
+ *    - Folders: 755
+ *    - Files: 644
+ *    - config.php: 640
+ *    - uploads/: 775
+ * 6. Keep regular database backups
+ * 7. Update PHP and MySQL regularly
+ * 8. Review logs in /logs/ folder
+ * 9. Limit database user privileges (no GRANT ALL in production)
+ * 10. Consider using .env file for sensitive credentials
+ */

@@ -1,0 +1,107 @@
+═══════════════════════════════════════════════════════════════════════════
+  HandyCRM v1.0.6 - INSTALLATION INSTRUCTIONS
+═══════════════════════════════════════════════════════════════════════════
+
+📦 PACKAGE: handycrm-XAMPP-EXACT.zip
+📊 DATABASE: database/handycrm.sql (included in package)
+📝 VERSION: 1.0.6
+
+
+🚀 INSTALLATION STEPS:
+═══════════════════════════════════════════════════════════════════════════
+
+1. EXTRACT FILES
+   - Upload handycrm-XAMPP-EXACT.zip to your server
+   - Extract to your web directory (e.g., public_html/handycrm/)
+
+2. IMPORT DATABASE
+   - Open phpMyAdmin on your hosting
+   - Create a new database (e.g., "handycrm")
+   - Import the file: database/handycrm.sql
+   - Note your database credentials (host, name, username, password)
+
+3. CONFIGURE APPLICATION
+   - Copy: config/config.example.php to config/config.php
+   - Edit config/config.php with your database credentials:
+   
+     define('DB_HOST', 'localhost');          // Usually 'localhost'
+     define('DB_NAME', 'your_database_name'); // Your database name
+     define('DB_USER', 'your_username');      // Your database username
+     define('DB_PASS', 'your_password');      // Your database password
+     define('DB_PORT', '3306');               // Usually '3306'
+     
+     define('BASE_URL', 'https://yourdomain.com'); // Your site URL (no trailing slash)
+
+4. SET PERMISSIONS
+   - Make sure these folders are writable (chmod 755 or 777):
+     - uploads/
+     - backups/
+     - languages/
+
+5. DONE!
+   - Visit your site: https://yourdomain.com
+   - Login with your existing credentials
+
+
+⚠️ IMPORTANT NOTES:
+═══════════════════════════════════════════════════════════════════════════
+
+• The config/config.php file is NOT included for security
+  You MUST create it from config.example.php
+
+• The database/handycrm.sql contains your FULL working database
+  from XAMPP (exported on 13/10/2025 2:45 μμ)
+
+• Auto-update checker is ENABLED and working correctly
+  Version 1.0.6 is the latest (GitHub release: 10/10/2025)
+  System will auto-clear cached update data on version changes
+
+• All delete buttons, CSRF tokens, and dashboard links are fixed
+
+• If you get exec() errors, they are already handled with fallbacks
+
+
+📂 PACKAGE CONTENTS:
+═══════════════════════════════════════════════════════════════════════════
+
+Total Files: 265
+- PHP files: 74
+- SQL files: 4 (including handycrm.sql - main database)
+- Sample configs: 14
+- .htaccess: 2
+- Other files: 171 (uploads, backups, languages, etc.)
+
+
+🔧 TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════════════════════
+
+ERROR: "Can't connect to database"
+→ Check your database credentials in config/config.php
+→ Make sure your database user has proper permissions
+
+ERROR: "404 Not Found"
+→ Check your .htaccess file is uploaded
+→ Make sure mod_rewrite is enabled on your server
+
+ERROR: "500 Internal Server Error"
+→ Check file permissions (folders 755, files 644)
+→ Check your error_log for specific errors
+
+ERROR: Redirect loop at login
+→ Clear your browser cookies
+→ Check session.cookie_domain in config.php matches your domain
+
+
+📧 SUPPORT:
+═══════════════════════════════════════════════════════════════════════════
+
+If you encounter any issues, check:
+1. PHP version >= 7.4
+2. MySQL version >= 5.7
+3. Required PHP extensions: PDO, mysqli, zip, curl, gd
+
+
+═══════════════════════════════════════════════════════════════════════════
+  Package created: 13/10/2025
+  Source: Working XAMPP installation
+═══════════════════════════════════════════════════════════════════════════
