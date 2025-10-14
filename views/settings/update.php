@@ -101,11 +101,11 @@ if (isset($_POST['clear_cache'])) {
     echo '<meta http-equiv="refresh" content="1">';
 }
 
-// Only check for updates if explicitly requested AND automated updates are enabled
+// Always check for updates when page loads (respects 24h cache)
 $updateAvailable = false;
 $updateInfo = null;
 
-if ($automatedUpdatesEnabled && (isset($_POST['check_update']) || isset($_GET['auto_check']))) {
+if ($automatedUpdatesEnabled) {
     $updateAvailable = $updateChecker->checkForUpdates();
     $updateInfo = $updateChecker->getUpdateInfo();
 }
