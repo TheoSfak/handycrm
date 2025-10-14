@@ -144,10 +144,9 @@ class BackupManager {
             $username = DB_USER;
             $password = DB_PASS;
             
-            // Try mysqldump first
+            // Try mysqldump first (only if exec is available)
             $mysqldumpPath = $this->findMysqldump();
             
-            // Check if exec() is available
             if (function_exists('exec') && $mysqldumpPath) {
                 $command = sprintf(
                     '"%s" --host=%s --user=%s --password=%s %s > "%s" 2>&1',
@@ -167,11 +166,12 @@ class BackupManager {
             }
             
             // Fallback to PHP-based backup (works without exec)
-            $this->phpDatabaseBackup($backupFile);
+            return $this->phpDatabaseBackup($backupFile);
             
         } catch (Exception $e) {
             error_log('Database backup failed: ' . $e->getMessage());
-            // Continue even if DB backup fails
+            // Return false but don't throw - allow upgrade to continue
+            return false;
         }
     }
     
@@ -179,6 +179,11 @@ class BackupManager {
      * Find mysqldump executable
      */
     private function findMysqldump() {
+        // Don't even try to find mysqldump if exec is disabled
+        if (!function_exists('exec')) {
+            return null;
+        }
+        
         $possiblePaths = [
             'C:\xampp\mysql\bin\mysqldump.exe',
             'C:\wamp\bin\mysql\mysql8.0.27\bin\mysqldump.exe',
@@ -193,17 +198,15 @@ class BackupManager {
             }
         }
         
-        // Try to find it using 'where' or 'which' (only if exec is available)
-        if (function_exists('exec')) {
-            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                @exec('where mysqldump 2>nul', $output, $returnVar);
-            } else {
-                @exec('which mysqldump 2>/dev/null', $output, $returnVar);
-            }
-            
-            if ($returnVar === 0 && !empty($output[0])) {
-                return $output[0];
-            }
+        // Try to find it using 'where' or 'which'
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            @exec('where mysqldump 2>nul', $output, $returnVar);
+        } else {
+            @exec('which mysqldump 2>/dev/null', $output, $returnVar);
+        }
+        
+        if ($returnVar === 0 && !empty($output[0])) {
+            return $output[0];
         }
         
         return null;
@@ -218,15 +221,25 @@ class BackupManager {
         $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
         
         if ($conn->connect_error) {
-            throw new Exception('Database connection failed');
+            throw new Exception('Database connection failed: ' . $conn->connect_error);
         }
         
+        // Set charset to handle Greek characters
+        $conn->set_charset('utf8mb4');
+        
         $sql = "-- HandyCRM Database Backup\n";
-        $sql .= "-- Created: " . date('Y-m-d H:i:s') . "\n\n";
+        $sql .= "-- Created: " . date('Y-m-d H:i:s') . "\n";
+        $sql .= "-- Database: " . DB_NAME . "\n\n";
+        $sql .= "SET NAMES utf8mb4;\n";
+        $sql .= "SET FOREIGN_KEY_CHECKS = 0;\n\n";
         
         // Get all tables
         $tables = [];
         $result = $conn->query("SHOW TABLES");
+        if (!$result) {
+            throw new Exception('Failed to get tables: ' . $conn->error);
+        }
+        
         while ($row = $result->fetch_array()) {
             $tables[] = $row[0];
         }
@@ -237,12 +250,17 @@ class BackupManager {
             
             // Get CREATE TABLE statement
             $result = $conn->query("SHOW CREATE TABLE `{$table}`");
+            if (!$result) {
+                error_log("Failed to get CREATE TABLE for {$table}: " . $conn->error);
+                continue;
+            }
+            
             $row = $result->fetch_array();
             $sql .= $row[1] . ";\n\n";
             
             // Get table data
             $result = $conn->query("SELECT * FROM `{$table}`");
-            if ($result->num_rows > 0) {
+            if ($result && $result->num_rows > 0) {
                 while ($row = $result->fetch_assoc()) {
                     $values = array_map(function($value) use ($conn) {
                         return $value === null ? 'NULL' : "'" . $conn->real_escape_string($value) . "'";
@@ -254,8 +272,16 @@ class BackupManager {
             }
         }
         
-        file_put_contents($backupFile, $sql);
+        $sql .= "SET FOREIGN_KEY_CHECKS = 1;\n";
+        
+        $result = file_put_contents($backupFile, $sql);
         $conn->close();
+        
+        if ($result === false) {
+            throw new Exception('Failed to write backup file');
+        }
+        
+        return true;
     }
     
     /**
