@@ -399,7 +399,7 @@
 
     <!-- Photos Tab -->
     <div class="tab-pane fade" id="photos" role="tabpanel">
-        <?php if (!empty($projectPhotos)): ?>
+        <?php if ($totalPhotos > 0): ?>
             <?php
             $photoTypes = [
                 'before' => ['label' => 'Πριν', 'icon' => 'fa-clock', 'color' => 'primary'],
