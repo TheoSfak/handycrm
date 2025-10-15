@@ -260,7 +260,7 @@ require_once 'views/includes/header.php';
                 <span class="badge bg-info ms-2"><?= date('d/m/Y', strtotime($task['task_date'])) ?></span>
             </p>
         </div>
-        <a href="index.php?route=projects/<?= $project_id ?>/tasks/<?= $task['id'] ?>/view" class="btn btn-outline-secondary">
+        <a href="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks/view/<?= $task['id'] ?>" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Πίσω στην Εργασία
         </a>
     </div>
