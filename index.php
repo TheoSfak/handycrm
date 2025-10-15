@@ -265,6 +265,20 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/breakdown/', $currentRoute, $matches)) {
             $taskId = $matches[2];
             $tasksController->breakdown($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos\/(\d+)\/delete/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $matches[2];
+            $photoId = $matches[3];
+            $tasksController->deletePhoto($projectId, $taskId, $photoId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos\/(\d+)\/update/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $matches[2];
+            $photoId = $matches[3];
+            $tasksController->updatePhotoDetails($projectId, $taskId, $photoId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos\/upload/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $matches[2];
+            $tasksController->uploadPhoto($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos/', $currentRoute, $matches)) {
+            $taskId = $matches[2];
+            $tasksController->photos($projectId, $taskId);
         } elseif (preg_match('/\/projects\/(\d+)\/tasks\/copy/', $currentRoute) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $taskId = $_POST['task_id'] ?? 0;
             $tasksController->copy($projectId, $taskId);

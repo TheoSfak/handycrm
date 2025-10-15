@@ -720,6 +720,166 @@ class ProjectTasksController extends BaseController {
     }
     
     /**
+     * Photo gallery for a task
+     * GET /projects/{project_id}/tasks/{task_id}/photos
+     */
+    public function photos($projectId, $taskId) {
+        $this->checkAuth();
+        
+        require_once 'models/TaskPhoto.php';
+        $photoModel = new TaskPhoto();
+        
+        // Get task details
+        $task = $this->taskModel->getById($taskId);
+        if (!$task || $task['project_id'] != $projectId) {
+            $_SESSION['error'] = 'Η εργασία δεν βρέθηκε';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+        
+        // Get photos grouped by type
+        $photos = $photoModel->getGroupedByType($taskId);
+        $counts = $photoModel->getCountByType($taskId);
+        
+        $this->view('projects/tasks/photos', [
+            'project_id' => $projectId,
+            'task' => $task,
+            'photos' => $photos,
+            'counts' => $counts,
+            'pageTitle' => 'Φωτογραφίες Εργασίας'
+        ]);
+    }
+    
+    /**
+     * Upload photo
+     * POST /projects/{project_id}/tasks/{task_id}/photos/upload
+     */
+    public function uploadPhoto($projectId, $taskId) {
+        $this->checkAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+            return;
+        }
+        
+        require_once 'models/TaskPhoto.php';
+        $photoModel = new TaskPhoto();
+        
+        // Verify task exists
+        $task = $this->taskModel->getById($taskId);
+        if (!$task || $task['project_id'] != $projectId) {
+            $_SESSION['error'] = 'Η εργασία δεν βρέθηκε';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+        
+        // Check if files were uploaded
+        if (empty($_FILES['photos']['name'][0])) {
+            $_SESSION['error'] = 'Δεν επιλέχθηκαν φωτογραφίες';
+            $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+            return;
+        }
+        
+        $photoType = $_POST['photo_type'] ?? 'other';
+        $caption = $_POST['caption'] ?? '';
+        $userId = $_SESSION['user_id'];
+        
+        $uploadedCount = 0;
+        $errors = [];
+        
+        // Handle multiple file upload
+        $fileCount = count($_FILES['photos']['name']);
+        for ($i = 0; $i < $fileCount; $i++) {
+            if ($_FILES['photos']['error'][$i] === UPLOAD_ERR_OK) {
+                $file = [
+                    'name' => $_FILES['photos']['name'][$i],
+                    'type' => $_FILES['photos']['type'][$i],
+                    'tmp_name' => $_FILES['photos']['tmp_name'][$i],
+                    'error' => $_FILES['photos']['error'][$i],
+                    'size' => $_FILES['photos']['size'][$i]
+                ];
+                
+                $photoId = $photoModel->uploadPhoto($taskId, $file, $photoType, $caption, $userId);
+                
+                if ($photoId) {
+                    $uploadedCount++;
+                } else {
+                    $errors[] = $file['name'];
+                }
+            }
+        }
+        
+        if ($uploadedCount > 0) {
+            $_SESSION['success'] = $uploadedCount . ' φωτογραφί' . ($uploadedCount == 1 ? 'α' : 'ες') . ' ανέβηκ' . ($uploadedCount == 1 ? 'ε' : 'αν') . ' επιτυχώς';
+        }
+        
+        if (!empty($errors)) {
+            $_SESSION['error'] = 'Αποτυχία ανεβάσματος: ' . implode(', ', $errors);
+        }
+        
+        $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+    }
+    
+    /**
+     * Delete photo
+     * POST /projects/{project_id}/tasks/{task_id}/photos/{photo_id}/delete
+     */
+    public function deletePhoto($projectId, $taskId, $photoId) {
+        $this->checkAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+            return;
+        }
+        
+        require_once 'models/TaskPhoto.php';
+        $photoModel = new TaskPhoto();
+        
+        // Verify task exists
+        $task = $this->taskModel->getById($taskId);
+        if (!$task || $task['project_id'] != $projectId) {
+            $_SESSION['error'] = 'Η εργασία δεν βρέθηκε';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+        
+        if ($photoModel->deletePhoto($photoId)) {
+            $_SESSION['success'] = 'Η φωτογραφία διαγράφηκε επιτυχώς';
+        } else {
+            $_SESSION['error'] = 'Αποτυχία διαγραφής φωτογραφίας';
+        }
+        
+        $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+    }
+    
+    /**
+     * Update photo details
+     * POST /projects/{project_id}/tasks/{task_id}/photos/{photo_id}/update
+     */
+    public function updatePhotoDetails($projectId, $taskId, $photoId) {
+        $this->checkAuth();
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+        
+        require_once 'models/TaskPhoto.php';
+        $photoModel = new TaskPhoto();
+        
+        $data = [
+            'photo_type' => $_POST['photo_type'] ?? null,
+            'caption' => $_POST['caption'] ?? null
+        ];
+        
+        if ($photoModel->updatePhoto($photoId, $data)) {
+            echo json_encode(['success' => true, 'message' => 'Ενημερώθηκε επιτυχώς']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Αποτυχία ενημέρωσης']);
+        }
+    }
+    
+    /**
      * Helper to redirect back
      */
     private function redirectBack() {

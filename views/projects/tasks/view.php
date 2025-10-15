@@ -49,6 +49,10 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
             </p>
         </div>
         <div class="btn-group">
+            <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos" 
+               class="btn btn-primary">
+                <i class="fas fa-camera me-2"></i>Φωτογραφίες
+            </a>
             <?php if ($task['task_type'] === 'date_range'): ?>
                 <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/breakdown" 
                    class="btn btn-info">

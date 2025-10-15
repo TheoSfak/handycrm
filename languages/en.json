@@ -843,5 +843,36 @@
         "no_labor": "No labor entries",
         "add_labor_prompt": "Click \"Add Technician\" to add labor",
         "calculate_hours": "Calculate Hours from Time"
+    },
+    "task_photos": {
+        "title": "Task Photos",
+        "photos": "Photos",
+        "upload": "Upload Photos",
+        "upload_multiple": "Upload Multiple",
+        "upload_success": "Photos uploaded successfully",
+        "upload_error": "Error uploading photos",
+        "delete_confirm": "Are you sure you want to delete this photo?",
+        "delete_success": "Photo deleted successfully",
+        "delete_error": "Error deleting photo",
+        "no_photos": "No photos",
+        "drag_drop": "Drag photos here or click to select",
+        "max_size": "Maximum size",
+        "supported_formats": "Supported formats",
+        "photo_types": {
+            "before": "Before",
+            "after": "After",
+            "during": "During Work",
+            "issue": "Issue/Damage",
+            "other": "Other"
+        },
+        "type": "Photo Type",
+        "caption": "Caption",
+        "caption_placeholder": "e.g. Main panel before repair",
+        "uploaded_by": "Uploaded by",
+        "uploaded_at": "Date",
+        "view_gallery": "View Gallery",
+        "total_photos": "Total Photos",
+        "selected_files": "Selected Files",
+        "photo_of": "Photo {current} of {total}"
     }
 }

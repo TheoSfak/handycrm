@@ -1,5 +1,46 @@
 # HandyCRM - Change Log
 
+## [1.2.0] - 2025-01-15
+
+### ✨ New Features
+- **Photo Gallery System**: Complete photo management system for project tasks
+  - Upload multiple photos with drag-and-drop interface
+  - 5 photo types: Before, After, During Work, Issue/Damage, Other
+  - Automatic image resizing (max 1920px) with aspect ratio preservation
+  - Photo captions and metadata (uploader, upload date)
+  - Lightbox integration for full-screen viewing
+  - Mobile camera support for direct photo capture
+  - Organized storage by year/month in `uploads/task_photos/`
+  - Statistics dashboard showing photo counts by type
+  - Color-coded photo type sections with custom icons
+  - Responsive grid layout adapting to all screen sizes
+
+### 🗄️ Database Changes
+- **New Table**: `task_photos` with fields:
+  - `id`, `task_id`, `filename`, `original_filename`, `file_path`
+  - `file_size`, `mime_type`, `photo_type` (enum)
+  - `caption`, `sort_order`, `uploaded_by`, `created_at`
+  - Foreign keys with CASCADE delete to `project_tasks` and `users`
+  - Indexes on `task_id`, `photo_type`, `uploaded_by`, `created_at`
+
+### 📝 Files Added (3 files)
+1. `models/TaskPhoto.php` - Complete photo management model with image processing
+2. `views/projects/tasks/photos.php` - Photo gallery interface (570 lines)
+3. `migrations/add_task_photos.sql` - Database migration script
+
+### 📝 Files Modified (4 files)
+1. `controllers/ProjectTasksController.php` - Added 4 photo methods (photos, uploadPhoto, deletePhoto, updatePhotoDetails)
+2. `index.php` - Added 4 photo routes
+3. `views/projects/tasks/view.php` - Added "Φωτογραφίες" button
+4. `languages/el.json` + `languages/en.json` - Added task_photos translations (20+ keys)
+
+### 🛠️ Technical Details
+- Image formats supported: JPEG, PNG, GIF, WebP
+- Maximum file size: 10MB per photo
+- Automatic transparency preservation for PNG/GIF
+- Thumbnail generation capability (square crop)
+- Lightbox2 v2.11.3 library integration
+
 ## [1.0.6] - 2025-10-13
 
 ### 🐛 Bug Fixes
