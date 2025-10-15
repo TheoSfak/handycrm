@@ -372,9 +372,9 @@ require_once 'views/includes/header.php';
             <div class="photos-grid">
                 <?php foreach ($photos[$type] as $photo): ?>
                 <div class="photo-card">
-                    <a href="<?= htmlspecialchars($photo['file_path']) ?>" data-lightbox="task-<?= $task['id'] ?>" 
+                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" data-lightbox="task-<?= $task['id'] ?>" 
                        data-title="<?= htmlspecialchars($photo['caption'] ?: $info['label']) ?>">
-                        <img src="<?= htmlspecialchars($photo['file_path']) ?>" 
+                        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
                              alt="<?= htmlspecialchars($photo['caption']) ?>" 
                              class="photo-image">
                     </a>
