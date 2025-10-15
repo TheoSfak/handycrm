@@ -333,12 +333,29 @@ class ProjectTasksController extends BaseController {
         $task['total_days'] = $this->taskModel->getTotalDays($task);
         $task['daily_average'] = $this->taskModel->getDailyAverage($task);
         
+        // Get photos for preview (limit 6 most recent)
+        require_once 'models/TaskPhoto.php';
+        $photoModel = new TaskPhoto();
+        $recentPhotos = $photoModel->query(
+            "SELECT tp.*, u.username, u.first_name, u.last_name 
+             FROM task_photos tp
+             LEFT JOIN users u ON tp.uploaded_by = u.id
+             WHERE tp.task_id = ?
+             ORDER BY tp.created_at DESC
+             LIMIT 6",
+            [$taskId]
+        );
+        $photoCount = $photoModel->getCountByType($taskId);
+        $totalPhotos = array_sum(array_values($photoCount));
+        
         parent::view('projects/tasks/view', [
             'title' => 'Προβολή Εργασίας - ' . ($project['title'] ?? $project['name'] ?? 'Project'),
             'project' => $project,
             'task' => $task,
             'materials' => $task['materials'] ?? [],
-            'labor' => $task['labor'] ?? []
+            'labor' => $task['labor'] ?? [],
+            'recentPhotos' => $recentPhotos,
+            'totalPhotos' => $totalPhotos
         ]);
     }
     

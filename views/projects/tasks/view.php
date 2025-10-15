@@ -197,6 +197,50 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                     <?php endif; ?>
                 </div>
             </div>
+
+            <!-- Photos Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-camera me-2"></i>Φωτογραφίες</h5>
+                        <span class="badge bg-light text-primary"><?= $totalPhotos ?></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <?php if (!empty($recentPhotos)): ?>
+                        <div class="row g-2 mb-3">
+                            <?php foreach ($recentPhotos as $photo): ?>
+                                <div class="col-4">
+                                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                       target="_blank" 
+                                       style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 2px solid #e0e0e0;">
+                                        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                             alt="<?= htmlspecialchars($photo['caption']) ?>"
+                                             style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
+                                             onmouseover="this.style.transform='scale(1.1)'" 
+                                             onmouseout="this.style.transform='scale(1)'">
+                                    </a>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="text-center">
+                            <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos" 
+                               class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-images me-2"></i>Προβολή όλων (<?= $totalPhotos ?>)
+                            </a>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-4">
+                            <i class="fas fa-camera text-muted mb-2" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="text-muted mb-3">Δεν υπάρχουν φωτογραφίες</p>
+                            <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos" 
+                               class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus me-2"></i>Προσθήκη Φωτογραφιών
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
 
         <!-- Right Column: Summary & Info -->
