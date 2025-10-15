@@ -399,7 +399,23 @@
 
     <!-- Photos Tab -->
     <div class="tab-pane fade" id="photos" role="tabpanel">
-        <?php if ($totalPhotos > 0): ?>
+        <!-- Debug info -->
+        <?php if (false): // Set to true to debug ?>
+        <div class="alert alert-info">
+            <strong>Debug Info:</strong><br>
+            Total Photos: <?= $totalPhotos ?? 'undefined' ?><br>
+            Project Photos Array: <?= isset($projectPhotos) ? 'exists' : 'undefined' ?><br>
+            <?php if (isset($projectPhotos)): ?>
+                Before: <?= count($projectPhotos['before']) ?><br>
+                After: <?= count($projectPhotos['after']) ?><br>
+                During: <?= count($projectPhotos['during']) ?><br>
+                Issue: <?= count($projectPhotos['issue']) ?><br>
+                Other: <?= count($projectPhotos['other']) ?>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (isset($totalPhotos) && $totalPhotos > 0): ?>
             <?php
             $photoTypes = [
                 'before' => ['label' => 'Πριν', 'icon' => 'fa-clock', 'color' => 'primary'],

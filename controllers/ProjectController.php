@@ -126,8 +126,15 @@ class ProjectController extends BaseController {
         }
         
         // Get all photos from all tasks in this project
-        $projectPhotos = [];
+        $projectPhotos = [
+            'before' => [],
+            'after' => [],
+            'during' => [],
+            'issue' => [],
+            'other' => []
+        ];
         $totalPhotos = 0;
+        
         try {
             require_once 'models/TaskPhoto.php';
             $photoModel = new TaskPhoto();
@@ -144,20 +151,13 @@ class ProjectController extends BaseController {
             );
             
             // Group by type
-            $projectPhotos = [
-                'before' => [],
-                'after' => [],
-                'during' => [],
-                'issue' => [],
-                'other' => []
-            ];
-            
             foreach ($allPhotos as $photo) {
                 $projectPhotos[$photo['photo_type']][] = $photo;
                 $totalPhotos++;
             }
         } catch (Exception $e) {
             // Photos feature not available yet
+            error_log("Photo loading error: " . $e->getMessage());
         }
         
         $data = [
