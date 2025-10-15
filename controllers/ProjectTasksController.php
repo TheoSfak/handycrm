@@ -346,7 +346,7 @@ class ProjectTasksController extends BaseController {
             [$taskId]
         );
         $photoCount = $photoModel->getCountByType($taskId);
-        $totalPhotos = array_sum(array_values($photoCount));
+        $totalPhotos = $photoCount['total'];
         
         parent::view('projects/tasks/view', [
             'title' => 'Προβολή Εργασίας - ' . ($project['title'] ?? $project['name'] ?? 'Project'),

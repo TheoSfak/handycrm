@@ -210,10 +210,10 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                     <?php if (!empty($recentPhotos)): ?>
                         <div class="row g-2 mb-3">
                             <?php foreach ($recentPhotos as $photo): ?>
-                                <div class="col-4">
+                                <div class="col-2">
                                     <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
                                        target="_blank" 
-                                       style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 2px solid #e0e0e0;">
+                                       style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 6px; border: 1px solid #e0e0e0;">
                                         <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
                                              alt="<?= htmlspecialchars($photo['caption']) ?>"
                                              style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
