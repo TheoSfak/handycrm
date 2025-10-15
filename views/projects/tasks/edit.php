@@ -27,6 +27,15 @@ require_once __DIR__ . '/../../includes/header.php';
         </ol>
     </nav>
 
+    <!-- Header with Photos Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0"><i class="fas fa-edit me-2"></i>Επεξεργασία Εργασίας</h4>
+        <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos" 
+           class="btn btn-primary">
+            <i class="fas fa-camera me-2"></i>Φωτογραφίες
+        </a>
+    </div>
+
     <form method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/edit/<?= $task['id'] ?>" id="taskForm">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
         <input type="hidden" name="project_id" value="<?= $project['id'] ?>">
