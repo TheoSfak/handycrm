@@ -161,6 +161,44 @@ location ~ \.php$ {
 
 ⚠️ **Σημαντικό**: Αλλάξτε αμέσως τον κωδικό του διαχειριστή!
 
+## 🔄 Ενημέρωση (Update)
+
+### Αυτόματη Ενημέρωση (Συνιστάται)
+
+1. Πηγαίνετε στο **Ρυθμίσεις → Ενημέρωση**
+2. Κλικ "Έλεγχος για Ενημέρωση"
+3. Αν υπάρχει νέα έκδοση, κλικ "Ενημέρωση Τώρα"
+
+Το σύστημα θα:
+- ✅ Κατεβάσει αυτόματα τη νέα έκδοση από GitHub
+- ✅ Δημιουργήσει backup της βάσης δεδομένων
+- ✅ Τρέξει αυτόματα όλα τα απαραίτητα database migrations
+- ✅ Αντικαταστήσει τα αρχεία με τη νέα έκδοση
+
+### Χειροκίνητη Ενημέρωση
+
+1. **Κάντε backup** της βάσης δεδομένων
+2. Κατεβάστε τη νέα έκδοση από [GitHub Releases](https://github.com/TheoSfak/handycrm/releases)
+3. Αντικαταστήστε τα αρχεία (⚠️ **μην διαγράψετε** το `config/config.php`)
+4. Τα migrations θα τρέξουν αυτόματα κατά το πρώτο login
+
+Για περισσότερα, δείτε το [migrations/README.md](migrations/README.md)
+
+### GitHub Token για Ενημερώσεις (Προαιρετικό)
+
+Αν αντιμετωπίζετε rate limiting από το GitHub API, προσθέστε ένα token:
+
+```php
+// Στο config/config.php
+define('GITHUB_TOKEN', 'your_github_personal_access_token');
+```
+
+**Πώς να δημιουργήσετε token:**
+1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token
+3. Επιλέξτε μόνο: `public_repo` (Read access to public repositories)
+4. Copy το token και προσθέστε το στο config
+
 ## 📁 Δομή Έργου
 
 ```
