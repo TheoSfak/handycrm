@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
+
 <!-- Project Header -->
 <div class="card mb-4 shadow-sm border-0">
     <div class="card-body">
@@ -118,6 +120,14 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
             <i class="fas fa-chart-line me-2"></i>Στατιστικά
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab">
+            <i class="fas fa-camera me-2"></i>Φωτογραφίες
+            <?php if (!empty($totalPhotos)): ?>
+                <span class="badge bg-primary rounded-pill ms-1"><?= $totalPhotos ?></span>
+            <?php endif; ?>
         </button>
     </li>
 </ul>
@@ -387,6 +397,72 @@
     </div>
     <!-- End Statistics Tab -->
 
+    <!-- Photos Tab -->
+    <div class="tab-pane fade" id="photos" role="tabpanel">
+        <?php if (!empty($projectPhotos)): ?>
+            <?php
+            $photoTypes = [
+                'before' => ['label' => 'Πριν', 'icon' => 'fa-clock', 'color' => 'primary'],
+                'after' => ['label' => 'Μετά', 'icon' => 'fa-check-circle', 'color' => 'success'],
+                'during' => ['label' => 'Κατά τη διάρκεια', 'icon' => 'fa-cog', 'color' => 'info'],
+                'issue' => ['label' => 'Πρόβλημα/Ζημιά', 'icon' => 'fa-exclamation-triangle', 'color' => 'danger'],
+                'other' => ['label' => 'Άλλο', 'icon' => 'fa-image', 'color' => 'secondary']
+            ];
+            
+            foreach ($photoTypes as $type => $info):
+                if (!empty($projectPhotos[$type])):
+            ?>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-<?= $info['color'] ?> text-white">
+                    <h5 class="mb-0">
+                        <i class="fas <?= $info['icon'] ?> me-2"></i><?= $info['label'] ?>
+                        <span class="badge bg-light text-<?= $info['color'] ?> ms-2"><?= count($projectPhotos[$type]) ?></span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <?php foreach ($projectPhotos[$type] as $photo): ?>
+                        <div class="col-md-3 col-sm-4 col-6">
+                            <div class="position-relative" style="aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 2px solid #e0e0e0;">
+                                <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                   data-lightbox="project-<?= $project['id'] ?>-<?= $type ?>" 
+                                   data-title="<?= htmlspecialchars($photo['caption'] ?: $info['label']) ?> - <?= htmlspecialchars($photo['task_description']) ?>">
+                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                         alt="<?= htmlspecialchars($photo['caption']) ?>"
+                                         style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
+                                         onmouseover="this.style.transform='scale(1.1)'" 
+                                         onmouseout="this.style.transform='scale(1)'">
+                                </a>
+                                <div class="position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-75 text-white p-2" style="font-size: 0.75rem;">
+                                    <div class="text-truncate">
+                                        <i class="fas fa-tasks me-1"></i><?= htmlspecialchars($photo['task_description']) ?>
+                                    </div>
+                                    <?php if ($photo['caption']): ?>
+                                    <div class="text-truncate opacity-75">
+                                        <?= htmlspecialchars($photo['caption']) ?>
+                                    </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php
+                endif;
+            endforeach;
+            ?>
+        <?php else: ?>
+            <div class="text-center py-5">
+                <i class="fas fa-camera text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
+                <h4 class="text-muted">Δεν υπάρχουν φωτογραφίες</h4>
+                <p class="text-muted">Προσθέστε φωτογραφίες στις εργασίες του έργου για να τις δείτε εδώ.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+    <!-- End Photos Tab -->
+
 </div>
 <!-- End Tab Content -->
 
@@ -455,4 +531,13 @@ function changeStatus(newStatus, projectId) {
         form.submit();
     }
 }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+<script>
+lightbox.option({
+    'resizeDuration': 200,
+    'wrapAround': true,
+    'albumLabel': 'Φωτογραφία %1 από %2'
+});
 </script>

@@ -125,6 +125,41 @@ class ProjectController extends BaseController {
             // Tasks feature not available yet
         }
         
+        // Get all photos from all tasks in this project
+        $projectPhotos = [];
+        $totalPhotos = 0;
+        try {
+            require_once 'models/TaskPhoto.php';
+            $photoModel = new TaskPhoto();
+            
+            // Get all photos for this project's tasks, grouped by type
+            $allPhotos = $photoModel->query(
+                "SELECT tp.*, pt.description as task_description, u.username, u.first_name, u.last_name
+                 FROM task_photos tp
+                 INNER JOIN project_tasks pt ON tp.task_id = pt.id
+                 LEFT JOIN users u ON tp.uploaded_by = u.id
+                 WHERE pt.project_id = ?
+                 ORDER BY tp.photo_type, tp.created_at DESC",
+                [$project['id']]
+            );
+            
+            // Group by type
+            $projectPhotos = [
+                'before' => [],
+                'after' => [],
+                'during' => [],
+                'issue' => [],
+                'other' => []
+            ];
+            
+            foreach ($allPhotos as $photo) {
+                $projectPhotos[$photo['photo_type']][] = $photo;
+                $totalPhotos++;
+            }
+        } catch (Exception $e) {
+            // Photos feature not available yet
+        }
+        
         $data = [
             'title' => 'Έργο: ' . $project['title'] . ' - ' . APP_NAME,
             'user' => $user,
@@ -132,7 +167,9 @@ class ProjectController extends BaseController {
             'tasksCount' => $tasksCount,
             'tasks' => $tasks,
             'summary' => $summary,
-            'filters' => $filters
+            'filters' => $filters,
+            'projectPhotos' => $projectPhotos,
+            'totalPhotos' => $totalPhotos
         ];
         
         parent::view('projects/show', $data);
