@@ -237,7 +237,7 @@ class TaskPhoto extends BaseModel {
      */
     public function deletePhoto($photoId) {
         // Get photo info
-        $photo = $this->findById($photoId);
+        $photo = $this->find($photoId);
         if (!$photo) {
             return false;
         }
