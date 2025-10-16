@@ -406,10 +406,10 @@
             }
             ?>
             
-            <!-- Labor Cards in 3 Columns -->
+            <!-- Labor Cards in 4 Columns -->
             <div class="row g-3">
                 <?php foreach ($groupedLabor as $dateKey => $group): ?>
-                    <div class="col-lg-4 col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="card shadow-sm h-100 border-0">
                             <div class="card-header <?= $group['type'] === 'single_day' ? 'bg-primary' : 'bg-info' ?> text-white">
                                 <h6 class="mb-0">
