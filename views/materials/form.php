@@ -110,24 +110,26 @@ if ($isEdit && empty($formData)) {
                             <!-- Unit -->
                             <div class="col-md-4 mb-3">
                                 <label for="unit" class="form-label">Μονάδα Μέτρησης</label>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="unit" 
-                                       name="unit" 
-                                       value="<?= htmlspecialchars($formData['unit'] ?? '') ?>"
-                                       placeholder="π.χ. τεμάχια, μέτρα, κιλά"
-                                       list="unitsList">
-                                <datalist id="unitsList">
-                                    <option value="τεμάχια">
-                                    <option value="μέτρα">
-                                    <option value="τ.μ.">
-                                    <option value="κ.μ.">
-                                    <option value="κιλά">
-                                    <option value="λίτρα">
-                                    <option value="τόνοι">
-                                    <option value="κουτιά">
-                                    <option value="συσκευασίες">
-                                </datalist>
+                                <select class="form-select" id="unit" name="unit">
+                                    <option value="τεμ" <?= ($formData['unit'] ?? '') === 'τεμ' ? 'selected' : '' ?>>Τεμάχια (τεμ)</option>
+                                    <option value="μ" <?= ($formData['unit'] ?? '') === 'μ' ? 'selected' : '' ?>>Μέτρα (μ)</option>
+                                    <option value="μ²" <?= ($formData['unit'] ?? '') === 'μ²' ? 'selected' : '' ?>>Τετραγωνικά Μέτρα (μ²)</option>
+                                    <option value="μ³" <?= ($formData['unit'] ?? '') === 'μ³' ? 'selected' : '' ?>>Κυβικά Μέτρα (μ³)</option>
+                                    <option value="κιλά" <?= ($formData['unit'] ?? '') === 'κιλά' ? 'selected' : '' ?>>Κιλά (κιλά)</option>
+                                    <option value="γρ" <?= ($formData['unit'] ?? '') === 'γρ' ? 'selected' : '' ?>>Γραμμάρια (γρ)</option>
+                                    <option value="τόνοι" <?= ($formData['unit'] ?? '') === 'τόνοι' ? 'selected' : '' ?>>Τόνοι (τόνοι)</option>
+                                    <option value="λίτρα" <?= ($formData['unit'] ?? '') === 'λίτρα' ? 'selected' : '' ?>>Λίτρα (λίτρα)</option>
+                                    <option value="ml" <?= ($formData['unit'] ?? '') === 'ml' ? 'selected' : '' ?>>Χιλιοστόλιτρα (ml)</option>
+                                    <option value="σετ" <?= ($formData['unit'] ?? '') === 'σετ' ? 'selected' : '' ?>>Σετ (σετ)</option>
+                                    <option value="κουτί" <?= ($formData['unit'] ?? '') === 'κουτί' ? 'selected' : '' ?>>Κουτί (κουτί)</option>
+                                    <option value="σακί" <?= ($formData['unit'] ?? '') === 'σακί' ? 'selected' : '' ?>>Σακί (σακί)</option>
+                                    <option value="παλέτα" <?= ($formData['unit'] ?? '') === 'παλέτα' ? 'selected' : '' ?>>Παλέτα (παλέτα)</option>
+                                    <option value="ρολό" <?= ($formData['unit'] ?? '') === 'ρολό' ? 'selected' : '' ?>>Ρολό (ρολό)</option>
+                                    <option value="φύλλο" <?= ($formData['unit'] ?? '') === 'φύλλο' ? 'selected' : '' ?>>Φύλλο (φύλλο)</option>
+                                    <option value="κιβώτιο" <?= ($formData['unit'] ?? '') === 'κιβώτιο' ? 'selected' : '' ?>>Κιβώτιο (κιβώτιο)</option>
+                                    <option value="ώρες" <?= ($formData['unit'] ?? '') === 'ώρες' ? 'selected' : '' ?>>Ώρες (ώρες)</option>
+                                    <option value="ημέρες" <?= ($formData['unit'] ?? '') === 'ημέρες' ? 'selected' : '' ?>>Ημέρες (ημέρες)</option>
+                                </select>
                             </div>
 
                             <!-- Price -->
