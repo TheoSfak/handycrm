@@ -213,9 +213,12 @@
         <div class="card mt-4">
             <div class="card-body">
                 <h6 class="mb-3"><i class="fas fa-link"></i> <?= __('settings.quick_links') ?></h6>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <a href="<?= BASE_URL ?>/settings/update" class="btn btn-outline-primary">
                         <i class="fas fa-sync-alt"></i> <?= __('settings.system_updates') ?>
+                    </a>
+                    <a href="<?= BASE_URL ?>/settings/migrations" class="btn btn-outline-info">
+                        <i class="fas fa-database"></i> Database Migrations
                     </a>
                     <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-success">
                         <i class="fas fa-language"></i> <?= __('settings.translations') ?>

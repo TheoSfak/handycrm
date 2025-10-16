@@ -40,6 +40,24 @@ try {
         header('Location: install.php');
         exit;
     }
+    
+    // Auto-run pending migrations (silent, non-blocking)
+    require_once 'classes/AutoMigration.php';
+    $autoMigration = new AutoMigration($db);
+    $migrationResults = $autoMigration->checkAndRun();
+    
+    // Log migration results if any were executed
+    if ($migrationResults['executed'] > 0) {
+        error_log("HandyCRM: Auto-executed {$migrationResults['executed']} pending migrations");
+    }
+    
+    // Log errors if any (but don't block application)
+    if (!empty($migrationResults['errors'])) {
+        foreach ($migrationResults['errors'] as $error) {
+            error_log("HandyCRM Migration Error ({$error['file']}): {$error['error']}");
+        }
+    }
+    
 } catch (Exception $e) {
     // Database connection failed - redirect to installation
     header('Location: install.php');
@@ -637,6 +655,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         }
     } elseif ($currentRoute === '/settings/reset-data') {
         $controller->resetData();
+    } elseif ($currentRoute === '/settings/migrations') {
+        require_once 'views/settings/migrations.php';
     } elseif ($currentRoute === '/settings/update') {
         // Update checker page - already handled separately
         require_once 'views/settings/update.php';
