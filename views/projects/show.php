@@ -121,6 +121,11 @@
         </button>
     </li>
     <li class="nav-item" role="presentation">
+        <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials" type="button" role="tab">
+            <i class="fas fa-boxes me-2"></i>Υλικά
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
         <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
             <i class="fas fa-chart-line me-2"></i>Στατιστικά
         </button>
@@ -488,6 +493,192 @@
     </div>
     <!-- End Labor Tab -->
 
+    <!-- Materials Tab -->
+    <div class="tab-pane fade" id="materials" role="tabpanel">
+        <!-- Filters Card -->
+        <div class="card shadow-sm mb-4 border-0">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Φίλτρα Ημερομηνιών</h5>
+            </div>
+            <div class="card-body">
+                <form method="GET" action="" id="materialsFilterForm">
+                    <input type="hidden" name="slug" value="<?= htmlspecialchars($project['slug']) ?>">
+                    <input type="hidden" name="tab" value="materials">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label for="materials_date_from" class="form-label">Από Ημερομηνία</label>
+                            <input type="date" class="form-control" id="materials_date_from" name="materials_date_from" 
+                                   value="<?= $_GET['materials_date_from'] ?? '' ?>">
+                        </div>
+                        <div class="col-md-5">
+                            <label for="materials_date_to" class="form-label">Έως Ημερομηνία</label>
+                            <input type="date" class="form-control" id="materials_date_to" name="materials_date_to" 
+                                   value="<?= $_GET['materials_date_to'] ?? '' ?>">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-2"></i>Αναζήτηση
+                            </button>
+                        </div>
+                    </div>
+                    <?php if (!empty($_GET['materials_date_from']) || !empty($_GET['materials_date_to'])): ?>
+                    <div class="mt-3">
+                        <a href="?slug=<?= htmlspecialchars($project['slug']) ?>&tab=materials" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-times me-2"></i>Καθαρισμός Φίλτρων
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                </form>
+            </div>
+        </div>
+
+        <?php if (!empty($materialsSummary)): ?>
+            <!-- Export Button -->
+            <div class="mb-3 text-end">
+                <button onclick="exportMaterialsToCSV()" class="btn btn-success">
+                    <i class="fas fa-file-export me-2"></i>Export CSV
+                </button>
+            </div>
+
+            <!-- Date Range Info -->
+            <?php if (!empty($_GET['materials_date_from']) || !empty($_GET['materials_date_to'])): ?>
+            <div class="alert alert-info">
+                <i class="fas fa-calendar-alt me-2"></i>
+                <strong>Περίοδος:</strong> 
+                <?php if (!empty($_GET['materials_date_from'])): ?>
+                    Από <?= date('d/m/Y', strtotime($_GET['materials_date_from'])) ?>
+                <?php endif; ?>
+                <?php if (!empty($_GET['materials_date_to'])): ?>
+                    έως <?= date('d/m/Y', strtotime($_GET['materials_date_to'])) ?>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- Materials Summary Table -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>Συγκεντρωτικά Υλικά</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="materialsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Υλικό</th>
+                                    <th class="text-center">Μονάδα Μέτρησης</th>
+                                    <th class="text-end">Συνολική Ποσότητα</th>
+                                    <th class="text-end">Μέση Τιμή</th>
+                                    <th class="text-end">Συνολική Αξία</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $grandTotalValue = 0;
+                                foreach ($materialsSummary as $material): 
+                                    $totalValue = $material['total_quantity'] * $material['avg_price'];
+                                    $grandTotalValue += $totalValue;
+                                ?>
+                                    <tr>
+                                        <td>
+                                            <strong><?= htmlspecialchars($material['name']) ?></strong>
+                                            <?php if (!empty($material['category'])): ?>
+                                                <br><small class="text-muted">
+                                                    <i class="fas fa-tag fa-xs"></i> <?= htmlspecialchars($material['category']) ?>
+                                                </small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-secondary"><?= htmlspecialchars($material['unit']) ?></span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong><?= number_format($material['total_quantity'], 2) ?></strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <?= number_format($material['avg_price'], 2) ?> €
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-success"><?= number_format($totalValue, 2) ?> €</strong>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr class="table-success">
+                                    <td colspan="4" class="text-end"><strong><i class="fas fa-calculator me-2"></i>ΣΥΝΟΛΟ:</strong></td>
+                                    <td class="text-end"><strong class="fs-5 text-success"><?= number_format($grandTotalValue, 2) ?> €</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Materials Detail (by task) -->
+            <?php if (!empty($materialsDetail)): ?>
+            <div class="card shadow-sm mt-4 border-0">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Λεπτομέρειες ανά Εργασία</h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="materialsAccordion">
+                        <?php foreach ($materialsDetail as $index => $task): ?>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading<?= $index ?>">
+                                <button class="accordion-button <?= $index > 0 ? 'collapsed' : '' ?>" type="button" 
+                                        data-bs-toggle="collapse" data-bs-target="#collapse<?= $index ?>">
+                                    <i class="fas fa-calendar-day me-2 text-primary"></i>
+                                    <strong><?= date('d/m/Y', strtotime($task['task_date'])) ?></strong>
+                                    <span class="ms-3 text-muted"><?= htmlspecialchars($task['description']) ?></span>
+                                    <span class="badge bg-primary ms-auto me-3"><?= count($task['materials']) ?> υλικά</span>
+                                </button>
+                            </h2>
+                            <div id="collapse<?= $index ?>" class="accordion-collapse collapse <?= $index === 0 ? 'show' : '' ?>" 
+                                 data-bs-parent="#materialsAccordion">
+                                <div class="accordion-body p-0">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Υλικό</th>
+                                                <th class="text-center">Μονάδα</th>
+                                                <th class="text-end">Ποσότητα</th>
+                                                <th class="text-end">Τιμή</th>
+                                                <th class="text-end">Σύνολο</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($task['materials'] as $mat): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($mat['name']) ?></td>
+                                                <td class="text-center"><small><?= htmlspecialchars($mat['unit']) ?></small></td>
+                                                <td class="text-end"><?= number_format($mat['quantity'], 2) ?></td>
+                                                <td class="text-end"><?= number_format($mat['unit_price'], 2) ?> €</td>
+                                                <td class="text-end"><strong><?= number_format($mat['subtotal'], 2) ?> €</strong></td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
+        <?php else: ?>
+            <div class="text-center py-5">
+                <i class="fas fa-boxes fa-4x text-muted mb-3" style="opacity: 0.3;"></i>
+                <h5 class="text-muted">Δεν υπάρχουν υλικά</h5>
+                <p class="text-muted">Προσθέστε υλικά στις εργασίες του έργου για να τα δείτε εδώ.</p>
+                <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/add" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Δημιουργία Εργασίας
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+    <!-- End Materials Tab -->
+
     <!-- Statistics Tab -->
     <div class="tab-pane fade" id="statistics" role="tabpanel">
         <?php
@@ -718,7 +909,7 @@ function exportLaborToCSV() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
-    const filename = projectName + ', ημερομίσθια.csv';
+    const filename = projectName + ' - Ημερομίσθια.csv';
     
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
@@ -731,4 +922,71 @@ function exportLaborToCSV() {
         alert('Σφάλμα κατά το export: ' + error.message);
     }
 }
+
+// Export Materials Data to CSV
+function exportMaterialsToCSV() {
+    try {
+        const projectName = <?= json_encode($project['title'] ?? 'Project') ?>;
+        const materialsData = <?= json_encode($materialsSummary ?? []) ?>;
+        
+        if (!materialsData || materialsData.length === 0) {
+            alert('Δεν υπάρχουν δεδομένα για export');
+            return;
+        }
+        
+        // CSV Header
+        let csv = '\uFEFF'; // BOM for proper Greek character encoding
+        csv += 'Υλικό,Μονάδα,Ποσότητα,Μέση Τιμή,Συνολική Αξία,Κατηγορία\n';
+        
+        let grandTotal = 0;
+        
+        // Add data rows
+        materialsData.forEach(material => {
+            const name = material.name || '';
+            const unit = material.unit || '';
+            const quantity = parseFloat(material.total_quantity).toFixed(2);
+            const avgPrice = parseFloat(material.avg_price).toFixed(2);
+            const totalValue = (parseFloat(material.total_quantity) * parseFloat(material.avg_price)).toFixed(2);
+            const category = material.category || '-';
+            
+            grandTotal += parseFloat(totalValue);
+            
+            csv += `"${name}","${unit}",${quantity},${avgPrice},${totalValue},"${category}"\n`;
+        });
+        
+        // Add grand total
+        csv += `\n"ΓΕΝΙΚΟ ΣΥΝΟΛΟ","","","",${grandTotal.toFixed(2)},""\n`;
+        
+        // Create download link
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        const filename = projectName + ' - Υλικά.csv';
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Σφάλμα κατά το export: ' + error.message);
+    }
+}
+
+// Auto-activate materials tab if filter is applied
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tab = urlParams.get('tab');
+    
+    if (tab === 'materials') {
+        const materialsTab = document.getElementById('materials-tab');
+        if (materialsTab) {
+            const bsTab = new bootstrap.Tab(materialsTab);
+            bsTab.show();
+        }
+    }
+});
 </script>

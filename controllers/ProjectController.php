@@ -195,6 +195,111 @@ class ProjectController extends BaseController {
             error_log("Labor loading error: " . $e->getMessage());
         }
         
+        // Get materials summary and detail
+        $materialsSummary = [];
+        $materialsDetail = [];
+        $materialsDateFrom = $_GET['materials_date_from'] ?? '';
+        $materialsDateTo = $_GET['materials_date_to'] ?? '';
+        
+        try {
+            // Build date filter for materials query
+            $dateFilter = '';
+            $params = [$project['id']];
+            
+            if (!empty($materialsDateFrom) && !empty($materialsDateTo)) {
+                $dateFilter = " AND (
+                    (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                    OR
+                    (pt.task_type = 'date_range' AND (
+                        (pt.date_from BETWEEN ? AND ?) OR 
+                        (pt.date_to BETWEEN ? AND ?) OR
+                        (pt.date_from <= ? AND pt.date_to >= ?)
+                    ))
+                )";
+                $params[] = $materialsDateFrom;
+                $params[] = $materialsDateTo;
+                $params[] = $materialsDateFrom;
+                $params[] = $materialsDateTo;
+                $params[] = $materialsDateFrom;
+                $params[] = $materialsDateTo;
+                $params[] = $materialsDateFrom;
+                $params[] = $materialsDateTo;
+            } elseif (!empty($materialsDateFrom)) {
+                $dateFilter = " AND (
+                    (pt.task_type = 'single_day' AND pt.task_date >= ?)
+                    OR
+                    (pt.task_type = 'date_range' AND pt.date_to >= ?)
+                )";
+                $params[] = $materialsDateFrom;
+                $params[] = $materialsDateFrom;
+            } elseif (!empty($materialsDateTo)) {
+                $dateFilter = " AND (
+                    (pt.task_type = 'single_day' AND pt.task_date <= ?)
+                    OR
+                    (pt.task_type = 'date_range' AND pt.date_from <= ?)
+                )";
+                $params[] = $materialsDateTo;
+                $params[] = $materialsDateTo;
+            }
+            
+            // Get materials summary (grouped by material name)
+            $materialsSummary = $taskModel->query(
+                "SELECT 
+                    tm.name,
+                    tm.unit,
+                    SUM(tm.quantity) as total_quantity,
+                    AVG(tm.unit_price) as avg_price,
+                    mc.name as category
+                 FROM task_materials tm
+                 INNER JOIN project_tasks pt ON tm.task_id = pt.id
+                 LEFT JOIN materials_catalog mcat ON tm.catalog_material_id = mcat.id
+                 LEFT JOIN material_categories mc ON mcat.category_id = mc.id
+                 WHERE pt.project_id = ?{$dateFilter}
+                 GROUP BY tm.name, tm.unit, mc.name
+                 ORDER BY tm.name",
+                $params
+            );
+            
+            // Get materials detail (by task)
+            $materialsDetail = [];
+            $tasksWithMaterials = $taskModel->query(
+                "SELECT DISTINCT
+                    pt.id as task_id,
+                    pt.task_type,
+                    CASE 
+                        WHEN pt.task_type = 'single_day' THEN pt.task_date
+                        ELSE pt.date_from
+                    END as task_date,
+                    pt.description
+                 FROM project_tasks pt
+                 INNER JOIN task_materials tm ON pt.id = tm.task_id
+                 WHERE pt.project_id = ?{$dateFilter}
+                 ORDER BY task_date DESC",
+                $params
+            );
+            
+            // For each task, get its materials
+            foreach ($tasksWithMaterials as $task) {
+                $materials = $taskModel->query(
+                    "SELECT name, unit, quantity, unit_price, subtotal
+                     FROM task_materials
+                     WHERE task_id = ?
+                     ORDER BY name",
+                    [$task['task_id']]
+                );
+                
+                $materialsDetail[] = [
+                    'task_id' => $task['task_id'],
+                    'task_date' => $task['task_date'],
+                    'description' => $task['description'],
+                    'materials' => $materials
+                ];
+            }
+        } catch (Exception $e) {
+            // Materials not available
+            error_log("Materials loading error: " . $e->getMessage());
+        }
+        
         $data = [
             'title' => 'Έργο: ' . $project['title'] . ' - ' . APP_NAME,
             'user' => $user,
@@ -205,7 +310,9 @@ class ProjectController extends BaseController {
             'filters' => $filters,
             'projectPhotos' => $projectPhotos,
             'totalPhotos' => $totalPhotos,
-            'laborEntries' => $laborEntries
+            'laborEntries' => $laborEntries,
+            'materialsSummary' => $materialsSummary,
+            'materialsDetail' => $materialsDetail
         ];
         
         parent::view('projects/show', $data);
