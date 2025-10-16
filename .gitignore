@@ -36,9 +36,10 @@ tmp/
 temp/
 cache/
 
-# Database dumps (except the template)
+# Database dumps (except the template and migrations)
 *.sql
 !database/handycrm.sql
+!migrations/*.sql
 
 # Composer (if you add it later)
 /vendor/
