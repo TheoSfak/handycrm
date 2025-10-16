@@ -188,12 +188,17 @@ class ProjectTasksController extends BaseController {
         
         if (!empty($_POST['materials'])) {
             foreach ($_POST['materials'] as $index => $material) {
-                if (!empty($material['description'])) {
+                // Check for 'name' field (new form) or 'description' field (old form)
+                $materialName = trim($material['name'] ?? $material['description'] ?? '');
+                
+                if (!empty($materialName)) {
                     $materials[] = [
-                        'description' => trim($material['description']),
+                        'name' => $materialName,
+                        'catalog_material_id' => !empty($material['catalog_material_id']) ? intval($material['catalog_material_id']) : null,
+                        'unit' => trim($material['unit'] ?? ''),
+                        'unit_type' => trim($material['unit'] ?? $material['unit_type'] ?? 'other'),
                         'unit_price' => floatval($material['unit_price'] ?? 0),
-                        'quantity' => floatval($material['quantity'] ?? 0),
-                        'unit_type' => $material['unit_type'] ?? 'pieces'
+                        'quantity' => floatval($material['quantity'] ?? 0)
                     ];
                 }
             }
