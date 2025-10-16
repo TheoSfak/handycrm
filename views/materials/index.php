@@ -174,9 +174,11 @@ require_once __DIR__ . '/../includes/header.php';
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($materials as $index => $material): ?>
+                        <?php foreach ($materials as $index => $material): 
+                            $rowNumber = ($currentPage - 1) * $perPage + $index + 1;
+                        ?>
                         <tr>
-                            <td><?= $index + 1 ?></td>
+                            <td><?= $rowNumber ?></td>
                             <td>
                                 <strong><?= htmlspecialchars($material['name']) ?></strong>
                                 <?php if (!empty($material['description'])): ?>
@@ -232,9 +234,114 @@ require_once __DIR__ . '/../includes/header.php';
                 </table>
             </div>
             <?php endif; ?>
+            
+            <!-- Pagination Controls -->
+            <?php if ($totalPages > 1): ?>
+            <div class="card-footer bg-light">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="form-label mb-0">Εμφάνιση:</label>
+                            <select class="form-select form-select-sm" style="width: auto;" id="perPageSelect">
+                                <option value="10" <?= $perPage == 10 ? 'selected' : '' ?>>10</option>
+                                <option value="25" <?= $perPage == 25 ? 'selected' : '' ?>>25</option>
+                                <option value="50" <?= $perPage == 50 ? 'selected' : '' ?>>50</option>
+                                <option value="100" <?= $perPage == 100 ? 'selected' : '' ?>>100</option>
+                            </select>
+                            <span class="text-muted small">από <?= $totalMaterials ?> υλικά</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <nav aria-label="Σελιδοποίηση υλικών">
+                            <ul class="pagination pagination-sm justify-content-end mb-0">
+                                <!-- Previous Button -->
+                                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="<?= buildPaginationUrl($currentPage - 1, $perPage, $filters) ?>" aria-label="Προηγούμενη">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                                
+                                <?php
+                                // Calculate page range to display
+                                $startPage = max(1, $currentPage - 2);
+                                $endPage = min($totalPages, $currentPage + 2);
+                                
+                                // First page
+                                if ($startPage > 1): ?>
+                                    <li class="page-item">
+                                        <a class="page-link" href="<?= buildPaginationUrl(1, $perPage, $filters) ?>">1</a>
+                                    </li>
+                                    <?php if ($startPage > 2): ?>
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                                
+                                <!-- Page Numbers -->
+                                <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                                    <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
+                                        <a class="page-link" href="<?= buildPaginationUrl($i, $perPage, $filters) ?>"><?= $i ?></a>
+                                    </li>
+                                <?php endfor; ?>
+                                
+                                <!-- Last page -->
+                                <?php if ($endPage < $totalPages): ?>
+                                    <?php if ($endPage < $totalPages - 1): ?>
+                                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    <?php endif; ?>
+                                    <li class="page-item">
+                                        <a class="page-link" href="<?= buildPaginationUrl($totalPages, $perPage, $filters) ?>"><?= $totalPages ?></a>
+                                    </li>
+                                <?php endif; ?>
+                                
+                                <!-- Next Button -->
+                                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                                    <a class="page-link" href="<?= buildPaginationUrl($currentPage + 1, $perPage, $filters) ?>" aria-label="Επόμενη">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
+
+<?php
+// Helper function to build pagination URL with current filters
+function buildPaginationUrl($page, $perPage, $filters) {
+    $params = [
+        'page' => $page,
+        'per_page' => $perPage
+    ];
+    
+    if (!empty($filters['category_id'])) {
+        $params['category_id'] = $filters['category_id'];
+    }
+    if (!empty($filters['search'])) {
+        $params['search'] = $filters['search'];
+    }
+    if (isset($_GET['show_inactive'])) {
+        $params['show_inactive'] = '1';
+    }
+    
+    return BASE_URL . '/materials?' . http_build_query($params);
+}
+?>
+
+<script>
+// Handle per-page change
+document.getElementById('perPageSelect').addEventListener('change', function() {
+    const perPage = this.value;
+    const url = new URL(window.location.href);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', 1); // Reset to first page
+    window.location.href = url.toString();
+});
+</script>
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1">

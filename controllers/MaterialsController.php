@@ -20,19 +20,30 @@ class MaterialsController extends BaseController {
     
     /**
      * GET /materials
-     * Display materials list
+     * Display materials list with pagination
      */
     public function index() {
         $this->checkAuth();
+        
+        // Get pagination parameters
+        $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $perPage = isset($_GET['per_page']) ? max(10, min(100, (int)$_GET['per_page'])) : 25;
+        $offset = ($page - 1) * $perPage;
         
         // Get filters
         $filters = [
             'category_id' => $_GET['category_id'] ?? null,
             'search' => $_GET['search'] ?? null,
-            'is_active' => isset($_GET['show_inactive']) ? null : 1
+            'is_active' => isset($_GET['show_inactive']) ? null : 1,
+            'limit' => $perPage,
+            'offset' => $offset
         ];
         
-        // Get materials
+        // Get total count for pagination
+        $totalMaterials = $this->materialModel->getCount($filters);
+        $totalPages = ceil($totalMaterials / $perPage);
+        
+        // Get materials for current page
         $materials = $this->materialModel->getAll($filters);
         
         // Get categories for filter dropdown
@@ -46,6 +57,10 @@ class MaterialsController extends BaseController {
             'categories' => $categories,
             'statistics' => $statistics,
             'filters' => $filters,
+            'currentPage' => $page,
+            'perPage' => $perPage,
+            'totalPages' => $totalPages,
+            'totalMaterials' => $totalMaterials,
             'pageTitle' => 'Κατάλογος Υλικών'
         ]);
     }

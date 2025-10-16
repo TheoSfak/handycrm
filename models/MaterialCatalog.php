@@ -11,7 +11,7 @@ class MaterialCatalog extends BaseModel {
     protected $primaryKey = 'id';
     
     /**
-     * Get all materials with optional filters
+     * Get all materials with optional filters and pagination
      */
     public function getAll($filters = []) {
         $sql = "SELECT mc.*, mcat.name as category_name 
@@ -26,8 +26,9 @@ class MaterialCatalog extends BaseModel {
         }
         
         if (!empty($filters['search'])) {
-            $sql .= " AND (mc.name LIKE ? OR mc.description LIKE ?)";
+            $sql .= " AND (mc.name LIKE ? OR mc.description LIKE ? OR mc.supplier LIKE ?)";
             $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
             $params[] = $searchTerm;
             $params[] = $searchTerm;
         }
@@ -41,8 +42,47 @@ class MaterialCatalog extends BaseModel {
         
         $sql .= " ORDER BY mcat.name, mc.name";
         
+        // Add pagination if specified
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $sql .= " LIMIT " . (int)$filters['limit'] . " OFFSET " . (int)$filters['offset'];
+        }
+        
         $stmt = $this->execute($sql, $params);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
+    }
+    
+    /**
+     * Get total count of materials with filters (for pagination)
+     */
+    public function getCount($filters = []) {
+        $sql = "SELECT COUNT(*) as total 
+                FROM {$this->table} mc
+                WHERE 1=1";
+        $params = [];
+        
+        if (!empty($filters['category_id'])) {
+            $sql .= " AND mc.category_id = ?";
+            $params[] = $filters['category_id'];
+        }
+        
+        if (!empty($filters['search'])) {
+            $sql .= " AND (mc.name LIKE ? OR mc.description LIKE ? OR mc.supplier LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+        
+        if (isset($filters['is_active'])) {
+            $sql .= " AND mc.is_active = ?";
+            $params[] = $filters['is_active'];
+        } else {
+            $sql .= " AND mc.is_active = 1";
+        }
+        
+        $stmt = $this->execute($sql, $params);
+        $result = $stmt ? $stmt->fetch(PDO::FETCH_ASSOC) : ['total' => 0];
+        return (int)$result['total'];
     }
     
     /**
