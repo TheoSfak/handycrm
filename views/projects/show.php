@@ -136,9 +136,9 @@
 <div class="tab-content" id="projectTabContent">
     <!-- Overview Tab -->
     <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-        <div class="row">
-            <!-- Left Column -->
-            <div class="col-lg-4">
+            <div class="row">
+                <!-- Left Column -->
+                <div class="col-lg-4">
         <!-- Customer Card -->
         <div class="card mb-4 shadow-sm border-0">
             <div class="card-header bg-primary text-white">
@@ -297,10 +297,10 @@
                 </div>
             </div>
         </div>
-    </div>
+                </div>
 
-    <!-- Right Column -->
-    <div class="col-lg-8">
+                <!-- Right Column -->
+                <div class="col-lg-8">
         <!-- Tasks History Card -->
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -350,16 +350,15 @@
                     </div>
                 <?php endif; ?>
             </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-    </div>
-    <!-- End Overview Tab -->
-
-    <!-- Tasks Tab -->
+    <!-- End Overview Tab -->    <!-- Tasks Tab -->
     <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
         <?php
         // Include the tasks index view
+        $isTabView = true; // Flag to indicate we're in a tab context
         if (file_exists(__DIR__ . '/tasks/index.php')) {
             include __DIR__ . '/tasks/index.php';
         } else {
@@ -990,3 +989,61 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<!-- Bootstrap Tab Fix v5 - Nuclear Option -->
+<style>
+/* COMPLETE RESET - Remove ALL spacing */
+.nav-tabs {
+  margin: 0 !important;
+  padding: 0 !important;
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Tab buttons */
+.nav-tabs .nav-link {
+  margin-bottom: 0 !important;
+}
+
+/* Tab content container - ZERO spacing */
+.tab-content,
+#projectTabContent {
+  margin: 0 !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border: none !important;
+  border-top: none !important;
+}
+
+/* All tab panes - ZERO spacing */
+.tab-content > .tab-pane,
+#projectTabContent > .tab-pane {
+  margin: 0 !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border: none !important;
+  border-top: none !important;
+}
+
+/* Active tab pane - ZERO spacing */
+.tab-content > .tab-pane.active,
+#projectTabContent > .tab-pane.active {
+  margin: 0 !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove any wrapper spacing inside cards that might cause gaps */
+.card.mb-4.shadow-sm.border-0 {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Ensure the tab comment doesn't create spacing */
+.tab-content::before,
+.tab-content::after {
+  display: none !important;
+}
+</style>

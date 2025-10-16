@@ -4,10 +4,15 @@
  * Displays all tasks for a project with filters and summary
  */
 
-$pageTitle = $title ?? 'Εργασίες Έργου';
-require_once __DIR__ . '/../../includes/header.php';
+// Check if we're in a tab context (included from show.php)
+if (!isset($isTabView)) {
+    $isTabView = false;
+    $pageTitle = $title ?? 'Εργασίες Έργου';
+    require_once __DIR__ . '/../../includes/header.php';
+}
 ?>
 
+<?php if (!$isTabView): ?>
 <div class="container-fluid py-4">
     <!-- Project Context Header -->
     <nav aria-label="breadcrumb" class="mb-4">
@@ -25,6 +30,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <li class="breadcrumb-item active">Εργασίες</li>
         </ol>
     </nav>
+<?php endif; ?>
 
     <!-- Summary Cards -->
     <?php if ($summary): ?>
@@ -297,7 +303,9 @@ require_once __DIR__ . '/../../includes/header.php';
             <?php endif; ?>
         </div>
     </div>
+<?php if (!$isTabView): ?>
 </div>
+<?php endif; ?>
 
 <!-- Copy Task Form (Hidden) -->
 <form id="copyTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/copy" style="display:none;">
@@ -325,4 +333,6 @@ function deleteTask(taskId, description) {
 }
 </script>
 
+<?php if (!$isTabView): ?>
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+<?php endif; ?>
