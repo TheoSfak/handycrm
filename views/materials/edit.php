@@ -46,8 +46,26 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="unit" class="form-label"><?= __('materials.unit_measurement') ?></label>
-                                <input type="text" class="form-control" id="unit" name="unit" 
-                                       value="<?= htmlspecialchars($material['unit']) ?>">
+                                <select class="form-select" id="unit" name="unit">
+                                    <option value="τεμ" <?= $material['unit'] === 'τεμ' ? 'selected' : '' ?>>Τεμάχια (τεμ)</option>
+                                    <option value="μ" <?= $material['unit'] === 'μ' ? 'selected' : '' ?>>Μέτρα (μ)</option>
+                                    <option value="μ²" <?= $material['unit'] === 'μ²' ? 'selected' : '' ?>>Τετραγωνικά Μέτρα (μ²)</option>
+                                    <option value="μ³" <?= $material['unit'] === 'μ³' ? 'selected' : '' ?>>Κυβικά Μέτρα (μ³)</option>
+                                    <option value="κιλά" <?= $material['unit'] === 'κιλά' ? 'selected' : '' ?>>Κιλά (κιλά)</option>
+                                    <option value="γρ" <?= $material['unit'] === 'γρ' ? 'selected' : '' ?>>Γραμμάρια (γρ)</option>
+                                    <option value="τόνοι" <?= $material['unit'] === 'τόνοι' ? 'selected' : '' ?>>Τόνοι (τόνοι)</option>
+                                    <option value="λίτρα" <?= $material['unit'] === 'λίτρα' ? 'selected' : '' ?>>Λίτρα (λίτρα)</option>
+                                    <option value="ml" <?= $material['unit'] === 'ml' ? 'selected' : '' ?>>Χιλιοστόλιτρα (ml)</option>
+                                    <option value="σετ" <?= $material['unit'] === 'σετ' ? 'selected' : '' ?>>Σετ (σετ)</option>
+                                    <option value="κουτί" <?= $material['unit'] === 'κουτί' ? 'selected' : '' ?>>Κουτί (κουτί)</option>
+                                    <option value="σακί" <?= $material['unit'] === 'σακί' ? 'selected' : '' ?>>Σακί (σακί)</option>
+                                    <option value="παλέτα" <?= $material['unit'] === 'παλέτα' ? 'selected' : '' ?>>Παλέτα (παλέτα)</option>
+                                    <option value="ρολό" <?= $material['unit'] === 'ρολό' ? 'selected' : '' ?>>Ρολό (ρολό)</option>
+                                    <option value="φύλλο" <?= $material['unit'] === 'φύλλο' ? 'selected' : '' ?>>Φύλλο (φύλλο)</option>
+                                    <option value="κιβώτιο" <?= $material['unit'] === 'κιβώτιο' ? 'selected' : '' ?>>Κιβώτιο (κιβώτιο)</option>
+                                    <option value="ώρες" <?= $material['unit'] === 'ώρες' ? 'selected' : '' ?>>Ώρες (ώρες)</option>
+                                    <option value="ημέρες" <?= $material['unit'] === 'ημέρες' ? 'selected' : '' ?>>Ημέρες (ημέρες)</option>
+                                </select>
                             </div>
                         </div>
                     </div>

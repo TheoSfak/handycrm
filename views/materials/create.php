@@ -44,7 +44,26 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="unit" class="form-label"><?= __('materials.unit_measurement') ?></label>
-                                <input type="text" class="form-control" id="unit" name="unit" value="τεμ" placeholder="π.χ. τεμ, μ, κιλά">
+                                <select class="form-select" id="unit" name="unit">
+                                    <option value="τεμ">Τεμάχια (τεμ)</option>
+                                    <option value="μ">Μέτρα (μ)</option>
+                                    <option value="μ²">Τετραγωνικά Μέτρα (μ²)</option>
+                                    <option value="μ³">Κυβικά Μέτρα (μ³)</option>
+                                    <option value="κιλά">Κιλά (κιλά)</option>
+                                    <option value="γρ">Γραμμάρια (γρ)</option>
+                                    <option value="τόνοι">Τόνοι (τόνοι)</option>
+                                    <option value="λίτρα">Λίτρα (λίτρα)</option>
+                                    <option value="ml">Χιλιοστόλιτρα (ml)</option>
+                                    <option value="σετ">Σετ (σετ)</option>
+                                    <option value="κουτί">Κουτί (κουτί)</option>
+                                    <option value="σακί">Σακί (σακί)</option>
+                                    <option value="παλέτα">Παλέτα (παλέτα)</option>
+                                    <option value="ρολό">Ρολό (ρολό)</option>
+                                    <option value="φύλλο">Φύλλο (φύλλο)</option>
+                                    <option value="κιβώτιο">Κιβώτιο (κιβώτιο)</option>
+                                    <option value="ώρες">Ώρες (ώρες)</option>
+                                    <option value="ημέρες">Ημέρες (ημέρες)</option>
+                                </select>
                             </div>
                         </div>
                     </div>
