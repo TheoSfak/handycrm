@@ -359,5 +359,8 @@
             <?= $inline_scripts ?>
         </script>
     <?php endif; ?>
+    
+    <!-- Date Formatter - Converts all date inputs to dd/mm/yyyy format -->
+    <script src="<?= BASE_URL ?>/assets/js/date-formatter.js"></script>
 </body>
 </html>
