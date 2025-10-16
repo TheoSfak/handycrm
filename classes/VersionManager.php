@@ -59,18 +59,21 @@ class VersionManager {
                 throw new Exception('Failed to install files');
             }
             
-            // Step 5: Run database migrations
-            require_once __DIR__ . '/MigrationManager.php';
-            $migrationManager = new MigrationManager();
-            $migrationResult = $migrationManager->runMigrations($currentVersion, $version);
+            // Step 5: Run database migrations using AutoMigration
+            require_once __DIR__ . '/Database.php';
+            require_once __DIR__ . '/AutoMigration.php';
+            
+            $db = new Database();
+            $autoMigration = new AutoMigration($db);
+            $migrationResult = $autoMigration->checkAndRun();
             
             $migrationMessage = '';
-            if (count($migrationResult['migrations_run']) > 0) {
-                $migrationMessage = ' Εκτελέστηκαν ' . count($migrationResult['migrations_run']) . ' migrations.';
+            if ($migrationResult['executed'] > 0) {
+                $migrationMessage = ' Εκτελέστηκαν ' . $migrationResult['executed'] . ' migrations.';
             }
             
-            if (!$migrationResult['success'] && count($migrationResult['errors']) > 0) {
-                error_log('Migration warnings: ' . implode('; ', $migrationResult['errors']));
+            if (!empty($migrationResult['errors'])) {
+                error_log('Migration warnings: ' . print_r($migrationResult['errors'], true));
             }
             
             // Step 6: Update version in config.php
