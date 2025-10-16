@@ -107,6 +107,10 @@ class ProjectTasksController extends BaseController {
      * POST /projects/{project_id}/tasks/add
      */
     private function store($projectId) {
+        // DEBUG: Log that we entered store method
+        error_log("DEBUG: Entered store method for project $projectId");
+        error_log("DEBUG: POST data: " . print_r($_POST, true));
+        
         // Validate CSRF token would go here
         
         // Collect task data
@@ -120,8 +124,12 @@ class ProjectTasksController extends BaseController {
             'notes' => trim($_POST['notes'] ?? '')
         ];
         
+        error_log("DEBUG: Task data collected: " . print_r($taskData, true));
+        
         // Validate task data
         $errors = $this->validateTaskData($taskData);
+        
+        error_log("DEBUG: Validation errors: " . print_r($errors, true));
         
         if (!empty($errors)) {
             $_SESSION['error'] = implode('<br>', $errors);
@@ -133,28 +141,40 @@ class ProjectTasksController extends BaseController {
         $dateFrom = $taskData['task_type'] === 'single_day' ? $taskData['task_date'] : $taskData['date_from'];
         $dateTo = $taskData['task_type'] === 'single_day' ? $taskData['task_date'] : $taskData['date_to'];
         
+        error_log("DEBUG: Checking overlap for dates: $dateFrom to $dateTo");
         $overlapping = $this->taskModel->checkOverlap($projectId, $dateFrom, $dateTo);
+        error_log("DEBUG: Overlapping tasks found: " . count($overlapping));
+        error_log("DEBUG: confirm_overlap value: " . ($_POST['confirm_overlap'] ?? '0'));
         
-        if (!empty($overlapping) && !isset($_POST['confirm_overlap'])) {
-            $_SESSION['warning'] = 'Υπάρχουν ' . count($overlapping) . ' εργασίες που επικαλύπτονται με αυτό το διάστημα. Θέλετε να συνεχίσετε;';
+        if (!empty($overlapping) && (!isset($_POST['confirm_overlap']) || $_POST['confirm_overlap'] !== '1')) {
+            error_log("DEBUG: Redirecting back due to overlap");
+            $_SESSION['warning'] = 'overlap';
             $_SESSION['overlap_data'] = $overlapping;
             $this->redirectBack();
             return;
         }
         
+        error_log("DEBUG: Passed overlap check, continuing...");
+        
         // Collect materials
         $materials = $this->collectMaterials();
+        error_log("DEBUG: Collected " . count($materials) . " materials");
         
         // Collect labor
         $labor = $this->collectLabor();
+        error_log("DEBUG: Collected " . count($labor) . " labor entries");
         
         // Create task with all details
+        error_log("DEBUG: About to create task with details");
         $taskId = $this->taskModel->createWithDetails($taskData, $materials, $labor);
+        error_log("DEBUG: createWithDetails returned: " . var_export($taskId, true));
         
         if ($taskId) {
+            error_log("DEBUG: Task created successfully, redirecting");
             $_SESSION['success'] = 'Η εργασία δημιουργήθηκε επιτυχώς!';
             $this->redirect('/projects/' . $projectId . '/tasks');
         } else {
+            error_log("DEBUG: Task creation failed");
             $_SESSION['error'] = 'Αποτυχία δημιουργίας εργασίας';
             $this->redirectBack();
         }
@@ -744,7 +764,17 @@ class ProjectTasksController extends BaseController {
         $this->checkAuth();
         
         require_once 'models/TaskPhoto.php';
+        require_once 'models/Project.php';
         $photoModel = new TaskPhoto();
+        $projectModel = new Project();
+        
+        // Get project details
+        $project = $projectModel->find($projectId);
+        if (!$project) {
+            $_SESSION['error'] = 'Το έργο δεν βρέθηκε';
+            $this->redirect('/projects');
+            return;
+        }
         
         // Get task details
         $task = $this->taskModel->getById($taskId);
@@ -759,6 +789,7 @@ class ProjectTasksController extends BaseController {
         $counts = $photoModel->getCountByType($taskId);
         
         $this->view('projects/tasks/photos', [
+            'project' => $project,
             'project_id' => $projectId,
             'task' => $task,
             'photos' => $photos,

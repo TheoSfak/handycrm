@@ -240,10 +240,14 @@ require_once 'views/includes/header.php';
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/dashboard"><i class="fas fa-home me-1"></i>Dashboard</a></li>
             <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/projects"><i class="fas fa-briefcase me-1"></i>Έργα</a></li>
-            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/projects/details/<?= $project_id ?>">Έργο #<?= $project_id ?></a></li>
+            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/projects/<?= $project['slug'] ?>">
+                <?= htmlspecialchars($project['title'] ?? 'Project') ?>
+            </a></li>
             <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks">Εργασίες</a></li>
+            <li class="breadcrumb-item"><a href="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks/view/<?= $task['id'] ?>">
+                <?= htmlspecialchars($task['description'] ?? 'Εργασία') ?>
+            </a></li>
             <li class="breadcrumb-item active">Φωτογραφίες</li>
         </ol>
     </nav>

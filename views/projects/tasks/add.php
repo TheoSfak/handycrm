@@ -16,7 +16,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="<?= BASE_URL ?>/projects"><i class="fas fa-briefcase me-1"></i>Έργα</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="<?= BASE_URL ?>/projects/details/<?= $project['id'] ?>">
+                <a href="<?= BASE_URL ?>/projects/<?= $project['slug'] ?>">
                     <?= htmlspecialchars($project['title'] ?? $project['name'] ?? 'Project') ?>
                 </a>
             </li>
@@ -30,6 +30,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <form method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/add" id="taskForm">
         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
         <input type="hidden" name="project_id" value="<?= $project['id'] ?>">
+        <input type="hidden" name="confirm_overlap" id="confirm_overlap" value="0">
 
         <div class="row">
             <!-- Left Column: Basic Info -->
@@ -187,6 +188,23 @@ require_once __DIR__ . '/../../includes/header.php';
     </form>
 </div>
 
+<!-- Material Unit Types Datalist -->
+<datalist id="unit_types">
+    <option value="τεμάχια">
+    <option value="τεμ">
+    <option value="μέτρα">
+    <option value="μ">
+    <option value="τ.μ.">
+    <option value="κ.μ.">
+    <option value="κιλά">
+    <option value="kg">
+    <option value="λίτρα">
+    <option value="λ">
+    <option value="τόνοι">
+    <option value="κουτιά">
+    <option value="συσκευασίες">
+</datalist>
+
 <!-- Include Project Tasks JavaScript -->
 <script>
 // Technicians data for dropdowns
@@ -197,6 +215,7 @@ const projectId = <?= $project['id'] ?>;
 let materialCounter = 0;
 let laborCounter = 0;
 </script>
+<script src="<?= BASE_URL ?>/public/js/material-autocomplete.js"></script>
 <script src="<?= BASE_URL ?>/public/js/project-tasks.js"></script>
 
 <script>
@@ -244,11 +263,101 @@ document.getElementById('taskForm').addEventListener('submit', function(e) {
     }
 });
 
-// Initialize with one material and one labor row
+// Initialize with one material and one labor row (using project-tasks.js functions)
 window.addEventListener('DOMContentLoaded', function() {
     addMaterialRow();
     addLaborRow();
+    
+    // Check if there's an overlap warning from session
+    <?php if (isset($_SESSION['warning'])): ?>
+        showOverlapModal(<?= isset($_SESSION['overlap_data']) ? json_encode($_SESSION['overlap_data']) : '[]' ?>);
+        <?php 
+        unset($_SESSION['warning']);
+        unset($_SESSION['overlap_data']);
+        ?>
+    <?php endif; ?>
 });
+
+// Show overlap confirmation modal
+function showOverlapModal(overlappingTasks) {
+    const count = Array.isArray(overlappingTasks) ? overlappingTasks.length : 0;
+    
+    // Create modal HTML
+    const modalHtml = `
+        <div class="modal fade" id="overlapModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Προειδοποίηση Επικάλυψης
+                        </h5>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">
+                            <strong>Υπάρχουν ${count} εργασίες που επικαλύπτονται με αυτό το διάστημα.</strong>
+                        </p>
+                        ${count > 0 && overlappingTasks.length > 0 ? `
+                            <div class="alert alert-light">
+                                <small class="text-muted">Υπάρχουσες εργασίες:</small>
+                                <ul class="mb-0 mt-2">
+                                    ${overlappingTasks.map(task => `
+                                        <li>${task.description || 'Χωρίς περιγραφή'} 
+                                        (${task.task_date || task.date_from})</li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        <p class="mb-0">Θέλετε να συνεχίσετε την αποθήκευση;</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="cancelOverlap()">
+                            <i class="fas fa-times me-1"></i>Όχι, Ακύρωση
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="confirmOverlap()">
+                            <i class="fas fa-check me-1"></i>Ναι, Συνέχεια
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('overlapModal'));
+    modal.show();
+}
+
+// Confirm overlap and submit form
+function confirmOverlap() {
+    document.getElementById('confirm_overlap').value = '1';
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('overlapModal'));
+    modal.hide();
+    
+    // Remove modal from DOM after it's hidden
+    document.getElementById('overlapModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+    
+    // Submit form
+    document.getElementById('taskForm').submit();
+}
+
+// Cancel overlap
+function cancelOverlap() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('overlapModal'));
+    modal.hide();
+    
+    // Remove modal from DOM after it's hidden
+    document.getElementById('overlapModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

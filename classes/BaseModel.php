@@ -168,4 +168,26 @@ class BaseModel {
     public function queryOne($sql, $params = []) {
         return $this->db->fetchOne($sql, $params);
     }
+    
+    /**
+     * Execute SQL statement (INSERT, UPDATE, DELETE)
+     * Returns PDOStatement on success, false on failure
+     */
+    public function execute($sql, $params = []) {
+        return $this->db->execute($sql, $params);
+    }
+    
+    /**
+     * Get last insert ID
+     */
+    public function lastInsertId() {
+        return $this->db->lastInsertId();
+    }
+    
+    /**
+     * Get row count from statement
+     */
+    public function rowCount($stmt) {
+        return $this->db->rowCount($stmt);
+    }
 }

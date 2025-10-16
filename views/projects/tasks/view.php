@@ -17,7 +17,7 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                 <a href="<?= BASE_URL ?>/projects"><i class="fas fa-briefcase me-1"></i>Έργα</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="<?= BASE_URL ?>/projects/details/<?= $project['id'] ?>">
+                <a href="<?= BASE_URL ?>/projects/<?= $project['slug'] ?>">
                     <?= htmlspecialchars($project['title'] ?? $project['name'] ?? 'Project') ?>
                 </a>
             </li>

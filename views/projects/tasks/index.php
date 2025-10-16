@@ -18,7 +18,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a href="<?= BASE_URL ?>/projects/details/<?= $project['id'] ?>">
+                <a href="<?= BASE_URL ?>/projects/<?= $project['slug'] ?>">
                     <?= htmlspecialchars($project['title'] ?? $project['name'] ?? 'Project') ?>
                 </a>
             </li>

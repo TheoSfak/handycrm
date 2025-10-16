@@ -407,7 +407,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         echo "<h1>404 - Invoice page not found</h1>";
     }
     
-} elseif (strpos($currentRoute, '/materials') === 0) {
+} elseif (strpos($currentRoute, '/materials-inventory') === 0) {
+    // OLD INVENTORY SYSTEM - Changed route to /materials-inventory to avoid conflict
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
         header('Location: ?route=/login');
@@ -417,26 +418,26 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     require_once 'controllers/MaterialController.php';
     $controller = new MaterialController();
     
-    if ($currentRoute === '/materials') {
+    if ($currentRoute === '/materials-inventory') {
         $controller->index();
-    } elseif ($currentRoute === '/materials/create') {
+    } elseif ($currentRoute === '/materials-inventory/create') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->store();
         } else {
             $controller->create();
         }
-    } elseif ($currentRoute === '/materials/edit') {
+    } elseif ($currentRoute === '/materials-inventory/edit') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();
         } else {
             $controller->edit();
         }
-    } elseif ($currentRoute === '/materials/delete') {
+    } elseif ($currentRoute === '/materials-inventory/delete') {
         $controller->delete();
     } else {
         // 404 for materials
         header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 - Material page not found</h1>";
+        echo "<h1>404 - Material inventory page not found</h1>";
     }
     
 } elseif (strpos($currentRoute, '/technicians') === 0) {
@@ -477,6 +478,59 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         // 404 for technicians
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - Technician page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/materials') === 0 || strpos($currentRoute, '/api/materials') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        if (strpos($currentRoute, '/api/') === 0) {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+        } else {
+            header('Location: ?route=/login');
+        }
+        exit;
+    }
+    
+    require_once 'controllers/MaterialsController.php';
+    $controller = new MaterialsController();
+    
+    // Materials CRUD
+    if ($currentRoute === '/materials') {
+        $controller->index();
+    } elseif ($currentRoute === '/materials/add') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->add();
+        }
+    } elseif (preg_match('/\/materials\/(\d+)\/edit/', $currentRoute, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($matches[1]);
+        } else {
+            $controller->edit($matches[1]);
+        }
+    } elseif (preg_match('/\/materials\/(\d+)\/delete/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete($matches[1]);
+    // Category Management
+    } elseif ($currentRoute === '/materials/categories') {
+        $controller->categories();
+    } elseif ($currentRoute === '/materials/categories/add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->addCategory();
+    } elseif (preg_match('/\/materials\/categories\/(\d+)\/update/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->updateCategory($matches[1]);
+    } elseif (preg_match('/\/materials\/categories\/(\d+)\/delete/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deleteCategory($matches[1]);
+    // Admin Tools
+    } elseif ($currentRoute === '/materials/regenerate-aliases') {
+        $controller->regenerateAliases();
+    // API Endpoints
+    } elseif ($currentRoute === '/api/materials/search') {
+        $controller->search();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Materials page not found</h1>";
     }
     
 } elseif ($currentRoute === '/api/tasks/check-overlap' && $_SERVER['REQUEST_METHOD'] === 'POST') {

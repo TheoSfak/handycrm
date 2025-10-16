@@ -27,12 +27,30 @@ function addMaterialRow(data = null) {
     row.innerHTML = `
         <div class="row g-2">
             <div class="col-md-12 mb-2">
-                <label class="form-label small">Περιγραφή Υλικού</label>
+                <label class="form-label small">
+                    Ονομασία Υλικού
+                    <span class="text-muted" style="font-size: 0.8rem;">(Ξεκινήστε να γράφετε για προτάσεις)</span>
+                </label>
+                <input type="text" 
+                       class="form-control material-name-input" 
+                       name="materials[${materialCounter}][name]" 
+                       value="${data?.name || data?.description || ''}"
+                       placeholder="π.χ. Τσιμέντο, Σωλήνας PVC, Καλώδιο"
+                       autocomplete="off"
+                       data-row-index="${materialCounter}"
+                       required>
+                <input type="hidden" 
+                       name="materials[${materialCounter}][catalog_material_id]" 
+                       value="${data?.catalog_material_id || ''}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small">Μονάδα Μέτρησης</label>
                 <input type="text" 
                        class="form-control" 
-                       name="materials[${materialCounter}][description]" 
-                       value="${data?.description || ''}"
-                       placeholder="π.χ. Τσιμέντο, Άμμος, Σίδερο"
+                       name="materials[${materialCounter}][unit]" 
+                       value="${data?.unit || ''}"
+                       placeholder="τεμ, μέτρα, κιλά"
+                       list="unit_types"
                        required>
             </div>
             <div class="col-md-3">
@@ -60,19 +78,6 @@ function addMaterialRow(data = null) {
                        required>
             </div>
             <div class="col-md-3">
-                <label class="form-label small">Μονάδα Μέτρησης</label>
-                <select class="form-select" 
-                        name="materials[${materialCounter}][unit_type]" 
-                        required>
-                    <option value="pieces" ${data?.unit_type === 'pieces' ? 'selected' : ''}>Τεμάχια</option>
-                    <option value="meters" ${data?.unit_type === 'meters' ? 'selected' : ''}>Μέτρα</option>
-                    <option value="kg" ${data?.unit_type === 'kg' ? 'selected' : ''}>Κιλά</option>
-                    <option value="liters" ${data?.unit_type === 'liters' ? 'selected' : ''}>Λίτρα</option>
-                    <option value="boxes" ${data?.unit_type === 'boxes' ? 'selected' : ''}>Κουτιά</option>
-                    <option value="other" ${data?.unit_type === 'other' ? 'selected' : ''}>Άλλο</option>
-                </select>
-            </div>
-            <div class="col-md-3">
                 <label class="form-label small">Σύνολο</label>
                 <div class="input-group">
                     <input type="text" 
@@ -93,6 +98,13 @@ function addMaterialRow(data = null) {
     `;
     
     container.appendChild(row);
+    
+    // Initialize autocomplete for the material name input
+    const nameInput = row.querySelector('.material-name-input');
+    if (nameInput && typeof window.initMaterialAutocomplete === 'function') {
+        window.initMaterialAutocomplete(nameInput, materialCounter);
+    }
+    
     calculateGrandTotal();
 }
 

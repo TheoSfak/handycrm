@@ -8,8 +8,7 @@
 $stats = $statistics ?? [];
 ?>
 
-<div class="container-fluid">
-    <?php if (empty($stats) || $stats['total_tasks'] == 0): ?>
+<?php if (empty($stats) || $stats['total_tasks'] == 0): ?>
         <div class="alert alert-info">
             <i class="fas fa-info-circle me-2"></i>
             Δεν υπάρχουν αρκετά δεδομένα για στατιστικά. Προσθέστε εργασίες για να δείτε αναλυτικά στατιστικά.
@@ -268,86 +267,3 @@ $stats = $statistics ?? [];
         </div>
 
     <?php endif; ?>
-</div>
-
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<script>
-<?php if (!empty($stats) && $stats['total_tasks'] > 0): ?>
-// Cost Pie Chart
-const ctxPie = document.getElementById('costPieChart').getContext('2d');
-new Chart(ctxPie, {
-    type: 'doughnut',
-    data: {
-        labels: ['Υλικά', 'Εργατικά'],
-        datasets: [{
-            data: [<?= $stats['materials_total'] ?>, <?= $stats['labor_total'] ?>],
-            backgroundColor: ['#ffc107', '#17a2b8'],
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-            legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
-
-// Weekday Bar Chart
-const ctxWeekday = document.getElementById('weekdayChart').getContext('2d');
-const greekDays = {
-    'Monday': 'Δευτέρα',
-    'Tuesday': 'Τρίτη',
-    'Wednesday': 'Τετάρτη',
-    'Thursday': 'Πέμπτη',
-    'Friday': 'Παρασκευή',
-    'Saturday': 'Σάββατο',
-    'Sunday': 'Κυριακή'
-};
-
-new Chart(ctxWeekday, {
-    type: 'bar',
-    data: {
-        labels: Object.keys(greekDays).map(key => greekDays[key]),
-        datasets: [{
-            label: 'Εργασίες',
-            data: [
-                <?= $stats['tasks_by_weekday']['Monday'] ?>,
-                <?= $stats['tasks_by_weekday']['Tuesday'] ?>,
-                <?= $stats['tasks_by_weekday']['Wednesday'] ?>,
-                <?= $stats['tasks_by_weekday']['Thursday'] ?>,
-                <?= $stats['tasks_by_weekday']['Friday'] ?>,
-                <?= $stats['tasks_by_weekday']['Saturday'] ?>,
-                <?= $stats['tasks_by_weekday']['Sunday'] ?>
-            ],
-            backgroundColor: [
-                '#007bff', '#007bff', '#007bff', '#007bff', '#007bff', '#ffc107', '#ffc107'
-            ],
-            borderWidth: 1
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
-                }
-            }
-        },
-        plugins: {
-            legend: {
-                display: false
-            }
-        }
-    }
-});
-<?php endif; ?>
-</script>

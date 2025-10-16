@@ -160,6 +160,41 @@ class ProjectController extends BaseController {
             error_log("Photo loading error: " . $e->getMessage());
         }
         
+        // Get all labor entries from all tasks in this project
+        $laborEntries = [];
+        try {
+            require_once 'models/ProjectTask.php';
+            $taskModel = new ProjectTask();
+            
+            // Get all labor entries with task and technician info
+            $laborEntries = $taskModel->query(
+                "SELECT 
+                    pt.task_type,
+                    pt.task_date,
+                    pt.date_from,
+                    pt.date_to,
+                    pt.description as task_description,
+                    tl.technician_id,
+                    tl.hours_worked as hours,
+                    u.first_name,
+                    u.last_name
+                 FROM project_tasks pt
+                 INNER JOIN task_labor tl ON pt.id = tl.task_id
+                 LEFT JOIN users u ON tl.technician_id = u.id
+                 WHERE pt.project_id = ?
+                 ORDER BY 
+                    CASE 
+                        WHEN pt.task_type = 'single_day' THEN pt.task_date
+                        ELSE pt.date_from
+                    END DESC,
+                    u.last_name, u.first_name",
+                [$project['id']]
+            );
+        } catch (Exception $e) {
+            // Labor entries not available
+            error_log("Labor loading error: " . $e->getMessage());
+        }
+        
         $data = [
             'title' => 'Έργο: ' . $project['title'] . ' - ' . APP_NAME,
             'user' => $user,
@@ -169,7 +204,8 @@ class ProjectController extends BaseController {
             'summary' => $summary,
             'filters' => $filters,
             'projectPhotos' => $projectPhotos,
-            'totalPhotos' => $totalPhotos
+            'totalPhotos' => $totalPhotos,
+            'laborEntries' => $laborEntries
         ];
         
         parent::view('projects/show', $data);

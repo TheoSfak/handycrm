@@ -1,5 +1,3 @@
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
-
 <!-- Project Header -->
 <div class="card mb-4 shadow-sm border-0">
     <div class="card-body">
@@ -118,16 +116,13 @@
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
-            <i class="fas fa-chart-line me-2"></i>Στατιστικά
+        <button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" type="button" role="tab">
+            <i class="fas fa-hard-hat me-2"></i>Ημερομίσθια
         </button>
     </li>
     <li class="nav-item" role="presentation">
-        <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab">
-            <i class="fas fa-camera me-2"></i>Φωτογραφίες
-            <?php if (!empty($totalPhotos)): ?>
-                <span class="badge bg-primary rounded-pill ms-1"><?= $totalPhotos ?></span>
-            <?php endif; ?>
+        <button class="nav-link" id="statistics-tab" data-bs-toggle="tab" data-bs-target="#statistics" type="button" role="tab">
+            <i class="fas fa-chart-line me-2"></i>Στατιστικά
         </button>
     </li>
 </ul>
@@ -374,6 +369,125 @@
     </div>
     <!-- End Tasks Tab -->
 
+    <!-- Labor Tab -->
+    <div class="tab-pane fade" id="labor" role="tabpanel">
+        <?php if (!empty($laborEntries)): ?>
+            <!-- Export Button -->
+            <div class="mb-3 text-end">
+                <button onclick="exportLaborToCSV()" class="btn btn-success">
+                    <i class="fas fa-file-export me-2"></i>Export CSV
+                </button>
+            </div>
+            <?php
+            // Group labor entries by date/date range
+            $groupedLabor = [];
+            foreach ($laborEntries as $entry) {
+                if ($entry['task_type'] === 'single_day') {
+                    $dateKey = $entry['task_date'];
+                    $dateLabel = date('d/m/Y', strtotime($entry['task_date']));
+                } else {
+                    $dateKey = $entry['date_from'] . '_to_' . $entry['date_to'];
+                    $dateLabel = 'Από ' . date('d/m/Y', strtotime($entry['date_from'])) . ' έως ' . date('d/m/Y', strtotime($entry['date_to']));
+                }
+                
+                if (!isset($groupedLabor[$dateKey])) {
+                    $groupedLabor[$dateKey] = [
+                        'label' => $dateLabel,
+                        'type' => $entry['task_type'],
+                        'entries' => []
+                    ];
+                }
+                
+                $groupedLabor[$dateKey]['entries'][] = $entry;
+            }
+            ?>
+            
+            <!-- Labor Cards in 3 Columns -->
+            <div class="row g-3">
+                <?php foreach ($groupedLabor as $dateKey => $group): ?>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="card shadow-sm h-100 border-0">
+                            <div class="card-header <?= $group['type'] === 'single_day' ? 'bg-primary' : 'bg-info' ?> text-white">
+                                <h6 class="mb-0">
+                                    <?php if ($group['type'] === 'single_day'): ?>
+                                        <i class="fas fa-calendar-day me-2"></i>
+                                    <?php else: ?>
+                                        <i class="fas fa-calendar-week me-2"></i>
+                                    <?php endif; ?>
+                                    <?= $group['label'] ?>
+                                </h6>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm table-hover mb-0">
+                                    <tbody>
+                                        <?php 
+                                        $totalHours = 0;
+                                        foreach ($group['entries'] as $entry): 
+                                            $totalHours += $entry['hours'];
+                                        ?>
+                                            <tr>
+                                                <td class="py-2">
+                                                    <i class="fas fa-user-hard-hat text-muted me-2"></i>
+                                                    <small><?= htmlspecialchars($entry['last_name'] . ' ' . $entry['first_name']) ?></small>
+                                                </td>
+                                                <td class="text-end py-2">
+                                                    <span class="badge bg-info">
+                                                        <?= number_format($entry['hours'], 1) ?>h
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong><i class="fas fa-clock me-1"></i>Σύνολο:</strong>
+                                    <span class="badge bg-success fs-6">
+                                        <?= number_format($totalHours, 1) ?> ώρες
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <!-- Grand Total -->
+            <div class="card shadow-sm mt-4 mb-0 border-success" style="background-color: #d1e7dd;">
+                <div class="card-body py-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h5 class="mb-0 text-success">
+                                <i class="fas fa-calculator me-2"></i>Συνολικές Ώρες Έργου
+                            </h5>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <h3 class="mb-0">
+                                <span class="badge bg-success fs-4">
+                                    <?php 
+                                    $grandTotal = array_sum(array_column($laborEntries, 'hours'));
+                                    echo number_format($grandTotal, 1); 
+                                    ?> ώρες
+                                </span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php else: ?>
+            <div class="text-center py-5">
+                <i class="fas fa-hard-hat fa-4x text-muted mb-3" style="opacity: 0.3;"></i>
+                <h5 class="text-muted">Δεν υπάρχουν ημερομίσθια</h5>
+                <p class="text-muted">Προσθέστε εργατικά στις εργασίες του έργου για να τα δείτε εδώ.</p>
+                <a href="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/add" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Δημιουργία Εργασίας
+                </a>
+            </div>
+        <?php endif; ?>
+    </div>
+    <!-- End Labor Tab -->
+
     <!-- Statistics Tab -->
     <div class="tab-pane fade" id="statistics" role="tabpanel">
         <?php
@@ -396,88 +510,6 @@
         ?>
     </div>
     <!-- End Statistics Tab -->
-
-    <!-- Photos Tab -->
-    <div class="tab-pane fade" id="photos" role="tabpanel">
-        <!-- Debug info -->
-        <?php if (false): // Set to true to debug ?>
-        <div class="alert alert-info">
-            <strong>Debug Info:</strong><br>
-            Total Photos: <?= $totalPhotos ?? 'undefined' ?><br>
-            Project Photos Array: <?= isset($projectPhotos) ? 'exists' : 'undefined' ?><br>
-            <?php if (isset($projectPhotos)): ?>
-                Before: <?= count($projectPhotos['before']) ?><br>
-                After: <?= count($projectPhotos['after']) ?><br>
-                During: <?= count($projectPhotos['during']) ?><br>
-                Issue: <?= count($projectPhotos['issue']) ?><br>
-                Other: <?= count($projectPhotos['other']) ?>
-            <?php endif; ?>
-        </div>
-        <?php endif; ?>
-        
-        <?php if (isset($totalPhotos) && $totalPhotos > 0): ?>
-            <?php
-            $photoTypes = [
-                'before' => ['label' => 'Πριν', 'icon' => 'fa-clock', 'color' => 'primary'],
-                'after' => ['label' => 'Μετά', 'icon' => 'fa-check-circle', 'color' => 'success'],
-                'during' => ['label' => 'Κατά τη διάρκεια', 'icon' => 'fa-cog', 'color' => 'info'],
-                'issue' => ['label' => 'Πρόβλημα/Ζημιά', 'icon' => 'fa-exclamation-triangle', 'color' => 'danger'],
-                'other' => ['label' => 'Άλλο', 'icon' => 'fa-image', 'color' => 'secondary']
-            ];
-            
-            foreach ($photoTypes as $type => $info):
-                if (!empty($projectPhotos[$type])):
-            ?>
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-<?= $info['color'] ?> text-white">
-                    <h5 class="mb-0">
-                        <i class="fas <?= $info['icon'] ?> me-2"></i><?= $info['label'] ?>
-                        <span class="badge bg-light text-<?= $info['color'] ?> ms-2"><?= count($projectPhotos[$type]) ?></span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <?php foreach ($projectPhotos[$type] as $photo): ?>
-                        <div class="col-md-3 col-sm-4 col-6">
-                            <div class="position-relative" style="aspect-ratio: 1; overflow: hidden; border-radius: 8px; border: 2px solid #e0e0e0;">
-                                <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
-                                   data-lightbox="project-<?= $project['id'] ?>-<?= $type ?>" 
-                                   data-title="<?= htmlspecialchars($photo['caption'] ?: $info['label']) ?> - <?= htmlspecialchars($photo['task_description']) ?>">
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
-                                         alt="<?= htmlspecialchars($photo['caption']) ?>"
-                                         style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
-                                         onmouseover="this.style.transform='scale(1.1)'" 
-                                         onmouseout="this.style.transform='scale(1)'">
-                                </a>
-                                <div class="position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-75 text-white p-2" style="font-size: 0.75rem;">
-                                    <div class="text-truncate">
-                                        <i class="fas fa-tasks me-1"></i><?= htmlspecialchars($photo['task_description']) ?>
-                                    </div>
-                                    <?php if ($photo['caption']): ?>
-                                    <div class="text-truncate opacity-75">
-                                        <?= htmlspecialchars($photo['caption']) ?>
-                                    </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
-            <?php
-                endif;
-            endforeach;
-            ?>
-        <?php else: ?>
-            <div class="text-center py-5">
-                <i class="fas fa-camera text-muted mb-3" style="font-size: 4rem; opacity: 0.3;"></i>
-                <h4 class="text-muted">Δεν υπάρχουν φωτογραφίες</h4>
-                <p class="text-muted">Προσθέστε φωτογραφίες στις εργασίες του έργου για να τις δείτε εδώ.</p>
-            </div>
-        <?php endif; ?>
-    </div>
-    <!-- End Photos Tab -->
 
 </div>
 <!-- End Tab Content -->
@@ -549,11 +581,154 @@ function changeStatus(newStatus, projectId) {
 }
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
+<!-- Chart.js for Statistics Tab -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-lightbox.option({
-    'resizeDuration': 200,
-    'wrapAround': true,
-    'albumLabel': 'Φωτογραφία %1 από %2'
+let statisticsChartsInitialized = false;
+
+// Initialize charts when Statistics tab is shown
+document.getElementById('statistics-tab')?.addEventListener('shown.bs.tab', function (e) {
+    if (statisticsChartsInitialized) return; // Already initialized
+    
+    statisticsChartsInitialized = true;
+    
+    <?php if (!empty($statistics) && $statistics['total_tasks'] > 0): ?>
+    // Cost Pie Chart
+    const ctxPie = document.getElementById('costPieChart');
+    if (ctxPie) {
+        new Chart(ctxPie.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Υλικά', 'Εργατικά'],
+                datasets: [{
+                    data: [<?= $statistics['materials_total'] ?? 0 ?>, <?= $statistics['labor_total'] ?? 0 ?>],
+                    backgroundColor: ['#ffc107', '#17a2b8'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Weekday Bar Chart
+    const ctxWeekday = document.getElementById('weekdayChart');
+    if (ctxWeekday) {
+        const greekDays = {
+            'Monday': 'Δευτέρα',
+            'Tuesday': 'Τρίτη',
+            'Wednesday': 'Τετάρτη',
+            'Thursday': 'Πέμπτη',
+            'Friday': 'Παρασκευή',
+            'Saturday': 'Σάββατο',
+            'Sunday': 'Κυριακή'
+        };
+
+        new Chart(ctxWeekday.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(greekDays).map(key => greekDays[key]),
+                datasets: [{
+                    label: 'Εργασίες',
+                    data: [
+                        <?= $statistics['tasks_by_weekday']['Monday'] ?? 0 ?>,
+                        <?= $statistics['tasks_by_weekday']['Tuesday'] ?? 0 ?>,
+                        <?= $statistics['tasks_by_weekday']['Wednesday'] ?? 0 ?>,
+                        <?= $statistics['tasks_by_weekday']['Thursday'] ?? 0 ?>,
+                        <?= $statistics['tasks_by_weekday']['Friday'] ?? 0 ?>,
+                        <?= $statistics['tasks_by_weekday']['Saturday'] ?? 0 ?>,
+                        <?= $statistics['tasks_by_weekday']['Sunday'] ?? 0 ?>
+                    ],
+                    backgroundColor: [
+                        '#007bff', '#007bff', '#007bff', '#007bff', '#007bff', '#ffc107', '#ffc107'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+    <?php endif; ?>
 });
+</script>
+
+<script>
+// Export Labor Data to CSV
+function exportLaborToCSV() {
+    try {
+        const projectName = <?= json_encode($project['title'] ?? 'Project') ?>;
+        const laborData = <?= json_encode($laborEntries ?? []) ?>;
+        
+        if (!laborData || laborData.length === 0) {
+            alert('Δεν υπάρχουν δεδομένα για export');
+            return;
+        }
+    
+    // CSV Header
+    let csv = '\uFEFF'; // BOM for proper Greek character encoding
+    csv += 'Ημερομηνία,Τεχνικός,Ώρες\n';
+    
+    // Add data rows
+    laborData.forEach(entry => {
+        let dateStr = '';
+        if (entry.task_type === 'single_day') {
+            const date = new Date(entry.task_date);
+            dateStr = date.toLocaleDateString('el-GR');
+        } else {
+            const dateFrom = new Date(entry.date_from);
+            const dateTo = new Date(entry.date_to);
+            dateStr = 'Από ' + dateFrom.toLocaleDateString('el-GR') + ' έως ' + dateTo.toLocaleDateString('el-GR');
+        }
+        
+        const technicianName = (entry.last_name + ' ' + entry.first_name).trim();
+        const hours = parseFloat(entry.hours).toFixed(1);
+        
+        csv += `"${dateStr}","${technicianName}",${hours}\n`;
+    });
+    
+    // Add total
+    const totalHours = laborData.reduce((sum, entry) => sum + parseFloat(entry.hours), 0);
+    csv += `\n"ΣΥΝΟΛΟ","",${totalHours.toFixed(1)}\n`;
+    
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    const filename = projectName + ', ημερομίσθια.csv';
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Σφάλμα κατά το export: ' + error.message);
+    }
+}
 </script>

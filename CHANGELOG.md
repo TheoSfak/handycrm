@@ -1,6 +1,320 @@
 # HandyCRM - Change Log
 
-## [1.2.0] - 2025-01-15
+## [1.2.0] - 2025-10-16
+
+### 🎉 Major Features
+
+#### 1. Project Photos System
+- **Photo Upload**: Upload multiple photos per project with drag & drop support
+- **Smart Storage**: Organized by project (uploads/projects/{project_id}/)
+- **Photo Gallery**: Beautiful grid layout with lightbox viewer (Lightbox2)
+- **Photo Management**: View, delete photos with confirmation dialogs
+- **Database Schema**: New `project_photos` table with proper indexing
+- **Automatic Cleanup**: Deletes photos when project is deleted
+
+#### 2. Materials Catalog with Intelligent Search
+- **Full CRUD**: Complete materials catalog with categories
+- **Smart Autocomplete**: Real-time search with keyboard navigation
+- **Greeklish Support**: Search "kalodio" finds "Καλώδιο"
+- **Synonym Matching**: Search "cable" finds "Καλώδιο"
+- **Code Extraction**: Search "nym" finds "Καλώδιο NYM 3x1.5"
+- **Auto-Aliases**: Automatic generation of search keywords
+- **Manual Override**: Edit aliases manually in material form
+- **Accent Handling**: Properly converts τονισμένα (ά→a, έ→e, etc.)
+- **Clean Greeklish**: No mixing Greek and Latin letters in same word
+
+#### 3. Enhanced Project Tasks System
+- **Task Materials**: Link materials from catalog to tasks
+- **Labor Tracking**: Add labor rows with hours and rates
+- **Material Autocomplete**: Smart dropdown for material selection
+- **Auto-Fill**: Unit and price auto-populate from catalog
+- **Cost Calculations**: Real-time cost calculations for materials and labor
+
+#### 4. Automatic Migration System
+- **Auto-Migrations**: All database changes applied automatically on install
+- **Migration Tracking**: Prevents duplicate migrations
+- **Smart Install**: New installations include all migrations
+- **Version Control**: Track which migrations have been applied
+
+### 🗄️ Database Changes
+
+**New Tables:**
+- `project_photos` - Photo storage and metadata
+  - Fields: id, project_id (FK), filename, file_path, file_size, uploaded_by, uploaded_at
+  - Indexes on project_id for fast lookups
+  
+- `material_categories` - Category management
+  - Fields: id, name (UNIQUE), description, timestamps
+  - 6 default categories included
+  
+- `materials_catalog` - Master materials database
+  - Fields: id, category_id, name, description, unit, default_price, supplier, notes, aliases, is_active
+  - **NEW**: `aliases` TEXT field for search optimization
+  - FULLTEXT index on (name, aliases) for fast searching
+
+**Enhanced Tables:**
+- `task_materials` - Now linked to catalog
+  - Added: catalog_material_id, name, unit fields
+- `task_labor` - Labor tracking
+  - Fields: task_id, description, hours, rate, cost
+
+### 🚀 Major Technical Improvements
+
+#### Smart Search Algorithm
+- **Word-Level Processing**: Each word processed separately (no mixed Greek-Latin)
+- **Priority Ordering**: Exact match → Starts with → In aliases → Contains
+- **Case-Insensitive**: Works with any capitalization
+- **Accent-Aware**: Handles all Greek diacritics properly
+
+#### Auto-Generation Intelligence
+- **Greeklish Conversion**: Full mapping including diphthongs (ου→ou, αι→ai)
+- **Synonym Dictionary**: 15+ common materials with English translations
+- **Code Extraction**: Regex-based extraction of product codes (NYM, PVC, 3x1.5)
+- **Duplicate Removal**: Smart filtering of redundant aliases
+
+#### Installation Enhancements
+- **One-Click Setup**: Single install.php handles everything
+- **Auto-Migration**: All SQL files in /migrations executed automatically
+- **Error Resilience**: Skips existing tables/columns gracefully
+- **Progress Feedback**: Shows count of executed statements
+
+### 🎨 UI/UX Improvements
+- **Photo Lightbox**: Click any project photo for full-screen view
+- **Drag & Drop**: Modern file upload interface
+- **Live Preview**: Alias generation preview as you type
+- **Keyboard Navigation**: Full keyboard support in autocomplete
+- **Visual Feedback**: Loading states, success/error messages
+- **Mobile Responsive**: All new features work on mobile
+
+### 🔧 API Enhancements
+- `GET /api/materials/search` - Material search with aliases
+- Returns: name, category, unit, price, aliases
+
+### 📝 Code Quality
+- **MaterialAliasGenerator**: Standalone utility class
+- **MaterialsController**: RESTful controller pattern
+- **BaseModel Enhancements**: execute(), lastInsertId(), rowCount() methods
+- **Clean Separation**: Materials vs Materials-Inventory (old system preserved)
+
+### 🐛 Bug Fixes
+- Fixed routing conflict between old and new materials systems
+- Fixed autocomplete not initializing (XAMPP sync issues)
+- Fixed form action URLs for material edit
+- Fixed project-tasks.js integration
+- Fixed Greek letter mixing with Latin in Greeklish conversion
+- Fixed accented vowels (ά, έ, ή, ί, ό, ύ, ώ) not converting properly
+
+### 🔒 Security
+- All file uploads validated by type and size
+- SQL injection protection via prepared statements
+- XSS protection with htmlspecialchars()
+- Authentication required for all API endpoints
+
+---
+
+## [1.1.0] - 2025-10-15 (Previous Release)
+
+### 🎉 Major Feature: Materials Catalog System with Autocomplete
+
+#### ✨ New Features
+
+**Materials Catalog Management**
+- Created comprehensive materials catalog system with category organization
+- Material management with full CRUD operations (Create, Read, Update, Delete)
+- Category management with nested material counts and deletion protection
+- Statistics dashboard showing total materials, active materials, and categories
+- Advanced filtering by category, search query, and active/inactive status
+- Smart soft delete: Materials used in tasks become inactive instead of being deleted
+- Default categories: Ηλεκτρολογικά, Υδραυλικά, Οικοδομικά, Χρώματα & Βερνίκια, Μηχανολογικά, Άλλα
+
+**Intelligent Autocomplete in Tasks**
+- Real-time autocomplete for material selection when creating/editing tasks
+- Dropdown displays: Material name, category badge, unit of measurement, default price
+- Full keyboard navigation support (↑↓ arrows for navigation, Enter to select, Escape to close)
+- Auto-populate: When material selected, automatically fills unit and price fields
+- Debounced API calls (300ms delay) to optimize performance and reduce server load
+- Minimum query length: 2 characters before search begins
+- Visual feedback with category color-coded badges and Font Awesome icons
+- Click outside to close, focus management for smooth UX
+
+**RESTful API Endpoint**
+- `GET /api/materials/search?q={query}&limit={limit}` - Search materials catalog
+- Returns JSON with material details for autocomplete consumption
+- Authentication required, returns 401 for unauthorized access
+
+#### 🗄️ Database Changes
+
+**New Tables:**
+- `material_categories` - Central category management
+  - Fields: id, name (UNIQUE), description, created_at, updated_at
+  - 6 default categories auto-inserted during migration
+  
+- `materials_catalog` - Master materials catalog
+  - Fields: id, category_id (FK), name, description, unit, default_price, supplier, notes, is_active, created_at, updated_at
+  - Indexes on category_id and is_active for performance
+  - Foreign key constraint with ON DELETE RESTRICT to prevent orphaned materials
+
+**Enhanced Tables:**
+- `task_materials` - Linked to catalog for data consistency
+  - Added: `catalog_material_id` INT NULL (FK to materials_catalog.id)
+  - Added: `name` VARCHAR(255) NOT NULL - Material name
+  - Added: `unit` VARCHAR(50) NULL - Flexible unit of measurement
+  - Retained: `description` field for backward compatibility with existing tasks
+  - Index on catalog_material_id for JOIN performance
+
+#### 📁 New Files Created
+
+**Backend Models:**
+- `models/MaterialCategory.php` (95 lines) - Category CRUD with material counting
+- `models/MaterialCatalog.php` (190 lines) - Material CRUD, search, statistics
+
+**Controllers:**
+- `controllers/MaterialsController.php` (350+ lines)
+  - Material CRUD: index(), add(), store(), edit(), update(), delete()
+  - Category CRUD: categories(), addCategory(), updateCategory(), deleteCategory()
+  - API: search() endpoint returning JSON for autocomplete
+
+**Frontend Views:**
+- `views/materials/index.php` - Materials listing with filters, statistics, and actions
+- `views/materials/form.php` (260+ lines) - Add/edit material form with validation and help text
+- `views/materials/categories.php` (245+ lines) - Category management interface with Bootstrap modals
+
+**JavaScript:**
+- `public/js/material-autocomplete.js` (300+ lines)
+  - Fetch API integration with error handling
+  - Dynamic dropdown rendering with category badges
+  - Keyboard navigation (ArrowUp, ArrowDown, Enter, Escape)
+  - Auto-population of unit and price fields on selection
+  - Debouncing (300ms) to prevent excessive API calls
+  - XSS prevention with HTML escaping
+
+**Database Migrations:**
+- `database/migrations/add_materials_system.sql` - Creates catalog tables and default categories
+- `database/migrations/add_name_unit_to_task_materials.sql` - Enhances task_materials table
+
+**Documentation:**
+- `TESTING_GUIDE.md` - Comprehensive testing scenarios with 10 test cases and success criteria
+
+#### 🔧 Modified Files
+
+**Models:**
+- `models/TaskMaterial.php`
+  - Enhanced `create()` method to support name, unit, catalog_material_id
+  - Enhanced `update()` method with same fields
+  - Fully backward compatible: Legacy tasks using "description" still work
+
+**Views:**
+- `views/projects/tasks/add.php`
+  - Added HTML5 datalist for common Greek unit types (τεμάχια, μέτρα, κιλά, etc.)
+  - Included material-autocomplete.js script
+  - Changed material input from "description" to "name" with autocomplete attributes
+  - Added hidden catalog_material_id field for linking
+  
+- `views/projects/tasks/edit.php`
+  - Applied same changes as add.php for consistency
+
+**JavaScript:**
+- `public/js/project-tasks.js`
+  - Refactored `addMaterialRow()` function to support new structure
+  - Changed from "Περιγραφή Υλικού" to "Ονομασία Υλικού" with autocomplete hint
+  - Replaced unit_type dropdown with flexible text input + datalist
+  - Initialize autocomplete for each material row dynamically
+  - Store and pass catalog_material_id in hidden field
+
+**Routing:**
+- `index.php`
+  - Added comprehensive materials routing section
+  - Material routes: /materials, /materials/add, /materials/{id}/edit, /materials/{id}/delete
+  - Category routes: /materials/categories, /materials/categories/add, /materials/categories/{id}/update, /materials/categories/{id}/delete
+  - API route: /api/materials/search with JSON response
+
+#### 🎨 UI/UX Enhancements
+
+- Bootstrap 5.3 modals for category add/edit/delete with smooth animations
+- Color-coded category badges (bg-secondary) for visual categorization
+- Icon-rich interface using Font Awesome (fa-boxes, fa-tags, fa-check-circle, etc.)
+- Responsive statistics cards with large numbers and icons
+- Card-based layouts for clean, modern appearance
+- Inline action buttons with icon-only design for compact tables
+- Professional autocomplete dropdown with:
+  - Hover effects for better visual feedback
+  - Category badges inline with material names
+  - Price and unit information in muted text
+  - Smooth transitions and shadows
+- Help cards with usage instructions for admins
+- Toggle switches for is_active status (green for active, gray for inactive)
+
+#### 🔒 Security Measures
+
+- Authentication checks on all routes (redirect to login if not authenticated)
+- CSRF token validation on all POST forms
+- SQL injection prevention via PDO prepared statements
+- XSS prevention via htmlspecialchars() on all user input display
+- Input validation and sanitization on both client and server side
+- JSON responses set proper Content-Type headers
+- Foreign key constraints ensure referential integrity
+
+#### 📊 Sample Test Data
+
+8 real-world materials inserted across 4 categories:
+- **Ηλεκτρολογικά**: Καλώδιο NYM 3x1.5 (1.20€/μέτρα), Καλώδιο NYM 3x2.5 (1.80€/μέτρα), Πρίζα Σούκο (2.50€/τεμάχια)
+- **Υδραυλικά**: Σωλήνας PVC Φ32 (3.20€/μέτρα), Κολάρο Φ32 (0.80€/τεμάχια)
+- **Οικοδομικά**: Τσιμέντο 25kg (5.50€/τεμάχια), Άμμος (25.00€/κ.μ.)
+- **Χρώματα & Βερνίκια**: Χρώμα Πλαστικό Λευκό (8.50€/λίτρα)
+
+#### 🧪 Testing Results
+
+All 10 comprehensive test scenarios passed successfully:
+1. ✅ View materials catalog with filters and statistics
+2. ✅ Manage categories (add, edit, delete with protection)
+3. ✅ Add new material to catalog
+4. ✅ **Autocomplete in tasks** (main feature - full workflow tested)
+5. ✅ Verify catalog_material_id correctly saved in database
+6. ✅ Edit existing task with materials preserved
+7. ✅ Edit catalog material and verify autocomplete updates
+8. ✅ Delete used material (correctly soft-deletes to inactive)
+9. ✅ Keyboard navigation in autocomplete dropdown
+10. ✅ Performance & edge cases (debounce, empty results, short queries)
+
+#### 🚀 Performance Optimizations
+
+- Debounced autocomplete with 300ms delay prevents excessive API calls
+- Database indexes on foreign keys for fast JOIN operations
+- Lazy loading of autocomplete results (only on user input)
+- Maximum 10 results per search to keep dropdown manageable
+- Efficient SQL queries using LEFT JOINs and proper WHERE clauses
+- Client-side caching of selected materials to reduce redundant calls
+
+#### 📝 Technical Implementation Notes
+
+- **Minimum autocomplete query:** 2 characters (prevents too broad searches)
+- **Default price behavior:** Suggested from catalog but always overridable by user
+- **Soft delete logic:** Materials used in tasks set to is_active=0 instead of DELETE
+- **Category protection:** Categories containing materials cannot be deleted
+- **Backward compatibility:** Old task_materials records with only "description" field continue to work
+- **Unit flexibility:** Changed from ENUM to VARCHAR to support any Greek unit type
+- **Data migration:** Existing task_materials.description copied to new name field
+
+#### 🔄 Workflow Integration
+
+**New Material → Task Workflow:**
+1. Admin creates category via /materials/categories
+2. Admin adds material with unit and default price via /materials/add
+3. User creates new task and starts typing material name
+4. Autocomplete suggests materials from catalog
+5. User selects material → unit and price auto-populate
+6. catalog_material_id links task to catalog entry
+7. Future catalog updates (e.g., price changes) immediately reflect in autocomplete
+
+**Edit/Delete Protection:**
+- Editing catalog material: Updates appear in autocomplete immediately
+- Deleting unused material: Permanently removes from database
+- Deleting used material: Sets is_active=0, preserves existing task links
+- Deleting category with materials: Blocked with user-friendly error message
+
+---
+
+## [1.1.0] - 2025-01-15
 
 ### ✨ New Features
 - **Photo Gallery System**: Complete photo management system for project tasks

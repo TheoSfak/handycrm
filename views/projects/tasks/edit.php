@@ -16,7 +16,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <a href="<?= BASE_URL ?>/projects"><i class="fas fa-briefcase me-1"></i>Έργα</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="<?= BASE_URL ?>/projects/details/<?= $project['id'] ?>">
+                <a href="<?= BASE_URL ?>/projects/<?= $project['slug'] ?>">
                     <?= htmlspecialchars($project['title'] ?? $project['name'] ?? 'Project') ?>
                 </a>
             </li>
@@ -221,6 +221,25 @@ const existingLabor = <?= json_encode($labor ?? []) ?>;
 let materialCounter = 0;
 let laborCounter = 0;
 </script>
+
+<!-- Material Unit Types Datalist -->
+<datalist id="unit_types">
+    <option value="τεμάχια">
+    <option value="τεμ">
+    <option value="μέτρα">
+    <option value="μ">
+    <option value="τ.μ.">
+    <option value="κ.μ.">
+    <option value="κιλά">
+    <option value="kg">
+    <option value="λίτρα">
+    <option value="λ">
+    <option value="τόνοι">
+    <option value="κουτιά">
+    <option value="συσκευασίες">
+</datalist>
+
+<script src="<?= BASE_URL ?>/public/js/material-autocomplete.js"></script>
 <script src="<?= BASE_URL ?>/public/js/project-tasks.js"></script>
 
 <script>
@@ -268,7 +287,7 @@ document.getElementById('taskForm').addEventListener('submit', function(e) {
     }
 });
 
-// Populate existing data on load
+// Populate existing data on load (using project-tasks.js functions)
 window.addEventListener('DOMContentLoaded', function() {
     // Add existing materials
     if (existingMaterials && existingMaterials.length > 0) {

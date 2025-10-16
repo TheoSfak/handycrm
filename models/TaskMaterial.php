@@ -34,17 +34,23 @@ class TaskMaterial extends BaseModel {
     public function create($data) {
         $subtotal = $this->calculateSubtotal($data['unit_price'], $data['quantity']);
         
+        // Support both 'name' (new) and 'description' (legacy) field names
+        $materialName = $data['name'] ?? $data['description'] ?? '';
+        
         $sql = "INSERT INTO {$this->table} 
-                (task_id, description, unit_price, quantity, unit_type, subtotal) 
-                VALUES (?, ?, ?, ?, ?, ?)";
+                (task_id, name, description, unit, unit_price, quantity, unit_type, subtotal, catalog_material_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $this->db->execute($sql, [
             $data['task_id'],
-            $data['description'],
+            $materialName,
+            $materialName, // Keep description for backward compatibility
+            $data['unit'] ?? '',
             $data['unit_price'],
             $data['quantity'],
-            $data['unit_type'],
-            $subtotal
+            $data['unit_type'] ?? 'other',
+            $subtotal,
+            !empty($data['catalog_material_id']) ? $data['catalog_material_id'] : null
         ]);
         
         return $stmt ? $this->db->lastInsertId() : false;
@@ -60,16 +66,22 @@ class TaskMaterial extends BaseModel {
     public function update($id, $data) {
         $subtotal = $this->calculateSubtotal($data['unit_price'], $data['quantity']);
         
+        // Support both 'name' (new) and 'description' (legacy) field names
+        $materialName = $data['name'] ?? $data['description'] ?? '';
+        
         $sql = "UPDATE {$this->table} 
-                SET description = ?, unit_price = ?, quantity = ?, unit_type = ?, subtotal = ?
+                SET name = ?, description = ?, unit = ?, unit_price = ?, quantity = ?, unit_type = ?, subtotal = ?, catalog_material_id = ?
                 WHERE id = ?";
         
         $stmt = $this->db->execute($sql, [
-            $data['description'],
+            $materialName,
+            $materialName, // Keep description for backward compatibility
+            $data['unit'] ?? '',
             $data['unit_price'],
             $data['quantity'],
-            $data['unit_type'],
+            $data['unit_type'] ?? 'other',
             $subtotal,
+            !empty($data['catalog_material_id']) ? $data['catalog_material_id'] : null,
             $id
         ]);
         

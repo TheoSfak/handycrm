@@ -60,6 +60,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step == 1) {
             }
         }
         
+        // Run all migrations automatically
+        $migrationsRun = 0;
+        $migrationsDir = __DIR__ . '/migrations';
+        if (is_dir($migrationsDir)) {
+            $migrationFiles = glob($migrationsDir . '/*.sql');
+            sort($migrationFiles); // Execute in order
+            
+            foreach ($migrationFiles as $migrationFile) {
+                $migrationSql = file_get_contents($migrationFile);
+                $migrationSql = preg_replace('/--.*$/m', '', $migrationSql);
+                $migrationSql = preg_replace('/\/\*.*?\*\//s', '', $migrationSql);
+                $migrationStatements = explode(';', $migrationSql);
+                
+                foreach ($migrationStatements as $stmt) {
+                    $stmt = trim($stmt);
+                    if (!empty($stmt) && strlen($stmt) > 5) {
+                        try {
+                            $pdo->exec($stmt);
+                            $migrationsRun++;
+                        } catch (PDOException $e) {
+                            // Ignore duplicate/exists errors
+                            if (strpos($e->getMessage(), 'Duplicate') === false &&
+                                strpos($e->getMessage(), 'already exists') === false) {
+                                error_log("Migration Error: " . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
         // Create config file
         $configTemplate = file_get_contents('config/config.example.php');
         
@@ -79,6 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $step == 1) {
         $step = 2;
         $messages[] = 'Εγκατάσταση ολοκληρώθηκε με επιτυχία!';
         $messages[] = "Εισήχθησαν $importedCount SQL statements επιτυχώς.";
+        if ($migrationsRun > 0) {
+            $messages[] = "Εκτελέστηκαν $migrationsRun migration statements.";
+        }
     } catch (PDOException $e) {
         $errors[] = 'Σφάλμα Βάσης Δεδομένων: ' . $e->getMessage();
         $errors[] = 'Παρακαλώ ελέγξτε: 1) Τα στοιχεία σύνδεσης, 2) Αν η βάση υπάρχει, 3) Αν ο χρήστης έχει δικαιώματα';
