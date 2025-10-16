@@ -135,7 +135,7 @@
 <!-- Tab Content -->
 <div class="tab-content" id="projectTabContent">
     <!-- Overview Tab -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
         <div class="row">
             <!-- Left Column -->
             <div class="col-lg-4">
@@ -357,7 +357,7 @@
     <!-- End Overview Tab -->
 
     <!-- Tasks Tab -->
-    <div class="tab-pane fade" id="tasks" role="tabpanel">
+    <div class="tab-pane fade" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
         <?php
         // Include the tasks index view
         if (file_exists(__DIR__ . '/tasks/index.php')) {
@@ -375,7 +375,7 @@
     <!-- End Tasks Tab -->
 
     <!-- Labor Tab -->
-    <div class="tab-pane fade" id="labor" role="tabpanel">
+    <div class="tab-pane fade" id="labor" role="tabpanel" aria-labelledby="labor-tab">
         <?php if (!empty($laborEntries)): ?>
             <!-- Export Button -->
             <div class="mb-3 text-end">
@@ -494,7 +494,7 @@
     <!-- End Labor Tab -->
 
     <!-- Materials Tab -->
-    <div class="tab-pane fade" id="materials" role="tabpanel">
+    <div class="tab-pane fade" id="materials" role="tabpanel" aria-labelledby="materials-tab">
         <!-- Filters Card -->
         <div class="card shadow-sm mb-4 border-0">
             <div class="card-header bg-warning">
@@ -680,7 +680,7 @@
     <!-- End Materials Tab -->
 
     <!-- Statistics Tab -->
-    <div class="tab-pane fade" id="statistics" role="tabpanel">
+    <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
         <?php
         // Get statistics data
         require_once 'models/ProjectTask.php';
