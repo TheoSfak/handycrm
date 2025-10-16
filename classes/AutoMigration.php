@@ -85,7 +85,7 @@ class AutoMigration {
         // Get executed migrations
         try {
             $sql = "SELECT migration FROM migrations";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db->execute($sql);
             $executed = $stmt->fetchAll(PDO::FETCH_COLUMN);
         } catch (Exception $e) {
             error_log('AutoMigration: Failed to get executed migrations - ' . $e->getMessage());
@@ -206,7 +206,7 @@ class AutoMigration {
     public function isExecuted($filename) {
         try {
             $sql = "SELECT COUNT(*) FROM migrations WHERE migration = ?";
-            $stmt = $this->db->query($sql, [$filename]);
+            $stmt = $this->db->execute($sql, [$filename]);
             return $stmt->fetchColumn() > 0;
         } catch (Exception $e) {
             return false;
@@ -221,7 +221,7 @@ class AutoMigration {
     public function getExecutedMigrations() {
         try {
             $sql = "SELECT migration, executed_at FROM migrations ORDER BY executed_at DESC";
-            $stmt = $this->db->query($sql);
+            $stmt = $this->db->execute($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             return [];
