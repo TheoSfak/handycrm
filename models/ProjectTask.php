@@ -212,18 +212,26 @@ class ProjectTask extends BaseModel {
      * Add material to task
      */
     private function addMaterial($data) {
+        // Support both new fields (name, unit) and old fields (description, unit_type)
+        $materialName = $data['name'] ?? $data['description'] ?? '';
+        $unit = $data['unit'] ?? '';
+        $unitType = $data['unit_type'] ?? 'other';
+        
         $sql = "INSERT INTO task_materials 
-                (task_id, description, unit_price, quantity, unit_type, subtotal) 
-                VALUES (?, ?, ?, ?, ?, ?)";
+                (task_id, catalog_material_id, name, description, unit, unit_price, quantity, unit_type, subtotal) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         $subtotal = $data['unit_price'] * $data['quantity'];
         
         $stmt = $this->db->execute($sql, [
             $data['task_id'],
-            $data['description'],
+            $data['catalog_material_id'] ?? null,
+            $materialName,
+            $materialName, // Keep description same as name for backward compatibility
+            $unit,
             $data['unit_price'],
             $data['quantity'],
-            $data['unit_type'],
+            $unitType,
             $subtotal
         ]);
         
