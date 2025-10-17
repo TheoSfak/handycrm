@@ -131,4 +131,46 @@ class Material extends BaseModel {
             ];
         }
     }
+    
+    /**
+     * Get all materials for export (no pagination)
+     */
+    public function getAllForExport($filters = []) {
+        $database = new Database();
+        $db = $database->connect();
+        $params = [];
+        
+        // Build WHERE clause
+        $whereConditions = ['1=1'];
+        
+        if (!empty($filters['category_id'])) {
+            $whereConditions[] = "m.category_id = ?";
+            $params[] = $filters['category_id'];
+        }
+        
+        if (!empty($filters['search'])) {
+            $whereConditions[] = "(m.name LIKE ? OR m.description LIKE ? OR m.supplier LIKE ?)";
+            $searchTerm = "%{$filters['search']}%";
+            $params = array_merge($params, [$searchTerm, $searchTerm, $searchTerm]);
+        }
+        
+        $whereClause = implode(' AND ', $whereConditions);
+        
+        try {
+            $sql = "SELECT m.*, mc.name as category_name 
+                    FROM {$this->table} m
+                    LEFT JOIN material_categories mc ON m.category_id = mc.id
+                    WHERE {$whereClause}
+                    ORDER BY m.name";
+            
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Material getAllForExport error: " . $e->getMessage());
+            return [];
+        }
+    }
 }
+

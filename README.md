@@ -1,23 +1,31 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.2.5  
+**Version:** 1.3.0  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
 HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους και υδραυλικούς. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και τα τιμολόγια.
 
-## 🎉 Τι Νέο στην v1.2.5
+## 🎉 Τι Νέο στην v1.3.0
 
-- 🔄 **Automated Updates** - Αυτόματες ενημερώσεις βάσης δεδομένων από τις Ρυθμίσεις με ένα κλικ
-- 📊 **CSV Export/Import** - Μαζική εξαγωγή/εισαγωγή υλικών με Excel-ready format
-- 📋 **Demo Template** - Έτοιμο template CSV με δείγματα για γρήγορη εισαγωγή
-- 📄 **Pagination System** - 25 υλικά/σελίδα με επιλογές 10/25/50/100
-- 🔢 **Unit Dropdown** - 18 προκαθορισμένες μονάδες μέτρησης (τεμ, μ, μ², κιλά, κιβώτιο, κ.ά.)
-- ⚡ **100 Electrical Materials** - Πλήρης κατάλογος ηλεκτρολογικών υλικών ready-to-use
-- 🔍 **Auto-Generated Aliases** - Αυτόματα Greeklish + English aliases για όλα τα υλικά
-- 📐 **4-Column Layout** - Καλύτερη οργάνωση στο tab ημερομίσθιων
-- 🌍 **English Translations** - Πλήρεις μεταφράσεις για μονάδες και ημερομηνίες
+- � **PDF Project Reports** - Επαγγελματικές αναφορές έργων σε PDF με πλήρη στοιχεία
+  - Φίλτρο εύρους ημερομηνιών για επιλεκτική αναφορά
+  - Επιλογή απόκρυψης τιμών για τεχνικές αναφορές
+  - Πεδίο παρατηρήσεων για επιπλέον σημειώσεις
+  - Αυτόματη επανάληψη headers σε πολυσέλιδες αναφορές
+  - Συγκεντρωτικά στοιχεία με ισομεγέθη cards
+  - Καθαρή εμφάνιση χωρίς περιττές μπλε γραμμές
+- � **DD/MM/YYYY Date Format** - Πλήρης υποστήριξη ελληνικής μορφής ημερομηνιών σε όλες τις φόρμες
+  - Αυτόματη μετατροπή όλων των date inputs
+  - Custom ελληνικό ημερολόγιο popup
+  - Input mask με auto-formatting
+  - Backend conversion για συμβατότητα
+- � **Automated Database Migrations** - Πλήρως αυτοματοποιημένες ενημερώσεις
+  - Auto-detection και εκτέλεση pending migrations κατά το login
+  - Silent background execution χωρίς διακοπή λειτουργίας
+  - Transaction-safe με rollback σε περίπτωση σφάλματος
+  - Error logging για debugging
 
 Δείτε το [CHANGELOG.md](CHANGELOG.md) για πλήρη λίστα αλλαγών.
 

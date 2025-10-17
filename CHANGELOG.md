@@ -1,5 +1,165 @@
 # HandyCRM - Change Log
 
+## [1.3.0] - 2025-10-17
+
+### 🎯 Major Features
+
+#### 1. PDF Project Reports with Advanced Customization
+- **Professional PDF Generation**:
+  - Complete project report with logo, company details, and customer information
+  - Three main sections: Tasks (Εργασίες), Materials (Υλικά), Labor (Ημερομίσθια)
+  - Summary section with total calculations (Materials, Labor, Grand Total)
+  - Custom footer with company contact details on every page
+  - TCPDF 6.7.5 integration with custom styling
+
+- **Date Range Filtering**:
+  - "All Dates" checkbox for complete project history (default)
+  - Custom date range with from/to date pickers
+  - Filters tasks, materials, and labor within selected period
+  - Maintains data integrity across related tables
+
+- **Price Hiding Option**:
+  - Checkbox to hide all pricing information
+  - Technical reports without financial details
+  - Conditional table columns (shows only description/quantity when hiding prices)
+  - Adjusted summary cards (shows counts instead of totals)
+
+- **Report Notes Field**:
+  - Multi-line textarea (4 rows) in report modal
+  - Appears at end of PDF with title "ΠΑΡΑΤΗΡΗΣΕΙΣ"
+  - Clean gray background box with blue top border
+  - nl2br conversion for proper line breaks
+  - htmlspecialchars for security
+
+- **Advanced PDF Styling**:
+  - Multi-page support with automatic table splitting
+  - Headers repeat on every page (TCPDF `nobr="true"` on `<thead>`)
+  - Optimized column widths: Tasks (25%/75%), Materials (40%/20%/20%/20%), Labor (30%/15%/15%/20%/20%)
+  - Equal-height summary cards (80px) with vertical centering
+  - Black header text on blue gradient background for readability
+  - Minimal blue accents (only horizontal lines under section titles)
+  - Proper spacing: 100px top margin for summary section, 40px for notes
+
+- **Table Structure**:
+  - HTML5 semantic tags (`<thead>`, `<tbody>`) for proper rendering
+  - `page-break-inside: auto` on tables for splitting
+  - `display: table-header-group` on thead for repetition
+  - 1px borders for clear cell separation
+  - Responsive to content length (no overflow issues)
+
+- **Translations**:
+  - 31 new translation keys for reports (el.json, en.json)
+  - Keys: report_title, report_date_range, hide_prices, report_notes, etc.
+  - Complete Greek and English support
+
+#### 2. DD/MM/YYYY Date Format System
+- **Automatic Date Input Conversion**:
+  - JavaScript `date-formatter.js` (252 lines, v2.0)
+  - Converts all `input[type="date"]` to text fields with dd/mm/yyyy format
+  - Applies to ALL forms system-wide (tasks, projects, reports, customers, etc.)
+
+- **Input Mask & Validation**:
+  - Auto-formatting while typing (15102024 → 15/10/2024)
+  - Automatic "/" insertion at positions 2 and 5
+  - Pattern validation: `\d{2}/\d{2}/\d{4}`
+  - Custom validity messages in Greek
+  - Placeholder: "ηη/μμ/εεεε"
+
+- **Custom Calendar Picker**:
+  - Greek month names (Ιανουάριος, Φεβρουάριος, etc.)
+  - Greek day abbreviations (Κυ, Δε, Τρ, Τε, Πε, Πα, Σα)
+  - Calendar button with Font Awesome icon
+  - Modal overlay with month navigation
+  - "Σήμερα" and "Άκυρο" buttons
+  - Highlights current day and selected date
+  - Click anywhere on overlay to close
+
+- **Backend Integration**:
+  - Form submission intercept before send
+  - Converts dd/mm/yyyy → yyyy-mm-dd for MySQL
+  - Creates hidden inputs with converted values
+  - Removes name attribute from visible inputs to avoid duplicates
+  - Seamless database compatibility
+
+- **Bootstrap Integration**:
+  - Wraps inputs in `.input-group` class
+  - Calendar button with `.btn.btn-outline-secondary`
+  - Maintains Bootstrap form styling
+  - Responsive design (grid system for calendar)
+
+#### 3. Automated Database Migration System
+- **Silent Auto-Migration on Login**:
+  - Runs in `index.php` after database connection test
+  - Checks for pending migrations on every page load
+  - Non-blocking execution (logs errors but doesn't break app)
+  - `AutoMigration` class handles detection and execution
+
+- **Migration Detection**:
+  - Scans `migrations/` directory for `.sql` files
+  - Compares with `migrations` table to find pending
+  - Checks file modification time for changes
+  - Skips already-executed migrations
+
+- **Safe Execution**:
+  - Transaction-wrapped for rollback on error
+  - Try-catch blocks for exception handling
+  - Error logging to PHP error_log
+  - Continues app execution even if migration fails
+
+- **Migration Table Tracking**:
+  - Records filename, execution time, status
+  - Prevents duplicate execution
+  - Maintains migration history
+  - Easy rollback identification
+
+- **Developer-Friendly**:
+  - Drop `.sql` files in `migrations/` folder
+  - Automatic execution on next page load
+  - No manual intervention required
+  - Full error details in logs
+
+### 🔧 Technical Improvements
+
+#### PDF Generation (TCPDF)
+- Custom `CustomPDF` class extends `TCPDF`
+- Override `Footer()` method for company details
+- UTF-8 encoding for Greek characters
+- HTML/CSS styling within PDF content
+- Image embedding (company logo)
+
+#### Date Handling
+- Client-side: JavaScript Date object parsing
+- Server-side: PHP DateTime conversions
+- MySQL: DATE type (yyyy-mm-dd format)
+- Display: dd/mm/yyyy via JavaScript formatter
+
+#### Auto-Migration Architecture
+- Class: `classes/AutoMigration.php`
+- Trigger: `index.php` after DB connection
+- Storage: `migrations` table (filename, executed_at, status)
+- Files: `migrations/*.sql`
+
+### 🐛 Bug Fixes
+- Fixed table headers hidden behind blue lines in PDFs
+- Fixed table splitting without headers on new pages
+- Fixed unequal summary card heights (added fixed 80px height)
+- Fixed column alignment issues (optimized widths)
+- Fixed blue border overflow on notes section
+
+### 📝 Documentation Updates
+- README.md updated to v1.3.0
+- CHANGELOG.md with complete feature documentation
+- Inline code comments for PDF generation logic
+- Migration system documentation
+
+### 🎨 UI/UX Enhancements
+- Report modal with clear sections (dates, prices, notes)
+- Clean PDF styling with minimal decorative elements
+- Responsive summary cards (33.33% width each)
+- Professional color scheme (blue accents on white)
+
+---
+
 ## [1.2.5] - 2025-10-17
 
 ### 🎯 Production-Ready Features

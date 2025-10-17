@@ -1,6 +1,64 @@
 <?php
 require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
 
+// Custom PDF class with footer
+class CustomPDF extends TCPDF {
+    private $companySettings = [];
+    
+    public function setCompanySettings($settings) {
+        $this->companySettings = $settings;
+    }
+    
+    public function Footer() {
+        $this->SetY(-30);
+        $this->SetFont('dejavusans', '', 8);
+        
+        // Footer with border
+        $html = '<div style="border-top: 2px solid #3498db; padding-top: 8px; margin-top: 10px;">';
+        $html .= '<table style="width: 100%; border: none;">';
+        $html .= '<tr>';
+        
+        // Left: Company info
+        $html .= '<td style="width: 70%; border: none; text-align: left; vertical-align: top;">';
+        $html .= '<strong style="font-size: 10px; color: #2c3e50;">' . htmlspecialchars($this->companySettings['company_name'] ?? '') . '</strong><br>';
+        
+        // Address
+        if (!empty($this->companySettings['company_address'])) {
+            $html .= '<span style="font-size: 8px; color: #7f8c8d;">' . htmlspecialchars($this->companySettings['company_address']) . '</span><br>';
+        }
+        
+        // Contact info line
+        $contactInfo = [];
+        if (!empty($this->companySettings['company_phone'])) {
+            $contactInfo[] = 'Τ: ' . htmlspecialchars($this->companySettings['company_phone']);
+        }
+        if (!empty($this->companySettings['company_email'])) {
+            $contactInfo[] = htmlspecialchars($this->companySettings['company_email']);
+        }
+        if (!empty($this->companySettings['company_tax_id'])) {
+            $contactInfo[] = 'ΑΦΜ: ' . htmlspecialchars($this->companySettings['company_tax_id']);
+        }
+        
+        if (!empty($contactInfo)) {
+            $html .= '<span style="font-size: 7px; color: #95a5a6;">' . implode(' | ', $contactInfo) . '</span>';
+        }
+        
+        $html .= '</td>';
+        
+        // Right: Page number
+        $html .= '<td style="width: 30%; border: none; text-align: right; vertical-align: top;">';
+        $html .= '<span style="font-size: 9px; color: #34495e; font-weight: bold;">Σελίδα ' . $this->getAliasNumPage() . ' / ' . $this->getAliasNbPages() . '</span><br>';
+        $html .= '<span style="font-size: 7px; color: #95a5a6;">' . date('d/m/Y H:i') . '</span>';
+        $html .= '</td>';
+        
+        $html .= '</tr>';
+        $html .= '</table>';
+        $html .= '</div>';
+        
+        $this->writeHTML($html, true, false, true, false, '');
+    }
+}
+
 class ProjectReportController extends BaseController {
     
     public function __construct() {
@@ -17,6 +75,12 @@ class ProjectReportController extends BaseController {
         // Get date filters
         $fromDate = isset($_POST['from_date']) && !empty($_POST['from_date']) ? $_POST['from_date'] : null;
         $toDate = isset($_POST['to_date']) && !empty($_POST['to_date']) ? $_POST['to_date'] : null;
+        
+        // Get hide prices option
+        $hidePrices = isset($_POST['hide_prices']) && $_POST['hide_prices'] === '1';
+        
+        // Get report notes
+        $reportNotes = isset($_POST['report_notes']) && !empty($_POST['report_notes']) ? $_POST['report_notes'] : null;
         
         // Get project data
         $project = $this->getProject($projectId);
@@ -43,7 +107,7 @@ class ProjectReportController extends BaseController {
         $totals = $this->calculateTotals($materials, $labor);
         
         // Generate PDF
-        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate);
+        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices, $reportNotes);
     }
     
     private function getProject($projectId) {
@@ -96,13 +160,12 @@ class ProjectReportController extends BaseController {
         $pdo = $this->db->getPdo();
         $sql = "
             SELECT 
-                mc.name as material_name,
-                mc.unit,
+                tm.description as material_name,
+                tm.unit_type as unit,
                 SUM(tm.quantity) as total_quantity,
-                mc.cost as unit_cost,
-                SUM(tm.quantity * mc.cost) as total_cost
+                AVG(tm.unit_price) as unit_cost,
+                SUM(tm.subtotal) as total_cost
             FROM task_materials tm
-            LEFT JOIN materials_catalog mc ON tm.material_id = mc.id
             LEFT JOIN project_tasks pt ON tm.task_id = pt.id
             WHERE pt.project_id = ?
         ";
@@ -114,21 +177,31 @@ class ProjectReportController extends BaseController {
             $params[] = $toDate;
         }
         
-        $sql .= " GROUP BY mc.id, mc.name, mc.unit, mc.cost ORDER BY mc.name";
+        $sql .= " GROUP BY tm.description, tm.unit_type ORDER BY tm.description";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Debug: Log the materials
+        error_log("=== MATERIALS QUERY DEBUG ===");
+        error_log("Total materials found: " . count($results));
+        foreach ($results as $mat) {
+            error_log("Material: " . $mat['material_name'] . " | Unit: " . $mat['unit'] . " | Qty: " . $mat['total_quantity'] . " | Unit Price: " . $mat['unit_cost'] . " | Total: " . $mat['total_cost']);
+        }
+        
+        return $results;
     }
     
     private function getAggregatedLabor($projectId, $fromDate = null, $toDate = null) {
         $pdo = $this->db->getPdo();
         $sql = "
             SELECT 
-                tl.worker_name,
-                COUNT(*) as days_worked,
-                tl.daily_rate,
-                SUM(tl.daily_rate) as total_cost
+                tl.technician_name as worker_name,
+                SUM(tl.hours_worked) as total_hours,
+                COUNT(DISTINCT pt.id) as days_worked,
+                AVG(tl.hourly_rate) as hourly_rate,
+                SUM(tl.subtotal) as total_cost
             FROM task_labor tl
             LEFT JOIN project_tasks pt ON tl.task_id = pt.id
             WHERE pt.project_id = ?
@@ -141,7 +214,7 @@ class ProjectReportController extends BaseController {
             $params[] = $toDate;
         }
         
-        $sql .= " GROUP BY tl.worker_name, tl.daily_rate ORDER BY tl.worker_name";
+        $sql .= " GROUP BY tl.technician_name ORDER BY tl.technician_name";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -156,9 +229,11 @@ class ProjectReportController extends BaseController {
         
         $laborCost = 0;
         $totalDays = 0;
+        $totalHours = 0;
         foreach ($labor as $worker) {
             $laborCost += $worker['total_cost'];
             $totalDays += $worker['days_worked'];
+            $totalHours += $worker['total_hours'];
         }
         
         return [
@@ -167,26 +242,29 @@ class ProjectReportController extends BaseController {
             'total_cost' => $materialsCost + $laborCost,
             'total_workers' => count($labor),
             'total_days' => $totalDays,
+            'total_hours' => $totalHours,
             'total_materials' => count($materials)
         ];
     }
     
-    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate) {
-        // Create new PDF document
-        $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices = false, $reportNotes = null) {
+        // Create new PDF document with custom footer
+        $pdf = new CustomPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        
+        // Pass settings to PDF for footer
+        $pdf->setCompanySettings($settings);
         
         // Set document information
         $pdf->SetCreator('HandyCRM');
         $pdf->SetAuthor($settings['company_name'] ?? 'HandyCRM');
         $pdf->SetTitle(__('projects.project_report') . ' - ' . $project['title']);
         
-        // Remove default header/footer
+        // Remove default header
         $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
         
-        // Set margins
+        // Set margins with larger bottom margin to avoid splitting
         $pdf->SetMargins(15, 15, 15);
-        $pdf->SetAutoPageBreak(TRUE, 15);
+        $pdf->SetAutoPageBreak(TRUE, 35); // Larger bottom margin
         
         // Add a page
         $pdf->AddPage();
@@ -195,7 +273,7 @@ class ProjectReportController extends BaseController {
         $pdf->SetFont('dejavusans', '', 10);
         
         // Build HTML content
-        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate);
+        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices, $reportNotes);
         
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -205,82 +283,214 @@ class ProjectReportController extends BaseController {
         $pdf->Output($filename, 'I');
     }
     
-    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate) {
+    private function buildFooterContent($settings, $pageNum = 1, $totalPages = 1) {
+        $html = '<div style="border-top: 2px solid #3498db; padding-top: 8px; text-align: center;">';
+        $html .= '<table style="width: 100%; border: none;">';
+        $html .= '<tr>';
+        
+        // Left: Company info
+        $html .= '<td style="width: 70%; border: none; text-align: left; padding: 0;">';
+        $html .= '<strong style="font-size: 9px; color: #2c3e50;">' . htmlspecialchars($settings['company_name'] ?? '') . '</strong><br>';
+        
+        $contactInfo = [];
+        if (!empty($settings['company_phone'])) {
+            $contactInfo[] = 'Τ: ' . htmlspecialchars($settings['company_phone']);
+        }
+        if (!empty($settings['company_email'])) {
+            $contactInfo[] = htmlspecialchars($settings['company_email']);
+        }
+        if (!empty($settings['company_tax_id'])) {
+            $contactInfo[] = 'ΑΦΜ: ' . htmlspecialchars($settings['company_tax_id']);
+        }
+        
+        if (!empty($contactInfo)) {
+            $html .= '<span style="font-size: 7px; color: #7f8c8d;">' . implode(' | ', $contactInfo) . '</span>';
+        }
+        
+        $html .= '</td>';
+        
+        // Right: Page number
+        $html .= '<td style="width: 30%; border: none; text-align: right; padding: 0;">';
+        $html .= '<span style="font-size: 8px; color: #95a5a6;">Σελίδα ' . $pageNum . ' από ' . $totalPages . '</span><br>';
+        $html .= '<span style="font-size: 7px; color: #bdc3c7;">' . date('d/m/Y H:i') . '</span>';
+        $html .= '</td>';
+        
+        $html .= '</tr>';
+        $html .= '</table>';
+        $html .= '</div>';
+        
+        return $html;
+    }
+    
+    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices = false, $reportNotes = null) {
         $currencySymbol = $settings['currency_symbol'] ?? '€';
         
         $html = '
         <style>
-            h1 { color: #2c3e50; font-size: 24px; margin-bottom: 10px; }
-            h2 { color: #34495e; font-size: 18px; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
-            h3 { color: #7f8c8d; font-size: 14px; margin-top: 15px; margin-bottom: 8px; }
-            table { border-collapse: collapse; width: 100%; margin-bottom: 15px; }
-            th { background-color: #3498db; color: white; padding: 8px; text-align: left; font-size: 11px; }
-            td { border: 1px solid #ddd; padding: 6px; font-size: 10px; }
-            .header-box { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
-            .summary-card { background-color: #ecf0f1; border-left: 4px solid #3498db; padding: 10px; margin: 5px 0; }
-            .total-card { background-color: #2ecc71; color: white; border-left: 4px solid #27ae60; padding: 10px; margin: 5px 0; font-weight: bold; }
+            body { font-family: "DejaVu Sans", sans-serif; }
+            h1 { 
+                color: #2c3e50; 
+                font-size: 26px; 
+                font-weight: bold;
+                margin-bottom: 10px;
+                letter-spacing: 1px;
+            }
+            h2 { 
+                color: #34495e; 
+                font-size: 16px; 
+                font-weight: bold;
+                margin-top: 25px; 
+                margin-bottom: 20px; 
+                padding-bottom: 8px;
+                page-break-after: avoid;
+                letter-spacing: 0.5px;
+            }
+            h3 { 
+                color: #7f8c8d; 
+                font-size: 11px; 
+                font-weight: bold;
+                margin-top: 0; 
+                margin-bottom: 8px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            table { 
+                border-collapse: collapse; 
+                width: 100%; 
+                margin-top: 10px;
+                margin-bottom: 20px; 
+                page-break-inside: auto;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            }
+            thead { 
+                display: table-header-group;
+            }
+            tbody {
+                display: table-row-group;
+            }
+            th { 
+                background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+                color: #000000; 
+                padding: 10px 8px; 
+                text-align: left; 
+                font-size: 10px;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                border: 1px solid #2980b9;
+            }
+            td { 
+                border: 1px solid #ecf0f1; 
+                padding: 8px; 
+                font-size: 10px;
+                line-height: 1.4;
+            }
+            tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
             .text-right { text-align: right; }
             .text-center { text-align: center; }
-            .company-logo { max-height: 60px; width: auto; }
+            .company-logo { 
+                max-height: 45px; 
+                width: auto; 
+                display: block; 
+                margin: 0 auto;
+            }
         </style>
         ';
         
-        // Header with Company and Customer Info
-        $html .= '<table style="margin-bottom: 20px;">';
-        $html .= '<tr>';
-        
-        // Customer Info (Left)
-        $html .= '<td style="width: 50%; border: none; vertical-align: top;">';
-        $html .= '<div class="header-box">';
-        $html .= '<h3 style="margin-top: 0;">ΠΕΛΑΤΗΣ</h3>';
-        $html .= '<strong>' . htmlspecialchars($customer['name']) . '</strong><br>';
-        if (!empty($customer['address'])) {
-            $html .= htmlspecialchars($customer['address']) . '<br>';
-        }
-        if (!empty($customer['phone'])) {
-            $html .= 'Τηλ: ' . htmlspecialchars($customer['phone']) . '<br>';
-        }
-        if (!empty($customer['email'])) {
-            $html .= 'Email: ' . htmlspecialchars($customer['email']);
-        }
-        $html .= '</div>';
-        $html .= '</td>';
-        
-        // Company Info (Right)
-        $html .= '<td style="width: 50%; border: none; vertical-align: top; text-align: right;">';
-        $html .= '<div class="header-box">';
-        
-        // Company Logo
+        // Logo at top center
         if (!empty($settings['company_logo'])) {
             $logoPath = __DIR__ . '/../' . $settings['company_logo'];
             if (file_exists($logoPath)) {
-                $html .= '<img src="' . $logoPath . '" class="company-logo" /><br>';
+                $html .= '<div style="text-align: center; margin-bottom: 20px;">';
+                $html .= '<img src="' . $logoPath . '" class="company-logo" />';
+                $html .= '</div>';
             }
         }
         
-        $html .= '<h3 style="margin-top: 10px;">' . htmlspecialchars($settings['company_name'] ?? '') . '</h3>';
+        // Header with Company and Customer Info - Simple & Clean
+        $html .= '<table style="margin-bottom: 25px; border: none;">';
+        $html .= '<tr>';
+        
+        // Customer Info (Left)
+        $html .= '<td style="width: 50%; border: none; vertical-align: top; padding-right: 15px;">';
+        $html .= '<h3 style="margin-top: 0; color: #3498db; margin-bottom: 10px;">ΠΕΛΑΤΗΣ</h3>';
+        
+        // Customer Name/Company
+        if (!empty($customer['company_name'])) {
+            $html .= '<strong style="font-size: 13px; color: #2c3e50;">' . htmlspecialchars($customer['company_name']) . '</strong><br>';
+            $customerName = trim(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? ''));
+            if (!empty($customerName)) {
+                $html .= '<span style="font-size: 10px; color: #7f8c8d;">' . htmlspecialchars($customerName) . '</span><br>';
+            }
+        } else {
+            $customerName = trim(($customer['first_name'] ?? '') . ' ' . ($customer['last_name'] ?? ''));
+            $html .= '<strong style="font-size: 13px; color: #2c3e50;">' . htmlspecialchars($customerName) . '</strong><br>';
+        }
+        
+        // Address
+        if (!empty($customer['address'])) {
+            $html .= '<span style="font-size: 10px;">' . htmlspecialchars($customer['address']) . '</span><br>';
+        }
+        
+        // City & Postal Code
+        $cityPostal = [];
+        if (!empty($customer['postal_code'])) {
+            $cityPostal[] = htmlspecialchars($customer['postal_code']);
+        }
+        if (!empty($customer['city'])) {
+            $cityPostal[] = htmlspecialchars($customer['city']);
+        }
+        if (!empty($cityPostal)) {
+            $html .= '<span style="font-size: 10px;">' . implode(', ', $cityPostal) . '</span><br>';
+        }
+        
+        // Tax ID (ΑΦΜ)
+        if (!empty($customer['tax_id'])) {
+            $html .= '<span style="font-size: 10px;">ΑΦΜ: ' . htmlspecialchars($customer['tax_id']) . '</span><br>';
+        }
+        
+        // Phone
+        if (!empty($customer['phone'])) {
+            $html .= '<span style="font-size: 9px; color: #7f8c8d;">Τηλ: ' . htmlspecialchars($customer['phone']) . '</span><br>';
+        }
+        
+        // Email
+        if (!empty($customer['email'])) {
+            $html .= '<span style="font-size: 9px; color: #7f8c8d;">Email: ' . htmlspecialchars($customer['email']) . '</span>';
+        }
+        
+        $html .= '</td>';
+        
+        // Company Info (Right)
+        $html .= '<td style="width: 50%; border: none; vertical-align: top; padding-left: 15px;">';
+        $html .= '<h3 style="margin-top: 0; color: #2c3e50; margin-bottom: 10px;">' . htmlspecialchars($settings['company_name'] ?? '') . '</h3>';
+        
         if (!empty($settings['company_address'])) {
-            $html .= htmlspecialchars($settings['company_address']) . '<br>';
+            $html .= '<span style="font-size: 10px; color: #2c3e50;">' . htmlspecialchars($settings['company_address']) . '</span><br>';
         }
         if (!empty($settings['company_phone'])) {
-            $html .= 'Τηλ: ' . htmlspecialchars($settings['company_phone']) . '<br>';
+            $html .= '<span style="font-size: 9px; color: #7f8c8d;">Τηλ: ' . htmlspecialchars($settings['company_phone']) . '</span><br>';
         }
         if (!empty($settings['company_email'])) {
-            $html .= 'Email: ' . htmlspecialchars($settings['company_email']) . '<br>';
+            $html .= '<span style="font-size: 9px; color: #7f8c8d;">Email: ' . htmlspecialchars($settings['company_email']) . '</span><br>';
         }
         if (!empty($settings['company_tax_id'])) {
-            $html .= 'ΑΦΜ: ' . htmlspecialchars($settings['company_tax_id']);
+            $html .= '<span style="font-size: 9px; color: #7f8c8d;">ΑΦΜ: ' . htmlspecialchars($settings['company_tax_id']) . '</span>';
         }
-        $html .= '</div>';
+        
         $html .= '</td>';
         
         $html .= '</tr>';
         $html .= '</table>';
         
         // Report Title and Date
-        $html .= '<h1 class="text-center">ΑΝΑΦΟΡΑ ΕΡΓΟΥ</h1>';
-        $html .= '<h2 class="text-center" style="border: none; margin-bottom: 5px;">' . htmlspecialchars($project['title']) . '</h2>';
-        $html .= '<p class="text-center" style="color: #7f8c8d; font-size: 11px; margin-bottom: 20px;">';
+        $html .= '<h1 class="text-center" style="margin-top: 30px; margin-bottom: 15px;">ΑΝΑΦΟΡΑ ΕΡΓΟΥ</h1>';
+        $html .= '<h2 class="text-center" style="border: none; margin-bottom: 15px; font-size: 20px;">' . htmlspecialchars($project['title']) . '</h2>';
+        
+        // Date info
+        $html .= '<p class="text-center" style="color: #7f8c8d; font-size: 11px; margin-top: 15px; margin-bottom: 30px;">';
         $html .= 'Ημερομηνία Αναφοράς: ' . date('d/m/Y');
         if ($fromDate && $toDate) {
             $html .= ' | Περίοδος: ' . date('d/m/Y', strtotime($fromDate)) . ' - ' . date('d/m/Y', strtotime($toDate));
@@ -293,17 +503,21 @@ class ProjectReportController extends BaseController {
         if (!empty($tasks)) {
             $html .= '<h2><i class="fas fa-tasks"></i> ΕΡΓΑΣΙΕΣ</h2>';
             $html .= '<table>';
-            $html .= '<tr><th style="width: 20%;">ΗΜΕΡΟΜΗΝΙΑ</th><th>ΤΙΤΛΟΣ ΕΡΓΑΣΙΑΣ</th></tr>';
+            $html .= '<thead nobr="true">';
+            $html .= '<tr nobr="true"><th style="width: 25%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 75%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th></tr>';
+            $html .= '</thead>';
+            $html .= '<tbody>';
             foreach ($tasks as $task) {
                 $html .= '<tr>';
-                $html .= '<td>' . date('d/m/Y', strtotime($task['task_date'])) . '</td>';
-                $html .= '<td><strong>' . htmlspecialchars($task['title']) . '</strong><br>';
-                if (!empty($task['description'])) {
-                    $html .= '<span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['description']) . '</span>';
+                $html .= '<td style="width: 25%;">' . date('d/m/Y', strtotime($task['task_date'])) . '</td>';
+                $html .= '<td style="width: 75%;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong><br>';
+                if (!empty($task['notes'])) {
+                    $html .= '<span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
                 }
                 $html .= '</td>';
                 $html .= '</tr>';
             }
+            $html .= '</tbody>';
             $html .= '</table>';
         }
         
@@ -311,15 +525,32 @@ class ProjectReportController extends BaseController {
         if (!empty($materials)) {
             $html .= '<h2><i class="fas fa-box"></i> ΥΛΙΚΑ (ΣΥΓΚΕΝΤΡΩΤΙΚΑ)</h2>';
             $html .= '<table>';
-            $html .= '<tr><th>ΥΛΙΚΟ</th><th class="text-center">ΠΟΣΟΤΗΤΑ</th><th class="text-right">ΤΙΜΗ ΜΟΝ.</th><th class="text-right">ΣΥΝΟΛΟ</th></tr>';
+            $html .= '<thead nobr="true">';
+            
+            // Table headers
+            if ($hidePrices) {
+                $html .= '<tr nobr="true"><th style="width: 50%;">ΥΛΙΚΟ</th><th class="text-center" style="width: 50%;">ΠΟΣΟΤΗΤΑ</th></tr>';
+            } else {
+                $html .= '<tr nobr="true"><th style="width: 40%;">ΥΛΙΚΟ</th><th class="text-center" style="width: 20%;">ΠΟΣΟΤΗΤΑ</th><th class="text-right" style="width: 20%;">ΤΙΜΗ ΜΟΝ.</th><th class="text-right" style="width: 20%;">ΣΥΝΟΛΟ</th></tr>';
+            }
+            
+            $html .= '</thead>';
+            $html .= '<tbody>';
+            
             foreach ($materials as $material) {
                 $html .= '<tr>';
-                $html .= '<td>' . htmlspecialchars($material['material_name']) . '</td>';
-                $html .= '<td class="text-center">' . number_format($material['total_quantity'], 2) . ' ' . htmlspecialchars($material['unit']) . '</td>';
-                $html .= '<td class="text-right">' . number_format($material['unit_cost'], 2) . ' ' . $currencySymbol . '</td>';
-                $html .= '<td class="text-right"><strong>' . number_format($material['total_cost'], 2) . ' ' . $currencySymbol . '</strong></td>';
+                $html .= '<td style="width: 40%;">' . htmlspecialchars($material['material_name']) . '</td>';
+                $html .= '<td class="text-center" style="width: 20%;">' . number_format($material['total_quantity'], 2) . ' ' . htmlspecialchars($material['unit']) . '</td>';
+                
+                if (!$hidePrices) {
+                    $html .= '<td class="text-right" style="width: 20%;">' . number_format($material['unit_cost'], 2) . ' ' . $currencySymbol . '</td>';
+                    $html .= '<td class="text-right" style="width: 20%;"><strong>' . number_format($material['total_cost'], 2) . ' ' . $currencySymbol . '</strong></td>';
+                }
+                
                 $html .= '</tr>';
             }
+            
+            $html .= '</tbody>';
             $html .= '</table>';
         }
         
@@ -327,53 +558,116 @@ class ProjectReportController extends BaseController {
         if (!empty($labor)) {
             $html .= '<h2><i class="fas fa-hard-hat"></i> ΗΜΕΡΟΜΙΣΘΙΑ (ΣΥΓΚΕΝΤΡΩΤΙΚΑ)</h2>';
             $html .= '<table>';
-            $html .= '<tr><th>ΕΡΓΑΖΟΜΕΝΟΣ</th><th class="text-center">ΗΜΕΡΕΣ</th><th class="text-right">ΗΜΕΡΟΜΙΣΘΙΟ</th><th class="text-right">ΣΥΝΟΛΟ</th></tr>';
+            $html .= '<thead nobr="true">';
+            
+            // Table headers
+            if ($hidePrices) {
+                $html .= '<tr nobr="true"><th style="width: 50%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 25%;">ΩΡΕΣ</th><th class="text-center" style="width: 25%;">ΗΜΕΡΕΣ</th></tr>';
+            } else {
+                $html .= '<tr nobr="true"><th style="width: 30%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 15%;">ΩΡΕΣ</th><th class="text-center" style="width: 15%;">ΗΜΕΡΕΣ</th><th class="text-right" style="width: 20%;">ΩΡΟΜΙΣΘΙΟ</th><th class="text-right" style="width: 20%;">ΣΥΝΟΛΟ</th></tr>';
+            }
+            
+            $html .= '</thead>';
+            $html .= '<tbody>';
+            
             foreach ($labor as $worker) {
                 $html .= '<tr>';
-                $html .= '<td>' . htmlspecialchars($worker['worker_name']) . '</td>';
-                $html .= '<td class="text-center">' . $worker['days_worked'] . '</td>';
-                $html .= '<td class="text-right">' . number_format($worker['daily_rate'], 2) . ' ' . $currencySymbol . '</td>';
-                $html .= '<td class="text-right"><strong>' . number_format($worker['total_cost'], 2) . ' ' . $currencySymbol . '</strong></td>';
+                $html .= '<td style="width: 30%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
+                $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2) . 'h</td>';
+                $html .= '<td class="text-center" style="width: 15%;">' . $worker['days_worked'] . '</td>';
+                
+                if (!$hidePrices) {
+                    $html .= '<td class="text-right" style="width: 20%;">' . number_format($worker['hourly_rate'], 2) . ' ' . $currencySymbol . '/h</td>';
+                    $html .= '<td class="text-right" style="width: 20%;"><strong>' . number_format($worker['total_cost'], 2) . ' ' . $currencySymbol . '</strong></td>';
+                }
+                
                 $html .= '</tr>';
             }
+            
+            $html .= '</tbody>';
             $html .= '</table>';
         }
         
         // Summary Cards
-        $html .= '<h2>ΣΥΓΚΕΝΤΡΩΤΙΚΑ ΣΤΟΙΧΕΙΑ</h2>';
+        $html .= '<h2 style="margin-top: 100px; margin-bottom: 15px;">ΣΥΓΚΕΝΤΡΩΤΙΚΑ ΣΤΟΙΧΕΙΑ</h2>';
+        $html .= '<div style="border-top: 2px solid #3498db; margin-bottom: 20px;"></div>';
         
-        $html .= '<table style="margin-bottom: 10px;">';
+        $html .= '<table style="margin-bottom: 20px; border: none;">';
         $html .= '<tr>';
-        $html .= '<td style="width: 33%; border: none; padding: 5px;">';
-        $html .= '<div class="summary-card">';
-        $html .= '<div style="font-size: 10px; color: #7f8c8d;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
-        $html .= '<div style="font-size: 18px; font-weight: bold; color: #2c3e50;">' . number_format($totals['materials_cost'], 2) . ' ' . $currencySymbol . '</div>';
-        $html .= '<div style="font-size: 9px; color: #95a5a6;">' . $totals['total_materials'] . ' είδη</div>';
-        $html .= '</div>';
-        $html .= '</td>';
         
-        $html .= '<td style="width: 33%; border: none; padding: 5px;">';
-        $html .= '<div class="summary-card">';
-        $html .= '<div style="font-size: 10px; color: #7f8c8d;">ΣΥΝΟΛΟ ΗΜΕΡΟΜΙΣΘΙΩΝ</div>';
-        $html .= '<div style="font-size: 18px; font-weight: bold; color: #2c3e50;">' . number_format($totals['labor_cost'], 2) . ' ' . $currencySymbol . '</div>';
-        $html .= '<div style="font-size: 9px; color: #95a5a6;">' . $totals['total_workers'] . ' εργαζόμενοι × ' . $totals['total_days'] . ' ημέρες</div>';
-        $html .= '</div>';
-        $html .= '</td>';
+        if ($hidePrices) {
+            // Show only counts when hiding prices
+            
+            // Materials Card
+            $html .= '<td style="width: 50%; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
+            $html .= '<div style="font-size: 24px; font-weight: bold; color: white; margin-top: 5px;">' . $totals['total_materials'] . '</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">είδη</div>';
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
+            
+            // Labor Card
+            $html .= '<td style="width: 50%; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2) . ' ώρες</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . $totals['total_days'] . ' ημέρες</div>';
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
+            
+        } else {
+            // Show prices (original version)
+            
+            // Materials Card
+            $html .= '<td style="width: 33.33%; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2) . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_materials'] . ' είδη</div>';
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
+            
+            // Labor Card
+            $html .= '<td style="width: 33.33%; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2) . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . number_format($totals['total_hours'], 2) . ' ώρες</div>';
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
+            
+            // Total Card
+            $html .= '<td style="width: 33.33%; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_cost'], 2) . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">&nbsp;</div>';
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
+        }
         
-        $html .= '<td style="width: 34%; border: none; padding: 5px;">';
-        $html .= '<div class="total-card">';
-        $html .= '<div style="font-size: 10px;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';
-        $html .= '<div style="font-size: 20px; font-weight: bold;">' . number_format($totals['total_cost'], 2) . ' ' . $currencySymbol . '</div>';
-        $html .= '</div>';
-        $html .= '</td>';
         $html .= '</tr>';
         $html .= '</table>';
         
-        // Footer
-        $html .= '<div style="margin-top: 30px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; color: #95a5a6; font-size: 9px;">';
-        $html .= 'Αυτή η αναφορά δημιουργήθηκε αυτόματα από το HandyCRM στις ' . date('d/m/Y H:i') . '<br>';
-        $html .= 'Για περισσότερες πληροφορίες επικοινωνήστε με ' . htmlspecialchars($settings['company_name'] ?? '');
-        $html .= '</div>';
+        // Report Notes Section
+        if (!empty($reportNotes)) {
+            $html .= '<h2 style="margin-top: 40px; margin-bottom: 15px;">ΠΑΡΑΤΗΡΗΣΕΙΣ</h2>';
+            $html .= '<div style="border-top: 2px solid #3498db; margin-bottom: 20px;"></div>';
+            $html .= '<div style="background-color: #f8f9fa; padding: 15px; font-size: 11px; line-height: 1.6;">';
+            $html .= nl2br(htmlspecialchars($reportNotes));
+            $html .= '</div>';
+        }
         
         return $html;
     }

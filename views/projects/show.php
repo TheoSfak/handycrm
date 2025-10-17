@@ -1086,6 +1086,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                     </div>
+                    
+                    <hr>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="hidePricesCheck" name="hide_prices" value="1">
+                        <label class="form-check-label" for="hidePricesCheck">
+                            <strong><?= __('projects.hide_prices') ?></strong>
+                            <br>
+                            <small class="text-muted"><?= __('projects.hide_prices_description') ?></small>
+                        </label>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <label for="report_notes" class="form-label"><strong><?= __('projects.report_notes') ?></strong></label>
+                        <textarea class="form-control" id="report_notes" name="report_notes" rows="4" placeholder="<?= __('projects.report_notes_placeholder') ?>"></textarea>
+                        <small class="text-muted"><?= __('projects.report_notes_description') ?></small>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
