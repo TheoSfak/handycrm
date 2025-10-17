@@ -107,6 +107,7 @@ $router->add('/projects', 'ProjectController', 'index');
 $router->add('/projects/create', 'ProjectController', 'create');
 $router->add('/projects/show/{id}', 'ProjectController', 'show');
 $router->add('/projects/details/{id}', 'ProjectController', 'details');
+$router->add('/projects/report/{id}', 'ProjectReportController', 'generate');
 
 // Appointment routes (future implementation)
 $router->add('/appointments', 'AppointmentController', 'index');
@@ -245,6 +246,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->importCsv();
     } elseif ($currentRoute === '/projects/demo-csv') {
         $controller->downloadDemoCsv();
+    } elseif (preg_match('/\/projects\/report\/(\d+)/', $currentRoute, $matches)) {
+        require_once 'controllers/ProjectReportController.php';
+        $reportController = new ProjectReportController();
+        $reportController->generate($matches[1]);
     } elseif (preg_match('/\/projects\/show\/(\d+)/', $currentRoute, $matches)) {
         $_GET['id'] = $matches[1];
         $controller->show();

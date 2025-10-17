@@ -47,6 +47,11 @@
                 </div>
             </div>
             <div class="text-end">
+                <!-- Project Report Button -->
+                <button type="button" class="btn btn-info mb-1 me-1" data-bs-toggle="modal" data-bs-target="#reportModal">
+                    <i class="fas fa-file-pdf"></i> <?= __('projects.project_report') ?>
+                </button>
+                
                 <!-- Quick Status Change -->
                 <div class="btn-group mb-1 me-1">
                     <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
@@ -1042,6 +1047,81 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 /* Ensure the tab comment doesn't create spacing */
+</style>
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-pdf me-2"></i><?= __('projects.project_report') ?>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="<?= BASE_URL ?>/projects/report/<?= $project['id'] ?>" method="POST" target="_blank">
+                <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <?= __('projects.report_filters') ?>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="allDatesCheck" checked onchange="toggleDateInputs()">
+                        <label class="form-check-label" for="allDatesCheck">
+                            <strong><?= __('projects.all_dates') ?></strong>
+                        </label>
+                    </div>
+                    
+                    <div id="dateInputs" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="from_date" class="form-label"><?= __('projects.from_date') ?></label>
+                                <input type="date" class="form-control" id="from_date" name="from_date">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="to_date" class="form-label"><?= __('projects.to_date') ?></label>
+                                <input type="date" class="form-control" id="to_date" name="to_date">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> <?= __('common.cancel') ?>
+                    </button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-file-pdf"></i> <?= __('projects.generate_report') ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDateInputs() {
+    const allDatesCheck = document.getElementById('allDatesCheck');
+    const dateInputs = document.getElementById('dateInputs');
+    const fromDate = document.getElementById('from_date');
+    const toDate = document.getElementById('to_date');
+    
+    if (allDatesCheck.checked) {
+        dateInputs.style.display = 'none';
+        fromDate.value = '';
+        toDate.value = '';
+        fromDate.removeAttribute('required');
+        toDate.removeAttribute('required');
+    } else {
+        dateInputs.style.display = 'block';
+        fromDate.setAttribute('required', 'required');
+        toDate.setAttribute('required', 'required');
+    }
+}
+</script>
+
+<style>
 .tab-content::before,
 .tab-content::after {
   display: none !important;
