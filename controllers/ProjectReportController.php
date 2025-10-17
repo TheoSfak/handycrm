@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../models/BaseModel.php';
+require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
 
 class ProjectReportController {
