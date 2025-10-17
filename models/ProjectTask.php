@@ -568,10 +568,10 @@ class ProjectTask extends BaseModel {
             'single_day_tasks' => 0,
             'date_range_tasks' => 0,
             'total_days' => 0,
-            'materials_total' => 0,
-            'labor_total' => 0,
-            'grand_total' => 0,
-            'average_daily_cost' => 0
+            'materials_total' => 0.0,
+            'labor_total' => 0.0,
+            'grand_total' => 0.0,
+            'average_daily_cost' => 0.0
         ];
         
         foreach ($tasks as $task) {
@@ -583,9 +583,10 @@ class ProjectTask extends BaseModel {
                 $summary['total_days'] += $this->getTotalDays($task);
             }
             
-            $summary['materials_total'] += $task['materials_total'];
-            $summary['labor_total'] += $task['labor_total'];
-            $summary['grand_total'] += $task['daily_total'];
+            // Explicitly cast to float to prevent string concatenation issues
+            $summary['materials_total'] += (float)($task['materials_total'] ?? 0);
+            $summary['labor_total'] += (float)($task['labor_total'] ?? 0);
+            $summary['grand_total'] += (float)($task['daily_total'] ?? 0);
         }
         
         if ($summary['total_days'] > 0) {
