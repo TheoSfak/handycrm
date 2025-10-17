@@ -638,6 +638,33 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         echo "<h1>404 - Reports page not found</h1>";
     }
     
+} elseif (strpos($currentRoute, '/update') === 0) {
+    // Application Update System
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    if ($_SESSION['role'] !== 'admin') {
+        $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης';
+        header('Location: ?route=/dashboard');
+        exit;
+    }
+    
+    require_once 'controllers/UpdateController.php';
+    $controller = new UpdateController();
+    
+    if ($currentRoute === '/update') {
+        $controller->index();
+    } elseif ($currentRoute === '/update/status') {
+        $controller->status();
+    } elseif ($currentRoute === '/update/process') {
+        $controller->process();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Update page not found</h1>";
+    }
+    
 } elseif (strpos($currentRoute, '/settings') === 0) {
     // Check if user is logged in and is admin
     if (!isset($_SESSION['user_id'])) {

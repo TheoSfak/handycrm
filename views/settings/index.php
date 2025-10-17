@@ -147,6 +147,35 @@
                 </div>
             </div>
             
+            <!-- Application Updates -->
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="bi bi-arrow-repeat"></i> <?= __('settings.application_updates') ?? 'Ενημερώσεις Εφαρμογής' ?></h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1"><strong><?= __('settings.check_updates') ?? 'Έλεγχος για Ενημερώσεις' ?></strong></h6>
+                            <p class="text-muted mb-0">
+                                <?= __('settings.check_updates_desc') ?? 'Ελέγξτε αν υπάρχουν διαθέσιμες ενημερώσεις για την εφαρμογή και τη βάση δεδομένων.' ?>
+                            </p>
+                            <small class="text-muted">
+                                <?php
+                                $versionFile = __DIR__ . '/../../VERSION';
+                                $currentVersion = file_exists($versionFile) ? trim(file_get_contents($versionFile)) : '1.0.0';
+                                echo (__('settings.current_version') ?? 'Τρέχουσα έκδοση') . ': <strong>v' . htmlspecialchars($currentVersion) . '</strong>';
+                                ?>
+                            </small>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="/update" class="btn btn-warning">
+                                <i class="bi bi-arrow-repeat"></i> <?= __('settings.check_updates_btn') ?? 'Έλεγχος Ενημερώσεων' ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- System Settings -->
             <div class="card mb-4">
                 <div class="card-header">
