@@ -96,24 +96,25 @@ class ProjectReportController extends BaseController {
         $pdo = $this->db->getPdo();
         $sql = "
             SELECT 
-                m.name as material_name,
-                m.unit,
-                SUM(pm.quantity) as total_quantity,
-                m.cost as unit_cost,
-                SUM(pm.quantity * m.cost) as total_cost
-            FROM project_materials pm
-            LEFT JOIN materials m ON pm.material_id = m.id
-            WHERE pm.project_id = ?
+                mc.name as material_name,
+                mc.unit,
+                SUM(tm.quantity) as total_quantity,
+                mc.cost as unit_cost,
+                SUM(tm.quantity * mc.cost) as total_cost
+            FROM task_materials tm
+            LEFT JOIN materials_catalog mc ON tm.material_id = mc.id
+            LEFT JOIN project_tasks pt ON tm.task_id = pt.id
+            WHERE pt.project_id = ?
         ";
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
-            $sql .= " AND pm.date_added BETWEEN ? AND ?";
+            $sql .= " AND pt.task_date BETWEEN ? AND ?";
             $params[] = $fromDate;
             $params[] = $toDate;
         }
         
-        $sql .= " GROUP BY m.id, m.name, m.unit, m.cost ORDER BY m.name";
+        $sql .= " GROUP BY mc.id, mc.name, mc.unit, mc.cost ORDER BY mc.name";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -124,22 +125,23 @@ class ProjectReportController extends BaseController {
         $pdo = $this->db->getPdo();
         $sql = "
             SELECT 
-                worker_name,
+                tl.worker_name,
                 COUNT(*) as days_worked,
-                daily_rate,
-                SUM(daily_rate) as total_cost
-            FROM project_labor
-            WHERE project_id = ?
+                tl.daily_rate,
+                SUM(tl.daily_rate) as total_cost
+            FROM task_labor tl
+            LEFT JOIN project_tasks pt ON tl.task_id = pt.id
+            WHERE pt.project_id = ?
         ";
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
-            $sql .= " AND work_date BETWEEN ? AND ?";
+            $sql .= " AND pt.task_date BETWEEN ? AND ?";
             $params[] = $fromDate;
             $params[] = $toDate;
         }
         
-        $sql .= " GROUP BY worker_name, daily_rate ORDER BY worker_name";
+        $sql .= " GROUP BY tl.worker_name, tl.daily_rate ORDER BY tl.worker_name";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
