@@ -323,7 +323,27 @@ class ProjectReportController extends BaseController {
     }
     
     private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices = false, $reportNotes = null) {
-        $currencySymbol = $settings['currency_symbol'] ?? '€';
+        // Get currency symbol from settings and convert to HTML entity for PDF compatibility
+        $currency = isset($settings['currency_symbol']) ? $settings['currency_symbol'] : '€';
+        
+        // Convert common currency symbols to HTML entities for proper PDF rendering
+        $currencyEntities = array(
+            '€' => '&euro;',
+            '$' => '&dollar;',
+            '£' => '&pound;',
+            '¥' => '&yen;',
+            '₹' => '&#8377;',
+            '₽' => '&#8381;',
+            '₺' => '&#8378;',
+            '₪' => '&#8362;',
+            '₩' => '&#8361;',
+            'CHF' => 'CHF',
+            'SEK' => 'SEK',
+            'NOK' => 'NOK',
+            'DKK' => 'DKK'
+        );
+        
+        $currencySymbol = isset($currencyEntities[$currency]) ? $currencyEntities[$currency] : htmlentities($currency, ENT_QUOTES, 'UTF-8');
         
         $html = '
         <style>
