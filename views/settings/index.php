@@ -39,11 +39,6 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="updates-tab" data-bs-toggle="tab" data-bs-target="#updates" type="button" role="tab">
-                        <i class="bi bi-arrow-repeat"></i> <?= __('settings.application_updates') ?? 'Ενημερώσεις' ?>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab">
                         <i class="fas fa-tools"></i> <?= __('settings.advanced') ?? 'Προχωρημένα' ?>
                     </button>
@@ -57,90 +52,91 @@
                 <div class="tab-pane fade show active" id="company" role="tabpanel">
                     <div class="card">
                         <div class="card-body">
-                    <!-- Company Logo -->
-                    <div class="mb-4">
-                        <label class="form-label">
-                            <i class="fas fa-image"></i> <?= __('settings.company_logo') ?? 'Λογότυπο Εταιρείας' ?>
-                        </label>
-                        <div class="row align-items-center">
-                            <div class="col-md-3">
-                                <?php if (!empty($settings['company_logo'])): ?>
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($settings['company_logo']) ?>" 
-                                         alt="Company Logo" 
-                                         class="img-thumbnail" 
-                                         id="logoPreview"
-                                         style="max-height: 150px; width: auto;">
-                                <?php else: ?>
-                                    <div class="border rounded p-4 text-center bg-light" id="logoPreview">
-                                        <i class="fas fa-image fa-3x text-muted"></i>
-                                        <p class="text-muted mt-2 mb-0 small">
-                                            <?= __('settings.no_logo') ?? 'Δεν έχει ανέβει λογότυπο' ?>
-                                        </p>
+                            <!-- Company Logo -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="fas fa-image"></i> <?= __('settings.company_logo') ?? 'Λογότυπο Εταιρείας' ?>
+                                </label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-3">
+                                        <?php if (!empty($settings['company_logo'])): ?>
+                                            <img src="<?= BASE_URL ?>/<?= htmlspecialchars($settings['company_logo']) ?>" 
+                                                 alt="Company Logo" 
+                                                 class="img-thumbnail" 
+                                                 id="logoPreview"
+                                                 style="max-height: 150px; width: auto;">
+                                        <?php else: ?>
+                                            <div class="border rounded p-4 text-center bg-light" id="logoPreview">
+                                                <i class="fas fa-image fa-3x text-muted"></i>
+                                                <p class="text-muted mt-2 mb-0 small">
+                                                    <?= __('settings.no_logo') ?? 'Δεν έχει ανέβει λογότυπο' ?>
+                                                </p>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="col-md-9">
-                                <input type="file" 
-                                       class="form-control mb-2" 
-                                       id="company_logo" 
-                                       name="company_logo" 
-                                       accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                                       onchange="previewLogo(this)">
-                                <small class="text-muted">
-                                    <?= __('settings.logo_requirements') ?? 'Επιτρεπόμενοι τύποι: PNG, JPG, GIF, WebP. Μέγιστο μέγεθος: 2MB. Συνιστώμενες διαστάσεις: 300x100px' ?>
-                                </small>
-                                <?php if (!empty($settings['company_logo'])): ?>
-                                    <div class="mt-2">
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeLogo()">
-                                            <i class="fas fa-trash"></i> <?= __('settings.remove_logo') ?? 'Διαγραφή Λογότυπου' ?>
-                                        </button>
-                                        <input type="hidden" name="remove_logo" id="remove_logo" value="0">
+                                    <div class="col-md-9">
+                                        <input type="file" 
+                                               class="form-control mb-2" 
+                                               id="company_logo" 
+                                               name="company_logo" 
+                                               accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                                               onchange="previewLogo(this)">
+                                        <small class="text-muted">
+                                            <?= __('settings.logo_requirements') ?? 'Επιτρεπόμενοι τύποι: PNG, JPG, GIF, WebP. Μέγιστο μέγεθος: 2MB. Συνιστώμενες διαστάσεις: 300x100px' ?>
+                                        </small>
+                                        <?php if (!empty($settings['company_logo'])): ?>
+                                            <div class="mt-2">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="removeLogo()">
+                                                    <i class="fas fa-trash"></i> <?= __('settings.remove_logo') ?? 'Διαγραφή Λογότυπου' ?>
+                                                </button>
+                                                <input type="hidden" name="remove_logo" id="remove_logo" value="0">
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
-                                <?php endif; ?>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <div class="mb-3">
-                        <label for="company_name" class="form-label"><?= __('settings.company_name') ?></label>
-                        <input type="text" class="form-control" id="company_name" name="company_name" 
-                               value="<?= htmlspecialchars($settings['company_name']) ?>">
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="company_address" class="form-label"><?= __('settings.company_address') ?></label>
-                        <input type="text" class="form-control" id="company_address" name="company_address" 
-                               value="<?= htmlspecialchars($settings['company_address']) ?>">
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="company_phone" class="form-label"><?= __('settings.company_phone') ?></label>
-                                <input type="text" class="form-control" id="company_phone" name="company_phone" 
-                                       value="<?= htmlspecialchars($settings['company_phone']) ?>">
+                                <label for="company_name" class="form-label"><?= __('settings.company_name') ?></label>
+                                <input type="text" class="form-control" id="company_name" name="company_name" 
+                                       value="<?= htmlspecialchars($settings['company_name']) ?>">
                             </div>
-                        </div>
-                        <div class="col-md-4">
+                            
                             <div class="mb-3">
-                                <label for="company_email" class="form-label"><?= __('settings.company_email') ?></label>
-                                <input type="email" class="form-control" id="company_email" name="company_email" 
-                                       value="<?= htmlspecialchars($settings['company_email']) ?>">
+                                <label for="company_address" class="form-label"><?= __('settings.company_address') ?></label>
+                                <input type="text" class="form-control" id="company_address" name="company_address" 
+                                       value="<?= htmlspecialchars($settings['company_address']) ?>">
                             </div>
-                        </div>
-                        <div class="col-md-4">
+                            
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="company_phone" class="form-label"><?= __('settings.company_phone') ?></label>
+                                        <input type="text" class="form-control" id="company_phone" name="company_phone" 
+                                               value="<?= htmlspecialchars($settings['company_phone']) ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="company_email" class="form-label"><?= __('settings.company_email') ?></label>
+                                        <input type="email" class="form-control" id="company_email" name="company_email" 
+                                               value="<?= htmlspecialchars($settings['company_email']) ?>">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="company_tax_id" class="form-label"><?= __('settings.company_tax_id') ?></label>
+                                        <input type="text" class="form-control" id="company_tax_id" name="company_tax_id" 
+                                               value="<?= htmlspecialchars($settings['company_tax_id']) ?>">
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="mb-3">
-                                <label for="company_tax_id" class="form-label"><?= __('settings.company_tax_id') ?></label>
-                                <input type="text" class="form-control" id="company_tax_id" name="company_tax_id" 
-                                       value="<?= htmlspecialchars($settings['company_tax_id']) ?>">
+                                <label for="company_website" class="form-label"><?= __('settings.company_website') ?></label>
+                                <input type="url" class="form-control" id="company_website" name="company_website" 
+                                       value="<?= htmlspecialchars($settings['company_website']) ?>">
                             </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label for="company_website" class="form-label"><?= __('settings.company_website') ?></label>
-                        <input type="url" class="form-control" id="company_website" name="company_website" 
-                               value="<?= htmlspecialchars($settings['company_website']) ?>">
                         </div>
                     </div>
                 </div>
@@ -229,34 +225,6 @@
                                                value="<?= htmlspecialchars($settings['items_per_page']) ?>" 
                                                min="10" max="100">
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Updates Tab -->
-                <div class="tab-pane fade" id="updates" role="tabpanel">
-                    <div class="card border-warning">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h6 class="mb-1"><strong><?= __('settings.check_updates') ?? 'Έλεγχος για Ενημερώσεις' ?></strong></h6>
-                                    <p class="text-muted mb-0">
-                                        <?= __('settings.check_updates_desc') ?? 'Ελέγξτε αν υπάρχουν διαθέσιμες ενημερώσεις για την εφαρμογή και τη βάση δεδομένων.' ?>
-                                    </p>
-                                    <small class="text-muted">
-                                        <?php
-                                        $versionFile = __DIR__ . '/../../VERSION';
-                                        $currentVersion = file_exists($versionFile) ? trim(file_get_contents($versionFile)) : '1.0.0';
-                                        echo (__('settings.current_version') ?? 'Τρέχουσα έκδοση') . ': <strong>v' . htmlspecialchars($currentVersion) . '</strong>';
-                                        ?>
-                                    </small>
-                                </div>
-                                <div class="col-md-4 text-md-end">
-                                    <a href="/update" class="btn btn-warning">
-                                        <i class="bi bi-arrow-repeat"></i> <?= __('settings.check_updates_btn') ?? 'Έλεγχος Ενημερώσεων' ?>
-                                    </a>
                                 </div>
                             </div>
                         </div>
