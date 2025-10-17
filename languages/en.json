@@ -593,7 +593,8 @@
         "logo_too_large": "File is too large. Maximum size: 2MB",
         "logo_invalid_type": "Invalid file type. Use PNG, JPG, GIF or WebP",
         "confirm_remove_logo": "Are you sure you want to remove the logo?",
-        "logo_will_be_removed": "Logo will be removed upon saving"
+        "logo_will_be_removed": "Logo will be removed upon saving",
+        "advanced": "Advanced"
     },
     "updates": {
         "title": "System Updates",

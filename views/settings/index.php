@@ -17,47 +17,46 @@
 <?php endif; ?>
 
 <div class="row">
-    <div class="col-md-10 mx-auto">
-        <!-- Language Settings (Outside main form) -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-language"></i> <?= __('settings.language_section') ?></h5>
-            </div>
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <label for="languageSelect" class="form-label"><?= __('settings.language_select_label') ?></label>
-                        <select class="form-select form-select-lg" id="languageSelect" onchange="changeLanguage(this.value)">
-                            <?php
-                            $currentLang = $_SESSION['language'] ?? 'el';
-                            $availableLanguages = $lang->getAvailableLanguages();
-                            foreach ($availableLanguages as $code => $name):
-                            ?>
-                                <option value="<?= $code ?>" <?= $currentLang === $code ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($name) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <small class="text-muted"><?= __('settings.language_changes_immediate') ?></small>
-                    </div>
-                    <div class="col-md-6 text-end">
-                        <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-primary">
-                            <i class="fas fa-globe"></i> <?= __('settings.manage_translations_btn') ?>
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+    <div class="col-md-11 mx-auto">
         <form method="POST" action="?route=/settings" enctype="multipart/form-data" id="settingsForm">
             <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
             
-            <!-- Company Information -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-building"></i> <?= __('settings.company_info') ?></h5>
-                </div>
-                <div class="card-body">
+            <!-- Bootstrap Tabs Navigation -->
+            <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="company-tab" data-bs-toggle="tab" data-bs-target="#company" type="button" role="tab">
+                        <i class="fas fa-building"></i> <?= __('settings.company_info') ?>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial" type="button" role="tab">
+                        <i class="fas fa-calculator"></i> <?= __('settings.financial_settings') ?>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">
+                        <i class="fas fa-sliders-h"></i> <?= __('settings.system_settings') ?>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="updates-tab" data-bs-toggle="tab" data-bs-target="#updates" type="button" role="tab">
+                        <i class="bi bi-arrow-repeat"></i> <?= __('settings.application_updates') ?? 'Ενημερώσεις' ?>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="advanced-tab" data-bs-toggle="tab" data-bs-target="#advanced" type="button" role="tab">
+                        <i class="fas fa-tools"></i> <?= __('settings.advanced') ?? 'Προχωρημένα' ?>
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content" id="settingsTabContent">
+                
+                <!-- Company Tab -->
+                <div class="tab-pane fade show active" id="company" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
                     <!-- Company Logo -->
                     <div class="mb-4">
                         <label class="form-label">
@@ -142,16 +141,14 @@
                         <label for="company_website" class="form-label"><?= __('settings.company_website') ?></label>
                         <input type="url" class="form-control" id="company_website" name="company_website" 
                                value="<?= htmlspecialchars($settings['company_website']) ?>">
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Financial Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-calculator"></i> <?= __('settings.financial_settings') ?></h5>
-                </div>
-                <div class="card-body">
+                
+                <!-- Financial Tab -->
+                <div class="tab-pane fade" id="financial" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
@@ -177,91 +174,99 @@
                                        value="<?= htmlspecialchars($settings['currency_symbol']) ?>">
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save"></i> <?= __('settings.save') ?>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Application Updates -->
-            <div class="card mb-4 border-warning">
-                <div class="card-header bg-warning">
-                    <h5 class="mb-0"><i class="bi bi-arrow-repeat"></i> <?= __('settings.application_updates') ?? 'Ενημερώσεις Εφαρμογής' ?></h5>
-                </div>
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h6 class="mb-1"><strong><?= __('settings.check_updates') ?? 'Έλεγχος για Ενημερώσεις' ?></strong></h6>
-                            <p class="text-muted mb-0">
-                                <?= __('settings.check_updates_desc') ?? 'Ελέγξτε αν υπάρχουν διαθέσιμες ενημερώσεις για την εφαρμογή και τη βάση δεδομένων.' ?>
-                            </p>
-                            <small class="text-muted">
-                                <?php
-                                $versionFile = __DIR__ . '/../../VERSION';
-                                $currentVersion = file_exists($versionFile) ? trim(file_get_contents($versionFile)) : '1.0.0';
-                                echo (__('settings.current_version') ?? 'Τρέχουσα έκδοση') . ': <strong>v' . htmlspecialchars($currentVersion) . '</strong>';
-                                ?>
-                            </small>
-                        </div>
-                        <div class="col-md-4 text-md-end">
-                            <a href="/update" class="btn btn-warning">
-                                <i class="bi bi-arrow-repeat"></i> <?= __('settings.check_updates_btn') ?? 'Έλεγχος Ενημερώσεων' ?>
-                            </a>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- System Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-sliders-h"></i> <?= __('settings.system_settings') ?></h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="date_format" class="form-label"><?= __('settings.date_format') ?></label>
-                                <select class="form-select" id="date_format" name="date_format">
-                                    <option value="d/m/Y" <?= $settings['date_format'] === 'd/m/Y' ? 'selected' : '' ?>><?= __('settings.date_format_greek') ?></option>
-                                    <option value="Y-m-d" <?= $settings['date_format'] === 'Y-m-d' ? 'selected' : '' ?>><?= __('settings.date_format_iso') ?></option>
-                                    <option value="m/d/Y" <?= $settings['date_format'] === 'm/d/Y' ? 'selected' : '' ?>><?= __('settings.date_format_us') ?></option>
-                                </select>
+                
+                <!-- System Tab -->
+                <div class="tab-pane fade" id="system" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <!-- Language Settings -->
+                            <div class="mb-4 pb-4 border-bottom">
+                                <h5 class="mb-3"><i class="fas fa-language"></i> <?= __('settings.language_section') ?></h5>
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <label for="languageSelect" class="form-label"><?= __('settings.language_select_label') ?></label>
+                                        <select class="form-select form-select-lg" id="languageSelect" onchange="changeLanguage(this.value)">
+                                            <?php
+                                            $currentLang = $_SESSION['language'] ?? 'el';
+                                            $availableLanguages = $lang->getAvailableLanguages();
+                                            foreach ($availableLanguages as $code => $name):
+                                            ?>
+                                                <option value="<?= $code ?>" <?= $currentLang === $code ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($name) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <small class="text-muted"><?= __('settings.language_changes_immediate') ?></small>
+                                    </div>
+                                    <div class="col-md-6 text-end">
+                                        <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-primary">
+                                            <i class="fas fa-globe"></i> <?= __('settings.manage_translations_btn') ?>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="items_per_page" class="form-label"><?= __('settings.items_per_page') ?></label>
-                                <input type="number" class="form-control" id="items_per_page" name="items_per_page" 
-                                       value="<?= htmlspecialchars($settings['items_per_page']) ?>" 
-                                       min="10" max="100">
+                            
+                            <!-- Date Format & Items Per Page -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="date_format" class="form-label"><?= __('settings.date_format') ?></label>
+                                        <select class="form-select" id="date_format" name="date_format">
+                                            <option value="d/m/Y" <?= $settings['date_format'] === 'd/m/Y' ? 'selected' : '' ?>><?= __('settings.date_format_greek') ?></option>
+                                            <option value="Y-m-d" <?= $settings['date_format'] === 'Y-m-d' ? 'selected' : '' ?>><?= __('settings.date_format_iso') ?></option>
+                                            <option value="m/d/Y" <?= $settings['date_format'] === 'm/d/Y' ? 'selected' : '' ?>><?= __('settings.date_format_us') ?></option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="items_per_page" class="form-label"><?= __('settings.items_per_page') ?></label>
+                                        <input type="number" class="form-control" id="items_per_page" name="items_per_page" 
+                                               value="<?= htmlspecialchars($settings['items_per_page']) ?>" 
+                                               min="10" max="100">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save"></i> <?= __('settings.save') ?>
-                        </button>
+                
+                <!-- Updates Tab -->
+                <div class="tab-pane fade" id="updates" role="tabpanel">
+                    <div class="card border-warning">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h6 class="mb-1"><strong><?= __('settings.check_updates') ?? 'Έλεγχος για Ενημερώσεις' ?></strong></h6>
+                                    <p class="text-muted mb-0">
+                                        <?= __('settings.check_updates_desc') ?? 'Ελέγξτε αν υπάρχουν διαθέσιμες ενημερώσεις για την εφαρμογή και τη βάση δεδομένων.' ?>
+                                    </p>
+                                    <small class="text-muted">
+                                        <?php
+                                        $versionFile = __DIR__ . '/../../VERSION';
+                                        $currentVersion = file_exists($versionFile) ? trim(file_get_contents($versionFile)) : '1.0.0';
+                                        echo (__('settings.current_version') ?? 'Τρέχουσα έκδοση') . ': <strong>v' . htmlspecialchars($currentVersion) . '</strong>';
+                                        ?>
+                                    </small>
+                                </div>
+                                <div class="col-md-4 text-md-end">
+                                    <a href="/update" class="btn btn-warning">
+                                        <i class="bi bi-arrow-repeat"></i> <?= __('settings.check_updates_btn') ?? 'Έλεγχος Ενημερώσεων' ?>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </form>
-
-        <!-- Danger Zone -->
-        <div class="card border-danger mt-4">
+                
+                <!-- Advanced Tab -->
+                <div class="tab-pane fade" id="advanced" role="tabpanel">
+                    
+                    <!-- Danger Zone -->
+                    <div class="card border-danger mb-4">
             <div class="card-header bg-danger text-white">
                 <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> <?= __('settings.danger_zone') ?></h5>
             </div>
@@ -282,26 +287,42 @@
             </div>
         </div>
 
-        <!-- Quick Links -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <h6 class="mb-3"><i class="fas fa-link"></i> <?= __('settings.quick_links') ?></h6>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="<?= BASE_URL ?>/settings/update" class="btn btn-outline-primary">
-                        <i class="fas fa-sync-alt"></i> <?= __('settings.system_updates') ?>
-                    </a>
-                    <a href="<?= BASE_URL ?>/settings/migrations" class="btn btn-outline-info">
-                        <i class="fas fa-database"></i> Database Migrations
-                    </a>
-                    <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-success">
-                        <i class="fas fa-language"></i> <?= __('settings.translations') ?>
-                    </a>
-                    <a href="<?= BASE_URL ?>/users" class="btn btn-outline-secondary">
-                        <i class="fas fa-users"></i> <?= __('settings.user_management') ?>
-                    </a>
+                    <!-- Quick Links -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="mb-3"><i class="fas fa-link"></i> <?= __('settings.quick_links') ?></h6>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="<?= BASE_URL ?>/settings/update" class="btn btn-outline-primary">
+                                    <i class="fas fa-sync-alt"></i> <?= __('settings.system_updates') ?>
+                                </a>
+                                <a href="<?= BASE_URL ?>/settings/migrations" class="btn btn-outline-info">
+                                    <i class="fas fa-database"></i> Database Migrations
+                                </a>
+                                <a href="<?= BASE_URL ?>/settings/translations" class="btn btn-outline-success">
+                                    <i class="fas fa-language"></i> <?= __('settings.translations') ?>
+                                </a>
+                                <a href="<?= BASE_URL ?>/users" class="btn btn-outline-secondary">
+                                    <i class="fas fa-users"></i> <?= __('settings.user_management') ?>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Save Button (Fixed at bottom) -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save"></i> <?= __('settings.save') ?>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
+            
+        </form>
     </div>
 </div>
 
