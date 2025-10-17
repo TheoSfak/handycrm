@@ -170,8 +170,8 @@ class SettingsController extends BaseController {
         
         // Move uploaded file
         if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            // Return relative path for database
-            return '/uploads/company/' . $filename;
+            // Return relative path for database (without leading slash for BASE_URL compatibility)
+            return 'uploads/company/' . $filename;
         }
         
         return false;
@@ -187,7 +187,8 @@ class SettingsController extends BaseController {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if ($result && !empty($result['setting_value'])) {
-            $logoPath = __DIR__ . '/..' . $result['setting_value'];
+            // Path is stored as "uploads/company/filename.ext"
+            $logoPath = __DIR__ . '/../' . $result['setting_value'];
             if (file_exists($logoPath)) {
                 unlink($logoPath);
             }

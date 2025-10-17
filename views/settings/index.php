@@ -66,7 +66,7 @@
                         <div class="row align-items-center">
                             <div class="col-md-3">
                                 <?php if (!empty($settings['company_logo'])): ?>
-                                    <img src="<?= htmlspecialchars($settings['company_logo']) ?>" 
+                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($settings['company_logo']) ?>" 
                                          alt="Company Logo" 
                                          class="img-thumbnail" 
                                          id="logoPreview"
