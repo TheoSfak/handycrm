@@ -149,31 +149,32 @@
                 <div class="tab-pane fade" id="financial" role="tabpanel">
                     <div class="card">
                         <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="default_vat_rate" class="form-label"><?= __('settings.default_vat') ?></label>
-                                <input type="number" class="form-control" id="default_vat_rate" name="default_vat_rate" 
-                                       value="<?= htmlspecialchars($settings['default_vat_rate']) ?>" 
-                                       min="0" max="100" step="0.01">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="default_vat_rate" class="form-label"><?= __('settings.default_vat') ?></label>
+                                        <input type="number" class="form-control" id="default_vat_rate" name="default_vat_rate" 
+                                               value="<?= htmlspecialchars($settings['default_vat_rate']) ?>" 
+                                               min="0" max="100" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="currency" class="form-label"><?= __('settings.currency') ?></label>
+                                        <select class="form-select" id="currency" name="currency">
+                                            <option value="EUR" <?= $settings['currency'] === 'EUR' ? 'selected' : '' ?>>EUR (Euro)</option>
+                                            <option value="USD" <?= $settings['currency'] === 'USD' ? 'selected' : '' ?>>USD (Dollar)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="currency_symbol" class="form-label"><?= __('settings.currency_symbol') ?></label>
+                                        <input type="text" class="form-control" id="currency_symbol" name="currency_symbol" 
+                                               value="<?= htmlspecialchars($settings['currency_symbol']) ?>">
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="currency" class="form-label"><?= __('settings.currency') ?></label>
-                                <select class="form-select" id="currency" name="currency">
-                                    <option value="EUR" <?= $settings['currency'] === 'EUR' ? 'selected' : '' ?>>EUR (Euro)</option>
-                                    <option value="USD" <?= $settings['currency'] === 'USD' ? 'selected' : '' ?>>USD (Dollar)</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label for="currency_symbol" class="form-label"><?= __('settings.currency_symbol') ?></label>
-                                <input type="text" class="form-control" id="currency_symbol" name="currency_symbol" 
-                                       value="<?= htmlspecialchars($settings['currency_symbol']) ?>">
-                            </div>
-                        </div>
                         </div>
                     </div>
                 </div>
@@ -307,9 +308,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div><!-- /advanced tab -->
                 
-            </div>
+            </div><!-- /tab-content -->
             
             <!-- Save Button (Fixed at bottom) -->
             <div class="card mt-4">
