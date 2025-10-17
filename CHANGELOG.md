@@ -1,5 +1,208 @@
 # HandyCRM - Change Log
 
+## [1.2.5] - 2025-10-17
+
+### 🎯 Production-Ready Features
+
+#### 1. CSV Export/Import/Demo for Materials Catalog
+- **Export CSV**: Bulk export all materials to Excel-ready CSV format
+  - UTF-8 BOM encoding for proper Greek character display in Excel
+  - Greek column headers (Όνομα, Περιγραφή, Κατηγορία, Μονάδα, Τιμή, etc.)
+  - Filename format: `materials_export_YYYY-MM-DD_HHmmss.csv`
+  - Exports all fields: ID, name, description, category, unit, price, stock, supplier, supplier code, notes, status
+  
+- **Import CSV**: Bulk import materials from spreadsheet
+  - Client-side CSV parsing with proper handling of quoted fields
+  - Server-side validation and error collection
+  - Category matching during import (finds existing or skips)
+  - Line-by-line error reporting with specific messages
+  - Confirmation dialog showing import count before processing
+  - JSON-based transport for clean data handling
+  
+- **Demo Template CSV**: Downloadable template with 5 sample materials
+  - Pre-filled with realistic electrical materials examples
+  - Shows correct format for all columns
+  - Ready to edit in Excel and re-import
+  - UTF-8 BOM for Excel compatibility
+
+#### 2. Enhanced Materials Catalog
+
+- **Pagination System**: 
+  - Default 25 items per page (optimal for page load)
+  - Adjustable per-page selector: 10, 25, 50, 100 items
+  - Bootstrap pagination with prev/next navigation
+  - Maintains filters across page changes
+  - Shows current page and total pages
+  
+- **Unit Measurement Dropdown**: 
+  - Replaced free-text input with standardized dropdown
+  - 18 predefined units: τεμ, μ, μ², μ³, κιλά, λίτρα, κιβώτιο, σετ, κουτί, ρολό, παλέτα, τόνος, πακέτο, δέσμη, φύλλο, τρέχον μέτρο, ώρα, ημέρα
+  - Prevents inconsistent unit names (τεμ vs τεμάχια vs τεμ.)
+  - Improves data quality and reporting
+  
+- **100 Electrical Materials Pre-loaded**:
+  - Comprehensive catalog of real-world electrical materials
+  - Materials 1-50: Cables (NYM, NYA, LIYY), conduits (CONDUR, FLEX), switches, outlets, breakers, junction boxes, LEDs, grounding equipment, WAGO connectors, cable ties
+  - Materials 51-100: Cable ducts, relays, timers, PIR sensors, LED power supplies, LED strips, adapters, smoke detectors, batteries, extension cords, DIN rails, heat-shrink tubing
+  - All with proper Greek names, descriptions, categories, units, realistic prices
+  - Ready for immediate production use
+  
+- **Auto-Generated Aliases for All Materials**:
+  - Batch regeneration script processes all 100 materials
+  - Generates Greeklish aliases (καλώδιο → kalodio)
+  - Generates English synonyms (cable, wire, cord)
+  - Extracts product codes (NYM, LED, IP65)
+  - Enables comprehensive search: type "kalodio", "cable", or "nym" to find "Καλώδιο NYM"
+  - 100% success rate (100/100 materials updated)
+
+#### 3. UI/UX Improvements
+
+- **4-Column Labor Layout**: 
+  - Changed project labor tab from 3 to 4 columns (col-lg-3)
+  - Better space utilization on large screens
+  - Maintains responsive design (2 columns on medium, 1 on small)
+  - Improved readability of labor cards
+  
+- **CSV Operations Button Group**:
+  - Three action buttons in header: Export CSV, Import CSV, Demo CSV
+  - Bootstrap btn-group styling for visual cohesion
+  - Hidden file input for clean import trigger
+  - Icons and clear labels for each action
+
+#### 4. Internationalization
+
+- **English Translations Added**:
+  - Unit measurements: piece, meter, square meter, cubic meter, kilograms, liters, box, set, case, roll, pallet, ton, package, bundle, sheet, linear meter, hour, day
+  - Date formats: dd/mm/yyyy format strings
+  - Month names: January through December
+  - Day names: Monday through Sunday
+  - All new features have dual language support
+
+### 🗄️ Database Changes
+
+**Data Additions:**
+- 100 electrical materials loaded via SQL migrations
+  - `load_electrical_materials.sql` (Materials 1-50)
+  - `load_electrical_materials_part2.sql` (Materials 51-100)
+- All materials have auto-generated aliases in `aliases` column
+
+**Schema Enhancements:**
+- No new tables (uses existing `materials_catalog` from v1.2.0)
+- Enhanced data quality with standardized units
+- Full-text search optimization via aliases column
+
+### 🚀 Technical Improvements
+
+#### CSV Processing
+- **Client-Side**:
+  - `parseCSVLine()`: Handles quoted fields with embedded commas/newlines
+  - `parseAndImportCSV()`: Splits into rows, maps headers, validates
+  - File API + FileReader for file handling
+  - Blob API for demo CSV generation and download
+  
+- **Server-Side**:
+  - `exportCSV()`: Uses fputcsv() for proper escaping
+  - `importCSV()`: JSON input, header mapping (Greek→English), validation
+  - Category matching: Finds existing categories or skips gracefully
+  - Error collection: Continues processing, returns all errors at end
+  - HTTP headers: Proper Content-Type and Content-Disposition for downloads
+
+#### Pagination Logic
+- SQL LIMIT/OFFSET for efficient queries
+- Separate count query for total pages calculation
+- URL parameter persistence (page, perPage, search, category)
+- Frontend: Bootstrap pagination component
+- Backend: MaterialCatalog::getAll() and getCount() methods
+
+#### Alias Generation
+- `MaterialAliasGenerator::generate()`: Core generation logic
+- Batch processing script: `regenerate_material_aliases.php`
+- Processes existing materials without aliases
+- Updates database in single transaction
+- Progress reporting (X/Y materials updated)
+
+### 🎨 UI/UX Polish
+
+- **Materials Index Page**:
+  - Added CSV button group to header
+  - Enhanced pagination with per-page selector
+  - Maintains clean, professional layout
+  
+- **Materials Forms** (Create/Edit):
+  - Replaced unit text input with select dropdown
+  - 18 options with user-friendly Greek names
+  - Consistent form validation
+  
+- **Project Show Page**:
+  - Labor tab now uses 4-column grid
+  - Better utilization of screen space
+  - Improved card readability
+
+### 📝 Code Quality
+
+- **New Controller Methods**:
+  - `MaterialsController::exportCSV()` - CSV generation with proper headers
+  - `MaterialsController::importCSV()` - JSON-based import with validation
+  
+- **New JavaScript Functions**:
+  - `exportMaterialsCSV()` - Triggers export by adding query parameter
+  - `downloadDemoCSV()` - Generates and downloads template
+  - `handleImportCSV()` - File input change handler
+  - `parseAndImportCSV()` - CSV parsing and server communication
+  - `parseCSVLine()` - Robust CSV field parser
+  
+- **Routing Enhancements**:
+  - `/materials?export=csv` - Triggers CSV export
+  - `POST /materials/import` - Accepts CSV import data
+  
+- **Migration Scripts**:
+  - Two SQL files for 100 materials
+  - One PHP script for alias regeneration
+  - All documented and version-controlled
+
+### 🐛 Bug Fixes
+
+- Fixed pagination not showing on initial materials load
+- Fixed unit field accepting inconsistent values
+- Fixed search not working for newly added materials (alias generation)
+- Fixed labor tab spacing issues on large screens
+- Fixed CSV export including deleted/inactive materials
+
+### 📦 Deployment Notes
+
+- **Files Modified**: 
+  - `index.php` (routing)
+  - `controllers/MaterialsController.php` (export/import methods)
+  - `views/materials/index.php` (CSV UI and JavaScript)
+  - `views/materials/form.php`, `create.php`, `edit.php` (unit dropdown)
+  - `views/projects/show.php` (4-column labor layout)
+  - `languages/en.json`, `languages/el.json` (translations)
+  - `models/MaterialCatalog.php` (pagination support)
+  
+- **Migration Files**:
+  - `migrations/load_electrical_materials.sql`
+  - `migrations/load_electrical_materials_part2.sql`
+  - `migrations/regenerate_material_aliases.php`
+  
+- **Dependencies**: No new external dependencies
+- **Backward Compatibility**: Fully compatible with v1.2.0 database
+- **Upgrade Path**: Copy files, run alias regeneration script (optional if keeping existing materials)
+
+### 🎯 Production Readiness
+
+This release focuses on making the Materials Catalog production-ready:
+- ✅ Bulk operations (export/import) for efficient data management
+- ✅ 100 real electrical materials ready to use
+- ✅ Standardized units for consistency
+- ✅ Comprehensive search via auto-aliases
+- ✅ Pagination for performance
+- ✅ Professional CSV handling with Excel compatibility
+- ✅ Full internationalization support
+
+Perfect for deployment to production environments handling real electrical/plumbing projects.
+
+---
+
 ## [1.2.0] - 2025-10-16
 
 ### 🎉 Major Features

@@ -1,20 +1,22 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.2.0  
+**Version:** 1.2.5  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
 HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους και υδραυλικούς. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και τα τιμολόγια.
 
-## 🎉 Τι Νέο στην v1.2.0
+## 🎉 Τι Νέο στην v1.2.5
 
-- 📸 **Φωτογραφίες Έργων** - Upload και προβολή φωτογραφιών με lightbox
-- 🔍 **Έξυπνο Materials Catalog** - Αυτόκλητο με Greeklish support ("kalodio" βρίσκει "Καλώδιο")
-- 🏷️ **Auto-Aliases** - Αυτόματη δημιουργία λέξεων-κλειδιών για αναζήτηση
-- 🌍 **Synonym Search** - Αναζήτηση με συνώνυμα ("cable" βρίσκει "Καλώδιο")
-- 🚀 **Auto-Migrations** - Αυτόματη εφαρμογή database changes κατά την εγκατάσταση
-- ⚡ **Βελτιωμένο Autocomplete** - Πιο γρήγορο και έξυπνο
+- � **CSV Export/Import** - Μαζική εξαγωγή/εισαγωγή υλικών με Excel-ready format
+- � **Demo Template** - Έτοιμο template CSV με δείγματα για γρήγορη εισαγωγή
+- 📄 **Pagination System** - 25 υλικά/σελίδα με επιλογές 10/25/50/100
+- 🔢 **Unit Dropdown** - 18 προκαθορισμένες μονάδες μέτρησης (τεμ, μ, μ², κιλά, κιβώτιο, κ.ά.)
+- ⚡ **100 Electrical Materials** - Πλήρης κατάλογος ηλεκτρολογικών υλικών ready-to-use
+- � **Auto-Generated Aliases** - Αυτόματα Greeklish + English aliases για όλα τα υλικά
+- 📐 **4-Column Layout** - Καλύτερη οργάνωση στο tab ημερομίσθιων
+- 🌍 **English Translations** - Πλήρεις μεταφράσεις για μονάδες και ημερομηνίες
 
 Δείτε το [CHANGELOG.md](CHANGELOG.md) για πλήρη λίστα αλλαγών.
 

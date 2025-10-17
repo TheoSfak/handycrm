@@ -395,4 +395,161 @@ class MaterialsController extends BaseController {
         $pageTitle = 'Aliases Regenerated';
         require_once 'views/materials/regenerate_aliases_result.php';
     }
+    
+    /**
+     * GET /materials/export
+     * Export materials to CSV
+     */
+    public function exportCSV() {
+        $this->checkAuth();
+        
+        // Get all materials without pagination
+        $filters = [
+            'category_id' => $_GET['category_id'] ?? null,
+            'search' => $_GET['search'] ?? null,
+            'is_active' => isset($_GET['show_inactive']) ? null : 1
+        ];
+        
+        $materials = $this->materialModel->getAll($filters);
+        
+        // Prepare CSV
+        $filename = 'materials_export_' . date('Y-m-d_His') . '.csv';
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        
+        $output = fopen('php://output', 'w');
+        
+        // UTF-8 BOM for Excel compatibility
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        // Headers
+        fputcsv($output, [
+            'ID',
+            'Όνομα',
+            'Περιγραφή',
+            'Κατηγορία',
+            'Μονάδα',
+            'Τιμή (€)',
+            'Απόθεμα',
+            'Ελάχιστο Απόθεμα',
+            'Προμηθευτής',
+            'Κωδικός Προμηθευτή',
+            'Κατάσταση'
+        ]);
+        
+        // Data rows
+        foreach ($materials as $material) {
+            fputcsv($output, [
+                $material['id'],
+                $material['name'],
+                $material['description'] ?? '',
+                $material['category_name'] ?? '',
+                $material['unit'] ?? '',
+                $material['default_price'] ?? '',
+                $material['current_stock'] ?? '',
+                $material['min_stock'] ?? '',
+                $material['supplier'] ?? '',
+                $material['supplier_code'] ?? '',
+                $material['is_active'] ? 'Ενεργό' : 'Ανενεργό'
+            ]);
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
+     * POST /materials/import
+     * Import materials from CSV
+     */
+    public function importCSV() {
+        $this->checkAuth();
+        
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+        
+        // Get JSON data
+        $input = file_get_contents('php://input');
+        $data = json_decode($input, true);
+        
+        if (!isset($data['materials']) || !is_array($data['materials'])) {
+            echo json_encode(['success' => false, 'error' => 'Invalid data format']);
+            exit;
+        }
+        
+        $imported = 0;
+        $errors = [];
+        
+        // Map Greek headers to database fields
+        $headerMap = [
+            'Όνομα' => 'name',
+            'Περιγραφή' => 'description',
+            'Κατηγορία' => 'category',
+            'Μονάδα' => 'unit',
+            'Τιμή' => 'default_price',
+            'Προμηθευτής' => 'supplier',
+            'Κωδικός Προμηθευτή' => 'supplier_code'
+        ];
+        
+        foreach ($data['materials'] as $index => $material) {
+            try {
+                // Map headers
+                $mappedData = [];
+                foreach ($material as $key => $value) {
+                    $mappedKey = $headerMap[$key] ?? $key;
+                    $mappedData[$mappedKey] = $value;
+                }
+                
+                // Validate required fields
+                if (empty($mappedData['name'])) {
+                    $errors[] = "Γραμμή " . ($index + 2) . ": Λείπει το όνομα";
+                    continue;
+                }
+                
+                // Find or create category
+                $categoryId = null;
+                if (!empty($mappedData['category'])) {
+                    $categories = $this->categoryModel->getAll();
+                    foreach ($categories as $cat) {
+                        if (mb_strtolower($cat['name']) === mb_strtolower($mappedData['category'])) {
+                            $categoryId = $cat['id'];
+                            break;
+                        }
+                    }
+                }
+                
+                // Prepare data for insertion
+                $insertData = [
+                    'name' => $mappedData['name'],
+                    'description' => $mappedData['description'] ?? null,
+                    'category_id' => $categoryId,
+                    'unit' => $mappedData['unit'] ?? null,
+                    'default_price' => !empty($mappedData['default_price']) ? floatval($mappedData['default_price']) : null,
+                    'supplier' => $mappedData['supplier'] ?? null,
+                    'supplier_code' => $mappedData['supplier_code'] ?? null,
+                    'is_active' => 1
+                ];
+                
+                // Insert material
+                if ($this->materialModel->create($insertData)) {
+                    $imported++;
+                }
+                
+            } catch (Exception $e) {
+                $errors[] = "Γραμμή " . ($index + 2) . ": " . $e->getMessage();
+            }
+        }
+        
+        echo json_encode([
+            'success' => true,
+            'imported' => $imported,
+            'errors' => $errors
+        ]);
+        exit;
+    }
 }

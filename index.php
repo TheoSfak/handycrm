@@ -516,7 +516,14 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     
     // Materials CRUD
     if ($currentRoute === '/materials') {
-        $controller->index();
+        // Check if export is requested
+        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+            $controller->exportCSV();
+        } else {
+            $controller->index();
+        }
+    } elseif ($currentRoute === '/materials/import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->importCSV();
     } elseif ($currentRoute === '/materials/add') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->store();

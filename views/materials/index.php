@@ -23,6 +23,17 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-boxes me-2"></i>Κατάλογος Υλικών</h2>
         <div>
+            <div class="btn-group me-2" role="group">
+                <button type="button" class="btn btn-success" onclick="exportMaterialsCSV()">
+                    <i class="fas fa-file-export me-1"></i>Export CSV
+                </button>
+                <button type="button" class="btn btn-info" onclick="document.getElementById('importCsvFile').click()">
+                    <i class="fas fa-file-import me-1"></i>Import CSV
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="downloadDemoCSV()">
+                    <i class="fas fa-file-download me-1"></i>Demo CSV
+                </button>
+            </div>
             <a href="<?= BASE_URL ?>/materials/categories" class="btn btn-outline-secondary me-2">
                 <i class="fas fa-tags me-1"></i>Κατηγορίες
             </a>
@@ -31,6 +42,9 @@ require_once __DIR__ . '/../includes/header.php';
             </a>
         </div>
     </div>
+    
+    <!-- Hidden Import File Input -->
+    <input type="file" id="importCsvFile" accept=".csv" style="display: none;" onchange="handleImportCSV(this)">
 
     <!-- Success/Error Messages -->
     <?php if (isset($_SESSION['success'])): ?>
@@ -383,6 +397,146 @@ function confirmDelete(materialId, materialName) {
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();
+}
+
+/**
+ * Export all materials to CSV
+ */
+function exportMaterialsCSV() {
+    // Fetch all materials (without pagination)
+    const url = new URL(window.location.href);
+    url.searchParams.delete('page');
+    url.searchParams.delete('per_page');
+    url.searchParams.set('export', 'csv');
+    
+    // Create temporary link and trigger download
+    window.location.href = url.toString();
+}
+
+/**
+ * Download demo CSV template
+ */
+function downloadDemoCSV() {
+    const demoData = [
+        ['Όνομα', 'Περιγραφή', 'Κατηγορία', 'Μονάδα', 'Τιμή', 'Προμηθευτής', 'Κωδικός Προμηθευτή'],
+        ['Καλώδιο ΝΥΜ 3x1.5', 'Καλώδιο τριπολικό 1.5mm', 'Ηλεκτρολογικά', 'μ', '1.20', 'Ηλεκτρονική ΑΕ', 'NYM-3X1.5'],
+        ['Σωλήνας PVC Φ32', 'Σωλήνας αποχέτευσης 32mm', 'Υδραυλικά', 'μ', '3.50', 'Υδραυλικά Παπαδόπουλος', 'PVC-32'],
+        ['Τσιμέντο 25kg', 'Τσιμέντο Portland 25kg', 'Οικοδομικά', 'τεμ', '5.50', 'Οικοδομικά Γεωργίου', 'CEM-25'],
+        ['Πρίζα Σούκο Λευκή', 'Πρίζα σούκο χωνευτή', 'Ηλεκτρολογικά', 'τεμ', '2.80', 'Ηλεκτρονική ΑΕ', 'SOCKET-WHITE']
+    ];
+    
+    // Convert to CSV
+    const csvContent = demoData.map(row => 
+        row.map(cell => `"${cell}"`).join(',')
+    ).join('\n');
+    
+    // Add UTF-8 BOM for Excel compatibility
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create download link
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'materials_demo_template.csv';
+    link.click();
+}
+
+/**
+ * Handle CSV import
+ */
+function handleImportCSV(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.csv')) {
+        alert('Παρακαλώ επιλέξτε αρχείο CSV');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const content = e.target.result;
+        parseAndImportCSV(content);
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+/**
+ * Parse CSV and send to server
+ */
+function parseAndImportCSV(content) {
+    // Simple CSV parser (handles quoted fields)
+    const lines = content.split('\n').filter(line => line.trim());
+    const headers = parseCSVLine(lines[0]);
+    
+    const materials = [];
+    for (let i = 1; i < lines.length; i++) {
+        const values = parseCSVLine(lines[i]);
+        if (values.length === headers.length) {
+            const material = {};
+            headers.forEach((header, index) => {
+                material[header] = values[index];
+            });
+            materials.push(material);
+        }
+    }
+    
+    if (materials.length === 0) {
+        alert('Δεν βρέθηκαν έγκυρα δεδομένα στο CSV');
+        return;
+    }
+    
+    // Confirm import
+    if (!confirm(`Θέλετε να εισάγετε ${materials.length} υλικά;`)) {
+        return;
+    }
+    
+    // Send to server
+    fetch('<?= BASE_URL ?>/materials/import', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= $_SESSION['csrf_token'] ?? '' ?>'
+        },
+        body: JSON.stringify({ materials: materials })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Επιτυχής εισαγωγή ${data.imported} υλικών!`);
+            window.location.reload();
+        } else {
+            alert('Σφάλμα κατά την εισαγωγή: ' + (data.error || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        alert('Σφάλμα δικτύου: ' + error.message);
+    });
+}
+
+/**
+ * Parse a single CSV line (handles quoted fields with commas)
+ */
+function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+            inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+            result.push(current.trim());
+            current = '';
+        } else {
+            current += char;
+        }
+    }
+    result.push(current.trim());
+    
+    return result;
 }
 </script>
 
