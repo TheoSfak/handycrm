@@ -82,6 +82,21 @@ class SettingsController extends BaseController {
         try {
             $db->beginTransaction();
             
+            // Handle logo upload
+            $logoPath = null;
+            if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] === UPLOAD_ERR_OK) {
+                $logoPath = $this->handleLogoUpload($_FILES['company_logo']);
+                if ($logoPath === false) {
+                    throw new Exception('Αποτυχία ανεβάσματος λογότυπου');
+                }
+            }
+            
+            // Handle logo removal
+            if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === '1') {
+                $this->removeLogo($db);
+                $logoPath = ''; // Clear logo
+            }
+            
             // List of allowed settings
             $allowedSettings = [
                 'company_name',
@@ -107,16 +122,76 @@ class SettingsController extends BaseController {
                 }
             }
             
+            // Save logo path if uploaded
+            if ($logoPath !== null) {
+                $stmt->execute(['company_logo', $logoPath, $logoPath]);
+            }
+            
             $db->commit();
             $_SESSION['success'] = __('settings.success');
             
         } catch (Exception $e) {
             $db->rollBack();
             error_log("Settings update error: " . $e->getMessage());
-            $_SESSION['error'] = __('settings.error');
+            $_SESSION['error'] = __('settings.error') . ': ' . $e->getMessage();
         }
         
         $this->redirect('/settings');
+    }
+    
+    /**
+     * Handle logo file upload
+     */
+    private function handleLogoUpload($file) {
+        // Validate file
+        $allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        $maxSize = 2 * 1024 * 1024; // 2MB
+        
+        if (!in_array($file['type'], $allowedTypes)) {
+            $_SESSION['error'] = 'Μη έγκυρος τύπος αρχείου. Χρησιμοποιήστε PNG, JPG, GIF ή WebP';
+            return false;
+        }
+        
+        if ($file['size'] > $maxSize) {
+            $_SESSION['error'] = 'Το αρχείο είναι πολύ μεγάλο. Μέγιστο μέγεθος: 2MB';
+            return false;
+        }
+        
+        // Create uploads directory if it doesn't exist
+        $uploadDir = __DIR__ . '/../uploads/company/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        // Generate unique filename
+        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $filename = 'logo_' . time() . '_' . uniqid() . '.' . $extension;
+        $targetPath = $uploadDir . $filename;
+        
+        // Move uploaded file
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            // Return relative path for database
+            return '/uploads/company/' . $filename;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Remove company logo
+     */
+    private function removeLogo($db) {
+        // Get current logo path
+        $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = 'company_logo'");
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result && !empty($result['setting_value'])) {
+            $logoPath = __DIR__ . '/..' . $result['setting_value'];
+            if (file_exists($logoPath)) {
+                unlink($logoPath);
+            }
+        }
     }
     
     /**

@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <form method="POST" action="?route=/settings">
+        <form method="POST" action="?route=/settings" enctype="multipart/form-data" id="settingsForm">
             <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
             
             <!-- Company Information -->
@@ -58,6 +58,50 @@
                     <h5 class="mb-0"><i class="fas fa-building"></i> <?= __('settings.company_info') ?></h5>
                 </div>
                 <div class="card-body">
+                    <!-- Company Logo -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-image"></i> <?= __('settings.company_logo') ?? 'Λογότυπο Εταιρείας' ?>
+                        </label>
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <?php if (!empty($settings['company_logo'])): ?>
+                                    <img src="<?= htmlspecialchars($settings['company_logo']) ?>" 
+                                         alt="Company Logo" 
+                                         class="img-thumbnail" 
+                                         id="logoPreview"
+                                         style="max-height: 150px; width: auto;">
+                                <?php else: ?>
+                                    <div class="border rounded p-4 text-center bg-light" id="logoPreview">
+                                        <i class="fas fa-image fa-3x text-muted"></i>
+                                        <p class="text-muted mt-2 mb-0 small">
+                                            <?= __('settings.no_logo') ?? 'Δεν έχει ανέβει λογότυπο' ?>
+                                        </p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-md-9">
+                                <input type="file" 
+                                       class="form-control mb-2" 
+                                       id="company_logo" 
+                                       name="company_logo" 
+                                       accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                                       onchange="previewLogo(this)">
+                                <small class="text-muted">
+                                    <?= __('settings.logo_requirements') ?? 'Επιτρεπόμενοι τύποι: PNG, JPG, GIF, WebP. Μέγιστο μέγεθος: 2MB. Συνιστώμενες διαστάσεις: 300x100px' ?>
+                                </small>
+                                <?php if (!empty($settings['company_logo'])): ?>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="removeLogo()">
+                                            <i class="fas fa-trash"></i> <?= __('settings.remove_logo') ?? 'Διαγραφή Λογότυπου' ?>
+                                        </button>
+                                        <input type="hidden" name="remove_logo" id="remove_logo" value="0">
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label for="company_name" class="form-label"><?= __('settings.company_name') ?></label>
                         <input type="text" class="form-control" id="company_name" name="company_name" 
@@ -282,5 +326,45 @@ function changeLanguage(languageCode) {
     form.appendChild(redirectInput);
     document.body.appendChild(form);
     form.submit();
+}
+
+// Logo preview function
+function previewLogo(input) {
+    const preview = document.getElementById('logoPreview');
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Validate file size (2MB max)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('<?= __('settings.logo_too_large') ?? 'Το αρχείο είναι πολύ μεγάλο. Μέγιστο μέγεθος: 2MB' ?>');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('<?= __('settings.logo_invalid_type') ?? 'Μη έγκυρος τύπος αρχείου. Χρησιμοποιήστε PNG, JPG, GIF ή WebP' ?>');
+            input.value = '';
+            return;
+        }
+        
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = '<img src="' + e.target.result + '" alt="Logo Preview" class="img-thumbnail" style="max-height: 150px; width: auto;">';
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Remove logo function
+function removeLogo() {
+    if (confirm('<?= __('settings.confirm_remove_logo') ?? 'Είστε σίγουροι ότι θέλετε να διαγράψετε το λογότυπο;' ?>')) {
+        document.getElementById('remove_logo').value = '1';
+        document.getElementById('logoPreview').innerHTML = '<div class="border rounded p-4 text-center bg-light"><i class="fas fa-image fa-3x text-muted"></i><p class="text-muted mt-2 mb-0 small"><?= __('settings.logo_will_be_removed') ?? 'Το λογότυπο θα διαγραφεί κατά την αποθήκευση' ?></p></div>';
+        document.getElementById('company_logo').value = '';
+    }
 }
 </script>

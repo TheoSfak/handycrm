@@ -585,7 +585,15 @@
         "check_updates": "Check for Updates",
         "check_updates_desc": "Check if there are available updates for the application and database.",
         "check_updates_btn": "Check for Updates",
-        "current_version": "Current version"
+        "current_version": "Current version",
+        "company_logo": "Company Logo",
+        "no_logo": "No logo uploaded",
+        "logo_requirements": "Allowed types: PNG, JPG, GIF, WebP. Maximum size: 2MB. Recommended dimensions: 300x100px",
+        "remove_logo": "Remove Logo",
+        "logo_too_large": "File is too large. Maximum size: 2MB",
+        "logo_invalid_type": "Invalid file type. Use PNG, JPG, GIF or WebP",
+        "confirm_remove_logo": "Are you sure you want to remove the logo?",
+        "logo_will_be_removed": "Logo will be removed upon saving"
     },
     "updates": {
         "title": "System Updates",
