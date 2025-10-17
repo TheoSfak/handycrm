@@ -1,12 +1,10 @@
 <?php
-require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
 
-class ProjectReportController {
-    private $db;
+class ProjectReportController extends BaseController {
     
     public function __construct() {
-        $this->db = Database::getInstance()->getConnection();
+        parent::__construct();
     }
     
     public function generate($projectId) {
@@ -49,7 +47,8 @@ class ProjectReportController {
     }
     
     private function getProject($projectId) {
-        $stmt = $this->db->prepare("
+        $pdo = $this->db->getPdo();
+        $stmt = $pdo->prepare("
             SELECT * FROM projects WHERE id = ?
         ");
         $stmt->execute([$projectId]);
@@ -57,7 +56,8 @@ class ProjectReportController {
     }
     
     private function getCustomer($customerId) {
-        $stmt = $this->db->prepare("
+        $pdo = $this->db->getPdo();
+        $stmt = $pdo->prepare("
             SELECT * FROM customers WHERE id = ?
         ");
         $stmt->execute([$customerId]);
@@ -65,7 +65,8 @@ class ProjectReportController {
     }
     
     private function getCompanySettings() {
-        $stmt = $this->db->query("SELECT setting_key, setting_value FROM settings");
+        $pdo = $this->db->getPdo();
+        $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
         $settings = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $settings[$row['setting_key']] = $row['setting_value'];
@@ -74,6 +75,7 @@ class ProjectReportController {
     }
     
     private function getTasks($projectId, $fromDate = null, $toDate = null) {
+        $pdo = $this->db->getPdo();
         $sql = "SELECT * FROM project_tasks WHERE project_id = ?";
         $params = [$projectId];
         
@@ -85,12 +87,13 @@ class ProjectReportController {
         
         $sql .= " ORDER BY task_date ASC";
         
-        $stmt = $this->db->prepare($sql);
+        $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     private function getAggregatedMaterials($projectId, $fromDate = null, $toDate = null) {
+        $pdo = $this->db->getPdo();
         $sql = "
             SELECT 
                 m.name as material_name,
@@ -112,12 +115,13 @@ class ProjectReportController {
         
         $sql .= " GROUP BY m.id, m.name, m.unit, m.cost ORDER BY m.name";
         
-        $stmt = $this->db->prepare($sql);
+        $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
     private function getAggregatedLabor($projectId, $fromDate = null, $toDate = null) {
+        $pdo = $this->db->getPdo();
         $sql = "
             SELECT 
                 worker_name,
@@ -137,7 +141,7 @@ class ProjectReportController {
         
         $sql .= " GROUP BY worker_name, daily_rate ORDER BY worker_name";
         
-        $stmt = $this->db->prepare($sql);
+        $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
