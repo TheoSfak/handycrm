@@ -93,8 +93,14 @@ function formatDate($date, $includeTime = false) {
  * Helper function to format currency
  */
 function formatCurrency($amount) {
-    $amount = $amount ?? 0; // Convert null to 0
-    return number_format((float)$amount, 2, ',', '.') . ' ' . CURRENCY_SYMBOL;
+    // Ensure amount is a valid number
+    $amount = is_numeric($amount) ? (float)$amount : 0.0;
+    
+    // Format with explicit decimal and thousands separators
+    // Using comma for decimal, dot for thousands (European format)
+    $formatted = number_format($amount, 2, ',', '.');
+    
+    return $formatted . ' ' . CURRENCY_SYMBOL;
 }
 
 // Define BASE_URL for clean URLs
