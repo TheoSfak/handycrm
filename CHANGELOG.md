@@ -4,7 +4,32 @@
 
 ### 🎯 Production-Ready Features
 
-#### 1. CSV Export/Import/Demo for Materials Catalog
+#### 1. Automated Database Update System
+- **Update Detection**: Automatically checks if database needs updates
+  - Compares VERSION file with migrations table
+  - Shows current app version vs database version
+  - Lists all pending updates with details
+  
+- **One-Click Updates**: Apply all updates from Settings page
+  - Professional UI with update cards
+  - Progress modal with real-time tracking
+  - Transaction-safe with automatic rollback on error
+  - Admin-only access with authentication
+  
+- **Update Management**:
+  - View list of pending updates
+  - See migration files and scripts to be run
+  - Detailed success/error messages
+  - Update history tracking in migrations table
+  
+- **Developer-Friendly**:
+  - Easy to add new updates in UpdateController
+  - Support for SQL migrations
+  - Support for PHP post-migration scripts
+  - Comprehensive error handling
+  - Full documentation included
+
+#### 2. CSV Export/Import/Demo for Materials Catalog
 - **Export CSV**: Bulk export all materials to Excel-ready CSV format
   - UTF-8 BOM encoding for proper Greek character display in Excel
   - Greek column headers (Όνομα, Περιγραφή, Κατηγορία, Μονάδα, Τιμή, etc.)

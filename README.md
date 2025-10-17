@@ -9,12 +9,13 @@ HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχεί�
 
 ## 🎉 Τι Νέο στην v1.2.5
 
-- � **CSV Export/Import** - Μαζική εξαγωγή/εισαγωγή υλικών με Excel-ready format
-- � **Demo Template** - Έτοιμο template CSV με δείγματα για γρήγορη εισαγωγή
+- 🔄 **Automated Updates** - Αυτόματες ενημερώσεις βάσης δεδομένων από τις Ρυθμίσεις με ένα κλικ
+- 📊 **CSV Export/Import** - Μαζική εξαγωγή/εισαγωγή υλικών με Excel-ready format
+- 📋 **Demo Template** - Έτοιμο template CSV με δείγματα για γρήγορη εισαγωγή
 - 📄 **Pagination System** - 25 υλικά/σελίδα με επιλογές 10/25/50/100
 - 🔢 **Unit Dropdown** - 18 προκαθορισμένες μονάδες μέτρησης (τεμ, μ, μ², κιλά, κιβώτιο, κ.ά.)
 - ⚡ **100 Electrical Materials** - Πλήρης κατάλογος ηλεκτρολογικών υλικών ready-to-use
-- � **Auto-Generated Aliases** - Αυτόματα Greeklish + English aliases για όλα τα υλικά
+- 🔍 **Auto-Generated Aliases** - Αυτόματα Greeklish + English aliases για όλα τα υλικά
 - 📐 **4-Column Layout** - Καλύτερη οργάνωση στο tab ημερομίσθιων
 - 🌍 **English Translations** - Πλήρεις μεταφράσεις για μονάδες και ημερομηνίες
 
