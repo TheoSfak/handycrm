@@ -21,26 +21,30 @@ class Payment extends BaseModel {
                     t.id as technician_id,
                     t.name as technician_name,
                     t.hourly_rate,
-                    COUNT(DISTINCT le.id) as entry_count,
-                    SUM(le.hours_worked) as total_hours,
-                    SUM(le.subtotal) as total_amount,
+                    COUNT(DISTINCT tl.id) as entry_count,
+                    SUM(tl.hours_worked) as total_hours,
+                    SUM(tl.subtotal) as total_amount,
                     p.id as payment_id,
                     p.paid_at,
                     p.paid_by,
                     u.username as paid_by_user
                 FROM technicians t
-                INNER JOIN labor_entries le ON t.id = le.technician_id
+                INNER JOIN task_labor tl ON t.id = tl.technician_id
+                INNER JOIN project_tasks pt ON tl.task_id = pt.id
                 LEFT JOIN payments p ON (
                     p.technician_id = t.id 
                     AND p.week_start = ? 
                     AND p.week_end = ?
                 )
                 LEFT JOIN users u ON p.paid_by = u.id
-                WHERE le.work_date BETWEEN ? AND ?
+                WHERE (
+                    (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                    OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+                )
                 GROUP BY t.id, t.name, t.hourly_rate, p.id, p.paid_at, p.paid_by, u.username
                 ORDER BY t.name";
                 
-        return $this->query($sql, [$weekStart, $weekEnd, $weekStart, $weekEnd]);
+        return $this->query($sql, [$weekStart, $weekEnd, $weekStart, $weekEnd, $weekEnd, $weekStart]);
     }
     
     /**
@@ -53,19 +57,26 @@ class Payment extends BaseModel {
      */
     public function getLaborEntriesForWeek($technicianId, $weekStart, $weekEnd) {
         $sql = "SELECT 
-                    le.*,
+                    tl.*,
                     pt.description as task_description,
+                    pt.task_date,
+                    pt.date_from,
+                    pt.date_to,
+                    pt.task_type,
                     p.title as project_title,
                     t.name as technician_name
-                FROM labor_entries le
-                INNER JOIN project_tasks pt ON le.task_id = pt.id
+                FROM task_labor tl
+                INNER JOIN project_tasks pt ON tl.task_id = pt.id
                 INNER JOIN projects p ON pt.project_id = p.id
-                INNER JOIN technicians t ON le.technician_id = t.id
-                WHERE le.technician_id = ?
-                AND le.work_date BETWEEN ? AND ?
-                ORDER BY le.work_date DESC, p.title";
+                INNER JOIN technicians t ON tl.technician_id = t.id
+                WHERE tl.technician_id = ?
+                AND (
+                    (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                    OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+                )
+                ORDER BY COALESCE(pt.task_date, pt.date_from) DESC, p.title";
                 
-        return $this->query($sql, [$technicianId, $weekStart, $weekEnd]);
+        return $this->query($sql, [$technicianId, $weekStart, $weekEnd, $weekEnd, $weekStart]);
     }
     
     /**
