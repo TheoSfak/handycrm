@@ -200,7 +200,8 @@ require_once 'views/includes/header.php';
                                             </td>
                                             <td class="text-center">
                                                 <?php if ($isPaid): ?>
-                                                    <span class="badge bg-success" title="<?= __('payments.paid_on') ?> <?= formatDate($entry['paid_at']) ?>">
+                                                    <span class="badge bg-success" 
+                                                          title="<?= __('payments.paid_on') ?> <?= formatDate($entry['paid_at'], true) ?><?= !empty($entry['paid_by_name']) ? ' από ' . htmlspecialchars($entry['paid_by_name']) : '' ?>">
                                                         <i class="fas fa-check-circle"></i>
                                                     </span>
                                                 <?php else: ?>

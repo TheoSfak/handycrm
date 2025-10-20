@@ -66,11 +66,13 @@ class Payment extends BaseModel {
                     pt.date_to,
                     pt.task_type,
                     p.title as project_title,
-                    CONCAT(u.first_name, ' ', u.last_name) as technician_name
+                    CONCAT(u.first_name, ' ', u.last_name) as technician_name,
+                    CONCAT(paid_user.first_name, ' ', paid_user.last_name) as paid_by_name
                 FROM task_labor tl
                 INNER JOIN project_tasks pt ON tl.task_id = pt.id
                 INNER JOIN projects p ON pt.project_id = p.id
                 INNER JOIN users u ON tl.technician_id = u.id
+                LEFT JOIN users paid_user ON tl.paid_by = paid_user.id
                 WHERE tl.technician_id = ?
                 AND (
                     (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)

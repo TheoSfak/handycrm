@@ -96,11 +96,13 @@ class PaymentReportController extends BaseController {
                     pt.date_to,
                     pt.task_type,
                     p.title as project_title,
-                    CONCAT(u.first_name, ' ', u.last_name) as technician_name
+                    CONCAT(u.first_name, ' ', u.last_name) as technician_name,
+                    CONCAT(paid_user.first_name, ' ', paid_user.last_name) as paid_by_name
                 FROM task_labor tl
                 INNER JOIN project_tasks pt ON tl.task_id = pt.id
                 INNER JOIN projects p ON pt.project_id = p.id
                 INNER JOIN users u ON tl.technician_id = u.id
+                LEFT JOIN users paid_user ON tl.paid_by = paid_user.id
                 WHERE tl.technician_id = ?
                 AND (
                     (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
@@ -195,11 +197,12 @@ class PaymentReportController extends BaseController {
             $html .= '<thead>';
             $html .= '<tr style="background-color: #f8f9fa; font-weight: bold;">';
             $html .= '<td style="width: 10%;">' . __('payments.date') . '</td>';
-            $html .= '<td style="width: 30%;">' . __('payments.project') . '</td>';
-            $html .= '<td style="width: 30%;">' . __('payments.task') . '</td>';
-            $html .= '<td style="width: 10%; text-align: center;">' . __('payments.hours') . '</td>';
+            $html .= '<td style="width: 25%;">' . __('payments.project') . '</td>';
+            $html .= '<td style="width: 25%;">' . __('payments.task') . '</td>';
+            $html .= '<td style="width: 8%; text-align: center;">' . __('payments.hours') . '</td>';
             $html .= '<td style="width: 10%; text-align: right;">' . __('payments.rate') . '</td>';
             $html .= '<td style="width: 10%; text-align: right;">' . __('payments.amount') . '</td>';
+            $html .= '<td style="width: 12%; text-align: center;">' . __('payments.status') . '</td>';
             $html .= '</tr>';
             $html .= '</thead>';
             $html .= '<tbody>';
@@ -216,6 +219,18 @@ class PaymentReportController extends BaseController {
                 $html .= '<td style="text-align: center;">' . number_format($entry['hours_worked'], 2) . '</td>';
                 $html .= '<td style="text-align: right;">' . formatCurrency($entry['hourly_rate']) . '</td>';
                 $html .= '<td style="text-align: right;"><strong>' . formatCurrency($entry['subtotal']) . '</strong></td>';
+                
+                // Payment status column
+                if ($isPaid) {
+                    $paidInfo = '✓ ' . formatDate($entry['paid_at'], true);
+                    if (!empty($entry['paid_by_name'])) {
+                        $paidInfo .= '<br/><small>' . htmlspecialchars($entry['paid_by_name']) . '</small>';
+                    }
+                    $html .= '<td style="text-align: center; font-size: 8px; color: #0f5132;">' . $paidInfo . '</td>';
+                } else {
+                    $html .= '<td style="text-align: center; color: #999;">-</td>';
+                }
+                
                 $html .= '</tr>';
             }
             
@@ -225,6 +240,7 @@ class PaymentReportController extends BaseController {
             $html .= '<td style="text-align: center;">' . number_format($techData['total_hours'], 2) . ' h</td>';
             $html .= '<td></td>';
             $html .= '<td style="text-align: right;">' . formatCurrency($techData['total_amount']) . '</td>';
+            $html .= '<td></td>';
             $html .= '</tr>';
             
             $html .= '</tbody>';
