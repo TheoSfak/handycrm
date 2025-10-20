@@ -1,3 +1,10 @@
+<?php
+// Prevent duplicate footer rendering
+if (defined('FOOTER_RENDERED')) {
+    return;
+}
+define('FOOTER_RENDERED', true);
+?>
         </div> <!-- End content-wrapper -->
         
         <!-- Application Footer -->
