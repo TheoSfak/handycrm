@@ -247,189 +247,232 @@ require_once 'views/includes/header.php';
 </div>
 
 <script>
-$(document).ready(function() {
-    // Update selected count
-    function updateSelectedCount($card) {
-        const count = $card.find('.entry-checkbox:checked').length;
-        $card.find('.selected-count').text(count);
+document.addEventListener('DOMContentLoaded', function() {
+    // Update selected count for a card
+    function updateSelectedCount(card) {
+        const checkedCount = card.querySelectorAll('.entry-checkbox:checked').length;
+        const countSpan = card.querySelector('.selected-count');
+        if (countSpan) {
+            countSpan.textContent = checkedCount;
+        }
     }
 
-    // Select all checkboxes in a card
-    $('.select-all-checkbox').on('change', function() {
-        const $card = $(this).closest('.technician-card');
-        $card.find('.entry-checkbox').prop('checked', this.checked);
-        updateSelectedCount($card);
-    });
-
-    // Select all button
-    $('.select-all-btn').on('click', function() {
-        const $card = $(this).closest('.technician-card');
-        $card.find('.entry-checkbox').prop('checked', true);
-        $card.find('.select-all-checkbox').prop('checked', true);
-        updateSelectedCount($card);
-    });
-
-    // Deselect all button
-    $('.deselect-all-btn').on('click', function() {
-        const $card = $(this).closest('.technician-card');
-        $card.find('.entry-checkbox').prop('checked', false);
-        $card.find('.select-all-checkbox').prop('checked', false);
-        updateSelectedCount($card);
-    });
-
-    // Update count when individual checkbox changes
-    $('.entry-checkbox').on('change', function() {
-        const $card = $(this).closest('.technician-card');
-        updateSelectedCount($card);
-        
-        // Update select-all checkbox state
-        const total = $card.find('.entry-checkbox').length;
-        const checked = $card.find('.entry-checkbox:checked').length;
-        $card.find('.select-all-checkbox').prop('checked', total === checked);
-    });
-
-    // Mark selected entries as paid
-    $('.mark-selected-paid-btn').on('click', function() {
-        const $card = $(this).closest('.technician-card');
-        const selectedIds = $card.find('.entry-checkbox:checked').map(function() {
-            return $(this).val();
-        }).get();
-
-        if (selectedIds.length === 0) {
-            alert('<?= __('payments.no_entries_selected') ?>');
-            return;
+    // Get all technician cards
+    const cards = document.querySelectorAll('.technician-card');
+    
+    cards.forEach(card => {
+        // Select all checkbox in header
+        const selectAllCheckbox = card.querySelector('.select-all-checkbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                const entryCheckboxes = card.querySelectorAll('.entry-checkbox');
+                entryCheckboxes.forEach(cb => cb.checked = this.checked);
+                updateSelectedCount(card);
+            });
         }
 
-        if (!confirm(`<?= __('payments.mark_selected_paid') ?>? (${selectedIds.length} <?= __('payments.selected') ?>)`)) {
-            return;
+        // Select all button
+        const selectAllBtn = card.querySelector('.select-all-btn');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                const entryCheckboxes = card.querySelectorAll('.entry-checkbox');
+                entryCheckboxes.forEach(cb => cb.checked = true);
+                if (selectAllCheckbox) selectAllCheckbox.checked = true;
+                updateSelectedCount(card);
+            });
         }
 
-        $.ajax({
-            url: '<?= BASE_URL ?>/payments/mark-entries-paid',
-            method: 'POST',
-            data: { labor_ids: selectedIds },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message || '<?= __('payments.error') ?>');
+        // Deselect all button
+        const deselectAllBtn = card.querySelector('.deselect-all-btn');
+        if (deselectAllBtn) {
+            deselectAllBtn.addEventListener('click', function() {
+                const entryCheckboxes = card.querySelectorAll('.entry-checkbox');
+                entryCheckboxes.forEach(cb => cb.checked = false);
+                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                updateSelectedCount(card);
+            });
+        }
+
+        // Individual checkbox change
+        const entryCheckboxes = card.querySelectorAll('.entry-checkbox');
+        entryCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateSelectedCount(card);
+                
+                // Update select-all checkbox state
+                const total = card.querySelectorAll('.entry-checkbox').length;
+                const checked = card.querySelectorAll('.entry-checkbox:checked').length;
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = (total === checked);
                 }
-            },
-            error: function() {
-                alert('<?= __('payments.error_updating') ?>');
-            }
+            });
         });
-    });
 
-    // Mark selected entries as unpaid
-    $('.mark-selected-unpaid-btn').on('click', function() {
-        const $card = $(this).closest('.technician-card');
-        const selectedIds = $card.find('.entry-checkbox:checked').map(function() {
-            return $(this).val();
-        }).get();
+        // Mark selected entries as paid
+        const markSelectedPaidBtn = card.querySelector('.mark-selected-paid-btn');
+        if (markSelectedPaidBtn) {
+            markSelectedPaidBtn.addEventListener('click', function() {
+                const selectedCheckboxes = card.querySelectorAll('.entry-checkbox:checked');
+                const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
 
-        if (selectedIds.length === 0) {
-            alert('<?= __('payments.no_entries_selected') ?>');
-            return;
-        }
-
-        if (!confirm(`<?= __('payments.mark_selected_unpaid') ?>? (${selectedIds.length} <?= __('payments.selected') ?>)`)) {
-            return;
-        }
-
-        $.ajax({
-            url: '<?= BASE_URL ?>/payments/mark-entries-unpaid',
-            method: 'POST',
-            data: { labor_ids: selectedIds },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message || '<?= __('payments.error') ?>');
+                if (selectedIds.length === 0) {
+                    alert('<?= __('payments.no_entries_selected') ?>');
+                    return;
                 }
-            },
-            error: function() {
-                alert('<?= __('payments.error_updating') ?>');
-            }
-        });
-    });
 
-    // Mark entire week as paid
-    $('.mark-week-paid-btn').on('click', function() {
-        const technicianId = $(this).data('technician-id');
-        const weekStart = $(this).data('week-start');
-        const weekEnd = $(this).data('week-end');
+                if (!confirm(`<?= __('payments.mark_selected_paid') ?>? (${selectedIds.length} <?= __('payments.selected') ?>)`)) {
+                    return;
+                }
 
-        if (!confirm('<?= __('payments.mark_week_paid') ?>?')) {
-            return;
+                // Send AJAX request
+                const formData = new FormData();
+                selectedIds.forEach(id => formData.append('labor_ids[]', id));
+
+                fetch('<?= BASE_URL ?>/payments/mark-entries-paid', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || '<?= __('payments.error') ?>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('<?= __('payments.error_updating') ?>');
+                });
+            });
         }
 
-        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i><?= __('payments.processing') ?>');
+        // Mark selected entries as unpaid
+        const markSelectedUnpaidBtn = card.querySelector('.mark-selected-unpaid-btn');
+        if (markSelectedUnpaidBtn) {
+            markSelectedUnpaidBtn.addEventListener('click', function() {
+                const selectedCheckboxes = card.querySelectorAll('.entry-checkbox:checked');
+                const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
 
-        $.ajax({
-            url: '<?= BASE_URL ?>/payments/mark-week-paid',
-            method: 'POST',
-            data: {
-                technician_id: technicianId,
-                week_start: weekStart,
-                week_end: weekEnd
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message || '<?= __('payments.error') ?>');
+                if (selectedIds.length === 0) {
+                    alert('<?= __('payments.no_entries_selected') ?>');
+                    return;
                 }
-            },
-            error: function() {
-                alert('<?= __('payments.error_updating') ?>');
-            },
-            complete: function() {
-                $('.mark-week-paid-btn').prop('disabled', false).html('<i class="fas fa-check-double me-2"></i><?= __('payments.mark_week_paid') ?>');
-            }
-        });
-    });
 
-    // Mark entire week as unpaid
-    $('.mark-week-unpaid-btn').on('click', function() {
-        const technicianId = $(this).data('technician-id');
-        const weekStart = $(this).data('week-start');
-        const weekEnd = $(this).data('week-end');
+                if (!confirm(`<?= __('payments.mark_selected_unpaid') ?>? (${selectedIds.length} <?= __('payments.selected') ?>)`)) {
+                    return;
+                }
 
-        if (!confirm('<?= __('payments.mark_week_unpaid') ?>?')) {
-            return;
+                const formData = new FormData();
+                selectedIds.forEach(id => formData.append('labor_ids[]', id));
+
+                fetch('<?= BASE_URL ?>/payments/mark-entries-unpaid', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || '<?= __('payments.error') ?>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('<?= __('payments.error_updating') ?>');
+                });
+            });
         }
 
-        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i><?= __('payments.processing') ?>');
+        // Mark entire week as paid
+        const markWeekPaidBtn = card.querySelector('.mark-week-paid-btn');
+        if (markWeekPaidBtn) {
+            markWeekPaidBtn.addEventListener('click', function() {
+                const technicianId = this.dataset.technicianId;
+                const weekStart = this.dataset.weekStart;
+                const weekEnd = this.dataset.weekEnd;
 
-        $.ajax({
-            url: '<?= BASE_URL ?>/payments/mark-week-unpaid',
-            method: 'POST',
-            data: {
-                technician_id: technicianId,
-                week_start: weekStart,
-                week_end: weekEnd
-            },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
-                } else {
-                    alert(response.message || '<?= __('payments.error') ?>');
+                if (!confirm('<?= __('payments.mark_week_paid') ?>?')) {
+                    return;
                 }
-            },
-            error: function() {
-                alert('<?= __('payments.error_updating') ?>');
-            },
-            complete: function() {
-                $('.mark-week-unpaid-btn').prop('disabled', false).html('<i class="fas fa-undo me-2"></i><?= __('payments.mark_week_unpaid') ?>');
-            }
-        });
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><?= __('payments.processing') ?>';
+
+                const formData = new FormData();
+                formData.append('technician_id', technicianId);
+                formData.append('week_start', weekStart);
+                formData.append('week_end', weekEnd);
+
+                fetch('<?= BASE_URL ?>/payments/mark-week-paid', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || '<?= __('payments.error') ?>');
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-check-double me-2"></i><?= __('payments.mark_week_paid') ?>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('<?= __('payments.error_updating') ?>');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check-double me-2"></i><?= __('payments.mark_week_paid') ?>';
+                });
+            });
+        }
+
+        // Mark entire week as unpaid
+        const markWeekUnpaidBtn = card.querySelector('.mark-week-unpaid-btn');
+        if (markWeekUnpaidBtn) {
+            markWeekUnpaidBtn.addEventListener('click', function() {
+                const technicianId = this.dataset.technicianId;
+                const weekStart = this.dataset.weekStart;
+                const weekEnd = this.dataset.weekEnd;
+
+                if (!confirm('<?= __('payments.mark_week_unpaid') ?>?')) {
+                    return;
+                }
+
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i><?= __('payments.processing') ?>';
+
+                const formData = new FormData();
+                formData.append('technician_id', technicianId);
+                formData.append('week_start', weekStart);
+                formData.append('week_end', weekEnd);
+
+                fetch('<?= BASE_URL ?>/payments/mark-week-unpaid', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.message || '<?= __('payments.error') ?>');
+                        this.disabled = false;
+                        this.innerHTML = '<i class="fas fa-undo me-2"></i><?= __('payments.mark_week_unpaid') ?>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('<?= __('payments.error_updating') ?>');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-undo me-2"></i><?= __('payments.mark_week_unpaid') ?>';
+                });
+            });
+        }
     });
 });
 </script>
 
 <?php require_once 'views/includes/footer.php'; ?>
+
