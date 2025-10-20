@@ -106,7 +106,7 @@ require_once 'views/includes/header.php';
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-muted mb-1">Συνολικά Κέρδη</h6>
+                                <h6 class="text-muted mb-1">Συνολική Μισθοδοσία</h6>
                                 <h3 class="mb-0 text-primary"><?= formatCurrency($grandTotalAmount) ?></h3>
                                 <small class="text-muted"><?= number_format($grandTotalHours, 2) ?>h</small>
                             </div>
@@ -457,12 +457,12 @@ function setDateRange(preset) {
             break;
     }
     
-    // Format dates as YYYY-MM-DD for input fields
+    // Format dates as dd/mm/yyyy for Greek format input fields
     const formatDate = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return `${day}/${month}/${year}`;
     };
     
     weekStartInput.value = formatDate(startDate);
