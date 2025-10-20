@@ -1046,7 +1046,12 @@
         "no_entries_selected": "Δεν έχετε επιλέξει καμία εργασία",
         "select_all": "Επιλογή Όλων",
         "deselect_all": "Αποεπιλογή Όλων",
-        "paid_on": "Πληρώθηκε στις"
+        "paid_on": "Πληρώθηκε στις",
+        "payment_report": "Αναφορά Πληρωμών",
+        "period": "Περίοδος",
+        "status": "Κατάσταση",
+        "generate_pdf": "Εκτύπωση PDF",
+        "report_generated_on": "Αναφορά δημιουργήθηκε στις"
     }
 }
 

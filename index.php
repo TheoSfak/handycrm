@@ -111,6 +111,7 @@ $router->add('/projects/report/{id}', 'ProjectReportController', 'generate');
 
 // Payment routes
 $router->add('/payments', 'PaymentsController', 'index');
+$router->add('/payments/report', 'PaymentReportController', 'generate');
 $router->add('/payments/mark-paid', 'PaymentsController', 'markPaid');
 $router->add('/payments/mark-unpaid', 'PaymentsController', 'markUnpaid');
 $router->add('/payments/mark-entries-paid', 'PaymentsController', 'markEntriesPaid');
@@ -335,28 +336,35 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         exit;
     }
     
-    require_once 'controllers/PaymentsController.php';
-    $controller = new PaymentsController();
-    
-    if ($currentRoute === '/payments' || $currentRoute === '/payments/') {
-        $controller->index();
-    } elseif ($currentRoute === '/payments/mark-paid') {
-        $controller->markPaid();
-    } elseif ($currentRoute === '/payments/mark-unpaid') {
-        $controller->markUnpaid();
-    } elseif ($currentRoute === '/payments/mark-entries-paid') {
-        $controller->markEntriesPaid();
-    } elseif ($currentRoute === '/payments/mark-entries-unpaid') {
-        $controller->markEntriesUnpaid();
-    } elseif ($currentRoute === '/payments/mark-week-paid') {
-        $controller->markWeekPaid();
-    } elseif ($currentRoute === '/payments/mark-week-unpaid') {
-        $controller->markWeekUnpaid();
-    } elseif ($currentRoute === '/payments/history') {
-        $controller->history();
+    if ($currentRoute === '/payments/report') {
+        require_once 'controllers/PaymentReportController.php';
+        $controller = new PaymentReportController();
+        $controller->generate();
     } else {
-        header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 - Payments page not found</h1>";
+        require_once 'controllers/PaymentsController.php';
+        $controller = new PaymentsController();
+        
+        if ($currentRoute === '/payments' || $currentRoute === '/payments/') {
+            $controller->index();
+        } elseif ($currentRoute === '/payments/mark-paid') {
+            $controller->markPaid();
+        } elseif ($currentRoute === '/payments/mark-unpaid') {
+            $controller->markUnpaid();
+        } elseif ($currentRoute === '/payments/mark-entries-paid') {
+            $controller->markEntriesPaid();
+        } elseif ($currentRoute === '/payments/mark-entries-unpaid') {
+            $controller->markEntriesUnpaid();
+        } elseif ($currentRoute === '/payments/mark-week-paid') {
+            $controller->markWeekPaid();
+        } elseif ($currentRoute === '/payments/mark-week-unpaid') {
+            $controller->markWeekUnpaid();
+        } elseif ($currentRoute === '/payments/history') {
+            $controller->history();
+        } else {
+            header('HTTP/1.0 404 Not Found');
+            echo "<h1>404 - Payments page not found</h1>";
+        }
+    }
     }
     
 } elseif (strpos($currentRoute, '/appointments') === 0) {

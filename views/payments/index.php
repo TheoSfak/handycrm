@@ -61,10 +61,14 @@ require_once 'views/includes/header.php';
                     </select>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">
+                <div class="col-md-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
                         <i class="fas fa-search me-1"></i><?= __('payments.filter') ?>
                     </button>
+                    <a href="<?= BASE_URL ?>/payments/report?date_from=<?= $weekStart ?>&date_to=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?><?= $selectedTechnician ? '&technician_id=' . $selectedTechnician : '' ?>" 
+                       class="btn btn-danger flex-fill" target="_blank" title="<?= __('payments.generate_pdf') ?>">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
                 </div>
             </form>
         </div>

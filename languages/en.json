@@ -1050,7 +1050,13 @@
         "no_entries_selected": "No entries selected",
         "select_all": "Select All",
         "deselect_all": "Deselect All",
-        "paid_on": "Paid on"
+        "paid_on": "Paid on",
+        "payment_report": "Payment Report",
+        "period": "Period",
+        "status": "Status",
+        "generate_pdf": "Generate PDF",
+        "report_generated_on": "Report generated on"
     }
 }
+
 
