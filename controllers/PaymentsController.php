@@ -4,7 +4,9 @@
  * Manages weekly technician payments
  */
 
-class PaymentsController extends Controller {
+require_once 'classes/BaseController.php';
+
+class PaymentsController extends BaseController {
     private $paymentModel;
     private $technicianModel;
     
