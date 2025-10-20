@@ -5,7 +5,7 @@
  */
 
 require_once 'classes/BaseController.php';
-require_once 'vendor/tecnickcom/tcpdf/tcpdf.php';
+require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
 
 class PaymentReportController extends BaseController {
     private $paymentModel;
