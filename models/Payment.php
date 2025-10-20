@@ -4,7 +4,9 @@
  * Handles weekly technician payments
  */
 
-class Payment extends Model {
+require_once 'classes/BaseModel.php';
+
+class Payment extends BaseModel {
     protected $table = 'payments';
     
     /**
