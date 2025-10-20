@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `payments` (
     KEY `idx_technician` (`technician_id`),
     KEY `idx_week` (`week_start`, `week_end`),
     KEY `idx_paid` (`paid_at`),
-    CONSTRAINT `fk_payment_technician` FOREIGN KEY (`technician_id`) REFERENCES `technicians` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_payment_technician` FOREIGN KEY (`technician_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_payment_user` FOREIGN KEY (`paid_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

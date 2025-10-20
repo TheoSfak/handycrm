@@ -8,20 +8,20 @@ require_once 'classes/BaseController.php';
 
 class PaymentsController extends BaseController {
     private $paymentModel;
-    private $technicianModel;
+    private $userModel;
     
     public function __construct() {
         parent::__construct();
         $this->paymentModel = new Payment();
-        $this->technicianModel = new Technician();
+        $this->userModel = new User();
     }
     
     /**
      * Display payments page with filters
      */
     public function index() {
-        // Get all technicians for dropdown
-        $technicians = $this->technicianModel->getAll();
+        // Get all active technicians/assistants from users for dropdown
+        $technicians = $this->userModel->getByRole(['technician', 'assistant']);
         
         // Get filter parameters
         $selectedTechnician = $_GET['technician_id'] ?? null;

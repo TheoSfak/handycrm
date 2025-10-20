@@ -18,31 +18,33 @@ class Payment extends BaseModel {
      */
     public function getTechniciansForWeek($weekStart, $weekEnd) {
         $sql = "SELECT 
-                    t.id as technician_id,
-                    t.name as technician_name,
-                    t.hourly_rate,
+                    u.id as technician_id,
+                    CONCAT(u.first_name, ' ', u.last_name) as technician_name,
+                    u.hourly_rate,
                     COUNT(DISTINCT tl.id) as entry_count,
                     SUM(tl.hours_worked) as total_hours,
                     SUM(tl.subtotal) as total_amount,
                     p.id as payment_id,
                     p.paid_at,
                     p.paid_by,
-                    u.username as paid_by_user
-                FROM technicians t
-                INNER JOIN task_labor tl ON t.id = tl.technician_id
+                    paid_by_user.username as paid_by_user
+                FROM users u
+                INNER JOIN task_labor tl ON u.id = tl.technician_id
                 INNER JOIN project_tasks pt ON tl.task_id = pt.id
                 LEFT JOIN payments p ON (
-                    p.technician_id = t.id 
+                    p.technician_id = u.id 
                     AND p.week_start = ? 
                     AND p.week_end = ?
                 )
-                LEFT JOIN users u ON p.paid_by = u.id
-                WHERE (
+                LEFT JOIN users paid_by_user ON p.paid_by = paid_by_user.id
+                WHERE u.is_active = 1
+                AND u.role IN ('technician', 'assistant')
+                AND (
                     (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
                     OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
                 )
-                GROUP BY t.id, t.name, t.hourly_rate, p.id, p.paid_at, p.paid_by, u.username
-                ORDER BY t.name";
+                GROUP BY u.id, u.first_name, u.last_name, u.hourly_rate, p.id, p.paid_at, p.paid_by, paid_by_user.username
+                ORDER BY u.first_name, u.last_name";
                 
         return $this->query($sql, [$weekStart, $weekEnd, $weekStart, $weekEnd, $weekEnd, $weekStart]);
     }
@@ -64,11 +66,11 @@ class Payment extends BaseModel {
                     pt.date_to,
                     pt.task_type,
                     p.title as project_title,
-                    t.name as technician_name
+                    CONCAT(u.first_name, ' ', u.last_name) as technician_name
                 FROM task_labor tl
                 INNER JOIN project_tasks pt ON tl.task_id = pt.id
                 INNER JOIN projects p ON pt.project_id = p.id
-                INNER JOIN technicians t ON tl.technician_id = t.id
+                INNER JOIN users u ON tl.technician_id = u.id
                 WHERE tl.technician_id = ?
                 AND (
                     (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
