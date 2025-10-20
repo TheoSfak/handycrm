@@ -1,0 +1,14 @@
+# Οδηγίες για ανέβασμα μέσω SCP/SFTP
+
+# Αν χρησιμοποιείς SCP:
+scp C:\Users\user\Desktop\handycrm\languages\el.json user@1stop.gr:/path/to/handycrm/languages/
+scp C:\Users\user\Desktop\handycrm\languages\en.json user@1stop.gr:/path/to/handycrm/languages/
+
+# Αν χρησιμοποιείς WinSCP ή FileZilla:
+# 1. Συνδέσου στον server
+# 2. Πήγαινε στο /handycrm/languages/
+# 3. Κάνε upload τα el.json και en.json
+
+# Μετά από το upload, έλεγξε ότι τα αρχεία έχουν τα σωστά permissions:
+chmod 644 /path/to/handycrm/languages/el.json
+chmod 644 /path/to/handycrm/languages/en.json

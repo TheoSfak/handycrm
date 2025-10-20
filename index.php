@@ -109,6 +109,12 @@ $router->add('/projects/show/{id}', 'ProjectController', 'show');
 $router->add('/projects/details/{id}', 'ProjectController', 'details');
 $router->add('/projects/report/{id}', 'ProjectReportController', 'generate');
 
+// Payment routes
+$router->add('/payments', 'PaymentsController', 'index');
+$router->add('/payments/mark-paid', 'PaymentsController', 'markPaid');
+$router->add('/payments/mark-unpaid', 'PaymentsController', 'markUnpaid');
+$router->add('/payments/history', 'PaymentsController', 'history');
+
 // Appointment routes (future implementation)
 $router->add('/appointments', 'AppointmentController', 'index');
 $router->add('/appointments/create', 'AppointmentController', 'create');
@@ -316,6 +322,29 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         // 404 for projects
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - Project page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/payments') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/PaymentsController.php';
+    $controller = new PaymentsController();
+    
+    if ($currentRoute === '/payments' || $currentRoute === '/payments/') {
+        $controller->index();
+    } elseif ($currentRoute === '/payments/mark-paid') {
+        $controller->markPaid();
+    } elseif ($currentRoute === '/payments/mark-unpaid') {
+        $controller->markUnpaid();
+    } elseif ($currentRoute === '/payments/history') {
+        $controller->history();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Payments page not found</h1>";
     }
     
 } elseif (strpos($currentRoute, '/appointments') === 0) {

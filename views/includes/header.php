@@ -238,8 +238,14 @@
             </li>
             
             <li class="nav-item">
-                <a class="nav-link <?= strpos($currentRoute, '/projects') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/projects">
+                <a class="nav-link <?= strpos($currentRoute, '/projects') !== false && strpos($currentRoute, '/payments') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/projects">
                     <i class="fas fa-project-diagram"></i> <?= __('menu.projects') ?>
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/payments') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/payments">
+                    <i class="fas fa-money-bill-wave"></i> <?= __('menu.payments') ?>
                 </a>
             </li>
             
