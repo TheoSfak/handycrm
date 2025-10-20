@@ -661,6 +661,13 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         }
     } elseif (preg_match('/^\/users\/show\/(\d+)$/', $currentRoute, $matches)) {
         $controller->show($matches[1]);
+    } elseif (preg_match('/^\/users\/edit\/(\d+)$/', $currentRoute, $matches)) {
+        $_GET['id'] = $matches[1]; // Set the ID for the edit method
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
     } elseif ($currentRoute === '/users/edit') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();
