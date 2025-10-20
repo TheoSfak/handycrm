@@ -191,13 +191,10 @@
                 <hr>
                 
                 <div class="d-grid gap-2">
-                    <button class="btn btn-primary" onclick="window.print()">
-                        <i class="fas fa-print"></i> <?= __('quotes.print') ?>
-                    </button>
-                    
-                    <button class="btn btn-success" onclick="exportToPDF()">
+                    <a href="<?= BASE_URL ?>/quotes/export-pdf?id=<?= $quote['id'] ?>" 
+                       class="btn btn-danger" target="_blank">
                         <i class="fas fa-file-pdf"></i> <?= __('quotes.export_pdf') ?>
-                    </button>
+                    </a>
                     
                     <a href="<?= BASE_URL ?>/quotes/edit/<?= $quote['id'] ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i> <?= __('quotes.edit') ?>

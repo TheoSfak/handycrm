@@ -424,6 +424,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         }
     } elseif ($currentRoute === '/quotes/details') {
         $controller->details();
+    } elseif ($currentRoute === '/quotes/export-pdf') {
+        require_once 'controllers/QuoteExportController.php';
+        $exportController = new QuoteExportController();
+        $exportController->generatePDF();
     } elseif ($currentRoute === '/quotes/edit') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();
