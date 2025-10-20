@@ -107,9 +107,12 @@ require_once 'views/includes/header.php';
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($tech['entries'] as $entry): ?>
+                                    <?php foreach ($tech['entries'] as $entry): 
+                                        // Get the work date from either task_date (single_day) or date_from (date_range)
+                                        $workDate = $entry['task_date'] ?: $entry['date_from'];
+                                    ?>
                                         <tr>
-                                            <td><?= formatDate($entry['work_date']) ?></td>
+                                            <td><?= formatDate($workDate) ?></td>
                                             <td>
                                                 <strong><?= htmlspecialchars($entry['project_title']) ?></strong>
                                             </td>
