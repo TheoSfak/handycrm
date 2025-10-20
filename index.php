@@ -365,7 +365,6 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
             echo "<h1>404 - Payments page not found</h1>";
         }
     }
-    }
     
 } elseif (strpos($currentRoute, '/appointments') === 0) {
     // Check if user is logged in
