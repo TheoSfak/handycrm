@@ -27,6 +27,7 @@ class PaymentsController extends BaseController {
         $selectedTechnician = $_GET['technician_id'] ?? null;
         $weekStart = $_GET['week_start'] ?? null;
         $weekEnd = $_GET['week_end'] ?? null;
+        $paidStatus = $_GET['paid_status'] ?? 'all'; // 'all', 'paid', 'unpaid'
         
         // If no dates provided, use last completed week
         if (!$weekStart || !$weekEnd) {
@@ -45,13 +46,38 @@ class PaymentsController extends BaseController {
             });
         }
         
-        // Get labor entries for each technician
+        // Get labor entries for each technician and apply paid status filter
         foreach ($weeklyData as &$tech) {
-            $tech['entries'] = $this->paymentModel->getLaborEntriesForWeek(
+            $entries = $this->paymentModel->getLaborEntriesForWeek(
                 $tech['technician_id'],
                 $weekStart,
                 $weekEnd
             );
+            
+            // Filter by paid status
+            if ($paidStatus === 'paid') {
+                $entries = array_filter($entries, function($entry) {
+                    return !empty($entry['paid_at']);
+                });
+            } elseif ($paidStatus === 'unpaid') {
+                $entries = array_filter($entries, function($entry) {
+                    return empty($entry['paid_at']);
+                });
+            }
+            
+            $tech['entries'] = array_values($entries); // Re-index array
+            
+            // Recalculate totals based on filtered entries
+            $tech['filtered_total_hours'] = array_sum(array_column($entries, 'hours_worked'));
+            $tech['filtered_total_amount'] = array_sum(array_column($entries, 'subtotal'));
+            $tech['filtered_entry_count'] = count($entries);
+        }
+        
+        // Remove technicians with no entries after filtering
+        if ($paidStatus !== 'all') {
+            $weeklyData = array_filter($weeklyData, function($tech) {
+                return !empty($tech['entries']);
+            });
         }
         
         $this->view('payments/index', [
@@ -59,6 +85,7 @@ class PaymentsController extends BaseController {
             'selectedTechnician' => $selectedTechnician,
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd,
+            'paidStatus' => $paidStatus,
             'weeklyData' => $weeklyData,
             'pageTitle' => __('payments.page_title')
         ]);
@@ -172,4 +199,154 @@ class PaymentsController extends BaseController {
             'history' => $history
         ]);
     }
+    
+    /**
+     * Mark individual labor entries as paid (AJAX)
+     */
+    public function markEntriesPaid() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        try {
+            $laborIds = $_POST['labor_ids'] ?? [];
+            
+            if (empty($laborIds) || !is_array($laborIds)) {
+                throw new Exception('No labor entries selected');
+            }
+            
+            $userId = $_SESSION['user_id'] ?? null;
+            if (!$userId) {
+                throw new Exception('User not authenticated');
+            }
+            
+            $success = $this->paymentModel->markLaborEntriesAsPaid($laborIds, $userId);
+            
+            echo json_encode([
+                'success' => $success,
+                'message' => $success ? __('payments.entries_marked_paid') : __('payments.error_updating'),
+                'paid_at' => date('d/m/Y H:i')
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Mark individual labor entries as unpaid (AJAX)
+     */
+    public function markEntriesUnpaid() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        try {
+            $laborIds = $_POST['labor_ids'] ?? [];
+            
+            if (empty($laborIds) || !is_array($laborIds)) {
+                throw new Exception('No labor entries selected');
+            }
+            
+            $success = $this->paymentModel->markLaborEntriesAsUnpaid($laborIds);
+            
+            echo json_encode([
+                'success' => $success,
+                'message' => $success ? __('payments.entries_marked_unpaid') : __('payments.error_updating')
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Mark entire week as paid for a technician (AJAX)
+     */
+    public function markWeekPaid() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        try {
+            $technicianId = $_POST['technician_id'] ?? null;
+            $weekStart = $_POST['week_start'] ?? null;
+            $weekEnd = $_POST['week_end'] ?? null;
+            
+            if (!$technicianId || !$weekStart || !$weekEnd) {
+                throw new Exception('Missing required parameters');
+            }
+            
+            $userId = $_SESSION['user_id'] ?? null;
+            if (!$userId) {
+                throw new Exception('User not authenticated');
+            }
+            
+            $paymentId = $this->paymentModel->markWeekAsPaid($technicianId, $weekStart, $weekEnd, $userId);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => __('payments.week_marked_paid'),
+                'payment_id' => $paymentId,
+                'paid_at' => date('d/m/Y H:i')
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Mark entire week as unpaid for a technician (AJAX)
+     */
+    public function markWeekUnpaid() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        try {
+            $technicianId = $_POST['technician_id'] ?? null;
+            $weekStart = $_POST['week_start'] ?? null;
+            $weekEnd = $_POST['week_end'] ?? null;
+            
+            if (!$technicianId || !$weekStart || !$weekEnd) {
+                throw new Exception('Missing required parameters');
+            }
+            
+            $success = $this->paymentModel->markWeekAsUnpaid($technicianId, $weekStart, $weekEnd);
+            
+            echo json_encode([
+                'success' => $success,
+                'message' => $success ? __('payments.week_marked_unpaid') : __('payments.error_updating')
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
 }
+

@@ -113,6 +113,10 @@ $router->add('/projects/report/{id}', 'ProjectReportController', 'generate');
 $router->add('/payments', 'PaymentsController', 'index');
 $router->add('/payments/mark-paid', 'PaymentsController', 'markPaid');
 $router->add('/payments/mark-unpaid', 'PaymentsController', 'markUnpaid');
+$router->add('/payments/mark-entries-paid', 'PaymentsController', 'markEntriesPaid');
+$router->add('/payments/mark-entries-unpaid', 'PaymentsController', 'markEntriesUnpaid');
+$router->add('/payments/mark-week-paid', 'PaymentsController', 'markWeekPaid');
+$router->add('/payments/mark-week-unpaid', 'PaymentsController', 'markWeekUnpaid');
 $router->add('/payments/history', 'PaymentsController', 'history');
 
 // Appointment routes (future implementation)

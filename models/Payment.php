@@ -202,4 +202,104 @@ class Payment extends BaseModel {
                 
         return $this->query($sql, [$technicianId, $limit]);
     }
+    
+    /**
+     * Mark individual task labor entries as paid
+     * 
+     * @param array $laborIds Array of task_labor IDs
+     * @param int $userId User who marked as paid
+     * @return bool
+     */
+    public function markLaborEntriesAsPaid($laborIds, $userId) {
+        if (empty($laborIds)) {
+            return false;
+        }
+        
+        $placeholders = str_repeat('?,', count($laborIds) - 1) . '?';
+        $sql = "UPDATE task_labor 
+                SET paid_at = NOW(), paid_by = ? 
+                WHERE id IN ($placeholders)";
+        
+        $params = array_merge([$userId], $laborIds);
+        return $this->db->execute($sql, $params);
+    }
+    
+    /**
+     * Mark individual task labor entries as unpaid (revert)
+     * 
+     * @param array $laborIds Array of task_labor IDs
+     * @return bool
+     */
+    public function markLaborEntriesAsUnpaid($laborIds) {
+        if (empty($laborIds)) {
+            return false;
+        }
+        
+        $placeholders = str_repeat('?,', count($laborIds) - 1) . '?';
+        $sql = "UPDATE task_labor 
+                SET paid_at = NULL, paid_by = NULL 
+                WHERE id IN ($placeholders)";
+        
+        return $this->db->execute($sql, $laborIds);
+    }
+    
+    /**
+     * Mark all labor entries for a technician's week as paid
+     * 
+     * @param int $technicianId
+     * @param string $weekStart
+     * @param string $weekEnd
+     * @param int $userId
+     * @return int Payment ID
+     */
+    public function markWeekAsPaid($technicianId, $weekStart, $weekEnd, $userId) {
+        $sql = "UPDATE task_labor tl
+                INNER JOIN project_tasks pt ON tl.task_id = pt.id
+                SET tl.paid_at = NOW(), tl.paid_by = ?
+                WHERE tl.technician_id = ?
+                AND tl.paid_at IS NULL
+                AND (
+                    (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                    OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+                )";
+        
+        $this->db->execute($sql, [$userId, $technicianId, $weekStart, $weekEnd, $weekEnd, $weekStart]);
+        
+        // Also create/update payment record
+        $entries = $this->getLaborEntriesForWeek($technicianId, $weekStart, $weekEnd);
+        $totalHours = array_sum(array_column($entries, 'hours_worked'));
+        $totalAmount = array_sum(array_column($entries, 'subtotal'));
+        
+        return $this->markAsPaid($technicianId, $weekStart, $weekEnd, $totalHours, $totalAmount, $userId);
+    }
+    
+    /**
+     * Mark all labor entries for a technician's week as unpaid
+     * 
+     * @param int $technicianId
+     * @param string $weekStart
+     * @param string $weekEnd
+     * @return bool
+     */
+    public function markWeekAsUnpaid($technicianId, $weekStart, $weekEnd) {
+        $sql = "UPDATE task_labor tl
+                INNER JOIN project_tasks pt ON tl.task_id = pt.id
+                SET tl.paid_at = NULL, tl.paid_by = NULL
+                WHERE tl.technician_id = ?
+                AND (
+                    (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                    OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+                )";
+        
+        $result = $this->db->execute($sql, [$technicianId, $weekStart, $weekEnd, $weekEnd, $weekStart]);
+        
+        // Also mark payment record as unpaid
+        $payment = $this->getPaymentRecord($technicianId, $weekStart, $weekEnd);
+        if ($payment) {
+            $this->markAsUnpaid($payment['id']);
+        }
+        
+        return $result;
+    }
 }
+

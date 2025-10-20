@@ -14,7 +14,7 @@ require_once 'views/includes/header.php';
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <form method="GET" action="<?= BASE_URL ?>/payments" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label for="technician_id" class="form-label">
                         <i class="fas fa-user me-1"></i><?= __('payments.select_technician') ?>
                     </label>
@@ -28,7 +28,7 @@ require_once 'views/includes/header.php';
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="week_start" class="form-label">
                         <i class="fas fa-calendar me-1"></i><?= __('payments.week_start') ?>
                     </label>
@@ -36,7 +36,7 @@ require_once 'views/includes/header.php';
                            value="<?= $weekStart ?>" required>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="week_end" class="form-label">
                         <i class="fas fa-calendar me-1"></i><?= __('payments.week_end') ?>
                     </label>
@@ -44,74 +44,144 @@ require_once 'views/includes/header.php';
                            value="<?= $weekEnd ?>" required>
                 </div>
 
+                <div class="col-md-3">
+                    <label for="paid_status" class="form-label">
+                        <i class="fas fa-filter me-1"></i><?= __('payments.paid_status') ?>
+                    </label>
+                    <select class="form-select" id="paid_status" name="paid_status">
+                        <option value="all" <?= $paidStatus === 'all' ? 'selected' : '' ?>>
+                            <?= __('payments.all_entries') ?>
+                        </option>
+                        <option value="unpaid" <?= $paidStatus === 'unpaid' ? 'selected' : '' ?>>
+                            <?= __('payments.unpaid_only') ?>
+                        </option>
+                        <option value="paid" <?= $paidStatus === 'paid' ? 'selected' : '' ?>>
+                            <?= __('payments.paid_only') ?>
+                        </option>
+                    </select>
+                </div>
+
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-filter me-1"></i><?= __('payments.filter') ?>
+                        <i class="fas fa-search me-1"></i><?= __('payments.filter') ?>
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Weekly Summary -->
-    <?php if (!empty($weeklyData)): ?>
+    <!-- Results -->
+    <?php if (empty($weeklyData)): ?>
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <?= __('payments.no_data_found') ?>. <?= __('payments.try_different_filters') ?>.
+        </div>
+    <?php else: ?>
         <div class="row mb-3">
             <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    <strong><?= __('payments.showing_week') ?>:</strong> 
-                    <?= formatDate($weekStart) ?> - <?= formatDate($weekEnd) ?>
-                    (<?= count($weeklyData) ?> <?= __('payments.technicians_found') ?>)
-                </div>
+                <h5><?= __('payments.showing_week') ?>: <?= formatDate($weekStart) ?> - <?= formatDate($weekEnd) ?></h5>
+                <p class="text-muted"><?= count($weeklyData) ?> <?= __('payments.technicians_found') ?></p>
             </div>
         </div>
 
-        <!-- Technicians List -->
         <?php foreach ($weeklyData as $tech): ?>
-            <div class="card shadow-sm mb-4" id="tech-card-<?= $tech['technician_id'] ?>">
+            <div class="card shadow-sm mb-4 technician-card" data-technician-id="<?= $tech['technician_id'] ?>">
                 <div class="card-header bg-primary text-white">
                     <div class="row align-items-center">
                         <div class="col-md-4">
                             <h5 class="mb-0">
-                                <i class="fas fa-user me-2"></i>
+                                <i class="fas fa-user-hard-hat me-2"></i>
                                 <?= htmlspecialchars($tech['technician_name']) ?>
                             </h5>
+                            <small><?= formatCurrency($tech['hourly_rate']) ?> / <?= __('payments.hours') ?></small>
                         </div>
-                        <div class="col-md-3 text-center">
-                            <strong><?= __('payments.hourly_rate') ?>:</strong> 
-                            <?= formatCurrency($tech['hourly_rate']) ?>/h
-                        </div>
-                        <div class="col-md-3 text-center">
-                            <strong><?= __('payments.total_hours') ?>:</strong> 
-                            <span class="badge bg-light text-dark fs-6"><?= number_format($tech['total_hours'], 2) ?>h</span>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            <strong><?= __('payments.total_amount') ?>:</strong> 
-                            <span class="badge bg-warning text-dark fs-6"><?= formatCurrency($tech['total_amount']) ?></span>
+                        <div class="col-md-8">
+                            <div class="row text-end">
+                                <div class="col-4">
+                                    <small class="d-block"><?= __('payments.total_hours') ?></small>
+                                    <strong><?= number_format($tech['filtered_total_hours'] ?? $tech['total_hours'], 2) ?>h</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="d-block"><?= __('payments.total_amount') ?></small>
+                                    <strong><?= formatCurrency($tech['filtered_total_amount'] ?? $tech['total_amount']) ?></strong>
+                                </div>
+                                <div class="col-4">
+                                    <?php if (!empty($tech['paid_at'])): ?>
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i><?= __('payments.paid') ?>
+                                        </span>
+                                        <small class="d-block text-white-50 mt-1">
+                                            <?= formatDate($tech['paid_at']) ?>
+                                        </small>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i><?= __('payments.not_paid_yet') ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card-body">
-                    <?php if (!empty($tech['entries'])): ?>
+                    <?php if (empty($tech['entries'])): ?>
+                        <div class="alert alert-info mb-0">
+                            <?= __('payments.no_entries_found') ?>
+                        </div>
+                    <?php else: ?>
+                        <!-- Selection Controls -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-primary select-all-btn">
+                                    <i class="fas fa-check-square me-1"></i><?= __('payments.select_all') ?>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary deselect-all-btn">
+                                    <i class="fas fa-square me-1"></i><?= __('payments.deselect_all') ?>
+                                </button>
+                                <span class="ms-3 text-muted">
+                                    <span class="selected-count">0</span> <?= __('payments.selected') ?>
+                                </span>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-success mark-selected-paid-btn">
+                                    <i class="fas fa-check me-1"></i><?= __('payments.mark_selected_paid') ?>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-warning mark-selected-unpaid-btn">
+                                    <i class="fas fa-undo me-1"></i><?= __('payments.mark_selected_unpaid') ?>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Labor Entries Table -->
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover table-sm">
                                 <thead class="table-light">
                                     <tr>
+                                        <th style="width: 40px;">
+                                            <input type="checkbox" class="form-check-input select-all-checkbox">
+                                        </th>
                                         <th><?= __('payments.date') ?></th>
                                         <th><?= __('payments.project') ?></th>
                                         <th><?= __('payments.task') ?></th>
                                         <th class="text-center"><?= __('payments.hours') ?></th>
                                         <th class="text-end"><?= __('payments.rate') ?></th>
                                         <th class="text-end"><?= __('payments.amount') ?></th>
+                                        <th class="text-center"><?= __('payments.paid') ?></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <?php foreach ($tech['entries'] as $entry): 
-                                        // Get the work date from either task_date (single_day) or date_from (date_range)
                                         $workDate = $entry['task_date'] ?: $entry['date_from'];
+                                        $isPaid = !empty($entry['paid_at']);
                                     ?>
-                                        <tr>
+                                        <tr class="labor-entry-row <?= $isPaid ? 'table-success' : '' ?>" 
+                                            data-entry-id="<?= $entry['id'] ?>"
+                                            data-is-paid="<?= $isPaid ? '1' : '0' ?>">
+                                            <td>
+                                                <input type="checkbox" class="form-check-input entry-checkbox" 
+                                                       value="<?= $entry['id'] ?>">
+                                            </td>
                                             <td><?= formatDate($workDate) ?></td>
                                             <td>
                                                 <strong><?= htmlspecialchars($entry['project_title']) ?></strong>
@@ -124,239 +194,241 @@ require_once 'views/includes/header.php';
                                             <td class="text-end">
                                                 <strong><?= formatCurrency($entry['subtotal']) ?></strong>
                                             </td>
+                                            <td class="text-center">
+                                                <?php if ($isPaid): ?>
+                                                    <span class="badge bg-success" title="<?= __('payments.paid_on') ?> <?= formatDate($entry['paid_at']) ?>">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </span>
+                                                <?php else: ?>
+                                                    <span class="badge bg-secondary">
+                                                        <i class="fas fa-minus-circle"></i>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </td>
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
-                                <tfoot class="table-secondary">
+                                <tfoot class="table-light">
                                     <tr>
-                                        <th colspan="3" class="text-end"><?= __('payments.total') ?>:</th>
-                                        <th class="text-center">
-                                            <strong><?= number_format($tech['total_hours'], 2) ?>h</strong>
-                                        </th>
-                                        <th></th>
-                                        <th class="text-end">
-                                            <strong class="text-success fs-5"><?= formatCurrency($tech['total_amount']) ?></strong>
-                                        </th>
+                                        <td colspan="4" class="text-end"><strong><?= __('payments.total') ?>:</strong></td>
+                                        <td class="text-center">
+                                            <strong><?= number_format($tech['filtered_total_hours'] ?? $tech['total_hours'], 2) ?>h</strong>
+                                        </td>
+                                        <td></td>
+                                        <td class="text-end">
+                                            <strong><?= formatCurrency($tech['filtered_total_amount'] ?? $tech['total_amount']) ?></strong>
+                                        </td>
+                                        <td></td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
 
-                        <!-- Payment Status -->
-                        <div class="mt-3 pt-3 border-top">
-                            <?php if ($tech['paid_at']): ?>
-                                <div class="alert alert-success mb-0">
-                                    <div class="row align-items-center">
-                                        <div class="col-md-8">
-                                            <i class="fas fa-check-circle me-2"></i>
-                                            <strong><?= __('payments.paid') ?>:</strong> 
-                                            <?= formatDate($tech['paid_at'], true) ?>
-                                            <?php if ($tech['paid_by_user']): ?>
-                                                <?= __('payments.by') ?> <?= htmlspecialchars($tech['paid_by_user']) ?>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="col-md-4 text-end">
-                                            <button class="btn btn-outline-danger btn-sm mark-unpaid-btn" 
-                                                    data-payment-id="<?= $tech['payment_id'] ?>"
-                                                    data-technician-id="<?= $tech['technician_id'] ?>">
-                                                <i class="fas fa-undo me-1"></i><?= __('payments.mark_unpaid') ?>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-warning mb-0">
-                                    <div class="row align-items-center">
-                                        <div class="col-md-8">
-                                            <i class="fas fa-exclamation-triangle me-2"></i>
-                                            <strong><?= __('payments.not_paid_yet') ?></strong>
-                                        </div>
-                                        <div class="col-md-4 text-end">
-                                            <button class="btn btn-success mark-paid-btn" 
-                                                    data-technician-id="<?= $tech['technician_id'] ?>"
-                                                    data-technician-name="<?= htmlspecialchars($tech['technician_name']) ?>"
-                                                    data-week-start="<?= $weekStart ?>"
-                                                    data-week-end="<?= $weekEnd ?>"
-                                                    data-total-hours="<?= $tech['total_hours'] ?>"
-                                                    data-total-amount="<?= $tech['total_amount'] ?>">
-                                                <i class="fas fa-check me-1"></i><?= __('payments.mark_as_paid') ?>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-
-                    <?php else: ?>
-                        <div class="alert alert-info mb-0">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <?= __('payments.no_entries_found') ?>
+                        <!-- Week Actions -->
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <button type="button" class="btn btn-lg btn-success mark-week-paid-btn"
+                                    data-technician-id="<?= $tech['technician_id'] ?>"
+                                    data-week-start="<?= $weekStart ?>"
+                                    data-week-end="<?= $weekEnd ?>">
+                                <i class="fas fa-check-double me-2"></i><?= __('payments.mark_week_paid') ?>
+                            </button>
+                            <button type="button" class="btn btn-lg btn-outline-warning mark-week-unpaid-btn"
+                                    data-technician-id="<?= $tech['technician_id'] ?>"
+                                    data-week-start="<?= $weekStart ?>"
+                                    data-week-end="<?= $weekEnd ?>">
+                                <i class="fas fa-undo me-2"></i><?= __('payments.mark_week_unpaid') ?>
+                            </button>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
-
-    <?php else: ?>
-        <div class="card shadow-sm">
-            <div class="card-body text-center py-5">
-                <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                <h4 class="text-muted"><?= __('payments.no_data_found') ?></h4>
-                <p><?= __('payments.try_different_filters') ?></p>
-            </div>
-        </div>
     <?php endif; ?>
 </div>
 
-<!-- Payment Confirmation Modal -->
-<div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-check-circle me-2"></i><?= __('payments.confirm_payment') ?>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="payment-details"></div>
-                <div class="mb-3 mt-3">
-                    <label for="payment-notes" class="form-label"><?= __('payments.notes') ?> (<?= __('payments.optional') ?>)</label>
-                    <textarea class="form-control" id="payment-notes" rows="3" 
-                              placeholder="<?= __('payments.notes_placeholder') ?>"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i><?= __('payments.cancel') ?>
-                </button>
-                <button type="button" class="btn btn-success" id="confirm-payment-btn">
-                    <i class="fas fa-check me-1"></i><?= __('payments.confirm_payment') ?>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
-    let currentPaymentData = {};
+$(document).ready(function() {
+    // Update selected count
+    function updateSelectedCount($card) {
+        const count = $card.find('.entry-checkbox:checked').length;
+        $card.find('.selected-count').text(count);
+    }
 
-    // Mark as Paid button click
-    document.querySelectorAll('.mark-paid-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentPaymentData = {
-                technician_id: this.dataset.technicianId,
-                technician_name: this.dataset.technicianName,
-                week_start: this.dataset.weekStart,
-                week_end: this.dataset.weekEnd,
-                total_hours: this.dataset.totalHours,
-                total_amount: this.dataset.totalAmount
-            };
-
-            // Display payment details in modal
-            document.getElementById('payment-details').innerHTML = `
-                <div class="alert alert-info">
-                    <p><strong><?= __('payments.technician') ?>:</strong> ${currentPaymentData.technician_name}</p>
-                    <p><strong><?= __('payments.week') ?>:</strong> ${formatDateJS(currentPaymentData.week_start)} - ${formatDateJS(currentPaymentData.week_end)}</p>
-                    <p><strong><?= __('payments.total_hours') ?>:</strong> ${parseFloat(currentPaymentData.total_hours).toFixed(2)}h</p>
-                    <p class="mb-0"><strong><?= __('payments.total_amount') ?>:</strong> <span class="text-success fs-5">${formatCurrencyJS(currentPaymentData.total_amount)}</span></p>
-                </div>
-            `;
-
-            paymentModal.show();
-        });
+    // Select all checkboxes in a card
+    $('.select-all-checkbox').on('change', function() {
+        const $card = $(this).closest('.technician-card');
+        $card.find('.entry-checkbox').prop('checked', this.checked);
+        updateSelectedCount($card);
     });
 
-    // Confirm payment
-    document.getElementById('confirm-payment-btn').addEventListener('click', function() {
-        const notes = document.getElementById('payment-notes').value;
-        const btn = this;
-        const originalText = btn.innerHTML;
+    // Select all button
+    $('.select-all-btn').on('click', function() {
+        const $card = $(this).closest('.technician-card');
+        $card.find('.entry-checkbox').prop('checked', true);
+        $card.find('.select-all-checkbox').prop('checked', true);
+        updateSelectedCount($card);
+    });
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i><?= __('payments.processing') ?>';
+    // Deselect all button
+    $('.deselect-all-btn').on('click', function() {
+        const $card = $(this).closest('.technician-card');
+        $card.find('.entry-checkbox').prop('checked', false);
+        $card.find('.select-all-checkbox').prop('checked', false);
+        updateSelectedCount($card);
+    });
 
-        fetch('<?= BASE_URL ?>/payments/mark-paid', {
+    // Update count when individual checkbox changes
+    $('.entry-checkbox').on('change', function() {
+        const $card = $(this).closest('.technician-card');
+        updateSelectedCount($card);
+        
+        // Update select-all checkbox state
+        const total = $card.find('.entry-checkbox').length;
+        const checked = $card.find('.entry-checkbox:checked').length;
+        $card.find('.select-all-checkbox').prop('checked', total === checked);
+    });
+
+    // Mark selected entries as paid
+    $('.mark-selected-paid-btn').on('click', function() {
+        const $card = $(this).closest('.technician-card');
+        const selectedIds = $card.find('.entry-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
+
+        if (selectedIds.length === 0) {
+            alert('<?= __('payments.no_entries_selected') ?>');
+            return;
+        }
+
+        if (!confirm(`<?= __('payments.mark_selected_paid') ?>? (${selectedIds.length} <?= __('payments.selected') ?>)`)) {
+            return;
+        }
+
+        $.ajax({
+            url: '<?= BASE_URL ?>/payments/mark-entries-paid',
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                ...currentPaymentData,
-                notes: notes
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Reload page to show updated status
-                location.reload();
-            } else {
-                alert('<?= __('payments.error') ?>: ' + data.message);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        })
-        .catch(error => {
-            alert('<?= __('payments.error') ?>: ' + error);
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        });
-    });
-
-    // Mark as Unpaid button click
-    document.querySelectorAll('.mark-unpaid-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            if (!confirm('<?= __('payments.confirm_mark_unpaid') ?>')) {
-                return;
-            }
-
-            const paymentId = this.dataset.paymentId;
-            const btn = this;
-            const originalText = btn.innerHTML;
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i><?= __('payments.processing') ?>';
-
-            fetch('<?= BASE_URL ?>/payments/mark-unpaid', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    payment_id: paymentId
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            data: { labor_ids: selectedIds },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
                     location.reload();
                 } else {
-                    alert('<?= __('payments.error') ?>: ' + data.message);
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
+                    alert(response.message || '<?= __('payments.error') ?>');
                 }
-            })
-            .catch(error => {
-                alert('<?= __('payments.error') ?>: ' + error);
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            });
+            },
+            error: function() {
+                alert('<?= __('payments.error_updating') ?>');
+            }
         });
     });
 
-    // Helper function to format date
-    function formatDateJS(dateStr) {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('el-GR');
-    }
+    // Mark selected entries as unpaid
+    $('.mark-selected-unpaid-btn').on('click', function() {
+        const $card = $(this).closest('.technician-card');
+        const selectedIds = $card.find('.entry-checkbox:checked').map(function() {
+            return $(this).val();
+        }).get();
 
-    // Helper function to format currency
-    function formatCurrencyJS(amount) {
-        return parseFloat(amount).toFixed(2).replace('.', ',') + ' €';
-    }
+        if (selectedIds.length === 0) {
+            alert('<?= __('payments.no_entries_selected') ?>');
+            return;
+        }
+
+        if (!confirm(`<?= __('payments.mark_selected_unpaid') ?>? (${selectedIds.length} <?= __('payments.selected') ?>)`)) {
+            return;
+        }
+
+        $.ajax({
+            url: '<?= BASE_URL ?>/payments/mark-entries-unpaid',
+            method: 'POST',
+            data: { labor_ids: selectedIds },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || '<?= __('payments.error') ?>');
+                }
+            },
+            error: function() {
+                alert('<?= __('payments.error_updating') ?>');
+            }
+        });
+    });
+
+    // Mark entire week as paid
+    $('.mark-week-paid-btn').on('click', function() {
+        const technicianId = $(this).data('technician-id');
+        const weekStart = $(this).data('week-start');
+        const weekEnd = $(this).data('week-end');
+
+        if (!confirm('<?= __('payments.mark_week_paid') ?>?')) {
+            return;
+        }
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i><?= __('payments.processing') ?>');
+
+        $.ajax({
+            url: '<?= BASE_URL ?>/payments/mark-week-paid',
+            method: 'POST',
+            data: {
+                technician_id: technicianId,
+                week_start: weekStart,
+                week_end: weekEnd
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || '<?= __('payments.error') ?>');
+                }
+            },
+            error: function() {
+                alert('<?= __('payments.error_updating') ?>');
+            },
+            complete: function() {
+                $('.mark-week-paid-btn').prop('disabled', false).html('<i class="fas fa-check-double me-2"></i><?= __('payments.mark_week_paid') ?>');
+            }
+        });
+    });
+
+    // Mark entire week as unpaid
+    $('.mark-week-unpaid-btn').on('click', function() {
+        const technicianId = $(this).data('technician-id');
+        const weekStart = $(this).data('week-start');
+        const weekEnd = $(this).data('week-end');
+
+        if (!confirm('<?= __('payments.mark_week_unpaid') ?>?')) {
+            return;
+        }
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i><?= __('payments.processing') ?>');
+
+        $.ajax({
+            url: '<?= BASE_URL ?>/payments/mark-week-unpaid',
+            method: 'POST',
+            data: {
+                technician_id: technicianId,
+                week_start: weekStart,
+                week_end: weekEnd
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert(response.message || '<?= __('payments.error') ?>');
+                }
+            },
+            error: function() {
+                alert('<?= __('payments.error_updating') ?>');
+            },
+            complete: function() {
+                $('.mark-week-unpaid-btn').prop('disabled', false).html('<i class="fas fa-undo me-2"></i><?= __('payments.mark_week_unpaid') ?>');
+            }
+        });
+    });
 });
 </script>
 

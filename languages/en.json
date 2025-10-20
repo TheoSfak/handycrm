@@ -1032,6 +1032,25 @@
         "no_data_found": "No data found",
         "try_different_filters": "Try different filters",
         "week": "Week",
-        "confirm_mark_unpaid": "Are you sure you want to mark this payment as unpaid?"
+        "confirm_mark_unpaid": "Are you sure you want to mark this payment as unpaid?",
+        "paid_status": "Payment Status",
+        "all_entries": "All",
+        "paid_only": "Paid Only",
+        "unpaid_only": "Unpaid Only",
+        "select_entries": "Select Entries",
+        "selected": "selected",
+        "mark_selected_paid": "Pay Selected",
+        "mark_selected_unpaid": "Revert Selected",
+        "mark_week_paid": "Pay Entire Week",
+        "mark_week_unpaid": "Revert Entire Week",
+        "entries_marked_paid": "Entries marked as paid",
+        "entries_marked_unpaid": "Entries marked as unpaid",
+        "week_marked_paid": "Week marked as paid",
+        "week_marked_unpaid": "Week marked as unpaid",
+        "no_entries_selected": "No entries selected",
+        "select_all": "Select All",
+        "deselect_all": "Deselect All",
+        "paid_on": "Paid on"
     }
 }
+
