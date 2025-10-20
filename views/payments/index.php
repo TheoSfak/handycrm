@@ -62,7 +62,7 @@ require_once 'views/includes/header.php';
                     </div>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label for="paid_status" class="form-label">
                         <i class="fas fa-filter me-1"></i><?= __('payments.paid_status') ?>
                     </label>
@@ -79,10 +79,14 @@ require_once 'views/includes/header.php';
                     </select>
                 </div>
 
-                <div class="col-md-2 d-flex align-items-end gap-2">
+                <div class="col-md-3 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-primary flex-fill">
                         <i class="fas fa-search me-1"></i><?= __('payments.filter') ?>
                     </button>
+                    <a href="<?= BASE_URL ?>/payments/export?date_from=<?= $weekStart ?>&date_to=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?><?= $selectedTechnician ? '&technician_id=' . $selectedTechnician : '' ?>" 
+                       class="btn btn-success flex-fill" title="Export Excel">
+                        <i class="fas fa-file-excel"></i>
+                    </a>
                     <a href="<?= BASE_URL ?>/payments/report?date_from=<?= $weekStart ?>&date_to=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?><?= $selectedTechnician ? '&technician_id=' . $selectedTechnician : '' ?>" 
                        class="btn btn-danger flex-fill" target="_blank" title="<?= __('payments.generate_pdf') ?>">
                         <i class="fas fa-file-pdf"></i>

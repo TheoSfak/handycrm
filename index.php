@@ -340,6 +340,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         require_once 'controllers/PaymentReportController.php';
         $controller = new PaymentReportController();
         $controller->generate();
+    } elseif ($currentRoute === '/payments/export') {
+        require_once 'controllers/PaymentExportController.php';
+        $controller = new PaymentExportController();
+        $controller->exportCSV();
     } else {
         require_once 'controllers/PaymentsController.php';
         $controller = new PaymentsController();
