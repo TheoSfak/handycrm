@@ -43,6 +43,24 @@ require_once 'views/includes/header.php';
                     <input type="date" class="form-control" id="week_end" name="week_end" 
                            value="<?= $weekEnd ?>" required>
                 </div>
+                
+                <!-- Quick Date Presets -->
+                <div class="col-12 mb-2">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('current-week')">
+                            <i class="fas fa-calendar-week me-1"></i>Τρέχουσα Εβδομάδα
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('last-week')">
+                            <i class="fas fa-calendar-minus me-1"></i>Προηγούμενη Εβδομάδα
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('current-month')">
+                            <i class="fas fa-calendar-alt me-1"></i>Τρέχων Μήνας
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('last-month')">
+                            <i class="fas fa-calendar-times me-1"></i>Προηγούμενος Μήνας
+                        </button>
+                    </div>
+                </div>
 
                 <div class="col-md-3">
                     <label for="paid_status" class="form-label">
@@ -394,6 +412,63 @@ require_once 'views/includes/header.php';
 </div>
 
 <script>
+// Quick Date Range Presets
+function setDateRange(preset) {
+    const weekStartInput = document.getElementById('week_start');
+    const weekEndInput = document.getElementById('week_end');
+    const today = new Date();
+    let startDate, endDate;
+    
+    switch(preset) {
+        case 'current-week':
+            // Get Monday of current week
+            const currentDay = today.getDay();
+            const diff = currentDay === 0 ? -6 : 1 - currentDay; // Sunday = 0, so go back 6 days
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() + diff);
+            // Get Sunday of current week
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 6);
+            break;
+            
+        case 'last-week':
+            // Get Monday of last week
+            const lastWeekDay = today.getDay();
+            const lastWeekDiff = lastWeekDay === 0 ? -13 : -6 - lastWeekDay;
+            startDate = new Date(today);
+            startDate.setDate(today.getDate() + lastWeekDiff);
+            // Get Sunday of last week
+            endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 6);
+            break;
+            
+        case 'current-month':
+            // First day of current month
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            // Last day of current month
+            endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            break;
+            
+        case 'last-month':
+            // First day of last month
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            // Last day of last month
+            endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            break;
+    }
+    
+    // Format dates as YYYY-MM-DD for input fields
+    const formatDate = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+    
+    weekStartInput.value = formatDate(startDate);
+    weekEndInput.value = formatDate(endDate);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Update selected count for a card
     function updateSelectedCount(card) {
