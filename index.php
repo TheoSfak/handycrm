@@ -659,6 +659,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         } else {
             $controller->create();
         }
+    } elseif (preg_match('/^\/users\/show\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
     } elseif ($currentRoute === '/users/edit') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();

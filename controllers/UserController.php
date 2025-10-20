@@ -225,4 +225,85 @@ class UserController extends BaseController {
         
         $this->redirect('/users');
     }
+    
+    /**
+     * Show user profile with payment history
+     */
+    public function show($id) {
+        $user = $this->getCurrentUser();
+        
+        $database = new Database();
+        $db = $database->connect();
+        
+        // Get user details
+        $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$id]);
+        $viewUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$viewUser) {
+            $_SESSION['error'] = 'Ο χρήστης δεν βρέθηκε';
+            $this->redirect('/users');
+            return;
+        }
+        
+        // Get payment history from task_labor
+        $paymentHistory = $this->getPaymentHistory($id, $db);
+        
+        // Calculate totals
+        $totalEarned = 0;
+        $totalPaid = 0;
+        $totalUnpaid = 0;
+        
+        foreach ($paymentHistory as $entry) {
+            $totalEarned += $entry['subtotal'];
+            if (!empty($entry['paid_at'])) {
+                $totalPaid += $entry['subtotal'];
+            } else {
+                $totalUnpaid += $entry['subtotal'];
+            }
+        }
+        
+        $data = [
+            'title' => $viewUser['first_name'] . ' ' . $viewUser['last_name'] . ' - ' . APP_NAME,
+            'user' => $user,
+            'viewUser' => $viewUser,
+            'paymentHistory' => $paymentHistory,
+            'totalEarned' => $totalEarned,
+            'totalPaid' => $totalPaid,
+            'totalUnpaid' => $totalUnpaid
+        ];
+        
+        $this->view('users/show', $data);
+    }
+    
+    /**
+     * Get payment history for a user
+     */
+    private function getPaymentHistory($userId, $db) {
+        $sql = "SELECT 
+                    tl.*,
+                    pt.description as task_description,
+                    pt.task_date,
+                    pt.date_from,
+                    pt.date_to,
+                    pt.task_type,
+                    p.title as project_title,
+                    c.first_name as customer_first_name,
+                    c.last_name as customer_last_name,
+                    c.company_name as customer_company_name,
+                    c.customer_type,
+                    CONCAT(paid_user.first_name, ' ', paid_user.last_name) as paid_by_name
+                FROM task_labor tl
+                INNER JOIN project_tasks pt ON tl.task_id = pt.id
+                INNER JOIN projects p ON pt.project_id = p.id
+                INNER JOIN customers c ON p.customer_id = c.id
+                LEFT JOIN users paid_user ON tl.paid_by = paid_user.id
+                WHERE tl.technician_id = ?
+                ORDER BY COALESCE(pt.task_date, pt.date_from) DESC
+                LIMIT 100";
+                
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

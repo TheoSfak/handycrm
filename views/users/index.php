@@ -53,6 +53,10 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
+                                <a href="<?= BASE_URL ?>/users/show/<?= $u['id'] ?>" 
+                                   class="btn btn-sm btn-info" title="<?= __('common.view') ?>">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="?route=/users/edit&id=<?= $u['id'] ?>" 
                                    class="btn btn-sm btn-warning" title="<?= __('common.edit') ?>">
                                     <i class="fas fa-edit"></i>
