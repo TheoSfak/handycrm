@@ -32,23 +32,15 @@ class Payment extends BaseModel {
                 INNER JOIN labor_entries le ON t.id = le.technician_id
                 LEFT JOIN payments p ON (
                     p.technician_id = t.id 
-                    AND p.week_start = :week_start 
-                    AND p.week_end = :week_end
+                    AND p.week_start = ? 
+                    AND p.week_end = ?
                 )
                 LEFT JOIN users u ON p.paid_by = u.id
-                WHERE le.work_date BETWEEN :week_start2 AND :week_end2
+                WHERE le.work_date BETWEEN ? AND ?
                 GROUP BY t.id, t.name, t.hourly_rate, p.id, p.paid_at, p.paid_by, u.username
                 ORDER BY t.name";
                 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'week_start' => $weekStart,
-            'week_end' => $weekEnd,
-            'week_start2' => $weekStart,
-            'week_end2' => $weekEnd
-        ]);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->query($sql, [$weekStart, $weekEnd, $weekStart, $weekEnd]);
     }
     
     /**
@@ -69,18 +61,11 @@ class Payment extends BaseModel {
                 INNER JOIN project_tasks pt ON le.task_id = pt.id
                 INNER JOIN projects p ON pt.project_id = p.id
                 INNER JOIN technicians t ON le.technician_id = t.id
-                WHERE le.technician_id = :technician_id
-                AND le.work_date BETWEEN :week_start AND :week_end
+                WHERE le.technician_id = ?
+                AND le.work_date BETWEEN ? AND ?
                 ORDER BY le.work_date DESC, p.title";
                 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'technician_id' => $technicianId,
-            'week_start' => $weekStart,
-            'week_end' => $weekEnd
-        ]);
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->query($sql, [$technicianId, $weekStart, $weekEnd]);
     }
     
     /**
@@ -102,21 +87,14 @@ class Payment extends BaseModel {
         if ($existing) {
             // Update existing record
             $sql = "UPDATE payments 
-                    SET total_hours = :total_hours,
-                        total_amount = :total_amount,
+                    SET total_hours = ?,
+                        total_amount = ?,
                         paid_at = NOW(),
-                        paid_by = :paid_by,
-                        notes = :notes
-                    WHERE id = :id";
+                        paid_by = ?,
+                        notes = ?
+                    WHERE id = ?";
                     
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                'total_hours' => $totalHours,
-                'total_amount' => $totalAmount,
-                'paid_by' => $userId,
-                'notes' => $notes,
-                'id' => $existing['id']
-            ]);
+            $this->db->execute($sql, [$totalHours, $totalAmount, $userId, $notes, $existing['id']]);
             
             return $existing['id'];
         } else {
@@ -124,18 +102,9 @@ class Payment extends BaseModel {
             $sql = "INSERT INTO payments 
                     (technician_id, week_start, week_end, total_hours, total_amount, paid_at, paid_by, notes)
                     VALUES 
-                    (:technician_id, :week_start, :week_end, :total_hours, :total_amount, NOW(), :paid_by, :notes)";
+                    (?, ?, ?, ?, ?, NOW(), ?, ?)";
                     
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                'technician_id' => $technicianId,
-                'week_start' => $weekStart,
-                'week_end' => $weekEnd,
-                'total_hours' => $totalHours,
-                'total_amount' => $totalAmount,
-                'paid_by' => $userId,
-                'notes' => $notes
-            ]);
+            $this->db->execute($sql, [$technicianId, $weekStart, $weekEnd, $totalHours, $totalAmount, $userId, $notes]);
             
             return $this->db->lastInsertId();
         }
@@ -151,10 +120,9 @@ class Payment extends BaseModel {
         $sql = "UPDATE payments 
                 SET paid_at = NULL,
                     paid_by = NULL
-                WHERE id = :id";
+                WHERE id = ?";
                 
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute(['id' => $paymentId]);
+        return $this->db->execute($sql, [$paymentId]);
     }
     
     /**
@@ -167,19 +135,12 @@ class Payment extends BaseModel {
      */
     public function getPaymentRecord($technicianId, $weekStart, $weekEnd) {
         $sql = "SELECT * FROM payments 
-                WHERE technician_id = :technician_id
-                AND week_start = :week_start
-                AND week_end = :week_end
+                WHERE technician_id = ?
+                AND week_start = ?
+                AND week_end = ?
                 LIMIT 1";
                 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            'technician_id' => $technicianId,
-            'week_start' => $weekStart,
-            'week_end' => $weekEnd
-        ]);
-        
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $this->queryOne($sql, [$technicianId, $weekStart, $weekEnd]);
         return $result ?: null;
     }
     
@@ -221,16 +182,11 @@ class Payment extends BaseModel {
                     u.username as paid_by_user
                 FROM payments p
                 LEFT JOIN users u ON p.paid_by = u.id
-                WHERE p.technician_id = :technician_id
+                WHERE p.technician_id = ?
                 AND p.paid_at IS NOT NULL
                 ORDER BY p.paid_at DESC
-                LIMIT :limit";
+                LIMIT ?";
                 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindValue('technician_id', $technicianId, PDO::PARAM_INT);
-        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->query($sql, [$technicianId, $limit]);
     }
 }
