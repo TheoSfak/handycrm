@@ -87,6 +87,30 @@ class PaymentsController extends BaseController {
         // Re-index array
         $weeklyData = array_values($weeklyData);
         
+        // Calculate grand totals for all technicians (before pagination)
+        $grandTotalHours = 0;
+        $grandTotalAmount = 0;
+        $grandTotalPaid = 0;
+        $grandTotalUnpaid = 0;
+        
+        foreach ($weeklyData as $tech) {
+            $techTotal = $tech['filtered_total_amount'] ?? $tech['total_amount'];
+            $grandTotalAmount += $techTotal;
+            $grandTotalHours += $tech['filtered_total_hours'] ?? $tech['total_hours'];
+            
+            // Calculate paid vs unpaid amounts
+            foreach ($tech['entries'] as $entry) {
+                if (!empty($entry['paid_at'])) {
+                    $grandTotalPaid += $entry['subtotal'];
+                } else {
+                    $grandTotalUnpaid += $entry['subtotal'];
+                }
+            }
+        }
+        
+        // Calculate payment percentage
+        $paymentPercentage = $grandTotalAmount > 0 ? ($grandTotalPaid / $grandTotalAmount) * 100 : 0;
+        
         // Calculate pagination
         $totalTechnicians = count($weeklyData);
         $totalPages = ceil($totalTechnicians / $itemsPerPage);
@@ -106,6 +130,11 @@ class PaymentsController extends BaseController {
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'itemsPerPage' => $itemsPerPage,
+            'grandTotalHours' => $grandTotalHours,
+            'grandTotalAmount' => $grandTotalAmount,
+            'grandTotalPaid' => $grandTotalPaid,
+            'grandTotalUnpaid' => $grandTotalUnpaid,
+            'paymentPercentage' => $paymentPercentage,
             'pageTitle' => __('payments.page_title')
         ]);
     }

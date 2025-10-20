@@ -81,10 +81,83 @@ require_once 'views/includes/header.php';
             <?= __('payments.no_data_found') ?>. <?= __('payments.try_different_filters') ?>.
         </div>
     <?php else: ?>
+        <!-- Summary Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Συνολικά Κέρδη</h6>
+                                <h3 class="mb-0 text-primary"><?= formatCurrency($grandTotalAmount) ?></h3>
+                                <small class="text-muted"><?= number_format($grandTotalHours, 2) ?>h</small>
+                            </div>
+                            <div class="fs-1 text-primary opacity-50">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-success">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Πληρωμένα</h6>
+                                <h3 class="mb-0 text-success"><?= formatCurrency($grandTotalPaid) ?></h3>
+                                <small class="text-muted">
+                                    <?= number_format($grandTotalAmount > 0 ? ($grandTotalPaid / $grandTotalAmount) * 100 : 0, 1) ?>%
+                                </small>
+                            </div>
+                            <div class="fs-1 text-success opacity-50">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-warning">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Απλήρωτα</h6>
+                                <h3 class="mb-0 text-warning"><?= formatCurrency($grandTotalUnpaid) ?></h3>
+                                <small class="text-muted">
+                                    <?= number_format($grandTotalAmount > 0 ? ($grandTotalUnpaid / $grandTotalAmount) * 100 : 0, 1) ?>%
+                                </small>
+                            </div>
+                            <div class="fs-1 text-warning opacity-50">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-info">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Πρόοδος Πληρωμής</h6>
+                        <div class="progress mb-2" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: <?= $paymentPercentage ?>%;" 
+                                 aria-valuenow="<?= $paymentPercentage ?>" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                <strong><?= number_format($paymentPercentage, 1) ?>%</strong>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            <i class="fas fa-users me-1"></i><?= $totalTechnicians ?> εργαζόμενοι
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="row mb-3">
             <div class="col-12">
                 <h5><?= __('payments.showing_week') ?>: <?= formatDate($weekStart) ?> - <?= formatDate($weekEnd) ?></h5>
-                <p class="text-muted"><?= count($weeklyData) ?> <?= __('payments.technicians_found') ?></p>
             </div>
         </div>
 
