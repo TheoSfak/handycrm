@@ -344,6 +344,14 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->markPaid();
     } elseif ($currentRoute === '/payments/mark-unpaid') {
         $controller->markUnpaid();
+    } elseif ($currentRoute === '/payments/mark-entries-paid') {
+        $controller->markEntriesPaid();
+    } elseif ($currentRoute === '/payments/mark-entries-unpaid') {
+        $controller->markEntriesUnpaid();
+    } elseif ($currentRoute === '/payments/mark-week-paid') {
+        $controller->markWeekPaid();
+    } elseif ($currentRoute === '/payments/mark-week-unpaid') {
+        $controller->markWeekUnpaid();
     } elseif ($currentRoute === '/payments/history') {
         $controller->history();
     } else {
