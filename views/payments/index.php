@@ -255,6 +255,69 @@ require_once 'views/includes/header.php';
             </div>
         <?php endforeach; ?>
     <?php endif; ?>
+    
+    <!-- Pagination -->
+    <?php if (isset($totalPages) && $totalPages > 1): ?>
+        <nav aria-label="Pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Previous button -->
+                <li class="page-item <?= $currentPage <= 1 ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?technician_id=<?= $selectedTechnician ?? '' ?>&week_start=<?= $weekStart ?>&week_end=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?>&page=<?= $currentPage - 1 ?>" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                
+                <?php
+                // Calculate page range to show
+                $range = 2; // Show 2 pages before and after current
+                $startPage = max(1, $currentPage - $range);
+                $endPage = min($totalPages, $currentPage + $range);
+                
+                // Show first page if not in range
+                if ($startPage > 1): ?>
+                    <li class="page-item">
+                        <a class="page-link" href="?technician_id=<?= $selectedTechnician ?? '' ?>&week_start=<?= $weekStart ?>&week_end=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?>&page=1">1</a>
+                    </li>
+                    <?php if ($startPage > 2): ?>
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    <?php endif; ?>
+                <?php endif; ?>
+                
+                <!-- Page numbers -->
+                <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                    <li class="page-item <?= $i == $currentPage ? 'active' : '' ?>">
+                        <a class="page-link" href="?technician_id=<?= $selectedTechnician ?? '' ?>&week_start=<?= $weekStart ?>&week_end=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?>&page=<?= $i ?>"><?= $i ?></a>
+                    </li>
+                <?php endfor; ?>
+                
+                <!-- Show last page if not in range -->
+                <?php if ($endPage < $totalPages): ?>
+                    <?php if ($endPage < $totalPages - 1): ?>
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    <?php endif; ?>
+                    <li class="page-item">
+                        <a class="page-link" href="?technician_id=<?= $selectedTechnician ?? '' ?>&week_start=<?= $weekStart ?>&week_end=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?>&page=<?= $totalPages ?>"><?= $totalPages ?></a>
+                    </li>
+                <?php endif; ?>
+                
+                <!-- Next button -->
+                <li class="page-item <?= $currentPage >= $totalPages ? 'disabled' : '' ?>">
+                    <a class="page-link" href="?technician_id=<?= $selectedTechnician ?? '' ?>&week_start=<?= $weekStart ?>&week_end=<?= $weekEnd ?>&paid_status=<?= $paidStatus ?>&page=<?= $currentPage + 1 ?>" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <!-- Results info -->
+        <div class="text-center text-muted mb-4">
+            <?php 
+            $startItem = ($currentPage - 1) * $itemsPerPage + 1;
+            $endItem = min($currentPage * $itemsPerPage, $totalTechnicians);
+            ?>
+            Εμφάνιση <?= $startItem ?> - <?= $endItem ?> από <?= $totalTechnicians ?> εργαζόμενους
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>

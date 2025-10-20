@@ -29,6 +29,10 @@ class PaymentsController extends BaseController {
         $weekEnd = $_GET['week_end'] ?? null;
         $paidStatus = $_GET['paid_status'] ?? 'all'; // 'all', 'paid', 'unpaid'
         
+        // Pagination parameters
+        $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+        $itemsPerPage = 10; // Show 10 technicians per page
+        
         // If no dates provided, use last completed week
         if (!$weekStart || !$weekEnd) {
             $lastWeek = Payment::getLastCompletedWeek();
@@ -80,13 +84,28 @@ class PaymentsController extends BaseController {
             });
         }
         
+        // Re-index array
+        $weeklyData = array_values($weeklyData);
+        
+        // Calculate pagination
+        $totalTechnicians = count($weeklyData);
+        $totalPages = ceil($totalTechnicians / $itemsPerPage);
+        $offset = ($page - 1) * $itemsPerPage;
+        
+        // Slice data for current page
+        $pagedWeeklyData = array_slice($weeklyData, $offset, $itemsPerPage);
+        
         $this->view('payments/index', [
             'technicians' => $technicians,
             'selectedTechnician' => $selectedTechnician,
             'weekStart' => $weekStart,
             'weekEnd' => $weekEnd,
             'paidStatus' => $paidStatus,
-            'weeklyData' => $weeklyData,
+            'weeklyData' => $pagedWeeklyData,
+            'totalTechnicians' => $totalTechnicians,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'itemsPerPage' => $itemsPerPage,
             'pageTitle' => __('payments.page_title')
         ]);
     }
