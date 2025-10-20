@@ -18,6 +18,20 @@ class PaymentReportController extends BaseController {
     }
     
     /**
+     * Get a setting value from the database
+     */
+    private function getSetting($key, $default = '') {
+        $database = new Database();
+        $db = $database->connect();
+        
+        $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        return $result ? $result['setting_value'] : $default;
+    }
+    
+    /**
      * Generate PDF report for payments
      */
     public function generate() {
@@ -115,12 +129,15 @@ class PaymentReportController extends BaseController {
      * Generate PDF document
      */
     private function generatePDF($data, $dateFrom, $dateTo, $paidStatus, $grandTotalHours, $grandTotalAmount) {
+        // Get company name from settings
+        $companyName = $this->getSetting('company_name', 'HandyCRM');
+        
         // Create new PDF document
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
         
         // Set document information
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor(COMPANY_NAME);
+        $pdf->SetAuthor($companyName);
         $pdf->SetTitle(__('payments.payment_report'));
         
         // Remove default header/footer
@@ -217,7 +234,7 @@ class PaymentReportController extends BaseController {
         // Footer
         $html .= '<p style="text-align: center; font-size: 8px; color: #6c757d; margin-top: 30px;">';
         $html .= __('payments.report_generated_on') . ' ' . date('d/m/Y H:i');
-        $html .= '<br>' . COMPANY_NAME;
+        $html .= '<br>' . $companyName;
         $html .= '</p>';
         
         // Print text using writeHTMLCell()
