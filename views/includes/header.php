@@ -293,15 +293,6 @@
             </li>
             <?php endif; ?>
             
-            <!-- Invoices - Admin only -->
-            <?php if ($isAdmin): ?>
-            <li class="nav-item">
-                <a class="nav-link <?= strpos($currentRoute, '/invoices') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/invoices">
-                    <i class="fas fa-receipt"></i> <?= __('menu.invoices') ?>
-                </a>
-            </li>
-            <?php endif; ?>
-            
             <!-- Materials - Admin & Supervisor -->
             <?php if ($isAdmin || $isSupervisor): ?>
             <li class="nav-item">
@@ -380,7 +371,6 @@
                     elseif (strpos($uri, '/projects') !== false) $breadcrumb = __('menu.projects');
                     elseif (strpos($uri, '/appointments') !== false) $breadcrumb = __('menu.appointments');
                     elseif (strpos($uri, '/quotes') !== false) $breadcrumb = __('menu.quotes');
-                    elseif (strpos($uri, '/invoices') !== false) $breadcrumb = __('menu.invoices');
                     elseif (strpos($uri, '/materials') !== false) $breadcrumb = __('menu.materials');
                     elseif (strpos($uri, '/users') !== false) $breadcrumb = __('menu.users');
                     elseif (strpos($uri, '/settings') !== false) $breadcrumb = __('menu.settings');

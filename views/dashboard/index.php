@@ -209,13 +209,6 @@ echo $updateChecker->getUpdateNotification();
                     </div>
                     
                     <div class="col-lg-2 col-md-4 col-6 mb-3">
-                        <a href="?route=/invoices/create" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
-                            <i class="fas fa-receipt fa-2x mb-2"></i>
-                            <span><?= __('dashboard.new_invoice') ?></span>
-                        </a>
-                    </div>
-                    
-                    <div class="col-lg-2 col-md-4 col-6 mb-3">
                         <a href="?route=/appointments/calendar" class="btn btn-outline-dark w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                             <i class="fas fa-calendar fa-2x mb-2"></i>
                             <span><?= __('dashboard.calendar') ?></span>

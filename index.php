@@ -448,46 +448,6 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         echo "<h1>404 - Quote page not found</h1>";
     }
     
-} elseif (strpos($currentRoute, '/invoices') === 0) {
-    // Check if user is logged in
-    if (!isset($_SESSION['user_id'])) {
-        header('Location: ?route=/login');
-        exit;
-    }
-    
-    require_once 'controllers/InvoiceController.php';
-    $controller = new InvoiceController();
-    
-    if ($currentRoute === '/invoices') {
-        $controller->index();
-    } elseif ($currentRoute === '/invoices/create') {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->store();
-        } else {
-            $controller->create();
-        }
-    } elseif ($currentRoute === '/invoices/view') {
-        $controller->details();
-    } elseif ($currentRoute === '/invoices/details') {
-        $controller->details();
-    } elseif ($currentRoute === '/invoices/edit') {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $controller->update();
-        } else {
-            $controller->edit();
-        }
-    } elseif ($currentRoute === '/invoices/delete') {
-        $controller->delete();
-    } elseif ($currentRoute === '/invoices/update-status') {
-        $controller->updateStatus();
-    } elseif ($currentRoute === '/invoices/updatePaymentStatus') {
-        $controller->updatePaymentStatus();
-    } else {
-        // 404 for invoices
-        header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 - Invoice page not found</h1>";
-    }
-    
 } elseif (strpos($currentRoute, '/materials-inventory') === 0) {
     // OLD INVENTORY SYSTEM - Changed route to /materials-inventory to avoid conflict
     // Check if user is logged in
