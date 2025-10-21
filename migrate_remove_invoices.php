@@ -16,8 +16,10 @@ if (!isset($_GET['run']) || $_GET['run'] !== $SECURITY_KEY) {
 }
 
 require_once 'config/config.php';
+require_once 'classes/Database.php';
 
-global $db;
+// Initialize database connection
+$db = new Database();
 
 echo "<!DOCTYPE html>
 <html lang='el'>
