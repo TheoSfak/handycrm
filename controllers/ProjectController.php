@@ -652,10 +652,34 @@ class ProjectController extends BaseController {
                 $this->db->execute($sql, [$projectId]);
             }
             
-            // If status is invoiced, set invoiced_at date
+            // If status is invoiced, set invoiced_at date and calculate costs from tasks
             if ($newStatus === 'invoiced' && empty($project['invoiced_at'])) {
-                $sql = "UPDATE projects SET invoiced_at = NOW() WHERE id = ?";
-                $this->db->execute($sql, [$projectId]);
+                // Calculate costs from tasks
+                $costsQuery = "SELECT 
+                                COALESCE(SUM(tl.subtotal), 0) as labor_cost,
+                                COALESCE(SUM(tm.subtotal), 0) as material_cost
+                              FROM project_tasks pt
+                              LEFT JOIN task_labor tl ON pt.id = tl.task_id
+                              LEFT JOIN task_materials tm ON pt.id = tm.task_id
+                              WHERE pt.project_id = ?";
+                
+                $costs = $this->db->fetchOne($costsQuery, [$projectId]);
+                
+                $laborCost = $costs['labor_cost'] ?? 0;
+                $materialCost = $costs['material_cost'] ?? 0;
+                $vatRate = $project['vat_rate'] ?? 24;
+                
+                $subtotal = $laborCost + $materialCost;
+                $totalCost = $subtotal * (1 + ($vatRate / 100));
+                
+                // Update project with calculated costs and invoiced_at
+                $sql = "UPDATE projects 
+                       SET invoiced_at = NOW(),
+                           material_cost = ?,
+                           labor_cost = ?,
+                           total_cost = ?
+                       WHERE id = ?";
+                $this->db->execute($sql, [$materialCost, $laborCost, $totalCost, $projectId]);
             }
             
             $statusLabels = [

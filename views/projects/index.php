@@ -142,7 +142,8 @@
                         </td>
                         <td>
                             <?php 
-                            $totalCost = ($project['material_cost'] ?? 0) + ($project['labor_cost'] ?? 0);
+                            // Use calculated costs from tasks
+                            $totalCost = $project['calculated_total_cost'] ?? 0;
                             if ($totalCost > 0): 
                             ?>
                                 <?= number_format($totalCost, 2) ?>€

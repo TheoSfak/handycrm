@@ -166,10 +166,17 @@ class Project extends BaseModel {
                        c.company_name as customer_company_name,
                        c.customer_type,
                        t.first_name as tech_first_name, 
-                       t.last_name as tech_last_name
+                       t.last_name as tech_last_name,
+                       COALESCE(SUM(tl.subtotal), 0) as calculated_labor_cost,
+                       COALESCE(SUM(tm.subtotal), 0) as calculated_materials_cost,
+                       COALESCE(SUM(tl.subtotal), 0) + COALESCE(SUM(tm.subtotal), 0) as calculated_total_cost
                 FROM {$this->table} p 
                 LEFT JOIN customers c ON p.customer_id = c.id 
-                LEFT JOIN users t ON p.assigned_technician = t.id 
+                LEFT JOIN users t ON p.assigned_technician = t.id
+                LEFT JOIN project_tasks pt ON p.id = pt.project_id
+                LEFT JOIN task_labor tl ON pt.id = tl.task_id
+                LEFT JOIN task_materials tm ON pt.id = tm.task_id
+                GROUP BY p.id
                 ORDER BY p.created_at DESC";
         
         return $this->db->fetchAll($sql);
