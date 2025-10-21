@@ -67,14 +67,8 @@ define('FOOTER_RENDERED', true);
             }
         });
         
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
+        // Alerts remain visible until manually closed by user
+        // No auto-hide timer
         
         // CSRF Token for AJAX requests
         $.ajaxSetup({
