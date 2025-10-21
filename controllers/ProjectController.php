@@ -652,6 +652,11 @@ class ProjectController extends BaseController {
                 $this->db->execute($sql, [$projectId]);
             }
             
+            // If status is invoiced, create invoice automatically
+            if ($newStatus === 'invoiced') {
+                $this->createInvoiceForProject($project);
+            }
+            
             $statusLabels = [
                 'new' => 'Νέο',
                 'in_progress' => 'Σε Εξέλιξη',
@@ -670,6 +675,122 @@ class ProjectController extends BaseController {
             } else {
                 $this->redirect('/projects');
             }
+        }
+    }
+    
+    /**
+     * Create invoice automatically when project is marked as invoiced
+     */
+    private function createInvoiceForProject($project) {
+        try {
+            // Check if invoice already exists for this project
+            $checkSql = "SELECT id FROM invoices WHERE project_id = ? AND status IN ('paid', 'sent', 'draft')";
+            $existing = $this->db->fetchOne($checkSql, [$project['id']]);
+            
+            if ($existing) {
+                // Invoice already exists, don't create duplicate
+                return;
+            }
+            
+            // Calculate costs from project materials and labor
+            $materialsSql = "SELECT COALESCE(SUM(quantity * unit_price), 0) as total FROM task_materials WHERE project_id = ?";
+            $materialsResult = $this->db->fetchOne($materialsSql, [$project['id']]);
+            $materialsTotal = $materialsResult['total'];
+            
+            $laborSql = "SELECT COALESCE(SUM(hours * hourly_rate), 0) as total FROM task_labor WHERE project_id = ?";
+            $laborResult = $this->db->fetchOne($laborSql, [$project['id']]);
+            $laborTotal = $laborResult['total'];
+            
+            $subtotal = $materialsTotal + $laborTotal;
+            $vatRate = $project['vat_rate'] ?? DEFAULT_VAT_RATE;
+            $vatAmount = $subtotal * ($vatRate / 100);
+            $totalAmount = $subtotal + $vatAmount;
+            
+            // If total is 0, don't create invoice
+            if ($totalAmount == 0) {
+                return;
+            }
+            
+            // Generate unique invoice number
+            $year = date('Y');
+            $lastInvoiceSql = "SELECT invoice_number FROM invoices 
+                              WHERE invoice_number LIKE ? 
+                              ORDER BY id DESC LIMIT 1";
+            $lastInvoice = $this->db->fetchOne($lastInvoiceSql, ["INV-{$year}-%"]);
+            
+            if ($lastInvoice) {
+                $lastNumber = (int) substr($lastInvoice['invoice_number'], -4);
+                $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+            } else {
+                $newNumber = '0001';
+            }
+            
+            $invoiceNumber = "INV-{$year}-{$newNumber}";
+            
+            // Create invoice
+            $invoiceSql = "INSERT INTO invoices (
+                invoice_number, customer_id, project_id, title, description,
+                subtotal, vat_rate, vat_amount, total_amount, paid_amount,
+                status, issue_date, due_date, paid_date, payment_method,
+                created_by, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+            
+            $this->db->execute($invoiceSql, [
+                $invoiceNumber,
+                $project['customer_id'],
+                $project['id'],
+                'Τιμολόγιο για: ' . $project['title'],
+                $project['description'],
+                $subtotal,
+                $vatRate,
+                $vatAmount,
+                $totalAmount,
+                $totalAmount, // paid_amount = total (marked as fully paid)
+                'paid', // status = paid
+                date('Y-m-d'), // issue_date = today
+                date('Y-m-d'), // due_date = today (already paid)
+                date('Y-m-d'), // paid_date = today
+                'cash', // default payment method
+                $_SESSION['user_id']
+            ]);
+            
+            $invoiceId = $this->db->lastInsertId();
+            
+            // Add invoice items from project materials
+            $materials = $this->db->fetchAll("SELECT * FROM task_materials WHERE project_id = ?", [$project['id']]);
+            foreach ($materials as $material) {
+                $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
+                           VALUES (?, ?, ?, ?, ?, NOW())";
+                $this->db->execute($itemSql, [
+                    $invoiceId,
+                    $material['description'] . ' (Υλικό)',
+                    $material['quantity'],
+                    $material['unit_price'],
+                    $material['quantity'] * $material['unit_price']
+                ]);
+            }
+            
+            // Add invoice items from project labor
+            $labor = $this->db->fetchAll("SELECT tl.*, u.first_name, u.last_name 
+                                         FROM task_labor tl 
+                                         LEFT JOIN users u ON tl.technician_id = u.id 
+                                         WHERE tl.project_id = ?", [$project['id']]);
+            foreach ($labor as $laborItem) {
+                $techName = $laborItem['first_name'] . ' ' . $laborItem['last_name'];
+                $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
+                           VALUES (?, ?, ?, ?, ?, NOW())";
+                $this->db->execute($itemSql, [
+                    $invoiceId,
+                    'Εργασία: ' . $laborItem['description'] . ' - ' . $techName,
+                    $laborItem['hours'],
+                    $laborItem['hourly_rate'],
+                    $laborItem['hours'] * $laborItem['hourly_rate']
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            // Log error but don't fail the status update
+            error_log("Failed to create invoice for project {$project['id']}: " . $e->getMessage());
         }
     }
     
