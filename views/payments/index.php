@@ -43,16 +43,18 @@ require_once 'views/includes/header.php';
                     <label for="week_start" class="form-label">
                         <i class="fas fa-calendar me-1"></i><?= __('payments.week_start') ?>
                     </label>
-                    <input type="date" class="form-control" id="week_start" name="week_start" 
-                           value="<?= $weekStart ?>" required>
+                    <input type="text" class="form-control datepicker" id="week_start" name="week_start" 
+                           value="<?= formatDate($weekStart) ?>" placeholder="ΗΗ/ΜΜ/ΕΕΕΕ" required autocomplete="off">
+                    <input type="hidden" id="week_start_hidden" name="week_start_sql" value="<?= $weekStart ?>">
                 </div>
 
                 <div class="col-md-2">
                     <label for="week_end" class="form-label">
                         <i class="fas fa-calendar me-1"></i><?= __('payments.week_end') ?>
                     </label>
-                    <input type="date" class="form-control" id="week_end" name="week_end" 
-                           value="<?= $weekEnd ?>" required>
+                    <input type="text" class="form-control datepicker" id="week_end" name="week_end" 
+                           value="<?= formatDate($weekEnd) ?>" placeholder="ΗΗ/ΜΜ/ΕΕΕΕ" required autocomplete="off">
+                    <input type="hidden" id="week_end_hidden" name="week_end_sql" value="<?= $weekEnd ?>">
                 </div>
                 
                 <!-- Quick Date Presets -->
@@ -582,6 +584,12 @@ function setDateRange(preset) {
     
     weekStartInput.value = formatDate(startDate);
     weekEndInput.value = formatDate(endDate);
+    
+    // Auto-submit the form after setting dates
+    const form = weekStartInput.closest('form');
+    if (form) {
+        form.submit();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
