@@ -652,9 +652,10 @@ class ProjectController extends BaseController {
                 $this->db->execute($sql, [$projectId]);
             }
             
-            // If status is invoiced, create invoice automatically
-            if ($newStatus === 'invoiced') {
-                $this->createInvoiceForProject($project);
+            // If status is invoiced, set invoiced_at date
+            if ($newStatus === 'invoiced' && empty($project['invoiced_at'])) {
+                $sql = "UPDATE projects SET invoiced_at = NOW() WHERE id = ?";
+                $this->db->execute($sql, [$projectId]);
             }
             
             $statusLabels = [
@@ -675,131 +676,6 @@ class ProjectController extends BaseController {
             } else {
                 $this->redirect('/projects');
             }
-        }
-    }
-    
-    /**
-     * Create invoice automatically when project is marked as invoiced
-     */
-    private function createInvoiceForProject($project) {
-        try {
-            error_log("=== CREATE INVOICE DEBUG ===");
-            error_log("Project ID: " . $project['id']);
-            error_log("Project data: " . print_r($project, true));
-            
-            // Check if invoice already exists for this project
-            $checkSql = "SELECT id FROM invoices WHERE project_id = ? AND status IN ('paid', 'sent', 'draft')";
-            $existing = $this->db->fetchOne($checkSql, [$project['id']]);
-            
-            if ($existing) {
-                error_log("Invoice already exists for project " . $project['id']);
-                // Invoice already exists, don't create duplicate
-                $_SESSION['success'] .= ' (Υπάρχει ήδη τιμολόγιο)';
-                return;
-            }
-            
-            error_log("No existing invoice found, proceeding...");
-            
-            // Use the project's stored costs directly
-            $materialsTotal = $project['material_cost'] ?? 0;
-            $laborTotal = $project['labor_cost'] ?? 0;
-            
-            error_log("Materials total from project: $materialsTotal");
-            error_log("Labor total from project: $laborTotal");
-            
-            $subtotal = $materialsTotal + $laborTotal;
-            $vatRate = $project['vat_rate'] ?? DEFAULT_VAT_RATE;
-            $vatAmount = $subtotal * ($vatRate / 100);
-            $totalAmount = $subtotal + $vatAmount;
-            
-            error_log("Subtotal: $subtotal, VAT: $vatAmount, Total: $totalAmount");
-            
-            // If total is 0, don't create invoice
-            if ($totalAmount == 0) {
-                error_log("Total is 0, not creating invoice");
-                $_SESSION['success'] .= ' (Δεν δημιουργήθηκε τιμολόγιο - το έργο δεν έχει κόστη)';
-                return;
-            }
-            
-            // Generate unique invoice number
-            $year = date('Y');
-            $lastInvoiceSql = "SELECT invoice_number FROM invoices 
-                              WHERE invoice_number LIKE ? 
-                              ORDER BY id DESC LIMIT 1";
-            $lastInvoice = $this->db->fetchOne($lastInvoiceSql, ["INV-{$year}-%"]);
-            
-            if ($lastInvoice) {
-                $lastNumber = (int) substr($lastInvoice['invoice_number'], -4);
-                $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-            } else {
-                $newNumber = '0001';
-            }
-            
-            $invoiceNumber = "INV-{$year}-{$newNumber}";
-            
-            // Create invoice
-            $invoiceSql = "INSERT INTO invoices (
-                invoice_number, customer_id, project_id, title, description,
-                subtotal, vat_rate, vat_amount, total_amount, paid_amount,
-                status, issue_date, due_date, paid_date, payment_method,
-                created_by, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
-            
-            $this->db->execute($invoiceSql, [
-                $invoiceNumber,
-                $project['customer_id'],
-                $project['id'],
-                'Τιμολόγιο για: ' . $project['title'],
-                $project['description'],
-                $subtotal,
-                $vatRate,
-                $vatAmount,
-                $totalAmount,
-                $totalAmount, // paid_amount = total (marked as fully paid)
-                'paid', // status = paid
-                date('Y-m-d'), // issue_date = today
-                date('Y-m-d'), // due_date = today (already paid)
-                date('Y-m-d'), // paid_date = today
-                'cash', // default payment method
-                $_SESSION['user_id']
-            ]);
-            
-            $invoiceId = $this->db->lastInsertId();
-            
-            // Add invoice items - Materials
-            if ($materialsTotal > 0) {
-                $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
-                           VALUES (?, ?, ?, ?, ?, NOW())";
-                $this->db->execute($itemSql, [
-                    $invoiceId,
-                    'Υλικά για: ' . $project['title'],
-                    1,
-                    $materialsTotal,
-                    $materialsTotal
-                ]);
-            }
-            
-            // Add invoice items - Labor
-            if ($laborTotal > 0) {
-                $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
-                           VALUES (?, ?, ?, ?, ?, NOW())";
-                $this->db->execute($itemSql, [
-                    $invoiceId,
-                    'Εργατικά για: ' . $project['title'],
-                    1,
-                    $laborTotal,
-                    $laborTotal
-                ]);
-            }
-            
-            error_log("Invoice created successfully: $invoiceNumber with total: $totalAmount");
-            $_SESSION['success'] .= " - Δημιουργήθηκε τιμολόγιο $invoiceNumber (" . number_format($totalAmount, 2) . "€)";
-            
-        } catch (Exception $e) {
-            // Log error but don't fail the status update
-            error_log("Failed to create invoice for project {$project['id']}: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            $_SESSION['error'] = 'Σφάλμα δημιουργίας τιμολογίου: ' . $e->getMessage();
         }
     }
     
