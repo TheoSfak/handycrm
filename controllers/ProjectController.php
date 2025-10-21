@@ -693,11 +693,17 @@ class ProjectController extends BaseController {
             }
             
             // Calculate costs from project materials and labor
-            $materialsSql = "SELECT COALESCE(SUM(quantity * unit_price), 0) as total FROM task_materials WHERE project_id = ?";
+            $materialsSql = "SELECT COALESCE(SUM(tm.quantity * tm.unit_price), 0) as total 
+                            FROM task_materials tm 
+                            JOIN tasks t ON tm.task_id = t.id 
+                            WHERE t.project_id = ?";
             $materialsResult = $this->db->fetchOne($materialsSql, [$project['id']]);
             $materialsTotal = $materialsResult['total'];
             
-            $laborSql = "SELECT COALESCE(SUM(hours * hourly_rate), 0) as total FROM task_labor WHERE project_id = ?";
+            $laborSql = "SELECT COALESCE(SUM(tl.hours * tl.hourly_rate), 0) as total 
+                        FROM task_labor tl 
+                        JOIN tasks t ON tl.task_id = t.id 
+                        WHERE t.project_id = ?";
             $laborResult = $this->db->fetchOne($laborSql, [$project['id']]);
             $laborTotal = $laborResult['total'];
             
@@ -757,13 +763,19 @@ class ProjectController extends BaseController {
             $invoiceId = $this->db->lastInsertId();
             
             // Add invoice items from project materials
-            $materials = $this->db->fetchAll("SELECT * FROM task_materials WHERE project_id = ?", [$project['id']]);
+            $materials = $this->db->fetchAll(
+                "SELECT tm.*, t.title as task_title 
+                 FROM task_materials tm 
+                 JOIN tasks t ON tm.task_id = t.id 
+                 WHERE t.project_id = ?", 
+                [$project['id']]
+            );
             foreach ($materials as $material) {
                 $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
                            VALUES (?, ?, ?, ?, ?, NOW())";
                 $this->db->execute($itemSql, [
                     $invoiceId,
-                    $material['description'] . ' (Υλικό)',
+                    $material['description'] . ' (' . $material['task_title'] . ')',
                     $material['quantity'],
                     $material['unit_price'],
                     $material['quantity'] * $material['unit_price']
@@ -771,17 +783,21 @@ class ProjectController extends BaseController {
             }
             
             // Add invoice items from project labor
-            $labor = $this->db->fetchAll("SELECT tl.*, u.first_name, u.last_name 
-                                         FROM task_labor tl 
-                                         LEFT JOIN users u ON tl.technician_id = u.id 
-                                         WHERE tl.project_id = ?", [$project['id']]);
+            $labor = $this->db->fetchAll(
+                "SELECT tl.*, t.title as task_title, u.first_name, u.last_name 
+                 FROM task_labor tl 
+                 JOIN tasks t ON tl.task_id = t.id 
+                 LEFT JOIN users u ON tl.user_id = u.id 
+                 WHERE t.project_id = ?", 
+                [$project['id']]
+            );
             foreach ($labor as $laborItem) {
-                $techName = $laborItem['first_name'] . ' ' . $laborItem['last_name'];
+                $techName = ($laborItem['first_name'] ?? '') . ' ' . ($laborItem['last_name'] ?? '');
                 $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
                            VALUES (?, ?, ?, ?, ?, NOW())";
                 $this->db->execute($itemSql, [
                     $invoiceId,
-                    'Εργασία: ' . $laborItem['description'] . ' - ' . $techName,
+                    'Εργασία: ' . $laborItem['task_title'] . ' - ' . trim($techName),
                     $laborItem['hours'],
                     $laborItem['hourly_rate'],
                     $laborItem['hours'] * $laborItem['hourly_rate']
