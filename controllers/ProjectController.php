@@ -700,22 +700,12 @@ class ProjectController extends BaseController {
             
             error_log("No existing invoice found, proceeding...");
             
-            // Calculate costs from project materials and labor
-            $materialsSql = "SELECT COALESCE(SUM(tm.quantity * tm.unit_price), 0) as total 
-                            FROM task_materials tm 
-                            JOIN tasks t ON tm.task_id = t.id 
-                            WHERE t.project_id = ?";
-            $materialsResult = $this->db->fetchOne($materialsSql, [$project['id']]);
-            $materialsTotal = $materialsResult['total'];
-            error_log("Materials total: $materialsTotal");
+            // Use the project's stored costs directly
+            $materialsTotal = $project['material_cost'] ?? 0;
+            $laborTotal = $project['labor_cost'] ?? 0;
             
-            $laborSql = "SELECT COALESCE(SUM(tl.hours * tl.hourly_rate), 0) as total 
-                        FROM task_labor tl 
-                        JOIN tasks t ON tl.task_id = t.id 
-                        WHERE t.project_id = ?";
-            $laborResult = $this->db->fetchOne($laborSql, [$project['id']]);
-            $laborTotal = $laborResult['total'];
-            error_log("Labor total: $laborTotal");
+            error_log("Materials total from project: $materialsTotal");
+            error_log("Labor total from project: $laborTotal");
             
             $subtotal = $materialsTotal + $laborTotal;
             $vatRate = $project['vat_rate'] ?? DEFAULT_VAT_RATE;
@@ -776,45 +766,29 @@ class ProjectController extends BaseController {
             
             $invoiceId = $this->db->lastInsertId();
             
-            // Add invoice items from project materials
-            $materials = $this->db->fetchAll(
-                "SELECT tm.*, t.title as task_title 
-                 FROM task_materials tm 
-                 JOIN tasks t ON tm.task_id = t.id 
-                 WHERE t.project_id = ?", 
-                [$project['id']]
-            );
-            foreach ($materials as $material) {
+            // Add invoice items - Materials
+            if ($materialsTotal > 0) {
                 $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
                            VALUES (?, ?, ?, ?, ?, NOW())";
                 $this->db->execute($itemSql, [
                     $invoiceId,
-                    $material['description'] . ' (' . $material['task_title'] . ')',
-                    $material['quantity'],
-                    $material['unit_price'],
-                    $material['quantity'] * $material['unit_price']
+                    'Υλικά για: ' . $project['title'],
+                    1,
+                    $materialsTotal,
+                    $materialsTotal
                 ]);
             }
             
-            // Add invoice items from project labor
-            $labor = $this->db->fetchAll(
-                "SELECT tl.*, t.title as task_title, u.first_name, u.last_name 
-                 FROM task_labor tl 
-                 JOIN tasks t ON tl.task_id = t.id 
-                 LEFT JOIN users u ON tl.user_id = u.id 
-                 WHERE t.project_id = ?", 
-                [$project['id']]
-            );
-            foreach ($labor as $laborItem) {
-                $techName = ($laborItem['first_name'] ?? '') . ' ' . ($laborItem['last_name'] ?? '');
+            // Add invoice items - Labor
+            if ($laborTotal > 0) {
                 $itemSql = "INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, created_at)
                            VALUES (?, ?, ?, ?, ?, NOW())";
                 $this->db->execute($itemSql, [
                     $invoiceId,
-                    'Εργασία: ' . $laborItem['task_title'] . ' - ' . trim($techName),
-                    $laborItem['hours'],
-                    $laborItem['hourly_rate'],
-                    $laborItem['hours'] * $laborItem['hourly_rate']
+                    'Εργατικά για: ' . $project['title'],
+                    1,
+                    $laborTotal,
+                    $laborTotal
                 ]);
             }
             
