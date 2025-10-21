@@ -574,16 +574,29 @@ function setDateRange(preset) {
             break;
     }
     
-    // Format dates as yyyy-mm-dd for HTML5 date input fields
-    const formatDate = (date) => {
+    // Format dates as dd/mm/yyyy for Greek format display
+    const formatDateGreek = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${day}/${month}/${year}`;
+    };
+    
+    // Format dates as yyyy-mm-dd for SQL
+    const formatDateSQL = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
     
-    weekStartInput.value = formatDate(startDate);
-    weekEndInput.value = formatDate(endDate);
+    // Set Greek format in visible input
+    weekStartInput.value = formatDateGreek(startDate);
+    weekEndInput.value = formatDateGreek(endDate);
+    
+    // Set SQL format in hidden inputs
+    document.getElementById('week_start_hidden').value = formatDateSQL(startDate);
+    document.getElementById('week_end_hidden').value = formatDateSQL(endDate);
     
     // Auto-submit the form after setting dates
     const form = weekStartInput.closest('form');

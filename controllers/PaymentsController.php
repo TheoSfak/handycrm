@@ -25,8 +25,21 @@ class PaymentsController extends BaseController {
         
         // Get filter parameters
         $selectedTechnician = $_GET['technician_id'] ?? null;
-        $weekStart = $_GET['week_start'] ?? null;
-        $weekEnd = $_GET['week_end'] ?? null;
+        
+        // Support both SQL format (from hidden inputs) and Greek format (from text inputs)
+        $weekStart = $_GET['week_start_sql'] ?? $_GET['week_start'] ?? null;
+        $weekEnd = $_GET['week_end_sql'] ?? $_GET['week_end'] ?? null;
+        
+        // Convert Greek format (dd/mm/yyyy) to SQL format (yyyy-mm-dd) if needed
+        if ($weekStart && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $weekStart)) {
+            $parts = explode('/', $weekStart);
+            $weekStart = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+        }
+        if ($weekEnd && preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $weekEnd)) {
+            $parts = explode('/', $weekEnd);
+            $weekEnd = $parts[2] . '-' . $parts[1] . '-' . $parts[0];
+        }
+        
         $paidStatus = $_GET['paid_status'] ?? 'all'; // 'all', 'paid', 'unpaid'
         
         // Pagination parameters
