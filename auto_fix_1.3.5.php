@@ -6,11 +6,12 @@
  * Run this file once via browser: http://yourdomain.com/auto_fix_1.3.5.php
  * 
  * Fixes:
- * 1. Adds missing 'paid_at' column to task_labor table
- * 2. Adds missing 'paid_by' column to task_labor table
- * 3. Updates users.role ENUM to include 'supervisor'
- * 4. Adds 'is_active' column to users table
- * 5. Creates necessary indexes for performance
+ * 1. Creates 'payments' table if missing
+ * 2. Adds missing 'paid_at' column to task_labor table
+ * 3. Adds missing 'paid_by' column to task_labor table
+ * 4. Updates users.role ENUM to include 'supervisor'
+ * 5. Adds 'is_active' column to users table
+ * 6. Creates necessary indexes for performance
  * 
  * SAFE TO RUN MULTIPLE TIMES - All operations are idempotent
  * 
@@ -170,6 +171,7 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
                 <strong>Ready to fix migration issues</strong><br>
                 This script will automatically:<br>
                 <ul style="margin: 10px 0 0 30px;">
+                    <li>Create 'payments' table if missing</li>
                     <li>Add missing 'paid_at' column to task_labor</li>
                     <li>Add missing 'paid_by' column to task_labor</li>
                     <li>Update users.role ENUM to include 'supervisor'</li>
@@ -211,9 +213,51 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             $allSuccess = true;
             $results = [];
 
-            // Step 1: Check and add paid_at and paid_by columns
+            // Step 1: Create payments table if it doesn't exist
             echo '<div class="step">';
-            echo '<h3>Step 1: Add payment tracking columns to task_labor</h3>';
+            echo '<h3>Step 1: Create payments table</h3>';
+            
+            $checkPaymentsTable = $pdo->query("
+                SELECT COUNT(*) as count 
+                FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'payments'
+            ")->fetch(PDO::FETCH_ASSOC);
+
+            if ($checkPaymentsTable['count'] == 0) {
+                $pdo->exec("
+                    CREATE TABLE `payments` (
+                        `id` INT(11) NOT NULL AUTO_INCREMENT,
+                        `technician_id` INT(11) NOT NULL,
+                        `week_start` DATE NOT NULL,
+                        `week_end` DATE NOT NULL,
+                        `total_hours` DECIMAL(10,2) DEFAULT 0.00,
+                        `total_amount` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+                        `paid_at` DATETIME DEFAULT NULL,
+                        `paid_by` INT(11) DEFAULT NULL,
+                        `notes` TEXT DEFAULT NULL,
+                        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                        PRIMARY KEY (`id`),
+                        KEY `idx_technician` (`technician_id`),
+                        KEY `idx_week` (`week_start`, `week_end`),
+                        KEY `idx_paid` (`paid_at`),
+                        KEY `idx_unpaid` (`technician_id`, `paid_at`),
+                        CONSTRAINT `fk_payment_technician` FOREIGN KEY (`technician_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+                        CONSTRAINT `fk_payment_user` FOREIGN KEY (`paid_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ");
+                echo '<div class="status success"><span class="icon success">✓</span> Table <code>payments</code> created successfully!</div>';
+                $results[] = 'payments table CREATED';
+            } else {
+                echo '<div class="status warning"><span class="icon warning">!</span> Table <code>payments</code> already exists (OK)</div>';
+                $results[] = 'payments table already exists';
+            }
+            echo '</div>';
+
+            // Step 2: Check and add paid_at and paid_by columns
+            echo '<div class="step">';
+            echo '<h3>Step 2: Add payment tracking columns to task_labor</h3>';
             
             // Check paid_at column
             $checkPaidAt = $pdo->query("
@@ -260,9 +304,9 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             }
             echo '</div>';
 
-            // Step 2: Add foreign key
+            // Step 3: Add foreign key
             echo '<div class="step">';
-            echo '<h3>Step 2: Add foreign key constraint</h3>';
+            echo '<h3>Step 3: Add foreign key constraint</h3>';
             
             $checkFK = $pdo->query("
                 SELECT COUNT(*) as count 
@@ -291,9 +335,9 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             }
             echo '</div>';
 
-            // Step 3: Update users role ENUM
+            // Step 4: Update users role ENUM
             echo '<div class="step">';
-            echo '<h3>Step 3: Update users.role ENUM (add supervisor)</h3>';
+            echo '<h3>Step 4: Update users.role ENUM (add supervisor)</h3>';
             
             try {
                 $pdo->exec("
@@ -310,9 +354,9 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             }
             echo '</div>';
 
-            // Step 4: Add is_active column to users
+            // Step 5: Add is_active column to users
             echo '<div class="step">';
-            echo '<h3>Step 4: Add is_active column to users</h3>';
+            echo '<h3>Step 5: Add is_active column to users</h3>';
             
             $checkActive = $pdo->query("
                 SELECT COUNT(*) as count 
@@ -339,9 +383,9 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             }
             echo '</div>';
 
-            // Step 5: Create indexes
+            // Step 6: Create indexes
             echo '<div class="step">';
-            echo '<h3>Step 5: Create performance indexes</h3>';
+            echo '<h3>Step 6: Create performance indexes</h3>';
             
             $indexes = [
                 'idx_paid' => "CREATE INDEX idx_paid ON task_labor (paid_at)",
@@ -373,9 +417,9 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             }
             echo '</div>';
 
-            // Step 6: Record migration
+            // Step 7: Record migration
             echo '<div class="step">';
-            echo '<h3>Step 6: Record migration in database</h3>';
+            echo '<h3>Step 7: Record migration in database</h3>';
             
             try {
                 $stmt = $pdo->prepare("
