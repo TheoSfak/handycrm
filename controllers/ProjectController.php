@@ -683,14 +683,22 @@ class ProjectController extends BaseController {
      */
     private function createInvoiceForProject($project) {
         try {
+            error_log("=== CREATE INVOICE DEBUG ===");
+            error_log("Project ID: " . $project['id']);
+            error_log("Project data: " . print_r($project, true));
+            
             // Check if invoice already exists for this project
             $checkSql = "SELECT id FROM invoices WHERE project_id = ? AND status IN ('paid', 'sent', 'draft')";
             $existing = $this->db->fetchOne($checkSql, [$project['id']]);
             
             if ($existing) {
+                error_log("Invoice already exists for project " . $project['id']);
                 // Invoice already exists, don't create duplicate
+                $_SESSION['success'] .= ' (Υπάρχει ήδη τιμολόγιο)';
                 return;
             }
+            
+            error_log("No existing invoice found, proceeding...");
             
             // Calculate costs from project materials and labor
             $materialsSql = "SELECT COALESCE(SUM(tm.quantity * tm.unit_price), 0) as total 
@@ -699,6 +707,7 @@ class ProjectController extends BaseController {
                             WHERE t.project_id = ?";
             $materialsResult = $this->db->fetchOne($materialsSql, [$project['id']]);
             $materialsTotal = $materialsResult['total'];
+            error_log("Materials total: $materialsTotal");
             
             $laborSql = "SELECT COALESCE(SUM(tl.hours * tl.hourly_rate), 0) as total 
                         FROM task_labor tl 
@@ -706,14 +715,19 @@ class ProjectController extends BaseController {
                         WHERE t.project_id = ?";
             $laborResult = $this->db->fetchOne($laborSql, [$project['id']]);
             $laborTotal = $laborResult['total'];
+            error_log("Labor total: $laborTotal");
             
             $subtotal = $materialsTotal + $laborTotal;
             $vatRate = $project['vat_rate'] ?? DEFAULT_VAT_RATE;
             $vatAmount = $subtotal * ($vatRate / 100);
             $totalAmount = $subtotal + $vatAmount;
             
+            error_log("Subtotal: $subtotal, VAT: $vatAmount, Total: $totalAmount");
+            
             // If total is 0, don't create invoice
             if ($totalAmount == 0) {
+                error_log("Total is 0, not creating invoice");
+                $_SESSION['success'] .= ' (Δεν δημιουργήθηκε τιμολόγιο - το έργο δεν έχει κόστη)';
                 return;
             }
             
@@ -804,9 +818,14 @@ class ProjectController extends BaseController {
                 ]);
             }
             
+            error_log("Invoice created successfully: $invoiceNumber with total: $totalAmount");
+            $_SESSION['success'] .= " - Δημιουργήθηκε τιμολόγιο $invoiceNumber (" . number_format($totalAmount, 2) . "€)";
+            
         } catch (Exception $e) {
             // Log error but don't fail the status update
             error_log("Failed to create invoice for project {$project['id']}: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            $_SESSION['error'] = 'Σφάλμα δημιουργίας τιμολογίου: ' . $e->getMessage();
         }
     }
     
