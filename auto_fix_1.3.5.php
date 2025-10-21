@@ -6,10 +6,11 @@
  * Run this file once via browser: http://yourdomain.com/auto_fix_1.3.5.php
  * 
  * Fixes:
- * 1. Adds missing 'paid_by' column to task_labor table
- * 2. Updates users.role ENUM to include 'supervisor'
- * 3. Adds 'is_active' column to users table
- * 4. Creates necessary indexes for performance
+ * 1. Adds missing 'paid_at' column to task_labor table
+ * 2. Adds missing 'paid_by' column to task_labor table
+ * 3. Updates users.role ENUM to include 'supervisor'
+ * 4. Adds 'is_active' column to users table
+ * 5. Creates necessary indexes for performance
  * 
  * SAFE TO RUN MULTIPLE TIMES - All operations are idempotent
  * 
@@ -169,6 +170,7 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
                 <strong>Ready to fix migration issues</strong><br>
                 This script will automatically:<br>
                 <ul style="margin: 10px 0 0 30px;">
+                    <li>Add missing 'paid_at' column to task_labor</li>
                     <li>Add missing 'paid_by' column to task_labor</li>
                     <li>Update users.role ENUM to include 'supervisor'</li>
                     <li>Add 'is_active' column to users table</li>
@@ -209,11 +211,34 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             $allSuccess = true;
             $results = [];
 
-            // Step 1: Check and add paid_by column
+            // Step 1: Check and add paid_at and paid_by columns
             echo '<div class="step">';
-            echo '<h3>Step 1: Add paid_by column to task_labor</h3>';
+            echo '<h3>Step 1: Add payment tracking columns to task_labor</h3>';
             
-            $checkColumn = $pdo->query("
+            // Check paid_at column
+            $checkPaidAt = $pdo->query("
+                SELECT COUNT(*) as count 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = DATABASE() 
+                AND TABLE_NAME = 'task_labor' 
+                AND COLUMN_NAME = 'paid_at'
+            ")->fetch(PDO::FETCH_ASSOC);
+
+            if ($checkPaidAt['count'] == 0) {
+                $pdo->exec("
+                    ALTER TABLE task_labor 
+                    ADD COLUMN paid_at DATETIME DEFAULT NULL 
+                    COMMENT 'When this labor entry was marked as paid'
+                ");
+                echo '<div class="status success"><span class="icon success">✓</span> Column <code>paid_at</code> added successfully!</div>';
+                $results[] = 'paid_at column ADDED';
+            } else {
+                echo '<div class="status warning"><span class="icon warning">!</span> Column <code>paid_at</code> already exists (OK)</div>';
+                $results[] = 'paid_at column already exists';
+            }
+            
+            // Check paid_by column
+            $checkPaidBy = $pdo->query("
                 SELECT COUNT(*) as count 
                 FROM INFORMATION_SCHEMA.COLUMNS 
                 WHERE TABLE_SCHEMA = DATABASE() 
@@ -221,7 +246,7 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
                 AND COLUMN_NAME = 'paid_by'
             ")->fetch(PDO::FETCH_ASSOC);
 
-            if ($checkColumn['count'] == 0) {
+            if ($checkPaidBy['count'] == 0) {
                 $pdo->exec("
                     ALTER TABLE task_labor 
                     ADD COLUMN paid_by INT UNSIGNED NULL 
@@ -247,7 +272,7 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
                 AND CONSTRAINT_NAME = 'fk_task_labor_paid_by'
             ")->fetch(PDO::FETCH_ASSOC);
 
-            if ($checkFK['count'] == 0 && $checkColumn['count'] > 0) {
+            if ($checkFK['count'] == 0 && $checkPaidBy['count'] > 0) {
                 try {
                     $pdo->exec("
                         ALTER TABLE task_labor 
@@ -319,8 +344,8 @@ define('AUTO_DELETE_AFTER_RUN', false); // Set to true to auto-delete this file 
             echo '<h3>Step 5: Create performance indexes</h3>';
             
             $indexes = [
-                'idx_task_labor_paid_at' => "CREATE INDEX idx_task_labor_paid_at ON task_labor (paid_at)",
-                'idx_task_labor_tech_paid' => "CREATE INDEX idx_task_labor_tech_paid ON task_labor (technician_id, paid_at)"
+                'idx_paid' => "CREATE INDEX idx_paid ON task_labor (paid_at)",
+                'idx_task_labor_unpaid' => "CREATE INDEX idx_task_labor_unpaid ON task_labor (technician_id, paid_at)"
             ];
 
             foreach ($indexes as $indexName => $sql) {
