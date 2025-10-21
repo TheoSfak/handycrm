@@ -32,20 +32,21 @@ class ReportsController extends BaseController {
     }
     
     /**
-     * Get revenue analytics (from paid invoices)
+     * Get revenue analytics (from invoiced projects)
      */
     private function getRevenueData($startDate, $endDate) {
         $sql = "SELECT 
-                    DATE_FORMAT(paid_date, '%Y-%m') as month,
+                    DATE_FORMAT(invoiced_at, '%Y-%m') as month,
                     COUNT(*) as total_invoices,
-                    SUM(total_amount) as total_revenue,
-                    SUM(subtotal) as subtotal,
-                    SUM(vat_amount) as vat_amount,
-                    AVG(total_amount) as avg_revenue
-                FROM invoices 
-                WHERE paid_date IS NOT NULL
-                AND paid_date BETWEEN ? AND ?
-                GROUP BY DATE_FORMAT(paid_date, '%Y-%m')
+                    SUM(total_cost) as total_revenue,
+                    SUM(material_cost + labor_cost) as subtotal,
+                    SUM(total_cost - (material_cost + labor_cost)) as vat_amount,
+                    AVG(total_cost) as avg_revenue
+                FROM projects 
+                WHERE status = 'invoiced'
+                AND invoiced_at IS NOT NULL
+                AND invoiced_at BETWEEN ? AND ?
+                GROUP BY DATE_FORMAT(invoiced_at, '%Y-%m')
                 ORDER BY month ASC";
         
         return $this->db->fetchAll($sql, [$startDate, $endDate]);
@@ -55,7 +56,7 @@ class ReportsController extends BaseController {
      * Get customer analytics
      */
     private function getCustomerData($startDate, $endDate) {
-        // Top 10 customers by revenue (from paid invoices)
+        // Top 10 customers by revenue (from invoiced projects)
         $topCustomers = "SELECT 
                             c.id,
                             CASE 
@@ -63,12 +64,13 @@ class ReportsController extends BaseController {
                                 ELSE CONCAT(c.first_name, ' ', c.last_name)
                             END as customer_name,
                             c.customer_type,
-                            COUNT(DISTINCT i.id) as total_invoices,
-                            COALESCE(SUM(i.total_amount), 0) as total_revenue
+                            COUNT(DISTINCT p.id) as total_invoices,
+                            COALESCE(SUM(p.total_cost), 0) as total_revenue
                         FROM customers c
-                        LEFT JOIN invoices i ON c.id = i.customer_id 
-                            AND i.paid_date IS NOT NULL
-                            AND i.paid_date BETWEEN ? AND ?
+                        LEFT JOIN projects p ON c.id = p.customer_id 
+                            AND p.status = 'invoiced'
+                            AND p.invoiced_at IS NOT NULL
+                            AND p.invoiced_at BETWEEN ? AND ?
                         WHERE c.is_active = 1
                         GROUP BY c.id
                         ORDER BY total_revenue DESC
@@ -118,16 +120,16 @@ class ReportsController extends BaseController {
         
         $statuses = $this->db->fetchAll($statusBreakdown, [$startDate, $endDate]);
         
-        // Revenue by project category (from paid invoices)
+        // Revenue by project category (from invoiced projects)
         $categoryBreakdown = "SELECT 
                                 p.category,
-                                COUNT(DISTINCT i.id) as count,
-                                AVG(i.total_amount) as avg_cost,
-                                SUM(i.total_amount) as total_revenue
-                            FROM invoices i
-                            INNER JOIN projects p ON i.project_id = p.id
-                            WHERE i.paid_date IS NOT NULL
-                            AND i.paid_date BETWEEN ? AND ?
+                                COUNT(DISTINCT p.id) as count,
+                                AVG(p.total_cost) as avg_cost,
+                                SUM(p.total_cost) as total_revenue
+                            FROM projects p
+                            WHERE p.status = 'invoiced'
+                            AND p.invoiced_at IS NOT NULL
+                            AND p.invoiced_at BETWEEN ? AND ?
                             GROUP BY p.category
                             ORDER BY total_revenue DESC";
         
@@ -163,7 +165,7 @@ class ReportsController extends BaseController {
     }
     
     /**
-     * Get technician performance (based on paid invoices)
+     * Get technician performance (based on invoiced projects)
      */
     private function getTechnicianData($startDate, $endDate) {
         $sql = "SELECT 
@@ -172,20 +174,17 @@ class ReportsController extends BaseController {
                     COUNT(DISTINCT p.id) as total_projects,
                     COUNT(DISTINCT CASE WHEN p.status = 'completed' THEN p.id END) as completed_projects,
                     ROUND((COUNT(DISTINCT CASE WHEN p.status = 'completed' THEN p.id END) / COUNT(DISTINCT p.id)) * 100, 1) as completion_rate,
-                    COALESCE(SUM(i.total_amount), 0) as total_revenue,
+                    COALESCE(SUM(CASE WHEN p.status = 'invoiced' THEN p.total_cost END), 0) as total_revenue,
                     AVG(DATEDIFF(p.completion_date, p.start_date)) as avg_completion_days
                 FROM users u
                 LEFT JOIN projects p ON u.id = p.assigned_technician
                     AND p.created_at BETWEEN ? AND ?
-                LEFT JOIN invoices i ON p.id = i.project_id
-                    AND i.paid_date IS NOT NULL
-                    AND i.paid_date BETWEEN ? AND ?
                 WHERE u.role = 'technician'
                 GROUP BY u.id
                 HAVING total_projects > 0
                 ORDER BY total_revenue DESC";
         
-        return $this->db->fetchAll($sql, [$startDate, $endDate, $startDate, $endDate]);
+        return $this->db->fetchAll($sql, [$startDate, $endDate]);
     }
     
     /**
@@ -194,11 +193,12 @@ class ReportsController extends BaseController {
     private function getSummaryStats($startDate, $endDate) {
         $stats = [];
         
-        // Total revenue (from paid invoices)
-        $revenue = "SELECT COALESCE(SUM(total_amount), 0) as total 
-                    FROM invoices 
-                    WHERE paid_date IS NOT NULL
-                    AND paid_date BETWEEN ? AND ?";
+        // Total revenue (from invoiced projects)
+        $revenue = "SELECT COALESCE(SUM(total_cost), 0) as total 
+                    FROM projects 
+                    WHERE status = 'invoiced'
+                    AND invoiced_at IS NOT NULL
+                    AND invoiced_at BETWEEN ? AND ?";
         $stats['total_revenue'] = $this->db->fetchOne($revenue, [$startDate, $endDate])['total'];
         
         // Total projects
