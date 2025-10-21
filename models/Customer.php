@@ -45,9 +45,9 @@ class Customer extends BaseModel {
         $sql = "SELECT * FROM quotes WHERE customer_id = ? ORDER BY created_at DESC";
         $customer['quotes'] = $this->db->fetchAll($sql, [$id]);
         
-        // Get invoices
-        $sql = "SELECT * FROM invoices WHERE customer_id = ? ORDER BY created_at DESC";
-        $customer['invoices'] = $this->db->fetchAll($sql, [$id]);
+        // Get invoiced projects (replaced invoices)
+        $sql = "SELECT * FROM projects WHERE customer_id = ? AND status = 'invoiced' ORDER BY invoiced_at DESC";
+        $customer['invoiced_projects'] = $this->db->fetchAll($sql, [$id]);
         
         return $customer;
     }
@@ -242,9 +242,9 @@ class Customer extends BaseModel {
             $sql = "SELECT * FROM quotes WHERE customer_id = ? ORDER BY created_at DESC";
             $customer['quotes'] = $this->db->fetchAll($sql, [$customer['id']]);
             
-            // Get invoices
-            $sql = "SELECT * FROM invoices WHERE customer_id = ? ORDER BY created_at DESC";
-            $customer['invoices'] = $this->db->fetchAll($sql, [$customer['id']]);
+            // Get invoiced projects (replaced invoices)
+            $sql = "SELECT * FROM projects WHERE customer_id = ? AND status = 'invoiced' ORDER BY invoiced_at DESC";
+            $customer['invoiced_projects'] = $this->db->fetchAll($sql, [$customer['id']]);
         }
         
         return $customer;
