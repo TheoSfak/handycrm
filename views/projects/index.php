@@ -143,7 +143,7 @@
                         <td>
                             <?php 
                             // Use calculated costs from tasks
-                            $totalCost = $project['calculated_total_cost'] ?? 0;
+                            $totalCost = floatval($project['calculated_total_cost'] ?? 0);
                             if ($totalCost > 0): 
                             ?>
                                 <?= number_format($totalCost, 2) ?>€
