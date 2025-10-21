@@ -165,23 +165,7 @@
                 </div>
             </div>
             
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="material_cost" class="form-label"><?= __('projects.material_cost') ?> (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="material_cost" name="material_cost" 
-                               value="<?= htmlspecialchars($project['material_cost'] ?? '0.00') ?>">
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="labor_cost" class="form-label"><?= __('projects.labor_cost') ?> (€)</label>
-                        <input type="number" step="0.01" class="form-control" id="labor_cost" name="labor_cost" 
-                               value="<?= htmlspecialchars($project['labor_cost'] ?? '0.00') ?>">
-                    </div>
-                </div>
-            </div>
+            <!-- Cost fields removed - costs calculated from tasks -->
             
             <div class="mb-3">
                 <label for="notes" class="form-label"><?= __('projects.notes') ?></label>
