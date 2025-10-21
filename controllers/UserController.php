@@ -10,6 +10,9 @@ class UserController extends BaseController {
      * Show users list
      */
     public function index() {
+        // Only admin can view users list
+        $this->requireAdmin();
+        
         $user = $this->getCurrentUser();
         
         $database = new Database();
@@ -31,6 +34,9 @@ class UserController extends BaseController {
      * Show create form
      */
     public function create() {
+        // Only admin can create users
+        $this->requireAdmin();
+        
         $user = $this->getCurrentUser();
         
         $data = [
@@ -138,6 +144,9 @@ class UserController extends BaseController {
      * Update user
      */
     public function update() {
+        // Only admin can update users
+        $this->requireAdmin();
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/users');
         }
@@ -157,13 +166,22 @@ class UserController extends BaseController {
             }
         }
         
+        // Validate role
+        $allowedRoles = ['admin', 'supervisor', 'technician', 'assistant'];
+        $role = $_POST['role'] ?? 'technician';
+        if (!in_array($role, $allowedRoles)) {
+            $_SESSION['error'] = 'Μη έγκυρος ρόλος χρήστη';
+            $this->redirect('/users/edit?id=' . $id);
+            return;
+        }
+        
         $userData = [
             'username' => trim($_POST['username']),
             'email' => trim($_POST['email']),
             'first_name' => trim($_POST['first_name']),
             'last_name' => trim($_POST['last_name']),
             'phone' => trim($_POST['phone'] ?? ''),
-            'role' => $_POST['role'] ?? 'technician',
+            'role' => $role,
             'hourly_rate' => floatval($_POST['hourly_rate'] ?? 0),
             'is_active' => isset($_POST['is_active']) ? 1 : 0
         ];
@@ -173,13 +191,17 @@ class UserController extends BaseController {
             $userData['password'] = password_hash($_POST['password'], PASSWORD_DEFAULT);
         }
         
-        $userModel = new User();
-        $success = $userModel->update($id, $userData);
-        
-        if ($success) {
-            $_SESSION['success'] = 'Ο χρήστης ενημερώθηκε με επιτυχία';
-        } else {
-            $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση του χρήστη';
+        try {
+            $userModel = new User();
+            $success = $userModel->update($id, $userData);
+            
+            if ($success) {
+                $_SESSION['success'] = 'Ο χρήστης ενημερώθηκε με επιτυχία';
+            } else {
+                $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση του χρήστη';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Σφάλμα: ' . $e->getMessage();
         }
         
         $this->redirect('/users');
@@ -230,6 +252,14 @@ class UserController extends BaseController {
      * Show user profile with payment history
      */
     public function show($id) {
+        // Check if user can view this profile
+        // Admin can view all, others can only view their own
+        if (!$this->canViewUser($id)) {
+            $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης σε αυτή την καρτέλα';
+            $this->redirect('/dashboard');
+            return;
+        }
+        
         $user = $this->getCurrentUser();
         
         $database = new Database();

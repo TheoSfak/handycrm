@@ -354,6 +354,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
             $controller->markPaid();
         } elseif ($currentRoute === '/payments/mark-unpaid') {
             $controller->markUnpaid();
+        } elseif ($currentRoute === '/payments/mark-all-paid') {
+            $controller->markAllPaid();
         } elseif ($currentRoute === '/payments/mark-entries-paid') {
             $controller->markEntriesPaid();
         } elseif ($currentRoute === '/payments/mark-entries-unpaid') {

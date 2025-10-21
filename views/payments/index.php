@@ -3,15 +3,26 @@ require_once 'views/includes/header.php';
 ?>
 
 <div class="container-fluid mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2><i class="fas fa-money-bill-wave me-2"></i><?= __('payments.page_title') ?></h2>
-            <p class="text-muted"><?= __('payments.page_description') ?></p>
+    <!-- Page Header with gradient background -->
+    <div class="card shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+        <div class="card-body text-white py-4">
+            <div class="text-center mb-3">
+                <h2 class="mb-2">
+                    <i class="fas fa-money-bill-wave me-3"></i>
+                    Πληρωμές Εργαζομένων
+                </h2>
+                <p class="mb-0 opacity-75">Διαχείριση εβδομαδιαίων πληρωμών εργαζομένων</p>
+            </div>
         </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Filters Card with colored header -->
     <div class="card shadow-sm mb-4">
+        <div class="card-header border-bottom" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <h5 class="mb-0 text-white">
+                <i class="fas fa-filter me-2"></i>Κατάσταση Πληρωμής
+            </h5>
+        </div>
         <div class="card-body">
             <form method="GET" action="<?= BASE_URL ?>/payments" class="row g-3">
                 <div class="col-md-3">
@@ -177,46 +188,89 @@ require_once 'views/includes/header.php';
             </div>
         </div>
         
+        <!-- Bulk Actions Toolbar -->
         <div class="row mb-3">
-            <div class="col-12">
+            <div class="col-md-6">
                 <h5><?= __('payments.showing_week') ?>: <?= formatDate($weekStart) ?> - <?= formatDate($weekEnd) ?></h5>
+            </div>
+            <div class="col-md-6 text-end">
+                <?php if ($grandTotalUnpaid > 0): ?>
+                    <button type="button" class="btn btn-warning" id="markAllPaidBtn" 
+                            data-week-start="<?= $weekStart ?>" 
+                            data-week-end="<?= $weekEnd ?>">
+                        <i class="fas fa-check-double me-2"></i>Επισήμανση Όλων ως Πληρωμένα
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
 
-        <?php foreach ($weeklyData as $tech): ?>
+        <?php foreach ($weeklyData as $tech): 
+            // Calculate payment percentage
+            $totalAmount = $tech['filtered_total_amount'] ?? $tech['total_amount'];
+            $paidAmount = 0;
+            $unpaidAmount = 0;
+            
+            foreach ($tech['entries'] as $entry) {
+                if (!empty($entry['paid_at'])) {
+                    $paidAmount += $entry['subtotal'];
+                } else {
+                    $unpaidAmount += $entry['subtotal'];
+                }
+            }
+            
+            $paymentPercentage = $totalAmount > 0 ? ($paidAmount / $totalAmount) * 100 : 0;
+            
+            // Role labels in Greek
+            $roleLabels = [
+                'technician' => 'ΤΕΧΝΙΚΟΣ',
+                'assistant' => 'ΒΟΗΘΟΣ ΤΕΧΝΙΚΟΥ',
+                'supervisor' => 'ΥΠΕΥΘΥΝΟΣ ΣΥΝΕΡΓΕΙΟΥ',
+                'admin' => 'ΔΙΑΧΕΙΡΙΣΤΗΣ'
+            ];
+            $roleLabel = $roleLabels[$tech['role']] ?? strtoupper($tech['role']);
+        ?>
             <div class="card shadow-sm mb-4 technician-card" data-technician-id="<?= $tech['technician_id'] ?>">
                 <div class="card-header bg-primary text-white">
                     <div class="row align-items-center">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <h5 class="mb-0">
                                 <i class="fas fa-user-hard-hat me-2"></i>
                                 <?= htmlspecialchars($tech['technician_name']) ?>
+                                <span class="badge bg-light text-dark ms-2" style="font-size: 0.7rem;">
+                                    <?= $roleLabel ?>
+                                </span>
                             </h5>
                             <small><?= formatCurrency($tech['hourly_rate']) ?> / <?= __('payments.hours') ?></small>
                         </div>
-                        <div class="col-md-8">
-                            <div class="row text-end">
-                                <div class="col-4">
+                        <div class="col-md-9">
+                            <div class="row text-end align-items-center">
+                                <div class="col-3">
                                     <small class="d-block"><?= __('payments.total_hours') ?></small>
                                     <strong><?= number_format($tech['filtered_total_hours'] ?? $tech['total_hours'], 2) ?>h</strong>
                                 </div>
-                                <div class="col-4">
+                                <div class="col-3">
                                     <small class="d-block"><?= __('payments.total_amount') ?></small>
-                                    <strong><?= formatCurrency($tech['filtered_total_amount'] ?? $tech['total_amount']) ?></strong>
+                                    <strong><?= formatCurrency($totalAmount) ?></strong>
                                 </div>
-                                <div class="col-4">
-                                    <?php if (!empty($tech['paid_at'])): ?>
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check-circle me-1"></i><?= __('payments.paid') ?>
-                                        </span>
-                                        <small class="d-block text-white-50 mt-1">
-                                            <?= formatDate($tech['paid_at']) ?>
-                                        </small>
-                                    <?php else: ?>
-                                        <span class="badge bg-warning">
-                                            <i class="fas fa-clock me-1"></i><?= __('payments.not_paid_yet') ?>
-                                        </span>
-                                    <?php endif; ?>
+                                <div class="col-3">
+                                    <small class="d-block">Πληρωμένα / Απλήρωτα</small>
+                                    <strong class="text-success"><?= formatCurrency($paidAmount) ?></strong>
+                                    <span class="mx-1">/</span>
+                                    <strong class="text-danger" data-unpaid-amount="<?= $unpaidAmount ?>"><?= formatCurrency($unpaidAmount) ?></strong>
+                                </div>
+                                <div class="col-3">
+                                    <small class="d-block">Ποσοστό Πληρωμής</small>
+                                    <div class="progress mt-1" style="height: 20px;" data-bs-toggle="tooltip" 
+                                         title="<?= number_format($paymentPercentage, 1) ?>% πληρωμένα">
+                                        <div class="progress-bar <?= $paymentPercentage == 100 ? 'bg-success' : ($paymentPercentage > 50 ? 'bg-info' : 'bg-warning') ?>" 
+                                             role="progressbar" 
+                                             style="width: <?= $paymentPercentage ?>%"
+                                             aria-valuenow="<?= $paymentPercentage ?>" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            <strong><?= number_format($paymentPercentage, 0) ?>%</strong>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -273,8 +327,10 @@ require_once 'views/includes/header.php';
                                     <?php foreach ($tech['entries'] as $entry): 
                                         $workDate = $entry['task_date'] ?: $entry['date_from'];
                                         $isPaid = !empty($entry['paid_at']);
+                                        $rowClass = $isPaid ? 'table-success' : 'table-warning';
+                                        $amountClass = $isPaid ? 'text-success' : 'text-danger';
                                     ?>
-                                        <tr class="labor-entry-row <?= $isPaid ? 'table-success' : '' ?>" 
+                                        <tr class="labor-entry-row <?= $rowClass ?>" 
                                             data-entry-id="<?= $entry['id'] ?>"
                                             data-is-paid="<?= $isPaid ? '1' : '0' ?>">
                                             <td>
@@ -285,17 +341,28 @@ require_once 'views/includes/header.php';
                                             <td>
                                                 <strong><?= htmlspecialchars($entry['project_title']) ?></strong>
                                             </td>
-                                            <td><?= htmlspecialchars($entry['task_description']) ?></td>
+                                            <td>
+                                                <span data-bs-toggle="tooltip" 
+                                                      data-bs-html="true"
+                                                      title="<strong>Έργο:</strong> <?= htmlspecialchars($entry['project_title']) ?><br><strong>Εργασία:</strong> <?= htmlspecialchars($entry['task_description']) ?><br><strong>Ημερομηνία:</strong> <?= formatDate($workDate) ?>">
+                                                    <?= htmlspecialchars($entry['task_description']) ?>
+                                                </span>
+                                            </td>
                                             <td class="text-center">
-                                                <span class="badge bg-info"><?= number_format($entry['hours_worked'], 2) ?>h</span>
+                                                <span class="badge bg-info" data-bs-toggle="tooltip" 
+                                                      title="<?= number_format($entry['hours_worked'], 2) ?> ώρες × <?= formatCurrency($entry['hourly_rate']) ?>/ώρα">
+                                                    <?= number_format($entry['hours_worked'], 2) ?>h
+                                                </span>
                                             </td>
                                             <td class="text-end"><?= formatCurrency($entry['hourly_rate']) ?></td>
                                             <td class="text-end">
-                                                <strong><?= formatCurrency($entry['subtotal']) ?></strong>
+                                                <strong class="<?= $amountClass ?>"><?= formatCurrency($entry['subtotal']) ?></strong>
                                             </td>
                                             <td class="text-center">
                                                 <?php if ($isPaid): ?>
-                                                    <span class="badge bg-success">
+                                                    <span class="badge bg-success" data-bs-toggle="tooltip"
+                                                          data-bs-html="true"
+                                                          title="<strong>Πληρώθηκε:</strong> <?= formatDate($entry['paid_at'], true) ?><?= !empty($entry['paid_by_name']) ? '<br><strong>Από:</strong> ' . htmlspecialchars($entry['paid_by_name']) : '' ?>">
                                                         <i class="fas fa-check-circle"></i>
                                                     </span>
                                                     <br>
@@ -413,6 +480,50 @@ require_once 'views/includes/header.php';
             Εμφάνιση <?= $startItem ?> - <?= $endItem ?> από <?= $totalTechnicians ?> εργαζόμενους
         </div>
     <?php endif; ?>
+</div>
+
+<!-- Bulk Payment Confirmation Modal -->
+<div class="modal fade" id="bulkPaymentModal" tabindex="-1" aria-labelledby="bulkPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="bulkPaymentModalLabel">
+                    <i class="fas fa-check-double me-2"></i>Επιβεβαίωση Μαζικής Πληρωμής
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Θα επισημανθούν ως πληρωμένες όλες οι <strong>απλήρωτες</strong> εγγραφές για την επιλεγμένη περίοδο.
+                </div>
+                
+                <h6 class="mb-3">Τεχνικοί προς πληρωμή:</h6>
+                <div id="bulkPaymentList" class="mb-3">
+                    <!-- Will be populated via JavaScript -->
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Συνολικό Ποσό Πληρωμής:</strong>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <h4 class="text-warning mb-0" id="bulkTotalAmount">0.00€</h4>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Ακύρωση
+                </button>
+                <button type="button" class="btn btn-warning" id="confirmBulkPayment">
+                    <i class="fas fa-check-double me-2"></i>Επιβεβαίωση Πληρωμής
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -696,6 +807,109 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         }
+    });
+});
+
+// Bulk Payment Functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const markAllBtn = document.getElementById('markAllPaidBtn');
+    if (markAllBtn) {
+        markAllBtn.addEventListener('click', function() {
+            // Collect all unpaid technicians from the page
+            const technicianCards = document.querySelectorAll('.technician-card');
+            const unpaidTechs = [];
+            let totalUnpaid = 0;
+            
+            technicianCards.forEach(card => {
+                // Find the unpaid amount using the data attribute
+                const unpaidElement = card.querySelector('[data-unpaid-amount]');
+                
+                if (unpaidElement) {
+                    const unpaidAmount = parseFloat(unpaidElement.dataset.unpaidAmount);
+                    
+                    // Only include techs with unpaid amounts > 0
+                    if (unpaidAmount > 0) {
+                        const techName = card.querySelector('h5').textContent.trim();
+                        
+                        unpaidTechs.push({
+                            id: card.dataset.technicianId,
+                            name: techName,
+                            amount: unpaidAmount
+                        });
+                        totalUnpaid += unpaidAmount;
+                    }
+                }
+            });
+            
+            if (unpaidTechs.length === 0) {
+                alert('Δεν υπάρχουν απλήρωτες εγγραφές για την επιλεγμένη περίοδο.');
+                return;
+            }
+            
+            // Populate modal
+            const listContainer = document.getElementById('bulkPaymentList');
+            listContainer.innerHTML = unpaidTechs.map(tech => `
+                <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                    <div>
+                        <i class="fas fa-user me-2 text-muted"></i>
+                        <strong>${tech.name}</strong>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-warning text-dark">${tech.amount.toFixed(2)}€</span>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('bulkTotalAmount').textContent = totalUnpaid.toFixed(2) + '€';
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('bulkPaymentModal'));
+            modal.show();
+        });
+    }
+    
+    // Confirm bulk payment
+    const confirmBtn = document.getElementById('confirmBulkPayment');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function() {
+            const weekStart = document.getElementById('markAllPaidBtn').dataset.weekStart;
+            const weekEnd = document.getElementById('markAllPaidBtn').dataset.weekEnd;
+            
+            // Disable button
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Επεξεργασία...';
+            
+            const formData = new FormData();
+            formData.append('week_start', weekStart);
+            formData.append('week_end', weekEnd);
+            
+            fetch('<?= BASE_URL ?>/payments/mark-all-paid', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Σφάλμα κατά την ενημέρωση');
+                    this.disabled = false;
+                    this.innerHTML = '<i class="fas fa-check-double me-2"></i>Επιβεβαίωση Πληρωμής';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Σφάλμα κατά την επικοινωνία με τον server');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-double me-2"></i>Επιβεβαίωση Πληρωμής';
+            });
+        });
+    }
+    
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
 </script>

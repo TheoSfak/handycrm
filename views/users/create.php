@@ -67,10 +67,10 @@
                     <div class="mb-3">
                         <label for="role" class="form-label"><?= __('users.role') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="role" name="role" required>
-                            <option value="technician">Τεχνικός</option>
-                            <option value="assistant">Βοηθός Τεχνικού</option>
                             <option value="admin">Διαχειριστής</option>
-                            <option value="office">Γραφείο</option>
+                            <option value="supervisor">Υπεύθυνος Συνεργείου</option>
+                            <option value="technician" selected>Τεχνικός</option>
+                            <option value="assistant">Βοηθός Τεχνικού</option>
                         </select>
                     </div>
                     

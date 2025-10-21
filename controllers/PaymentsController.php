@@ -41,6 +41,7 @@ class PaymentsController extends BaseController {
         }
         
         // Get technicians with labor for this week
+        // Get technicians with labor for this week
         $weeklyData = $this->paymentModel->getTechniciansForWeek($weekStart, $weekEnd);
         
         // If specific technician selected, filter the results
@@ -57,6 +58,11 @@ class PaymentsController extends BaseController {
                 $weekStart,
                 $weekEnd
             );
+            
+            // Calculate totals from all entries BEFORE filtering
+            $tech['entry_count'] = count($entries);
+            $tech['total_hours'] = array_sum(array_column($entries, 'hours_worked'));
+            $tech['total_amount'] = array_sum(array_column($entries, 'subtotal'));
             
             // Filter by paid status
             if ($paidStatus === 'paid') {
@@ -76,6 +82,7 @@ class PaymentsController extends BaseController {
             $tech['filtered_total_amount'] = array_sum(array_column($entries, 'subtotal'));
             $tech['filtered_entry_count'] = count($entries);
         }
+        unset($tech); // IMPORTANT: Break reference after loop!
         
         // Remove technicians with no entries after filtering
         if ($paidStatus !== 'all') {
@@ -387,6 +394,89 @@ class PaymentsController extends BaseController {
             echo json_encode([
                 'success' => $success,
                 'message' => $success ? __('payments.week_marked_unpaid') : __('payments.error_updating')
+            ]);
+            
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+    
+    /**
+     * Mark all unpaid entries as paid for a week (bulk action) - AJAX
+     */
+    public function markAllPaid() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+        
+        $weekStart = $_POST['week_start'] ?? null;
+        $weekEnd = $_POST['week_end'] ?? null;
+        
+        if (!$weekStart || !$weekEnd) {
+            echo json_encode(['success' => false, 'message' => 'Missing week dates']);
+            return;
+        }
+        
+        try {
+            $userId = $_SESSION['user_id'];
+            
+            // Get all unpaid labor entries for this week
+            $db = $this->db->connect();
+            $query = "SELECT tl.*, u.first_name, u.last_name, u.role, pt.task_date, pt.date_from, pt.date_to
+                     FROM task_labor tl
+                     INNER JOIN project_tasks pt ON tl.task_id = pt.id
+                     INNER JOIN users u ON tl.technician_id = u.id
+                     WHERE tl.paid_at IS NULL
+                     AND u.is_active = 1
+                     AND (
+                         (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                         OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+                     )";
+            
+            $stmt = $db->prepare($query);
+            $stmt->execute([$weekStart, $weekEnd, $weekEnd, $weekStart]);
+            $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug logging
+            error_log("=== BULK PAYMENT DEBUG ===");
+            error_log("Week Start: $weekStart");
+            error_log("Week End: $weekEnd");
+            error_log("Found unpaid entries: " . count($entries));
+            foreach ($entries as $entry) {
+                error_log("Entry ID: {$entry['id']}, User: {$entry['first_name']} {$entry['last_name']}, Role: {$entry['role']}, Hours: {$entry['hours_worked']}");
+            }
+            
+            if (empty($entries)) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Δεν υπάρχουν απλήρωτες εγγραφές για την επιλεγμένη περίοδο.',
+                    'count' => 0
+                ]);
+                return;
+            }
+            
+            // Mark all as paid
+            $updateQuery = "UPDATE task_labor
+                           SET paid_at = NOW(), paid_by = ?
+                           WHERE id = ?";
+            $updateStmt = $db->prepare($updateQuery);
+            
+            $count = 0;
+            foreach ($entries as $entry) {
+                $updateStmt->execute([$userId, $entry['id']]);
+                $count++;
+            }
+            
+            echo json_encode([
+                'success' => true,
+                'message' => "Επισημάνθηκαν {$count} εγγραφές ως πληρωμένες",
+                'count' => $count
             ]);
             
         } catch (Exception $e) {

@@ -219,36 +219,58 @@
 <body>
     <!-- Sidebar -->
     <?php if (isset($_SESSION['user_id'])): ?>
+    <?php
+        // Get user role for permission checks
+        $userRole = $_SESSION['role'] ?? 'technician';
+        $isAdmin = $userRole === 'admin';
+        $isSupervisor = $userRole === 'supervisor';
+        $isTechnician = $userRole === 'technician';
+        $isAssistant = $userRole === 'assistant';
+    ?>
     <nav class="sidebar" id="sidebar">
         <div class="logo">
             <h4><i class="fas fa-tools"></i> HandyCRM</h4>
         </div>
         
         <ul class="nav flex-column">
+            <!-- Dashboard - Admin & Supervisor only -->
+            <?php if ($isAdmin || $isSupervisor): ?>
             <li class="nav-item">
                 <a class="nav-link <?= $currentRoute === '/' || $currentRoute === '' || $currentRoute === '/dashboard' ? 'active' : '' ?>" href="<?= BASE_URL ?>/dashboard">
                     <i class="fas fa-tachometer-alt"></i> <?= __('menu.dashboard') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Customers - Admin only -->
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/customers') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/customers">
                     <i class="fas fa-users"></i> <?= __('menu.customers') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Projects - Admin & Supervisor -->
+            <?php if ($isAdmin || $isSupervisor): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/projects') !== false && strpos($currentRoute, '/payments') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/projects">
                     <i class="fas fa-project-diagram"></i> <?= __('menu.projects') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Payments - Admin only -->
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/payments') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/payments">
                     <i class="fas fa-money-bill-wave"></i> <?= __('menu.payments') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Appointments - Admin only -->
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/appointments') !== false && strpos($currentRoute, '/calendar') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/appointments">
                     <i class="fas fa-calendar-alt"></i> <?= __('menu.appointments') ?>
@@ -260,34 +282,66 @@
                     <i class="fas fa-calendar"></i> <?= __('menu.calendar') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Quotes - Admin only -->
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/quotes') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/quotes">
                     <i class="fas fa-file-invoice"></i> <?= __('menu.quotes') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Invoices - Admin only -->
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/invoices') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/invoices">
                     <i class="fas fa-receipt"></i> <?= __('menu.invoices') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Materials - Admin & Supervisor -->
+            <?php if ($isAdmin || $isSupervisor): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/materials') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/materials">
                     <i class="fas fa-boxes"></i> <?= __('menu.materials') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <!-- Reports - Admin only -->
+            <?php if ($isAdmin): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/reports') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/reports">
                     <i class="fas fa-chart-line"></i> <?= __('menu.reports') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
-            <?php if ($_SESSION['role'] === 'admin'): ?>
+            <!-- My Profile - Technician & Assistant (ONLY their profile card) -->
+            <?php if ($isTechnician || $isAssistant): ?>
             <li class="nav-item">
-                <a class="nav-link <?= strpos($currentRoute, '/users') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/users">
+                <a class="nav-link <?= strpos($currentRoute, '/users/show') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/users/show/<?= $_SESSION['user_id'] ?>">
+                    <i class="fas fa-user"></i> Η Καρτέλα μου
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <!-- My Profile - Supervisor (link to their own profile) -->
+            <?php if ($isSupervisor): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/users/show') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/users/show/<?= $_SESSION['user_id'] ?>">
+                    <i class="fas fa-user"></i> Η Καρτέλα μου
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <!-- Users & Settings - Admin only -->
+            <?php if ($isAdmin): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/users') !== false && strpos($currentRoute, '/users/show') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/users">
                     <i class="fas fa-user-cog"></i> <?= __('menu.users') ?>
                 </a>
             </li>

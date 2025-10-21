@@ -17,36 +17,41 @@ class Payment extends BaseModel {
      * @return array
      */
     public function getTechniciansForWeek($weekStart, $weekEnd) {
-        $sql = "SELECT 
+        // Get unique list of technicians who have labor entries in this period
+        $sql = "SELECT DISTINCT
                     u.id as technician_id,
+                    u.first_name,
+                    u.last_name,
                     CONCAT(u.first_name, ' ', u.last_name) as technician_name,
                     u.hourly_rate,
-                    COUNT(DISTINCT tl.id) as entry_count,
-                    SUM(tl.hours_worked) as total_hours,
-                    SUM(tl.subtotal) as total_amount,
-                    p.id as payment_id,
-                    p.paid_at,
-                    p.paid_by,
-                    paid_by_user.username as paid_by_user
+                    u.role
                 FROM users u
-                INNER JOIN task_labor tl ON u.id = tl.technician_id
-                INNER JOIN project_tasks pt ON tl.task_id = pt.id
-                LEFT JOIN payments p ON (
-                    p.technician_id = u.id 
-                    AND p.week_start = ? 
-                    AND p.week_end = ?
-                )
-                LEFT JOIN users paid_by_user ON p.paid_by = paid_by_user.id
+                INNER JOIN (
+                    SELECT DISTINCT tl.technician_id
+                    FROM task_labor tl
+                    INNER JOIN project_tasks pt ON tl.task_id = pt.id
+                    WHERE (
+                        (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                        OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+                    )
+                ) AS labor ON u.id = labor.technician_id
                 WHERE u.is_active = 1
-                AND u.role IN ('technician', 'assistant')
-                AND (
-                    (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
-                    OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
-                )
-                GROUP BY u.id, u.first_name, u.last_name, u.hourly_rate, p.id, p.paid_at, p.paid_by, paid_by_user.username
                 ORDER BY u.first_name, u.last_name";
                 
-        return $this->query($sql, [$weekStart, $weekEnd, $weekStart, $weekEnd, $weekEnd, $weekStart]);
+        $results = $this->query($sql, [$weekStart, $weekEnd, $weekEnd, $weekStart]);
+        
+        // Add computed fields for each technician
+        foreach ($results as &$tech) {
+            $tech['entry_count'] = 0;
+            $tech['total_hours'] = 0;
+            $tech['total_amount'] = 0;
+            $tech['payment_id'] = null;
+            $tech['paid_at'] = null;
+            $tech['paid_by'] = null;
+            $tech['paid_by_user'] = null;
+        }
+        
+        return $results;
     }
     
     /**

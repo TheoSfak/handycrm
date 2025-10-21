@@ -63,6 +63,96 @@ class BaseController {
     }
     
     /**
+     * Check if user is workshop supervisor
+     */
+    protected function isSupervisor() {
+        return $this->hasRole('supervisor');
+    }
+    
+    /**
+     * Check if user is technician
+     */
+    protected function isTechnician() {
+        return $this->hasRole('technician');
+    }
+    
+    /**
+     * Check if user is assistant
+     */
+    protected function isAssistant() {
+        return $this->hasRole('assistant');
+    }
+    
+    /**
+     * Check if user can manage all data (admin only)
+     */
+    protected function canManageAll() {
+        return $this->isAdmin();
+    }
+    
+    /**
+     * Check if user can manage projects (admin or supervisor)
+     */
+    protected function canManageProjects() {
+        return $this->isAdmin() || $this->isSupervisor();
+    }
+    
+    /**
+     * Check if user can manage materials (admin or supervisor)
+     */
+    protected function canManageMaterials() {
+        return $this->isAdmin() || $this->isSupervisor();
+    }
+    
+    /**
+     * Check if user can view own profile only (technician or assistant)
+     */
+    protected function canViewOwnProfileOnly() {
+        return $this->isTechnician() || $this->isAssistant();
+    }
+    
+    /**
+     * Check if user can view user data
+     * @param int|null $userId If provided, checks if user can view that specific user
+     */
+    protected function canViewUser($userId = null) {
+        // Admin can view all users
+        if ($this->isAdmin()) {
+            return true;
+        }
+        
+        // Supervisor can view their own profile
+        if ($this->isSupervisor()) {
+            return $userId === null || $userId == $_SESSION['user_id'];
+        }
+        
+        // Technician/Assistant can only view their own profile
+        if ($userId === null) {
+            return false; // Cannot view user list
+        }
+        
+        return $userId == $_SESSION['user_id'];
+    }
+    
+    /**
+     * Require admin access or redirect
+     */
+    protected function requireAdmin() {
+        if (!$this->isAdmin()) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+    }
+    
+    /**
+     * Require admin or supervisor access or redirect
+     */
+    protected function requireSupervisorOrAdmin() {
+        if (!$this->isAdmin() && !$this->isSupervisor()) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+    }
+    
+    /**
      * Redirect to URL
      */
     protected function redirect($url) {

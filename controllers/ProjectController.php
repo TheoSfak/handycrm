@@ -10,6 +10,9 @@ class ProjectController extends BaseController {
      * Show projects list
      */
     public function index() {
+        // Only admin and supervisor can view projects
+        $this->requireSupervisorOrAdmin();
+        
         $user = $this->getCurrentUser();
         
         // Get filters from request

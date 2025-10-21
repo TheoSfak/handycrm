@@ -1,31 +1,29 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.3.0  
+**Version:** 1.3.5  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
 HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους και υδραυλικούς. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και τα τιμολόγια.
 
-## 🎉 Τι Νέο στην v1.3.0
+## 🎉 Τι Νέο στην v1.3.5
 
-- � **PDF Project Reports** - Επαγγελματικές αναφορές έργων σε PDF με πλήρη στοιχεία
-  - Φίλτρο εύρους ημερομηνιών για επιλεκτική αναφορά
-  - Επιλογή απόκρυψης τιμών για τεχνικές αναφορές
-  - Πεδίο παρατηρήσεων για επιπλέον σημειώσεις
-  - Αυτόματη επανάληψη headers σε πολυσέλιδες αναφορές
-  - Συγκεντρωτικά στοιχεία με ισομεγέθη cards
-  - Καθαρή εμφάνιση χωρίς περιττές μπλε γραμμές
-- � **DD/MM/YYYY Date Format** - Πλήρης υποστήριξη ελληνικής μορφής ημερομηνιών σε όλες τις φόρμες
-  - Αυτόματη μετατροπή όλων των date inputs
-  - Custom ελληνικό ημερολόγιο popup
-  - Input mask με auto-formatting
-  - Backend conversion για συμβατότητα
-- � **Automated Database Migrations** - Πλήρως αυτοματοποιημένες ενημερώσεις
-  - Auto-detection και εκτέλεση pending migrations κατά το login
-  - Silent background execution χωρίς διακοπή λειτουργίας
-  - Transaction-safe με rollback σε περίπτωση σφάλματος
-  - Error logging για debugging
+- 💰 **Advanced Payment Management** - Ολοκληρωμένο σύστημα διαχείρισης πληρωμών τεχνικών
+  - **Summary Statistics** - Grand totals card με συνολικά κέρδη, πληρωμένα/απλήρωτα ποσά και progress bar
+  - **Quick Date Presets** - Κουμπιά γρήγορης επιλογής (Τρέχουσα/Προηγούμενη Εβδομάδα, Τρέχων/Προηγούμενος Μήνας)
+  - **CSV Export** - Εξαγωγή όλων των εγγραφών πληρωμών με φίλτρα
+  - **Bulk Payment Actions** - Επισήμανση όλων των εγγραφών ως πληρωμένες με ένα κλικ
+  - **Visual Enhancements** - Progress bars, color-coded amounts, enhanced tooltips, role badges
+- 👥 **Role-Based Access Control** - Πλήρες σύστημα ρόλων και δικαιωμάτων
+  - **4 Επίπεδα Ρόλων**: Admin, Supervisor, Technician, Assistant
+  - **Διαβαθμισμένα Δικαιώματα**: Admin (πλήρης πρόσβαση), Supervisor (έργα/υλικά), Technician/Assistant (μόνο προσωπική καρτέλα)
+  - **Role-Based Menu** - Δυναμικό sidebar menu ανάλογα με το ρόλο
+  - **Permission Guards** - Έλεγχος δικαιωμάτων σε controllers
+- 🐛 **Critical Bug Fixes**
+  - Διόρθωση duplicate technician cards (PHP foreach reference bug)
+  - Συμπερίληψη supervisors στις λίστες πληρωμών
+  - Σωστή ανάγνωση ποσών από DOM elements
 
 Δείτε το [CHANGELOG.md](CHANGELOG.md) για πλήρη λίστα αλλαγών.
 
@@ -61,7 +59,24 @@ HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχεί�
 - Υπενθυμίσεις μέσω email
 - Ομαδικός προγραμματισμός για συνεργεία
 
-### 📄 Προσφορές & Τιμολόγηση
+### � Διαχείριση Πληρωμών Τεχνικών (ΝΕΟ v1.3.5)
+- **📊 Summary Statistics** - Grand totals με συνολικά κέρδη, πληρωμένα/απλήρωτα
+- **⚡ Quick Date Filters** - Γρήγορη επιλογή περιόδων (εβδομάδα, μήνας)
+- **📥 CSV Export** - Εξαγωγή πληρωμών σε Excel
+- **✅ Bulk Actions** - Μαζική επισήμανση πληρωμών
+- **🎨 Visual Progress** - Progress bars, color-coded amounts, tooltips
+- **👤 Role Badges** - Εμφάνιση ρόλου δίπλα σε κάθε τεχνικό
+- Παρακολούθηση ωρών εργασίας και αμοιβών
+- Ανά τεχνικό/supervisor breakdown
+
+### 👥 Διαχείριση Χρηστών & Δικαιώματα (ΝΕΟ v1.3.5)
+- **4 Επίπεδα Ρόλων**: Admin, Supervisor, Technician, Assistant
+- **Role-Based Access Control**: Διαβαθμισμένα δικαιώματα ανά ρόλο
+- **Dynamic Menu**: Sidebar προσαρμόζεται στο ρόλο του χρήστη
+- **Permission Guards**: Έλεγχος πρόσβασης σε controllers
+- Προσωπική καρτέλα τεχνικού/βοηθού
+
+### �📄 Προσφορές & Τιμολόγηση
 - Δημιουργία επαγγελματικών προσφορών σε PDF
 - Μετατροπή προσφοράς σε έργο ή τιμολόγιο
 - Παρακολούθηση πληρωμών και υπολοίπων

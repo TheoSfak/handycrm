@@ -1,5 +1,175 @@
 # HandyCRM - Change Log
 
+## [1.3.5] - 2025-10-21
+
+### 🎯 Major Features
+
+#### 1. Advanced Payment Management System
+- **Summary Statistics Dashboard**:
+  - Grand totals card at top of payments page
+  - Shows overall earnings, paid amounts, unpaid amounts
+  - Progress bar indicating payment completion percentage
+  - Real-time calculation across all technicians
+  - Gradient styling with modern UI
+
+- **Quick Date Preset Buttons**:
+  - 4 quick-select buttons: "Τρέχουσα Εβδομάδα", "Προηγούμενη Εβδομάδα", "Τρέχων Μήνας", "Προηγούμενος Μήνας"
+  - Auto-fills start and end date fields
+  - JavaScript-based instant date calculation
+  - Located next to date filter inputs for easy access
+
+- **CSV Export Functionality**:
+  - Export button in payments toolbar
+  - Exports all payment records with applied filters
+  - Includes: technician name, date, project, task, hours, rate, amount, payment status
+  - Proper CSV formatting with UTF-8 BOM for Greek characters
+  - Downloads as `payments_YYYY-MM-DD.csv`
+
+- **Bulk Payment Actions**:
+  - "Επισήμανση Όλων ως Πληρωμένα" button
+  - Shows confirmation modal with list of all unpaid technicians
+  - Displays each technician's name and unpaid amount
+  - Shows total amount to be marked as paid
+  - AJAX endpoint `/payments/mark-all-paid` for bulk update
+  - Supports ALL user roles (admin, supervisor, technician, assistant)
+  - Uses `data-unpaid-amount` attribute for accurate amount detection
+
+- **Visual Enhancements**:
+  - Progress bar in each technician's card header showing payment percentage
+  - Color-coded amounts: green for paid, red for unpaid
+  - Enhanced tooltips with detailed information (hours, rate, calculation)
+  - Role badges next to technician names (e.g., "ΤΕΧΝΙΚΟΣ", "ΥΠΕΥΘΥΝΟΣ ΣΥΝΕΡΓΕΙΟΥ")
+  - Gradient header backgrounds (purple to blue gradient)
+  - Improved filter section layout with better spacing
+
+#### 2. Role-Based Access Control System
+- **Four-Tier Role System**:
+  - **Admin (Διαχειριστής)**: Full system access
+  - **Supervisor (Υπεύθυνος Συνεργείου)**: Projects, materials, own profile
+  - **Technician (Τεχνικός)**: Only own profile/timecard
+  - **Assistant (Βοηθός Τεχνικού)**: Only own profile/timecard
+
+- **BaseController Permission Methods**:
+  - `isAdmin()`, `isSupervisor()`, `isTechnician()`, `isAssistant()` - Role checks
+  - `canManageProjects()` - Returns true for Admin OR Supervisor
+  - `canManageMaterials()` - Returns true for Admin OR Supervisor
+  - `canViewUser($userId)` - Admin sees all, others only themselves
+  - `requireAdmin()` - Guard method, redirects if not admin
+  - `requireSupervisorOrAdmin()` - Guard for supervisor+ access
+
+- **Dynamic Sidebar Menu**:
+  - Menu items shown/hidden based on user role
+  - Admin: All menu items visible
+  - Supervisor: Dashboard, Projects, Materials, "Η Καρτέλα μου"
+  - Technician/Assistant: Only "Η Καρτέλα μου"
+  - Implemented in `views/includes/header.php` with `$_SESSION['role']` checks
+
+- **Database Migration**:
+  - Updated `users` table with new role ENUM
+  - Migration: `migrations/update_user_roles.sql`
+  - `ALTER TABLE users MODIFY COLUMN role ENUM('admin', 'supervisor', 'technician', 'assistant')`
+  - Default role remains 'technician'
+
+- **Form Updates**:
+  - User create/edit forms updated with all 4 role options
+  - Dropdown in `views/users/edit.php` and `views/users/create.php`
+  - Greek labels: Διαχειριστής, Υπεύθυνος Συνεργείου, Τεχνικός, Βοηθός Τεχνικού
+
+### 🐛 Bug Fixes
+
+#### Critical PHP Reference Bug
+- **Issue**: Duplicate technician cards appearing in payments page
+  - Example: "Σφακιανάκης Θεόδωρος" appeared twice, "Χάρης Μαγάκης" missing
+  - Caused by PHP foreach loop with reference `&$tech` not being unset
+
+- **Root Cause**: 
+  ```php
+  foreach ($weeklyData as &$tech) { 
+      // modifications 
+  }
+  // Reference persists after loop!
+  // Next array access overwrites last element
+  ```
+
+- **Fix**: Added `unset($tech)` after foreach loop in `PaymentsController.php`
+  ```php
+  foreach ($weeklyData as &$tech) { 
+      // modifications 
+  }
+  unset($tech); // CRITICAL: Break reference
+  ```
+
+#### Payment Query Role Restriction
+- **Issue**: Supervisors not appearing in payments list
+- **Cause**: Payment model query had `WHERE u.role IN ('technician', 'assistant')`
+- **Fix**: Removed role restriction, now queries all active users with labor entries
+- **Result**: All roles (admin, supervisor, technician, assistant) now visible in payments
+
+#### Bulk Payment Amount Detection
+- **Issue**: Amounts showing incorrectly in bulk payment modal (e.g., 15000.00€ instead of 150.00€)
+- **Cause**: JavaScript reading all `.text-danger` elements including table rows
+- **Fix**: 
+  - Added `data-unpaid-amount` attribute to unpaid amount element
+  - JavaScript now reads from `unpaidElement.dataset.unpaidAmount` for accurate values
+  - Only checks header elements, ignores table body
+
+#### UI Color Contrast
+- **Issue**: Blue text on purple gradient background unreadable
+- **Fix**: Changed to white text (`text-white`) on gradient headers
+
+### 🔧 Technical Improvements
+
+- **Code Quality**:
+  - Added comprehensive debug logging to PaymentsController
+  - Error logging in `mark-all-paid` endpoint for troubleshooting
+  - Better separation of concerns in payment detection logic
+
+- **Data Integrity**:
+  - Payment model now includes `u.is_active = 1` check
+  - Only active users shown in payment lists
+  - Consistent query structure across payment endpoints
+
+- **Frontend Performance**:
+  - Optimized DOM queries in bulk payment JavaScript
+  - Single attribute read instead of multiple element scans
+  - Faster modal population with direct data access
+
+### 📝 Files Changed
+
+#### New Files
+- `migrations/update_user_roles.sql` - Role system migration
+
+#### Modified Files
+- `controllers/PaymentsController.php` - Fixed foreach bug, added bulk payment endpoint
+- `models/Payment.php` - Removed role restriction, added role field to query
+- `classes/BaseController.php` - Added permission methods
+- `views/includes/header.php` - Implemented role-based menu
+- `views/payments/index.php` - Added all payment enhancements, visual improvements
+- `views/users/edit.php` - Added supervisor role option
+- `views/users/create.php` - Added supervisor role option
+- `README.md` - Updated to v1.3.5 with new features
+- `CHANGELOG.md` - This file
+
+### 🎨 UI/UX Improvements
+
+- Gradient header backgrounds (purple to blue)
+- Role badges with light background next to names
+- Progress bars with color coding (green=100%, blue=>50%, yellow=<50%)
+- Enhanced tooltips with detailed payment information
+- Improved spacing and alignment in filter section
+- Better visual hierarchy with summary statistics at top
+
+### ✅ Completed Tasks
+
+1. ✅ Summary Statistics Card - Grand Totals
+2. ✅ Quick Date Presets Buttons  
+3. ✅ Export to Excel/CSV Button
+4. ✅ Bulk Actions - Mark All Paid
+5. ✅ Visual Improvements - Progress Bars & Tooltips
+6. ✅ Role-Based Access Control
+
+---
+
 ## [1.3.0] - 2025-10-17
 
 ### 🎯 Major Features
