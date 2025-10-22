@@ -1,5 +1,66 @@
 # HandyCRM - Change Log
 
+## [1.3.6] - 2025-10-22
+
+### 🚀 Major Changes
+
+#### Invoices Module Removal
+- **Removed entire invoices module** from the system
+  - Deleted `InvoiceController.php`
+  - Deleted `Invoice.php` model
+  - Deleted all invoice views (index, create, edit, view)
+  - Removed `/invoices` routes from `index.php`
+  - Removed "Τιμολόγια" menu item from navigation
+  - Created migration script `migrate_remove_invoices.php` to drop invoice tables
+
+#### Task-Based Cost Calculation System
+- **Projects now calculate costs from tasks** instead of manual input
+  - Removed manual cost input fields (Κόστος Υλικών, Κόστος Εργασίας) from project forms
+  - Costs are now automatically calculated from:
+    - `task_labor.subtotal` (labor costs from technician hours)
+    - `task_materials.subtotal` (material costs from purchases)
+  - Auto-calculation triggers when project status changes to "Τιμολογημένο"
+  - Total cost includes VAT calculation based on project's VAT rate
+
+#### Database & Model Updates
+- **Project Model Enhancements**:
+  - Added subquery-based cost aggregation in `getAll()` method
+  - Returns `calculated_labor_cost`, `calculated_materials_cost`, `calculated_total_cost`
+  - Improved query performance with proper grouping
+  
+- **Customer Model Updates**:
+  - Changed `getInvoices()` to `getInvoicedProjects()`
+  - Now queries projects with `status = 'invoiced'` instead of invoices table
+  
+- **Reports Controller Updates**:
+  - All revenue queries now use `projects.invoiced_at` and `projects.total_cost`
+  - Removed dependency on invoices table
+
+### 🐛 Bug Fixes
+- Fixed toast notifications to persist without auto-dismiss
+- Fixed cost display in projects list (converted string to float for proper comparison)
+- Fixed Greek translation for "Αρ. Προσφοράς" (quotes.number)
+- Fixed MySQL Aria storage engine recovery issues
+- Fixed MySQL user permissions after system table restoration
+
+### 📝 Technical Improvements
+- Added migration script for invoice table removal
+- Created utility script `update_project_costs.php` for one-time cost calculation
+- Improved error handling in project cost calculations
+- Better separation of concerns between stored costs and calculated costs
+
+### 🔧 Database Migrations
+- New migration: `migrate_remove_invoices.php`
+  - Drops `invoices` and `invoice_items` tables
+  - Should be run on production after deployment
+
+### ⚠️ Breaking Changes
+- **Invoices module completely removed** - existing invoice data will be lost when migration runs
+- **Manual project cost fields** removed from create/edit forms
+- **Reports now use projects table** instead of invoices for revenue calculations
+
+---
+
 ## [1.3.5] - 2025-10-21
 
 ### 🎯 Major Features

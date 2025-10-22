@@ -1,7 +1,7 @@
-# HandyCRM v1.2.0 - Installation Package Creator (Windows)
+# HandyCRM v1.3.6 - Installation Package Creator (Windows)
 # Creates a clean distribution package without development files
 
-$VERSION = "1.2.0"
+$VERSION = "1.3.6"
 $PACKAGE_NAME = "HandyCRM-v$VERSION"
 $BUILD_DIR = "build"
 $DIST_DIR = "$BUILD_DIR\$PACKAGE_NAME"
