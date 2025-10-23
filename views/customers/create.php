@@ -33,9 +33,9 @@
                     </div>
                     
                     <div class="row">
-                        <!-- Individual Fields -->
+                        <!-- Individual/Company Contact Person Fields -->
                         <div class="col-md-6 mb-3">
-                            <label for="first_name" class="form-label"><?= __('customers.first_name') ?> <span class="text-danger">*</span></label>
+                            <label for="first_name" class="form-label" id="first_name_label"><?= __('customers.first_name') ?> <span class="text-danger">*</span></label>
                             <input type="text" 
                                    class="form-control <?= isset($_SESSION['form_errors']['first_name']) ? 'is-invalid' : '' ?>" 
                                    id="first_name" 
@@ -47,7 +47,7 @@
                             <?php endif; ?>
                         </div>
                         
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-6 mb-3" id="last_name_group">
                             <label for="last_name" class="form-label"><?= __('customers.last_name') ?> <span class="text-danger">*</span></label>
                             <input type="text" 
                                    class="form-control <?= isset($_SESSION['form_errors']['last_name']) ? 'is-invalid' : '' ?>" 
@@ -199,17 +199,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const companyRadio = document.getElementById('company');
     const companyFields = document.getElementById('company-fields');
     const companyNameField = document.getElementById('company_name');
+    const firstNameLabel = document.getElementById('first_name_label');
+    const lastNameGroup = document.getElementById('last_name_group');
     
     // Toggle company fields visibility
     function toggleCompanyFields() {
         if (companyRadio.checked) {
+            // Company mode
             companyFields.style.display = 'block';
             companyNameField.required = true;
+            
+            // Change labels for company contact person
+            firstNameLabel.innerHTML = 'Όνομα Επώνυμο <span class="text-danger">*</span>';
+            lastNameGroup.style.display = 'none';
+            document.getElementById('last_name').required = false;
         } else {
+            // Individual mode
             companyFields.style.display = 'none';
             companyNameField.required = false;
             companyNameField.value = '';
             document.getElementById('tax_id').value = '';
+            
+            // Restore original labels
+            firstNameLabel.innerHTML = '<?= __('customers.first_name') ?> <span class="text-danger">*</span>';
+            lastNameGroup.style.display = 'block';
+            document.getElementById('last_name').required = true;
         }
     }
     

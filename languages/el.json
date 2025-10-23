@@ -2,7 +2,9 @@
     "app": {
         "name": "HandyCRM",
         "tagline": "Σύστημα Διαχείρισης Πελατών",
-        "version": "Έκδοση"
+        "version": "Έκδοση",
+        "without_vat": "χωρίς ΦΠΑ",
+        "without_vat_note": "Όλες οι τιμές είναι χωρίς ΦΠΑ"
     },
     "menu": {
         "dashboard": "Πίνακας Ελέγχου",
@@ -427,6 +429,8 @@
         "password": "Κωδικός",
         "technician": "Τεχνικός",
         "admin": "Διαχειριστής",
+        "supervisor": "Επόπτης",
+        "assistant": "Βοηθός",
         "save": "Αποθήκευση",
         "cancel": "Ακύρωση",
         "active": "Ενεργός",

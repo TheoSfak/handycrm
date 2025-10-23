@@ -1,13 +1,30 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.3.5  
+**Version:** 1.3.8  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
 HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους και υδραυλικούς. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και τα τιμολόγια.
 
-## 🎉 Τι Νέο στην v1.3.5
+## 🎉 Τι Νέο στην v1.3.8
+
+- 💶 **VAT Display Settings** - Διαχείριση εμφάνισης ΦΠΑ σε τιμές
+  - **Admin Configuration** - Ρυθμίσεις για εμφάνιση σημειώσεων ΦΠΑ και αν οι τιμές περιλαμβάνουν ΦΠΑ
+  - **Live Preview** - Real-time προεπισκόπηση στις ρυθμίσεις
+  - **Automatic Labels** - Αυτόματη προσθήκη "(χωρίς ΦΠΑ)" ή "(με ΦΠΑ)" σε όλες τις τιμές
+  - **PDF Reports** - Υποστήριξη σημειώσεων ΦΠΑ σε PDF αναφορές
+- 📊 **Dashboard Improvements** - Βελτιώσεις στο dashboard
+  - **Fixed Statistics** - Διόρθωση υπολογισμών εσόδων και ενεργών έργων
+  - **Project Count Display** - Εμφάνιση αριθμού ολοκληρωμένων έργων
+  - **Calculated Totals** - Σωστός υπολογισμός κόστους από materials + labor
+- 🐛 **Bug Fixes**
+  - Διόρθωση υπολογισμού total_cost σε projects (χρήση calculated values αντί για stale data)
+  - Fix για missing invoices/quotes tables
+  - Σωστή χρήση technician_id αντί για user_id στο ProjectReportController
+  - Διόρθωση column names (completion_date, invoiced_at)
+
+### Προηγούμενα - v1.3.5
 
 - 💰 **Advanced Payment Management** - Ολοκληρωμένο σύστημα διαχείρισης πληρωμών τεχνικών
   - **Summary Statistics** - Grand totals card με συνολικά κέρδη, πληρωμένα/απλήρωτα ποσά και progress bar

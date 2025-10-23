@@ -244,7 +244,11 @@
                         <small class="text-muted fw-bold"><?= strtoupper(__('projects.cost')) ?></small>
                     </div>
                     <div class="ps-4">
-                        <h4 class="mb-0 text-success"><?= formatCurrency($project['total_cost']) ?></h4>
+                        <?php 
+                        // Calculate real total from summary (materials + labor)
+                        $realTotal = ((float)($summary['materials_total'] ?? 0)) + ((float)($summary['labor_total'] ?? 0));
+                        ?>
+                        <h4 class="mb-0 text-success"><?= formatCurrencyWithVAT($realTotal) ?></h4>
                     </div>
                 </div>
                 
@@ -326,14 +330,14 @@
                     <div class="col-md-4">
                         <div class="p-3 bg-light rounded">
                             <i class="fas fa-boxes fa-2x text-warning mb-2"></i>
-                            <h3 class="mb-0"><?= formatCurrency($summary['materials_total'] ?? 0) ?></h3>
+                            <h3 class="mb-0"><?= formatCurrencyWithVAT((float)($summary['materials_total'] ?? 0)) ?></h3>
                             <small class="text-muted">Κόστος Υλικών</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="p-3 bg-light rounded">
                             <i class="fas fa-users fa-2x text-info mb-2"></i>
-                            <h3 class="mb-0"><?= formatCurrency($summary['labor_total'] ?? 0) ?></h3>
+                            <h3 class="mb-0"><?= formatCurrencyWithVAT((float)($summary['labor_total'] ?? 0)) ?></h3>
                             <small class="text-muted">Κόστος Εργατικών</small>
                         </div>
                     </div>

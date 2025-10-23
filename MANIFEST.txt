@@ -1,0 +1,270 @@
+═══════════════════════════════════════════════════════════════════
+HandyCRM v1.3.7 - Complete Release Package Manifest
+═══════════════════════════════════════════════════════════════════
+
+📅 Created: October 23, 2025
+👤 Developer: Theodore Sfakianakis
+🎯 Target: ecowatt.gr/crm
+📦 Version: 1.3.7
+
+═══════════════════════════════════════════════════════════════════
+📚 DOCUMENTATION FILES (Read These First!)
+═══════════════════════════════════════════════════════════════════
+
+✅ START_HERE.txt
+   Purpose: Entry point - διάβασε αυτό πρώτα!
+   Size: Small
+   Read Time: 2 minutes
+
+✅ RELEASE_COMPLETE.txt
+   Purpose: Complete overview του release
+   Size: Medium
+   Read Time: 5 minutes
+
+✅ README_RELEASE_PACKAGE.txt
+   Purpose: Index of all files in package
+   Size: Medium
+   Read Time: 3 minutes
+
+✅ RELEASE_1.3.7_README.md
+   Purpose: DETAILED step-by-step deployment guide
+   Size: Large
+   Read Time: 10 minutes
+   ⚠️ MUST READ!
+
+✅ RELEASE_1.3.7_SUMMARY.txt
+   Purpose: Summary of changes and features
+   Size: Medium
+   Read Time: 5 minutes
+
+✅ RELEASE_1.3.7_FILES_TO_UPLOAD.txt
+   Purpose: Simplified list of files to upload
+   Size: Small
+   Read Time: 2 minutes
+
+✅ DEPLOYMENT_CHECKLIST.txt
+   Purpose: Printable checklist για deployment
+   Size: Medium
+   Read Time: 3 minutes
+   💡 TIP: Τύπωσέ το!
+
+═══════════════════════════════════════════════════════════════════
+🗄️ DATABASE FILES
+═══════════════════════════════════════════════════════════════════
+
+✅ RELEASE_1.3.7_MIGRATION.sql
+   Purpose: Database schema updates
+   Size: ~8KB
+   Lines: 131
+   Run: phpMyAdmin → SQL → Execute
+   ⚠️ RUN THIS FIRST!
+
+═══════════════════════════════════════════════════════════════════
+🔧 VALIDATION TOOLS
+═══════════════════════════════════════════════════════════════════
+
+✅ validate_install.php
+   Purpose: Check if deployment was successful
+   Size: ~6KB
+   Upload: ecowatt.gr/crm/validate_install.php
+   Run: ecowatt.gr/crm/validate_install.php
+   ⚠️ DELETE AFTER USE!
+
+═══════════════════════════════════════════════════════════════════
+📂 SOURCE CODE - Controllers
+═══════════════════════════════════════════════════════════════════
+
+✅ controllers/ProjectReportController.php
+   Purpose: Generate PDF reports
+   Changes:
+     - Dynamic SQL for old/new schema compatibility
+     - Fixed number_format() with explicit separators
+   Upload to: ecowatt.gr/crm/controllers/
+
+✅ controllers/ProjectTasksController.php
+   Purpose: Task CRUD operations
+   Changes:
+     - Fixed collectLabor() to handle "00:00" times
+     - Better validation logic
+   Upload to: ecowatt.gr/crm/controllers/
+
+═══════════════════════════════════════════════════════════════════
+📂 SOURCE CODE - Views
+═══════════════════════════════════════════════════════════════════
+
+✅ views/projects/show.php
+   Purpose: Display project details
+   Changes:
+     - Fixed currency display bug
+   Upload to: ecowatt.gr/crm/views/projects/
+
+✅ views/projects/tasks/add.php
+   Purpose: Add new task form
+   Changes:
+     - Removed validation requiring materials/labor
+     - Only date and description are required
+   Upload to: ecowatt.gr/crm/views/projects/tasks/
+
+✅ views/projects/tasks/edit.php
+   Purpose: Edit existing task form
+   Changes:
+     - Removed validation requiring materials/labor
+     - Labor entries don't get zeroed
+   Upload to: ecowatt.gr/crm/views/projects/tasks/
+
+✅ views/users/index.php
+   Purpose: List all users
+   Changes:
+     - Support for all 4 roles (admin, supervisor, technician, assistant)
+     - Color-coded badges
+   Upload to: ecowatt.gr/crm/views/users/
+
+═══════════════════════════════════════════════════════════════════
+📂 SOURCE CODE - Languages
+═══════════════════════════════════════════════════════════════════
+
+✅ languages/el.json
+   Purpose: Greek translations
+   Changes:
+     - Added "supervisor": "Επόπτης"
+     - Added "assistant": "Βοηθός"
+   Upload to: ecowatt.gr/crm/languages/
+
+═══════════════════════════════════════════════════════════════════
+📂 SOURCE CODE - Assets
+═══════════════════════════════════════════════════════════════════
+
+✅ assets/js/date-formatter.js
+   Purpose: Format dates as DD/MM/YYYY
+   Changes:
+     - NEW FILE! (was missing from production)
+     - Converts date inputs to Greek format
+     - Calendar picker support
+   Upload to: ecowatt.gr/crm/assets/js/
+
+═══════════════════════════════════════════════════════════════════
+📂 SOURCE CODE - Libraries
+═══════════════════════════════════════════════════════════════════
+
+✅ lib/tcpdf/ (ENTIRE FOLDER!)
+   Purpose: PDF generation library (Dompdf)
+   Size: ~10MB
+   Contents:
+     - tcpdf/config/
+     - tcpdf/fonts/
+     - tcpdf/include/
+     - tcpdf/examples/
+     - And more...
+   Upload to: ecowatt.gr/crm/lib/
+   ⚠️ IMPORTANT: Without this, PDF reports won't work!
+   💡 TIP: Use FTP if File Manager is slow
+
+═══════════════════════════════════════════════════════════════════
+📂 SOURCE CODE - Config (MANUAL EDIT!)
+═══════════════════════════════════════════════════════════════════
+
+⚠️ config/config.php
+   Purpose: Application configuration
+   Changes:
+     - formatCurrency(): Changed CURRENCY_SYMBOL to hardcoded '€'
+     - formatNumber(): New helper function
+   ⚠️ DO NOT UPLOAD ENTIRE FILE!
+   ⚠️ EDIT MANUALLY! (See README for details)
+
+═══════════════════════════════════════════════════════════════════
+📊 STATISTICS
+═══════════════════════════════════════════════════════════════════
+
+Total Files in Package:
+  - Documentation: 7 files
+  - Database: 1 file
+  - Validation: 1 file
+  - Controllers: 2 files
+  - Views: 4 files
+  - Languages: 1 file
+  - Assets: 1 file
+  - Libraries: 1 folder (~10MB)
+  - Config: 1 file (manual edit)
+
+Total to Upload: 9 files + 1 folder
+Manual Edits: 1 file (config.php)
+SQL Scripts: 1 file
+
+═══════════════════════════════════════════════════════════════════
+🔄 DEPLOYMENT ORDER
+═══════════════════════════════════════════════════════════════════
+
+1. ✅ BACKUP (Database + Files)
+2. ✅ Run RELEASE_1.3.7_MIGRATION.sql
+3. ✅ Upload controllers/ (2 files)
+4. ✅ Upload views/ (4 files)
+5. ✅ Upload languages/ (1 file)
+6. ✅ Upload assets/js/ (1 file)
+7. ✅ Upload lib/ (entire folder)
+8. ✅ Edit config.php manually
+9. ✅ Upload validate_install.php
+10. ✅ Run validate_install.php
+11. ✅ Test everything
+12. ✅ Delete validate_install.php
+
+═══════════════════════════════════════════════════════════════════
+✅ QUALITY CHECKS
+═══════════════════════════════════════════════════════════════════
+
+✅ All documentation files created
+✅ Database migration script complete
+✅ Validation tool ready
+✅ All source files present
+✅ lib/ folder included
+✅ Config edit instructions clear
+✅ Deployment checklist ready
+✅ Troubleshooting guide included
+✅ No files missing
+✅ Package is complete!
+
+═══════════════════════════════════════════════════════════════════
+🎯 QUICK START
+═══════════════════════════════════════════════════════════════════
+
+1. Open: START_HERE.txt
+2. Read: RELEASE_1.3.7_README.md
+3. Print: DEPLOYMENT_CHECKLIST.txt
+4. Deploy: Follow the README
+5. Validate: Run validate_install.php
+6. Test: Check all features
+7. Cleanup: Delete validate_install.php
+
+═══════════════════════════════════════════════════════════════════
+📞 SUPPORT
+═══════════════════════════════════════════════════════════════════
+
+If something goes wrong:
+1. Run validate_install.php to see what's missing
+2. Check README troubleshooting section
+3. Restore backup and try again
+
+═══════════════════════════════════════════════════════════════════
+✨ FINAL NOTES
+═══════════════════════════════════════════════════════════════════
+
+This is a COMPLETE, PROFESSIONAL release package.
+
+✅ Everything you need is here
+✅ No guessing required
+✅ No files missing
+✅ Step-by-step instructions
+✅ Validation tools included
+✅ Troubleshooting guide ready
+
+Just follow the README and you'll be fine! 🚀
+
+═══════════════════════════════════════════════════════════════════
+
+Package Created: October 23, 2025
+Package Version: 1.3.7
+Developer: Theodore Sfakianakis
+Target: ecowatt.gr/crm
+
+═══════════════════════════════════════════════════════════════════
+END OF MANIFEST
+═══════════════════════════════════════════════════════════════════

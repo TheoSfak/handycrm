@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
 
 // Custom PDF class with footer
@@ -195,15 +196,41 @@ class ProjectReportController extends BaseController {
     
     private function getAggregatedLabor($projectId, $fromDate = null, $toDate = null) {
         $pdo = $this->db->getPdo();
+        
+        // Check if technician_name column exists, otherwise use user_id with JOIN
+        $checkColumn = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'technician_name'");
+        $hasTechnicianName = $checkColumn->rowCount() > 0;
+        
+        if ($hasTechnicianName) {
+            // Use technician_name if column exists
+            $workerNameField = "COALESCE(tl.technician_name, CONCAT(u.first_name, ' ', u.last_name))";
+            $groupByField = "tl.technician_name";
+        } else {
+            // Fall back to user_id with JOIN to users table
+            $workerNameField = "CONCAT(u.first_name, ' ', u.last_name)";
+            $groupByField = "tl.user_id";
+        }
+        
+        // Check if hours_worked column exists, otherwise use hours
+        $checkHours = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'hours_worked'");
+        $hasHoursWorked = $checkHours->rowCount() > 0;
+        $hoursField = $hasHoursWorked ? "tl.hours_worked" : "tl.hours";
+        
+        // Check which ID column to use for JOIN
+        $checkTechId = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'technician_id'");
+        $hasTechnicianId = $checkTechId->rowCount() > 0;
+        $userIdField = $hasTechnicianId ? "tl.technician_id" : "tl.user_id";
+        
         $sql = "
             SELECT 
-                tl.technician_name as worker_name,
-                SUM(tl.hours_worked) as total_hours,
+                $workerNameField as worker_name,
+                SUM($hoursField) as total_hours,
                 COUNT(DISTINCT pt.id) as days_worked,
                 AVG(tl.hourly_rate) as hourly_rate,
                 SUM(tl.subtotal) as total_cost
             FROM task_labor tl
             LEFT JOIN project_tasks pt ON tl.task_id = pt.id
+            LEFT JOIN users u ON $userIdField = u.id
             WHERE pt.project_id = ?
         ";
         $params = [$projectId];
@@ -214,7 +241,7 @@ class ProjectReportController extends BaseController {
             $params[] = $toDate;
         }
         
-        $sql .= " GROUP BY tl.technician_name ORDER BY tl.technician_name";
+        $sql .= " GROUP BY $groupByField ORDER BY worker_name";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -542,11 +569,11 @@ class ProjectReportController extends BaseController {
             foreach ($materials as $material) {
                 $html .= '<tr>';
                 $html .= '<td style="width: 40%;">' . htmlspecialchars($material['material_name']) . '</td>';
-                $html .= '<td class="text-center" style="width: 20%;">' . number_format($material['total_quantity'], 2) . ' ' . htmlspecialchars($material['unit']) . '</td>';
+                $html .= '<td class="text-center" style="width: 20%;">' . number_format($material['total_quantity'], 2, ',', '.') . ' ' . htmlspecialchars($material['unit']) . '</td>';
                 
                 if (!$hidePrices) {
-                    $html .= '<td class="text-right" style="width: 20%;">' . number_format($material['unit_cost'], 2) . ' ' . $currencySymbol . '</td>';
-                    $html .= '<td class="text-right" style="width: 20%;"><strong>' . number_format($material['total_cost'], 2) . ' ' . $currencySymbol . '</strong></td>';
+                    $html .= '<td class="text-right" style="width: 20%;">' . formatCurrencyWithVAT($material['unit_cost']) . '</td>';
+                    $html .= '<td class="text-right" style="width: 20%;"><strong>' . formatCurrencyWithVAT($material['total_cost']) . '</strong></td>';
                 }
                 
                 $html .= '</tr>';
@@ -575,12 +602,12 @@ class ProjectReportController extends BaseController {
             foreach ($labor as $worker) {
                 $html .= '<tr>';
                 $html .= '<td style="width: 30%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
-                $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2) . 'h</td>';
+                $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
                 $html .= '<td class="text-center" style="width: 15%;">' . $worker['days_worked'] . '</td>';
                 
                 if (!$hidePrices) {
-                    $html .= '<td class="text-right" style="width: 20%;">' . number_format($worker['hourly_rate'], 2) . ' ' . $currencySymbol . '/h</td>';
-                    $html .= '<td class="text-right" style="width: 20%;"><strong>' . number_format($worker['total_cost'], 2) . ' ' . $currencySymbol . '</strong></td>';
+                    $html .= '<td class="text-right" style="width: 20%;">' . formatCurrencyWithVAT($worker['hourly_rate']) . '/h</td>';
+                    $html .= '<td class="text-right" style="width: 20%;"><strong>' . formatCurrencyWithVAT($worker['total_cost']) . '</strong></td>';
                 }
                 
                 $html .= '</tr>';
@@ -616,7 +643,7 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2) . ' ώρες</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
             $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . $totals['total_days'] . ' ημέρες</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
@@ -630,7 +657,7 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2) . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . formatCurrencyWithVAT($totals['materials_cost']) . '</div>';
             $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_materials'] . ' είδη</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
@@ -641,8 +668,8 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2) . ' ' . $currencySymbol . '</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . number_format($totals['total_hours'], 2) . ' ώρες</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . formatCurrencyWithVAT($totals['labor_cost']) . '</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';
@@ -652,7 +679,7 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_cost'], 2) . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . formatCurrencyWithVAT($totals['total_cost']) . '</div>';
             $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">&nbsp;</div>';
             $html .= '</td></tr>';
             $html .= '</table>';

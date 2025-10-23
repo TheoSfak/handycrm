@@ -1,0 +1,234 @@
+╔════════════════════════════════════════════════════════════════╗
+║          "χωρίς ΦΠΑ" - Quick Reference Card                   ║
+╚════════════════════════════════════════════════════════════════╝
+
+📋 ΓΡΗΓΟΡΗ ΑΝΑΦΟΡΑ
+═══════════════════════════════════════════════════════════════
+
+🔧 HELPER FUNCTIONS (config.php)
+═══════════════════════════════════════════════════════════════
+
+1️⃣ formatCurrencyWithVAT($amount, $showNote = true)
+   Παράδειγμα: 1.234,56 € (χωρίς ΦΠΑ)
+   
+   Χρήση:
+   <?php echo formatCurrencyWithVAT($price); ?>
+   → "1.234,56 € <small class="text-muted">(χωρίς ΦΠΑ)</small>"
+
+2️⃣ withoutVatLabel($label)
+   Παράδειγμα: Τιμή (χωρίς ΦΠΑ)
+   
+   Χρήση:
+   <th><?php echo withoutVatLabel('Τιμή'); ?></th>
+   → "Τιμή <small class="text-muted">(χωρίς ΦΠΑ)</small>"
+
+3️⃣ formatCurrency($amount)
+   Παράδειγμα: 1.234,56 €
+   
+   Χρήση:
+   <?php echo formatCurrency($price); ?>
+   → "1.234,56 €" (χωρίς την επισήμανση)
+
+═══════════════════════════════════════════════════════════════
+
+🎨 HTML SNIPPETS
+═══════════════════════════════════════════════════════════════
+
+📝 Table Header με σημείωση:
+   <th>Τιμή <small class="text-muted">(χωρίς ΦΠΑ)</small></th>
+
+📝 Inline value με σημείωση:
+   <?php echo formatCurrency($amount); ?> 
+   <small class="text-muted">(χωρίς ΦΠΑ)</small>
+
+📝 Global Note στο header:
+   <div class="alert alert-info">
+       <small><i class="fas fa-info-circle"></i> 
+       Όλες οι τιμές είναι χωρίς ΦΠΑ</small>
+   </div>
+
+📝 Footer Note:
+   <div class="card-footer text-muted">
+       <small>* Τιμές χωρίς ΦΠΑ</small>
+   </div>
+
+═══════════════════════════════════════════════════════════════
+
+📄 PDF REPORTS
+═══════════════════════════════════════════════════════════════
+
+📝 Global Note στο PDF:
+   <div style="font-size: 10px; color: #666; padding: 5px; 
+               background: #f8f9fa; border-left: 3px solid #007bff;">
+       <strong>Σημείωση:</strong> Όλες οι τιμές χωρίς ΦΠΑ 24%
+   </div>
+
+📝 Table Header στο PDF:
+   <th style="font-size: 10px;">
+       Τιμή<br>
+       <span style="font-size: 8px; color: #666;">(χωρίς ΦΠΑ)</span>
+   </th>
+
+📝 Total με σημείωση:
+   <tr>
+       <td colspan="3"><strong>Σύνολο (χωρίς ΦΠΑ):</strong></td>
+       <td><strong><?php echo formatCurrency($total); ?></strong></td>
+   </tr>
+
+═══════════════════════════════════════════════════════════════
+
+🎯 ΣΤΡΑΤΗΓΙΚΗ (Hybrid - Προτεινόμενη)
+═══════════════════════════════════════════════════════════════
+
+✅ Global note στο TOP της σελίδας
+✅ Inline note στα table headers (<th>)
+✅ Inline note στα TOTALS
+❌ ΌΧΙ σε κάθε cell (clutter)
+
+═══════════════════════════════════════════════════════════════
+
+📂 ΑΡΧΕΙΑ ΠΟΥ ΠΡΕΠΕΙ ΝΑ ΑΛΛΑΞΟΥΝ
+═══════════════════════════════════════════════════════════════
+
+Priority 1 (Κρίσιμα):
+  ✅ config/config.php (Ήδη έγινε)
+  ✅ languages/el.json (Ήδη έγινε)
+  ⚠️ controllers/ProjectReportController.php (PDF)
+  ⚠️ views/projects/show.php (Project details)
+  
+Priority 2 (Σημαντικά):
+  ⚠️ views/projects/tasks/add.php
+  ⚠️ views/projects/tasks/edit.php
+  ⚠️ views/materials/index.php
+  ⚠️ views/materials/add.php
+  ⚠️ views/materials/edit.php
+
+Priority 3 (Nice to have):
+  ⚠️ views/dashboard/index.php
+  ⚠️ views/projects/index.php
+  ⚠️ views/reports/index.php
+
+═══════════════════════════════════════════════════════════════
+
+🔍 ΠΑΡΑΔΕΙΓΜΑΤΑ ΑΠΟ ΠΡΑΓΜΑΤΙΚΕΣ ΠΕΡΙΠΤΩΣΕΙΣ
+═══════════════════════════════════════════════════════════════
+
+1️⃣ Project Materials Table:
+   
+   <table class="table">
+       <thead>
+           <tr>
+               <th>Υλικό</th>
+               <th>Ποσότητα</th>
+               <th><?php echo withoutVatLabel('Τιμή'); ?></th>
+               <th><?php echo withoutVatLabel('Σύνολο'); ?></th>
+           </tr>
+       </thead>
+       <tbody>
+           <tr>
+               <td>Καλώδιο 3x2.5</td>
+               <td>50m</td>
+               <td><?php echo formatCurrency(1.25); ?></td>
+               <td><?php echo formatCurrency(62.50); ?></td>
+           </tr>
+       </tbody>
+       <tfoot>
+           <tr>
+               <td colspan="3" class="text-right">
+                   <strong>Σύνολο Υλικών:</strong>
+               </td>
+               <td>
+                   <strong><?php echo formatCurrencyWithVAT(62.50); ?></strong>
+               </td>
+           </tr>
+       </tfoot>
+   </table>
+
+2️⃣ Labor Entry Form:
+   
+   <div class="form-group">
+       <label><?php echo withoutVatLabel('Ημερομίσθιο'); ?></label>
+       <input type="number" class="form-control" 
+              name="daily_rate" step="0.01" 
+              placeholder="π.χ. 80,00">
+   </div>
+
+3️⃣ Dashboard Stats Card:
+   
+   <div class="card">
+       <div class="card-body">
+           <h5>Έσοδα Μήνα</h5>
+           <h2><?php echo formatCurrency($revenue); ?></h2>
+       </div>
+       <div class="card-footer text-muted">
+           <small>* Χωρίς ΦΠΑ</small>
+       </div>
+   </div>
+
+═══════════════════════════════════════════════════════════════
+
+💡 TIPS & TRICKS
+═══════════════════════════════════════════════════════════════
+
+✅ Χρησιμοποίησε Bootstrap classes:
+   - text-muted για subtle appearance
+   - small για μικρό μέγεθος
+   - badge για emphasis
+
+✅ Χρησιμοποίησε icons:
+   <i class="fas fa-info-circle"></i> Όλες οι τιμές χωρίς ΦΠΑ
+
+✅ CSS classes για consistency:
+   .vat-note { font-size: 0.75rem; color: #6c757d; }
+
+❌ ΜΗΝ το γράφεις με CAPS (ΧΩΡΙΣ ΦΠΑ)
+❌ ΜΗΝ το βάζεις σε κάθε cell
+❌ ΜΗΝ το κάνεις πολύ έντονο
+
+═══════════════════════════════════════════════════════════════
+
+🧪 TESTING CHECKLIST
+═══════════════════════════════════════════════════════════════
+
+[ ] Task με materials - φαίνεται η σημείωση
+[ ] Task με labor - φαίνεται η σημείωση
+[ ] Project details - φαίνεται σε totals
+[ ] PDF Report - φαίνεται global note
+[ ] Dashboard stats - φαίνεται σημείωση
+[ ] Materials list - φαίνεται σε headers
+[ ] Mobile view - δεν χάνεται το text
+
+═══════════════════════════════════════════════════════════════
+
+📱 RESPONSIVE
+═══════════════════════════════════════════════════════════════
+
+Για mobile:
+   @media (max-width: 768px) {
+       .vat-note {
+           font-size: 0.65rem;
+           display: block;
+       }
+   }
+
+═══════════════════════════════════════════════════════════════
+
+🚀 DEPLOYMENT
+═══════════════════════════════════════════════════════════════
+
+1. ✅ Update config.php
+2. ✅ Update el.json
+3. ⚠️ Update all views (use checklist)
+4. ⚠️ Update CSS
+5. ⚠️ Test thoroughly
+6. ⚠️ Deploy to production
+
+═══════════════════════════════════════════════════════════════
+
+📞 NEED HELP?
+═══════════════════════════════════════════════════════════════
+
+Δες το πλήρες guide:
+→ VAT_IMPLEMENTATION_GUIDE.md
+
+═══════════════════════════════════════════════════════════════

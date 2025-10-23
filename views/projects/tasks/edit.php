@@ -275,16 +275,6 @@ document.getElementById('taskForm').addEventListener('submit', function(e) {
         alert('Η περιγραφή είναι υποχρεωτική');
         return false;
     }
-    
-    // Check if at least one material or labor entry exists
-    const hasMaterials = document.querySelectorAll('#materials_container .material-row').length > 0;
-    const hasLabor = document.querySelectorAll('#labor_container .labor-row').length > 0;
-    
-    if (!hasMaterials && !hasLabor) {
-        e.preventDefault();
-        alert('Πρέπει να προσθέσετε τουλάχιστον ένα υλικό ή ένα εργατικό');
-        return false;
-    }
 });
 
 // Populate existing data on load (using project-tasks.js functions)
@@ -294,18 +284,16 @@ window.addEventListener('DOMContentLoaded', function() {
         existingMaterials.forEach(material => {
             addMaterialRow(material);
         });
-    } else {
-        addMaterialRow(); // Add one empty row
     }
+    // Don't add empty row if no materials exist
     
     // Add existing labor
     if (existingLabor && existingLabor.length > 0) {
         existingLabor.forEach(labor => {
             addLaborRow(labor);
         });
-    } else {
-        addLaborRow(); // Add one empty row
     }
+    // Don't add empty row if no labor exists
     
     // Recalculate totals
     calculateGrandTotal();

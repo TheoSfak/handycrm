@@ -152,6 +152,7 @@
                                         <input type="number" class="form-control" id="default_vat_rate" name="default_vat_rate" 
                                                value="<?= htmlspecialchars($settings['default_vat_rate']) ?>" 
                                                min="0" max="100" step="0.01">
+                                        <small class="form-text text-muted">Π.χ. 24 για 24% ΦΠΑ</small>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -168,6 +169,72 @@
                                         <label for="currency_symbol" class="form-label"><?= __('settings.currency_symbol') ?></label>
                                         <input type="text" class="form-control" id="currency_symbol" name="currency_symbol" 
                                                value="<?= htmlspecialchars($settings['currency_symbol']) ?>">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- VAT Display Settings -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> 
+                                        <strong>Ρυθμίσεις Εμφάνισης ΦΠΑ</strong>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="prices_include_vat" 
+                                               name="prices_include_vat" value="1"
+                                               <?= ($settings['prices_include_vat'] ?? '0') === '1' ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="prices_include_vat">
+                                            <strong>Οι τιμές περιλαμβάνουν ΦΠΑ</strong>
+                                        </label>
+                                        <br>
+                                        <small class="text-muted">
+                                            Ενεργοποίησε αν οι τιμές που εισάγεις περιλαμβάνουν ήδη ΦΠΑ
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" id="display_vat_notes" 
+                                               name="display_vat_notes" value="1"
+                                               <?= ($settings['display_vat_notes'] ?? '1') === '1' ? 'checked' : '' ?>>
+                                        <label class="form-check-label" for="display_vat_notes">
+                                            <strong>Εμφάνιση σημειώσεων ΦΠΑ</strong>
+                                        </label>
+                                        <br>
+                                        <small class="text-muted">
+                                            Εμφανίζει "(χωρίς ΦΠΑ)" ή "(με ΦΠΑ)" δίπλα στις τιμές
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <strong>Πώς λειτουργεί:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li>Αν οι τιμές σου είναι <strong>χωρίς ΦΠΑ</strong>: Κράτα το "Οι τιμές περιλαμβάνουν ΦΠΑ" <u>απενεργοποιημένο</u></li>
+                                            <li>Αν οι τιμές σου είναι <strong>με ΦΠΑ</strong>: Ενεργοποίησε το "Οι τιμές περιλαμβάνουν ΦΠΑ"</li>
+                                            <li>Η ενεργοποίηση "Εμφάνιση σημειώσεων ΦΠΑ" θα δείχνει την ένδειξη σε όλο το σύστημα</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <!-- Preview -->
+                                <div class="col-12">
+                                    <div class="card bg-light">
+                                        <div class="card-header">
+                                            <h6 class="mb-0"><i class="fas fa-eye"></i> Προεπισκόπηση</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="mb-2"><strong>Πώς θα φαίνονται οι τιμές:</strong></p>
+                                            <div id="vat-preview" class="border p-3 bg-white">
+                                                <span class="fs-5" id="preview-price">100,00 €</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -357,4 +424,39 @@ function removeLogo() {
         document.getElementById('company_logo').value = '';
     }
 }
+
+// VAT Display Preview
+function updateVatPreview() {
+    const displayNotes = document.getElementById('display_vat_notes')?.checked || false;
+    const includeVat = document.getElementById('prices_include_vat')?.checked || false;
+    const previewElement = document.getElementById('preview-price');
+    
+    if (!previewElement) return;
+    
+    let priceText = '100,00 €';
+    
+    if (displayNotes) {
+        const vatText = includeVat ? 'με ΦΠΑ' : 'χωρίς ΦΠΑ';
+        priceText += ` <small class="text-muted">(${vatText})</small>`;
+    }
+    
+    previewElement.innerHTML = priceText;
+}
+
+// Attach event listeners for VAT settings
+document.addEventListener('DOMContentLoaded', function() {
+    const displayVatCheckbox = document.getElementById('display_vat_notes');
+    const pricesIncludeVatCheckbox = document.getElementById('prices_include_vat');
+    
+    if (displayVatCheckbox) {
+        displayVatCheckbox.addEventListener('change', updateVatPreview);
+    }
+    
+    if (pricesIncludeVatCheckbox) {
+        pricesIncludeVatCheckbox.addEventListener('change', updateVatPreview);
+    }
+    
+    // Initial preview
+    updateVatPreview();
+});
 </script>

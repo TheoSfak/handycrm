@@ -215,13 +215,19 @@ class ProjectTasksController extends BaseController {
         
         if (!empty($_POST['labor'])) {
             foreach ($_POST['labor'] as $index => $laborItem) {
-                if (!empty($laborItem['technician_name'])) {
+                // Check if this labor entry has meaningful data (hours or rate)
+                $hasHours = !empty($laborItem['hours_worked']) && floatval($laborItem['hours_worked']) > 0;
+                $hasRate = !empty($laborItem['hourly_rate']) && floatval($laborItem['hourly_rate']) > 0;
+                
+                // Only include labor if it has hours or rate
+                if ($hasHours || $hasRate) {
                     $isTemporary = !empty($laborItem['is_temporary']) || empty($laborItem['technician_id']);
                     
-                    // Calculate hours if time_from and time_to provided
+                    // Calculate hours if time_from and time_to provided (and not 00:00)
                     $hoursWorked = floatval($laborItem['hours_worked'] ?? 0);
                     
-                    if (!empty($laborItem['time_from']) && !empty($laborItem['time_to'])) {
+                    if (!empty($laborItem['time_from']) && !empty($laborItem['time_to']) 
+                        && $laborItem['time_from'] !== '00:00' && $laborItem['time_to'] !== '00:00') {
                         $hoursWorked = $this->laborModel->calculateHoursFromTime(
                             $laborItem['time_from'], 
                             $laborItem['time_to']

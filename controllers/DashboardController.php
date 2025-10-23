@@ -63,9 +63,9 @@ class DashboardController extends BaseController {
                                AND YEAR(created_at) = YEAR(CURRENT_DATE())");
             $stats['new_customers_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // Active projects (new and in_progress)
+            // Active projects (new, in_progress, and invoiced - not completed or cancelled)
             $stmt = $db->query("SELECT COUNT(*) as total FROM projects 
-                               WHERE status IN ('new', 'in_progress')");
+                               WHERE status IN ('new', 'in_progress', 'invoiced')");
             $stats['active_projects'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
             // Appointments today
@@ -73,26 +73,76 @@ class DashboardController extends BaseController {
                                WHERE DATE(appointment_date) = CURDATE() AND status != 'cancelled'");
             $stats['appointments_today'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // Revenue this month (from invoices with paid_date set)
-            $stmt = $db->query("SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices 
-                               WHERE paid_date IS NOT NULL 
-                               AND MONTH(paid_date) = MONTH(CURRENT_DATE()) 
-                               AND YEAR(paid_date) = YEAR(CURRENT_DATE())");
-            $stats['revenue_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            // Revenue this month - check if invoices table exists first
+            $checkTable = $db->query("SHOW TABLES LIKE 'invoices'");
+            error_log("Dashboard: Checking invoices table - rows: " . $checkTable->rowCount());
+            if ($checkTable->rowCount() > 0) {
+                $stmt = $db->query("SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices 
+                                   WHERE paid_date IS NOT NULL 
+                                   AND MONTH(paid_date) = MONTH(CURRENT_DATE()) 
+                                   AND YEAR(paid_date) = YEAR(CURRENT_DATE())");
+                $stats['revenue_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+                
+                // Overdue invoices (sent or overdue status, and past due date)
+                $stmt = $db->query("SELECT COUNT(*) as total FROM invoices 
+                                   WHERE status IN ('sent', 'overdue') AND due_date < CURDATE()");
+                $stats['overdue_invoices'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            } else {
+                // If invoices table doesn't exist, calculate from invoiced/completed projects this month
+                // Calculate correct total from materials + labor instead of stale total_cost
+                $stmt = $db->query("
+                    SELECT COALESCE(SUM(
+                        COALESCE((SELECT SUM(tm.subtotal) 
+                                  FROM task_materials tm 
+                                  JOIN project_tasks pt ON tm.task_id = pt.id 
+                                  WHERE pt.project_id = p.id), 0) +
+                        COALESCE((SELECT SUM(tl.subtotal) 
+                                  FROM task_labor tl 
+                                  JOIN project_tasks pt ON tl.task_id = pt.id 
+                                  WHERE pt.project_id = p.id), 0)
+                    ), 0) as total 
+                    FROM projects p
+                    WHERE status IN ('completed', 'invoiced') 
+                    AND (
+                        (MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()))
+                        OR (completion_date IS NOT NULL AND MONTH(completion_date) = MONTH(CURRENT_DATE()) AND YEAR(completion_date) = YEAR(CURRENT_DATE()))
+                        OR (invoiced_at IS NOT NULL AND MONTH(invoiced_at) = MONTH(CURRENT_DATE()) AND YEAR(invoiced_at) = YEAR(CURRENT_DATE()))
+                    )
+                ");
+                $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                $stats['revenue_month'] = $result ? $result['total'] : 0;
+                error_log("Dashboard revenue calculation - Result: " . print_r($result, true) . " | revenue_month: " . $stats['revenue_month']);
+                
+                // Count completed/invoiced projects this month
+                $stmt = $db->query("
+                    SELECT COUNT(*) as count
+                    FROM projects p
+                    WHERE status IN ('completed', 'invoiced') 
+                    AND (
+                        (MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()))
+                        OR (completion_date IS NOT NULL AND MONTH(completion_date) = MONTH(CURRENT_DATE()) AND YEAR(completion_date) = YEAR(CURRENT_DATE()))
+                        OR (invoiced_at IS NOT NULL AND MONTH(invoiced_at) = MONTH(CURRENT_DATE()) AND YEAR(invoiced_at) = YEAR(CURRENT_DATE()))
+                    )
+                ");
+                $countResult = $stmt->fetch(PDO::FETCH_ASSOC);
+                $stats['completed_projects_count'] = $countResult ? $countResult['count'] : 0;
+                
+                $stats['overdue_invoices'] = 0;
+            }
             
-            // Pending quotes (draft and sent)
-            $stmt = $db->query("SELECT COUNT(*) as total FROM quotes WHERE status IN ('draft', 'sent')");
-            $stats['pending_quotes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-            
-            // Overdue invoices (sent or overdue status, and past due date)
-            $stmt = $db->query("SELECT COUNT(*) as total FROM invoices 
-                               WHERE status IN ('sent', 'overdue') AND due_date < CURDATE()");
-            $stats['overdue_invoices'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            // Pending quotes (draft and sent) - check if table exists
+            $checkQuotes = $db->query("SHOW TABLES LIKE 'quotes'");
+            if ($checkQuotes->rowCount() > 0) {
+                $stmt = $db->query("SELECT COUNT(*) as total FROM quotes WHERE status IN ('draft', 'sent')");
+                $stats['pending_quotes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+            } else {
+                $stats['pending_quotes'] = 0;
+            }
             
         } catch (PDOException $e) {
             error_log("Dashboard stats error: " . $e->getMessage());
-            // Return default values on error
-            $stats = [
+            // Set defaults for any missing values
+            $defaults = [
                 'total_customers' => 0,
                 'new_customers_month' => 0,
                 'active_projects' => 0,
@@ -101,6 +151,8 @@ class DashboardController extends BaseController {
                 'pending_quotes' => 0,
                 'overdue_invoices' => 0
             ];
+            // Merge with existing stats, keeping already retrieved values
+            $stats = array_merge($defaults, $stats);
         }
         
         // Check if user is valid before accessing role

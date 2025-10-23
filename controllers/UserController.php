@@ -328,7 +328,7 @@ class UserController extends BaseController {
                 INNER JOIN projects p ON pt.project_id = p.id
                 INNER JOIN customers c ON p.customer_id = c.id
                 LEFT JOIN users paid_user ON tl.paid_by = paid_user.id
-                WHERE tl.technician_id = ?
+                WHERE tl.user_id = ?
                 ORDER BY COALESCE(pt.task_date, pt.date_from) DESC
                 LIMIT 100";
                 

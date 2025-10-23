@@ -64,8 +64,8 @@ echo $updateChecker->getUpdateNotification();
                 <div class="d-flex align-items-center">
                     <div class="flex-grow-1">
                         <h6 class="card-title mb-0"><?= __('dashboard.revenue_month') ?></h6>
-                        <h3 class="mb-0"><?= number_format($stats['revenue_month'] ?? 0, 2) ?>€</h3>
-                        <small><?= __('dashboard.completed_projects') ?></small>
+                        <h3 class="mb-0"><?= formatCurrencyWithVAT($stats['revenue_month'] ?? 0) ?></h3>
+                        <small><?= ($stats['completed_projects_count'] ?? 0) ?> <?= __('dashboard.completed_projects') ?></small>
                     </div>
                     <div class="text-end">
                         <i class="fas fa-euro-sign fa-2x opacity-75"></i>

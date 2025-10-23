@@ -251,22 +251,10 @@ document.getElementById('taskForm').addEventListener('submit', function(e) {
         alert('Η περιγραφή είναι υποχρεωτική');
         return false;
     }
-    
-    // Check if at least one material or labor entry exists
-    const hasMaterials = document.querySelectorAll('#materials_container .material-row').length > 0;
-    const hasLabor = document.querySelectorAll('#labor_container .labor-row').length > 0;
-    
-    if (!hasMaterials && !hasLabor) {
-        e.preventDefault();
-        alert('Πρέπει να προσθέσετε τουλάχιστον ένα υλικό ή ένα εργατικό');
-        return false;
-    }
 });
 
-// Initialize with one material and one labor row (using project-tasks.js functions)
+// Don't initialize with any rows - let user add as needed
 window.addEventListener('DOMContentLoaded', function() {
-    addMaterialRow();
-    addLaborRow();
     
     // Check if there's an overlap warning from session
     <?php if (isset($_SESSION['warning'])): ?>

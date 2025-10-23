@@ -42,13 +42,29 @@
                         <td><?= htmlspecialchars($u['email']) ?></td>
                         <td><?= htmlspecialchars($u['phone'] ?: '-') ?></td>
                         <td>
-                            <span class="badge bg-<?= $u['role'] === 'admin' ? 'danger' : 'primary' ?>">
-                                <?= $u['role'] === 'admin' ? __('users.admin') : __('users.technician') ?>
+                            <?php
+                            // Define role colors and labels
+                            $roleColors = [
+                                'admin' => 'danger',
+                                'supervisor' => 'warning',
+                                'technician' => 'primary',
+                                'assistant' => 'info'
+                            ];
+                            $roleLabels = [
+                                'admin' => __('users.admin'),
+                                'supervisor' => __('users.supervisor'),
+                                'technician' => __('users.technician'),
+                                'assistant' => __('users.assistant')
+                            ];
+                            $roleColor = $roleColors[$u['role']] ?? 'secondary';
+                            $roleLabel = $roleLabels[$u['role']] ?? ucfirst($u['role']);
+                            ?>
+                            <span class="badge bg-<?= $roleColor ?>">
+                                <?= $roleLabel ?>
                             </span>
                         </td>
                         <td>
-                            <span class="badge bg-<?= $u['is_active'] ? 'success' : 'secondary' ?>">
-                                <?= $u['is_active'] ? __('users.active') : __('users.inactive') ?>
+                            <span class="badge bg-<?= $u['is_active'] ? 'success' : 'secondary' ?>"><?= $u['is_active'] ? __('users.active') : __('users.inactive') ?>
                             </span>
                         </td>
                         <td>

@@ -34,6 +34,8 @@ class SettingsController extends BaseController {
             'company_tax_id' => '',
             'company_website' => '',
             'default_vat_rate' => '24',
+            'display_vat_notes' => '1',
+            'prices_include_vat' => '0',
             'currency' => 'EUR',
             'currency_symbol' => '€',
             'date_format' => 'd/m/Y',
@@ -106,6 +108,8 @@ class SettingsController extends BaseController {
                 'company_tax_id',
                 'company_website',
                 'default_vat_rate',
+                'display_vat_notes',
+                'prices_include_vat',
                 'currency',
                 'currency_symbol',
                 'date_format',
@@ -116,7 +120,11 @@ class SettingsController extends BaseController {
                                   ON DUPLICATE KEY UPDATE setting_value = ?");
             
             foreach ($allowedSettings as $key) {
-                if (isset($_POST[$key])) {
+                // Handle checkboxes specially
+                if (in_array($key, ['display_vat_notes', 'prices_include_vat'])) {
+                    $value = isset($_POST[$key]) ? '1' : '0';
+                    $stmt->execute([$key, $value, $value]);
+                } elseif (isset($_POST[$key])) {
                     $value = trim($_POST[$key]);
                     $stmt->execute([$key, $value, $value]);
                 }

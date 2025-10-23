@@ -106,14 +106,22 @@ class Project extends BaseModel {
             $totalRecords = $totalResult['total'];
             $totalPages = ceil($totalRecords / $perPage);
             
-            // Get records
+            // Get records with calculated costs from materials and labor
             $sql = "SELECT p.*, 
                            c.first_name as customer_first_name, 
                            c.last_name as customer_last_name, 
                            c.company_name as customer_company_name,
                            c.customer_type,
                            t.first_name as tech_first_name, 
-                           t.last_name as tech_last_name
+                           t.last_name as tech_last_name,
+                           COALESCE((SELECT SUM(tm.subtotal) 
+                                     FROM task_materials tm 
+                                     JOIN project_tasks pt ON tm.task_id = pt.id 
+                                     WHERE pt.project_id = p.id), 0) +
+                           COALESCE((SELECT SUM(tl.subtotal) 
+                                     FROM task_labor tl 
+                                     JOIN project_tasks pt ON tl.task_id = pt.id 
+                                     WHERE pt.project_id = p.id), 0) as calculated_total_cost
                     FROM {$this->table} p 
                     JOIN customers c ON p.customer_id = c.id 
                     JOIN users t ON p.assigned_technician = t.id 
