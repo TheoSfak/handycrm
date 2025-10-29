@@ -568,10 +568,13 @@ class ProjectReportController extends BaseController {
             
             foreach ($materials as $material) {
                 $html .= '<tr>';
-                $html .= '<td style="width: 40%;">' . htmlspecialchars($material['material_name']) . '</td>';
-                $html .= '<td class="text-center" style="width: 20%;">' . number_format($material['total_quantity'], 2, ',', '.') . ' ' . htmlspecialchars($material['unit']) . '</td>';
                 
-                if (!$hidePrices) {
+                if ($hidePrices) {
+                    $html .= '<td style="width: 50%;">' . htmlspecialchars($material['material_name']) . '</td>';
+                    $html .= '<td class="text-center" style="width: 50%;">' . number_format($material['total_quantity'], 2, ',', '.') . ' ' . htmlspecialchars($material['unit']) . '</td>';
+                } else {
+                    $html .= '<td style="width: 40%;">' . htmlspecialchars($material['material_name']) . '</td>';
+                    $html .= '<td class="text-center" style="width: 20%;">' . number_format($material['total_quantity'], 2, ',', '.') . ' ' . htmlspecialchars($material['unit']) . '</td>';
                     $html .= '<td class="text-right" style="width: 20%;">' . formatCurrencyWithVAT($material['unit_cost']) . '</td>';
                     $html .= '<td class="text-right" style="width: 20%;"><strong>' . formatCurrencyWithVAT($material['total_cost']) . '</strong></td>';
                 }
@@ -601,11 +604,15 @@ class ProjectReportController extends BaseController {
             
             foreach ($labor as $worker) {
                 $html .= '<tr>';
-                $html .= '<td style="width: 30%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
-                $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
-                $html .= '<td class="text-center" style="width: 15%;">' . $worker['days_worked'] . '</td>';
                 
-                if (!$hidePrices) {
+                if ($hidePrices) {
+                    $html .= '<td style="width: 50%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
+                    $html .= '<td class="text-center" style="width: 25%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
+                    $html .= '<td class="text-center" style="width: 25%;">' . $worker['days_worked'] . '</td>';
+                } else {
+                    $html .= '<td style="width: 30%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
+                    $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
+                    $html .= '<td class="text-center" style="width: 15%;">' . $worker['days_worked'] . '</td>';
                     $html .= '<td class="text-right" style="width: 20%;">' . formatCurrencyWithVAT($worker['hourly_rate']) . '/h</td>';
                     $html .= '<td class="text-right" style="width: 20%;"><strong>' . formatCurrencyWithVAT($worker['total_cost']) . '</strong></td>';
                 }
@@ -657,8 +664,9 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . formatCurrencyWithVAT($totals['materials_cost']) . '</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_materials'] . ' είδη</div>';
+            $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_materials'] . ' είδη</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';
@@ -668,8 +676,9 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . formatCurrencyWithVAT($totals['labor_cost']) . '</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+            $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί × ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';
@@ -679,8 +688,8 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . formatCurrencyWithVAT($totals['total_cost']) . '</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">&nbsp;</div>';
+            $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';

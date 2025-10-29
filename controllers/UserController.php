@@ -249,6 +249,51 @@ class UserController extends BaseController {
     }
     
     /**
+     * Toggle user active status
+     */
+    public function toggleActive() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/users');
+        }
+        
+        if (!DEBUG_MODE) {
+            try {
+                $this->validateCsrfToken();
+            } catch (Exception $e) {
+                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+                $this->redirect('/users');
+            }
+        }
+        
+        $id = $_POST['id'] ?? 0;
+        if (!$id) {
+            $_SESSION['error'] = 'Μη έγκυρο αναγνωριστικό χρήστη';
+            $this->redirect('/users');
+        }
+        
+        // Cannot deactivate yourself
+        if ($id == $_SESSION['user_id']) {
+            $_SESSION['error'] = 'Δεν μπορείτε να απενεργοποιήσετε τον εαυτό σας';
+            $this->redirect('/users');
+        }
+        
+        $database = new Database();
+        $db = $database->connect();
+        
+        // Toggle the is_active status
+        $stmt = $db->prepare("UPDATE users SET is_active = NOT is_active WHERE id = ?");
+        $success = $stmt->execute([$id]);
+        
+        if ($success) {
+            $_SESSION['success'] = 'Η κατάσταση του χρήστη ενημερώθηκε με επιτυχία';
+        } else {
+            $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση της κατάστασης';
+        }
+        
+        $this->redirect('/users');
+    }
+    
+    /**
      * Show user profile with payment history
      */
     public function show($id) {

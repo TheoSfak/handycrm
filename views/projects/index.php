@@ -142,11 +142,13 @@
                         </td>
                         <td>
                             <?php 
-                            // Use calculated total cost from materials + labor
-                            $totalCost = floatval($project['calculated_total_cost'] ?? 0);
-                            if ($totalCost > 0): 
+                            // Always use calculated_total_cost from tasks (materials + labor subtotals)
+                            // The material_cost/labor_cost fields stored in projects may be incorrect
+                            $displayCost = floatval($project['calculated_total_cost'] ?? 0);
+                            
+                            if ($displayCost > 0): 
                             ?>
-                                <?= formatCurrencyWithVAT($totalCost) ?>
+                                <?= formatCurrencyWithVAT($displayCost) ?>
                             <?php else: ?>
                                 -
                             <?php endif; ?>

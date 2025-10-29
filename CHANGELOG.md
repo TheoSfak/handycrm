@@ -1,5 +1,120 @@
 # HandyCRM - Change Log
 
+## [1.4.0] - 2025-10-29
+
+### 🚀 Major Features
+
+#### User Status Management
+- **Toggle Active/Inactive Status**
+  - Added toggle button in Users page to activate/deactivate users
+  - Visual indicators: Green badge for active, gray badge for inactive
+  - Protection: Cannot deactivate yourself
+  - Route: `/users/toggleActive` with CSRF protection
+  - JavaScript confirmation dialog before toggling
+
+#### Smart User Filtering
+- **getAllActive() Method**
+  - New method in User model to fetch all active users regardless of role
+  - Replaces hardcoded role lists (`technician`, `assistant`, `admin`, etc.)
+  - Automatically includes all roles as long as `is_active = 1`
+  - Future-proof: No need to update code when adding new roles
+
+#### Payments Page Enhancements
+- **Custom Date Range Picker**
+  - Bootstrap modal for custom date selection
+  - Button "Προσαρμοσμένο Εύρος" added to quick date filters
+  - HTML5 date inputs (type="date") for better UX
+  - Labels changed: "Από/Έως" instead of "Αρχή Εβδομάδας/Τέλος Εβδομάδας"
+  - Removed hidden inputs that caused conflicts
+
+#### PDF Report Improvements
+- **Compressed Column Layout**
+  - Reduced font size: 9px → 8px for main table
+  - Reduced cell padding: 4px → 3px
+  - Optimized column widths:
+    - Date: 10% → 8%
+    - Task: 27% → 28%
+    - Hours: 8% → 7%
+    - Rate: 13% → 10%
+    - Status: 12% → 17% (to fit payment info)
+  - Status font: 8px → 7px for compact display
+
+#### Task Safety Features
+- **Unsaved Data Warning**
+  - Beforeunload event handler in add/edit task pages
+  - Warns when leaving page with unsaved materials or labor
+  - Tracks additions to materials/labor tables
+  - Message: "You have added materials or labor that have not been saved"
+  
+- **Photo Delete Buttons**
+  - Added hover-activated delete buttons on task photos
+  - Positioned absolute (top-right corner of thumbnails)
+  - CSS transition: opacity 0 → 1 on hover
+  - Confirmation dialog before deletion
+
+### 🗑️ Feature Removals
+
+#### Complete Overlap Check Removal
+- **Removed from Controllers**
+  - Deleted `checkDateOverlap()` method from ProjectTasksController
+  - Removed overlap validation from `store()` method
+  - Removed overlap validation from `update()` method
+  - Removed all overlap-related session management
+  - Kept date conversion helper (DD/MM/YYYY → YYYY-MM-DD)
+
+- **Removed from Views**
+  - Deleted overlap warning modal HTML
+  - Removed all overlap JavaScript functions (showOverlapModal, confirmOverlap, cancelOverlap)
+  - Removed overlap status variables and flags
+  - Cleaned up form submission flow
+
+### 🐛 Bug Fixes
+
+#### Role Detection Issues
+- Fixed hardcoded role arrays in PaymentsController and PaymentReportController
+- Issue: Users with role `'admin'` were not included (code only checked for `'administrator'`)
+- Solution: Replaced `getByRole(['technician', 'assistant', 'administrator'])` with `getAllActive()`
+- Now automatically includes all active users regardless of role name
+
+#### Date Input Issues
+- Fixed date inputs in payments page (were text inputs without datepicker functionality)
+- Changed from `type="text"` with class "datepicker" to `type="date"`
+- Removed conflicting hidden inputs (week_start_hidden, week_end_hidden)
+- Updated JavaScript to work with HTML5 date inputs
+
+#### Print CSS Mistake
+- Removed incorrect `@media print` CSS from payments/index.php (93 lines)
+- PDF is generated server-side via PaymentReportController (TCPDF), not browser print
+- Print CSS would not affect the actual PDF output
+
+### 📝 Files Changed
+
+#### Controllers (3 files)
+- `controllers/PaymentsController.php` - Uses getAllActive() for dropdown
+- `controllers/PaymentReportController.php` - Compressed PDF columns, uses getAllActive()
+- `controllers/UserController.php` - Added toggleActive() method
+
+#### Models (1 file)
+- `models/User.php` - Added getAllActive() method
+
+#### Views (2 files)
+- `views/users/index.php` - Toggle button, JavaScript for toggleActive()
+- `views/payments/index.php` - Custom date modal, removed print CSS
+
+#### Router (1 file)
+- `index.php` - Added route `/users/toggleActive`
+
+#### Config (1 file)
+- `config/config.example.php` - Updated APP_VERSION to 1.4.0
+
+### 🔧 Technical Improvements
+- Cleaner separation between active/inactive users across the system
+- More maintainable code: no hardcoded role arrays
+- Better UX with native HTML5 date inputs
+- Optimized PDF layout for better readability
+
+---
+
 ## [1.3.6] - 2025-10-22
 
 ### 🚀 Major Changes

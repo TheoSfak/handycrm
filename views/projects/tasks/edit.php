@@ -73,7 +73,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                 Ημερομηνία <span class="text-danger">*</span>
                             </label>
                             <input type="date" class="form-control" id="task_date" name="task_date" 
-                                   value="<?= $task['task_date'] ?? '' ?>"
+                                   value="<?= htmlspecialchars($task['task_date'] ?? '') ?>"
                                    <?= $task['task_type'] === 'single_day' ? 'required' : '' ?>>
                         </div>
 
@@ -85,7 +85,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                     Από Ημερομηνία <span class="text-danger">*</span>
                                 </label>
                                 <input type="date" class="form-control" id="date_from" name="date_from"
-                                       value="<?= $task['date_from'] ?? '' ?>"
+                                       value="<?= htmlspecialchars($task['date_from'] ?? '') ?>"
                                        <?= $task['task_type'] === 'date_range' ? 'required' : '' ?>>
                             </div>
                             <div class="mb-3">
@@ -93,13 +93,8 @@ require_once __DIR__ . '/../../includes/header.php';
                                     Έως Ημερομηνία <span class="text-danger">*</span>
                                 </label>
                                 <input type="date" class="form-control" id="date_to" name="date_to"
-                                       value="<?= $task['date_to'] ?? '' ?>"
+                                       value="<?= htmlspecialchars($task['date_to'] ?? '') ?>"
                                        <?= $task['task_type'] === 'date_range' ? 'required' : '' ?>>
-                            </div>
-                            <div id="overlap_warning" class="alert alert-warning" style="display:none;">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Προσοχή!</strong> Υπάρχουν ήδη εργασίες σε αυτό το χρονικό διάστημα.
-                                <div id="overlap_list" class="mt-2 small"></div>
                             </div>
                         </div>
 
@@ -214,6 +209,8 @@ const projectId = <?= $project['id'] ?>;
 const taskId = <?= $task['id'] ?>;
 
 // Existing materials and labor data
+// Always use the current data from database, not pending data
+// The pending data materials/labor have wrong structure (POST array format)
 const existingMaterials = <?= json_encode($materials ?? []) ?>;
 const existingLabor = <?= json_encode($labor ?? []) ?>;
 
@@ -255,16 +252,8 @@ document.querySelectorAll('input[name="task_type"]').forEach(radio => {
         document.getElementById('date_from').required = !isSingleDay;
         document.getElementById('date_to').required = !isSingleDay;
         
-        // Check for overlaps if date range
-        if (!isSingleDay) {
-            checkOverlap();
-        }
     });
 });
-
-// Check for overlaps on date change
-document.getElementById('date_from')?.addEventListener('change', checkOverlap);
-document.getElementById('date_to')?.addEventListener('change', checkOverlap);
 
 // Form validation
 document.getElementById('taskForm').addEventListener('submit', function(e) {
@@ -298,6 +287,76 @@ window.addEventListener('DOMContentLoaded', function() {
     // Recalculate totals
     calculateGrandTotal();
 });
+
+// Track if form has unsaved changes (new materials or labor added during editing)
+let hasUnsavedChanges = false;
+let isSubmitting = false;
+let initialMaterialCount = 0;
+let initialLaborCount = 0;
+
+// Store initial counts after page loads
+window.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        initialMaterialCount = document.querySelectorAll('.material-row').length;
+        initialLaborCount = document.querySelectorAll('.labor-row').length;
+    }, 100);
+});
+
+// Monitor when materials or labor are added
+function markFormAsModified() {
+    hasUnsavedChanges = true;
+}
+
+// Check if there are NEW materials or labor added (not just the existing ones)
+function checkForUnsavedData() {
+    const currentMaterials = document.querySelectorAll('.material-row').length;
+    const currentLabor = document.querySelectorAll('.labor-row').length;
+    
+    // Check if new items were added OR if any input has changed
+    const hasNewItems = (currentMaterials > initialMaterialCount) || (currentLabor > initialLaborCount);
+    
+    return hasNewItems || hasUnsavedChanges;
+}
+
+// Warn user before leaving page if they have unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    // Don't show warning if form is being submitted
+    if (isSubmitting) {
+        return undefined;
+    }
+    
+    // Check if there are unsaved materials or labor
+    if (checkForUnsavedData()) {
+        const confirmationMessage = 'Έχετε μη αποθηκευμένες αλλαγές (υλικά ή εργατικά). Είστε σίγουροι ότι θέλετε να φύγετε;';
+        e.preventDefault();
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+    }
+});
+
+// Mark form as submitting when user clicks submit button
+document.getElementById('taskForm').addEventListener('submit', function() {
+    isSubmitting = true;
+});
+
+// Override the original addMaterialRow to mark form as modified
+const originalAddMaterialRow = window.addMaterialRow;
+window.addMaterialRow = function(material) {
+    const result = originalAddMaterialRow(material);
+    markFormAsModified();
+    return result;
+};
+
+// Override the original addLaborRow to mark form as modified
+const originalAddLaborRow = window.addLaborRow;
+window.addLaborRow = function(labor) {
+    const result = originalAddLaborRow(labor);
+    markFormAsModified();
+    return result;
+};
+
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+
+

@@ -69,6 +69,16 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
+                                <!-- Toggle Active Status -->
+                                <?php if ($u['id'] != $_SESSION['user_id']): ?>
+                                <button type="button" 
+                                        class="btn btn-sm btn-<?= $u['is_active'] ? 'secondary' : 'success' ?>" 
+                                        onclick="toggleActive(<?= $u['id'] ?>, '<?= htmlspecialchars($u['first_name'] . ' ' . $u['last_name']) ?>', <?= $u['is_active'] ? 'true' : 'false' ?>)"
+                                        title="<?= $u['is_active'] ? 'Απενεργοποίηση' : 'Ενεργοποίηση' ?>">
+                                    <i class="fas fa-<?= $u['is_active'] ? 'ban' : 'check' ?>"></i>
+                                </button>
+                                <?php endif; ?>
+                                
                                 <a href="<?= BASE_URL ?>/users/show/<?= $u['id'] ?>" 
                                    class="btn btn-sm btn-info" title="<?= __('common.view') ?>">
                                     <i class="fas fa-eye"></i>
@@ -98,11 +108,24 @@
     <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
 </form>
 
+<form id="toggleActiveForm" method="POST" action="index.php?route=/users/toggleActive">
+    <input type="hidden" name="id" id="toggleUserId">
+    <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
+</form>
+
 <script>
 function confirmDelete(userId) {
     if (confirm('<?= __('users.confirm_delete') ?>')) {
         document.getElementById('deleteUserId').value = userId;
         document.getElementById('deleteForm').submit();
+    }
+}
+
+function toggleActive(userId, userName, isActive) {
+    const action = isActive ? 'απενεργοποιήσετε' : 'ενεργοποιήσετε';
+    if (confirm('Είστε σίγουροι ότι θέλετε να ' + action + ' τον χρήστη "' + userName + '";')) {
+        document.getElementById('toggleUserId').value = userId;
+        document.getElementById('toggleActiveForm').submit();
     }
 }
 </script>

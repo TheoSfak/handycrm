@@ -107,29 +107,38 @@ class ProjectTasksController extends BaseController {
      * POST /projects/{project_id}/tasks/add
      */
     private function store($projectId) {
-        // DEBUG: Log that we entered store method
-        error_log("DEBUG: Entered store method for project $projectId");
-        error_log("DEBUG: POST data: " . print_r($_POST, true));
-        
         // Validate CSRF token would go here
+        
+        // Helper function to convert date formats (DD/MM/YYYY or YYYY-MM-DD to YYYY-MM-DD)
+        $convertDate = function($dateStr) {
+            if (empty($dateStr)) return null;
+            
+            // If already in YYYY-MM-DD format, return as-is
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+                return $dateStr;
+            }
+            
+            // If in DD/MM/YYYY format, convert to YYYY-MM-DD
+            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dateStr, $matches)) {
+                return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+            }
+            
+            return null;
+        };
         
         // Collect task data
         $taskData = [
             'project_id' => $projectId,
             'task_type' => $_POST['task_type'] ?? 'single_day',
-            'task_date' => !empty($_POST['task_date']) ? $_POST['task_date'] : null,
-            'date_from' => !empty($_POST['date_from']) ? $_POST['date_from'] : null,
-            'date_to' => !empty($_POST['date_to']) ? $_POST['date_to'] : null,
+            'task_date' => $convertDate($_POST['task_date'] ?? null),
+            'date_from' => $convertDate($_POST['date_from'] ?? null),
+            'date_to' => $convertDate($_POST['date_to'] ?? null),
             'description' => trim($_POST['description'] ?? ''),
             'notes' => trim($_POST['notes'] ?? '')
         ];
         
-        error_log("DEBUG: Task data collected: " . print_r($taskData, true));
-        
         // Validate task data
         $errors = $this->validateTaskData($taskData);
-        
-        error_log("DEBUG: Validation errors: " . print_r($errors, true));
         
         if (!empty($errors)) {
             $_SESSION['error'] = implode('<br>', $errors);
@@ -137,44 +146,19 @@ class ProjectTasksController extends BaseController {
             return;
         }
         
-        // Check for overlapping tasks
-        $dateFrom = $taskData['task_type'] === 'single_day' ? $taskData['task_date'] : $taskData['date_from'];
-        $dateTo = $taskData['task_type'] === 'single_day' ? $taskData['task_date'] : $taskData['date_to'];
-        
-        error_log("DEBUG: Checking overlap for dates: $dateFrom to $dateTo");
-        $overlapping = $this->taskModel->checkOverlap($projectId, $dateFrom, $dateTo);
-        error_log("DEBUG: Overlapping tasks found: " . count($overlapping));
-        error_log("DEBUG: confirm_overlap value: " . ($_POST['confirm_overlap'] ?? '0'));
-        
-        if (!empty($overlapping) && (!isset($_POST['confirm_overlap']) || $_POST['confirm_overlap'] !== '1')) {
-            error_log("DEBUG: Redirecting back due to overlap");
-            $_SESSION['warning'] = 'overlap';
-            $_SESSION['overlap_data'] = $overlapping;
-            $this->redirectBack();
-            return;
-        }
-        
-        error_log("DEBUG: Passed overlap check, continuing...");
-        
         // Collect materials
         $materials = $this->collectMaterials();
-        error_log("DEBUG: Collected " . count($materials) . " materials");
         
         // Collect labor
         $labor = $this->collectLabor();
-        error_log("DEBUG: Collected " . count($labor) . " labor entries");
         
         // Create task with all details
-        error_log("DEBUG: About to create task with details");
         $taskId = $this->taskModel->createWithDetails($taskData, $materials, $labor);
-        error_log("DEBUG: createWithDetails returned: " . var_export($taskId, true));
         
         if ($taskId) {
-            error_log("DEBUG: Task created successfully, redirecting");
             $_SESSION['success'] = 'Η εργασία δημιουργήθηκε επιτυχώς!';
             $this->redirect('/projects/' . $projectId . '/tasks');
         } else {
-            error_log("DEBUG: Task creation failed");
             $_SESSION['error'] = 'Αποτυχία δημιουργίας εργασίας';
             $this->redirectBack();
         }
@@ -294,12 +278,29 @@ class ProjectTasksController extends BaseController {
      * POST /projects/{project_id}/tasks/edit/{id}
      */
     private function update($projectId, $taskId) {
+        // Helper function to convert date formats (DD/MM/YYYY or YYYY-MM-DD to YYYY-MM-DD)
+        $convertDate = function($dateStr) {
+            if (empty($dateStr)) return null;
+            
+            // If already in YYYY-MM-DD format, return as-is
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+                return $dateStr;
+            }
+            
+            // If in DD/MM/YYYY format, convert to YYYY-MM-DD
+            if (preg_match('/^(\d{2})\/(\d{2})\/(\d{4})$/', $dateStr, $matches)) {
+                return $matches[3] . '-' . $matches[2] . '-' . $matches[1];
+            }
+            
+            return null;
+        };
+        
         // Collect task data
         $taskData = [
             'task_type' => $_POST['task_type'] ?? 'single_day',
-            'task_date' => !empty($_POST['task_date']) ? $_POST['task_date'] : null,
-            'date_from' => !empty($_POST['date_from']) ? $_POST['date_from'] : null,
-            'date_to' => !empty($_POST['date_to']) ? $_POST['date_to'] : null,
+            'task_date' => $convertDate($_POST['task_date'] ?? null),
+            'date_from' => $convertDate($_POST['date_from'] ?? null),
+            'date_to' => $convertDate($_POST['date_to'] ?? null),
             'description' => trim($_POST['description'] ?? ''),
             'notes' => trim($_POST['notes'] ?? '')
         ];
@@ -309,19 +310,6 @@ class ProjectTasksController extends BaseController {
         
         if (!empty($errors)) {
             $_SESSION['error'] = implode('<br>', $errors);
-            $this->redirectBack();
-            return;
-        }
-        
-        // Check for overlapping tasks (excluding current task)
-        $dateFrom = $taskData['task_type'] === 'single_day' ? $taskData['task_date'] : $taskData['date_from'];
-        $dateTo = $taskData['task_type'] === 'single_day' ? $taskData['task_date'] : $taskData['date_to'];
-        
-        $overlapping = $this->taskModel->checkOverlap($projectId, $dateFrom, $dateTo, $taskId);
-        
-        if (!empty($overlapping) && !isset($_POST['confirm_overlap'])) {
-            $_SESSION['warning'] = 'Υπάρχουν ' . count($overlapping) . ' εργασίες που επικαλύπτονται. Θέλετε να συνεχίσετε;';
-            $_SESSION['overlap_data'] = $overlapping;
             $this->redirectBack();
             return;
         }
@@ -938,6 +926,10 @@ class ProjectTasksController extends BaseController {
         }
     }
     
+    /**
+     * Check for date overlap with existing tasks in the same project
+     * Returns array with 'hasOverlap' and 'overlappingTasks' or false if no overlap
+     */
     /**
      * Helper to redirect back
      */

@@ -47,8 +47,19 @@ class PaymentReportController extends BaseController {
             $dateTo = date('Y-m-t');
         }
         
-        // Get all technicians with labor for this period
-        $technicians = $this->userModel->getByRole(['technician', 'assistant']);
+        // Get all active users regardless of role
+        $technicians = $this->userModel->getAllActive();
+        
+        // DEBUG: Write to file
+        $debugFile = __DIR__ . '/../debug_pdf_report.txt';
+        $debugContent = "PDF Report Debug - " . date('Y-m-d H:i:s') . "\n";
+        $debugContent .= "Date Range: $dateFrom to $dateTo\n";
+        $debugContent .= "Total users found: " . count($technicians) . "\n";
+        foreach ($technicians as $t) {
+            $debugContent .= "  User: {$t['name']} (ID: {$t['id']}, Role: {$t['role']})\n";
+        }
+        file_put_contents($debugFile, $debugContent);
+        
         $allData = [];
         $grandTotalHours = 0;
         $grandTotalAmount = 0;
@@ -61,6 +72,10 @@ class PaymentReportController extends BaseController {
             
             // Get labor entries for this technician
             $entries = $this->getEntriesForPeriod($tech['id'], $dateFrom, $dateTo, $paidStatus);
+            
+            // DEBUG: Append to file
+            $debugContent = "  Entries for {$tech['name']} (ID: {$tech['id']}): " . count($entries) . "\n";
+            file_put_contents($debugFile, $debugContent, FILE_APPEND);
             
             if (empty($entries)) {
                 continue;
@@ -193,16 +208,16 @@ class PaymentReportController extends BaseController {
             $html .= '</h3>';
             
             // Entries table
-            $html .= '<table border="1" cellpadding="4" style="border-collapse: collapse; width: 100%; font-size: 9px; margin-bottom: 10px;">';
+            $html .= '<table border="1" cellpadding="3" style="border-collapse: collapse; width: 100%; font-size: 8px; margin-bottom: 10px;">';
             $html .= '<thead>';
             $html .= '<tr style="background-color: #f8f9fa; font-weight: bold;">';
-            $html .= '<td style="width: 10%;">' . __('payments.date') . '</td>';
-            $html .= '<td style="width: 25%;">' . __('payments.project') . '</td>';
-            $html .= '<td style="width: 25%;">' . __('payments.task') . '</td>';
-            $html .= '<td style="width: 8%; text-align: center;">' . __('payments.hours') . '</td>';
+            $html .= '<td style="width: 8%;">' . __('payments.date') . '</td>';
+            $html .= '<td style="width: 20%;">' . __('payments.project') . '</td>';
+            $html .= '<td style="width: 28%;">' . __('payments.task') . '</td>';
+            $html .= '<td style="width: 7%; text-align: center;">' . __('payments.hours') . '</td>';
             $html .= '<td style="width: 10%; text-align: right;">' . __('payments.rate') . '</td>';
             $html .= '<td style="width: 10%; text-align: right;">' . __('payments.amount') . '</td>';
-            $html .= '<td style="width: 12%; text-align: center;">' . __('payments.status') . '</td>';
+            $html .= '<td style="width: 17%; text-align: center;">' . __('payments.status') . '</td>';
             $html .= '</tr>';
             $html .= '</thead>';
             $html .= '<tbody>';
@@ -213,12 +228,12 @@ class PaymentReportController extends BaseController {
                 $rowStyle = $isPaid ? 'background-color: #d1e7dd;' : '';
                 
                 $html .= '<tr style="' . $rowStyle . '">';
-                $html .= '<td>' . formatDate($workDate) . '</td>';
-                $html .= '<td>' . htmlspecialchars($entry['project_title']) . '</td>';
-                $html .= '<td>' . htmlspecialchars($entry['task_description']) . '</td>';
-                $html .= '<td style="text-align: center;">' . number_format($entry['hours_worked'], 2) . '</td>';
-                $html .= '<td style="text-align: right;">' . formatCurrency($entry['hourly_rate']) . '</td>';
-                $html .= '<td style="text-align: right;"><strong>' . formatCurrency($entry['subtotal']) . '</strong></td>';
+                $html .= '<td style="width: 8%;">' . formatDate($workDate) . '</td>';
+                $html .= '<td style="width: 20%;">' . htmlspecialchars($entry['project_title']) . '</td>';
+                $html .= '<td style="width: 28%;">' . htmlspecialchars($entry['task_description']) . '</td>';
+                $html .= '<td style="width: 7%; text-align: center;">' . number_format($entry['hours_worked'], 2) . '</td>';
+                $html .= '<td style="width: 10%; text-align: right;">' . formatCurrency($entry['hourly_rate']) . '</td>';
+                $html .= '<td style="width: 10%; text-align: right;"><strong>' . formatCurrency($entry['subtotal']) . '</strong></td>';
                 
                 // Payment status column
                 if ($isPaid) {
@@ -226,9 +241,9 @@ class PaymentReportController extends BaseController {
                     if (!empty($entry['paid_by_name'])) {
                         $paidInfo .= '<br/><small>' . htmlspecialchars($entry['paid_by_name']) . '</small>';
                     }
-                    $html .= '<td style="text-align: center; font-size: 8px; color: #0f5132;">' . $paidInfo . '</td>';
+                    $html .= '<td style="width: 17%; text-align: center; font-size: 7px; color: #0f5132;">' . $paidInfo . '</td>';
                 } else {
-                    $html .= '<td style="text-align: center; color: #999;">-</td>';
+                    $html .= '<td style="width: 17%; text-align: center; color: #999;">-</td>';
                 }
                 
                 $html .= '</tr>';

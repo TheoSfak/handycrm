@@ -1,13 +1,36 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.3.8  
+**Version:** 1.4.0  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
 HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους και υδραυλικούς. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και τα τιμολόγια.
 
-## 🎉 Τι Νέο στην v1.3.8
+## 🎉 Τι Νέο στην v1.4.0
+
+- 👥 **User Status Management** - Διαχείριση ενεργών/ανενεργών χρηστών
+  - **Toggle Active Status** - Κουμπί ενεργοποίησης/απενεργοποίησης χρηστών από τη σελίδα Users
+  - **Smart Filtering** - Οι ανενεργοί χρήστες δεν εμφανίζονται σε dropdowns και reports
+  - **Protection** - Δεν μπορείς να απενεργοποιήσεις τον εαυτό σου
+- 💼 **Payments Enhancements** - Βελτιώσεις στη σελίδα πληρωμών
+  - **Custom Date Range** - Modal για επιλογή custom ημερομηνιών
+  - **HTML5 Date Inputs** - Native date pickers για καλύτερη UX
+  - **All Users Support** - Αυτόματη υποστήριξη όλων των ρόλων χρηστών
+  - **Improved Labels** - "Από/Έως" αντί για "Αρχή/Τέλος Εβδομάδας"
+- 📄 **PDF Report Improvements** - Βελτιώσεις στις PDF αναφορές
+  - **Compressed Columns** - Συμπιεσμένες στήλες για καλύτερη εμφάνιση
+  - **Smaller Font Sizes** - 8px για πίνακα, 7px για status
+  - **Reduced Padding** - Μειωμένο padding για περισσότερα δεδομένα ανά σελίδα
+- 🔒 **Task Safety Features** - Προστασία από απώλεια δεδομένων
+  - **Unsaved Data Warning** - Προειδοποίηση όταν αποχωρείς με μη αποθηκευμένα materials/labor
+  - **Photo Delete Buttons** - Hover delete buttons σε φωτογραφίες tasks
+- 🐛 **Bug Fixes & Removals**
+  - **Complete Overlap Removal** - Πλήρης αφαίρεση του overlap check feature
+  - **Date Conversion Fix** - Διατήρηση date conversion helper (DD/MM/YYYY → YYYY-MM-DD)
+  - **Role Detection Fix** - Αυτόματη ανίχνευση όλων των ρόλων χρηστών (admin, administrator, κλπ)
+
+### Προηγούμενα - v1.3.8
 
 - 💶 **VAT Display Settings** - Διαχείριση εμφάνισης ΦΠΑ σε τιμές
   - **Admin Configuration** - Ρυθμίσεις για εμφάνιση σημειώσεων ΦΠΑ και αν οι τιμές περιλαμβάνουν ΦΠΑ

@@ -41,20 +41,18 @@ require_once 'views/includes/header.php';
 
                 <div class="col-md-2">
                     <label for="week_start" class="form-label">
-                        <i class="fas fa-calendar me-1"></i><?= __('payments.week_start') ?>
+                        <i class="fas fa-calendar me-1"></i>Από
                     </label>
-                    <input type="text" class="form-control datepicker" id="week_start" name="week_start" 
-                           value="<?= formatDate($weekStart) ?>" placeholder="ΗΗ/ΜΜ/ΕΕΕΕ" required autocomplete="off">
-                    <input type="hidden" id="week_start_hidden" name="week_start_sql" value="<?= $weekStart ?>">
+                    <input type="date" class="form-control" id="week_start" name="week_start" 
+                           value="<?= $weekStart ?>" required>
                 </div>
 
                 <div class="col-md-2">
                     <label for="week_end" class="form-label">
-                        <i class="fas fa-calendar me-1"></i><?= __('payments.week_end') ?>
+                        <i class="fas fa-calendar me-1"></i>Έως
                     </label>
-                    <input type="text" class="form-control datepicker" id="week_end" name="week_end" 
-                           value="<?= formatDate($weekEnd) ?>" placeholder="ΗΗ/ΜΜ/ΕΕΕΕ" required autocomplete="off">
-                    <input type="hidden" id="week_end_hidden" name="week_end_sql" value="<?= $weekEnd ?>">
+                    <input type="date" class="form-control" id="week_end" name="week_end" 
+                           value="<?= $weekEnd ?>" required>
                 </div>
                 
                 <!-- Quick Date Presets -->
@@ -71,6 +69,9 @@ require_once 'views/includes/header.php';
                         </button>
                         <button type="button" class="btn btn-outline-secondary" onclick="setDateRange('last-month')">
                             <i class="fas fa-calendar-times me-1"></i>Προηγούμενος Μήνας
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="showCustomDateModal()">
+                            <i class="fas fa-calendar-day me-1"></i>Προσαρμοσμένο Εύρος
                         </button>
                     </div>
                 </div>
@@ -574,15 +575,7 @@ function setDateRange(preset) {
             break;
     }
     
-    // Format dates as dd/mm/yyyy for Greek format display
-    const formatDateGreek = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${day}/${month}/${year}`;
-    };
-    
-    // Format dates as yyyy-mm-dd for SQL
+    // Format dates as yyyy-mm-dd for SQL and HTML5 date inputs
     const formatDateSQL = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -590,13 +583,12 @@ function setDateRange(preset) {
         return `${year}-${month}-${day}`;
     };
     
-    // Set Greek format in visible input
-    weekStartInput.value = formatDateGreek(startDate);
-    weekEndInput.value = formatDateGreek(endDate);
+    // Set SQL format in date inputs (HTML5 date inputs use YYYY-MM-DD)
+    const formattedStart = formatDateSQL(startDate);
+    const formattedEnd = formatDateSQL(endDate);
     
-    // Set SQL format in hidden inputs
-    document.getElementById('week_start_hidden').value = formatDateSQL(startDate);
-    document.getElementById('week_end_hidden').value = formatDateSQL(endDate);
+    weekStartInput.value = formattedStart;
+    weekEndInput.value = formattedEnd;
     
     // Auto-submit the form after setting dates
     const form = weekStartInput.closest('form');
@@ -933,7 +925,85 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 });
+
+// Show custom date range modal
+function showCustomDateModal() {
+    const modal = new bootstrap.Modal(document.getElementById('customDateModal'));
+    modal.show();
+}
+
+// Apply custom date range
+function applyCustomDateRange() {
+    const customStartInput = document.getElementById('custom_date_start');
+    const customEndInput = document.getElementById('custom_date_end');
+    
+    if (!customStartInput.value || !customEndInput.value) {
+        alert('Παρακαλώ επιλέξτε και τις δύο ημερομηνίες');
+        return;
+    }
+    
+    // HTML5 date inputs already give us YYYY-MM-DD format - just use directly
+    const startValue = customStartInput.value;
+    const endValue = customEndInput.value;
+    
+    // Set values in the main form
+    document.getElementById('week_start').value = startValue;
+    document.getElementById('week_end').value = endValue;
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('customDateModal'));
+    modal.hide();
+    
+    // Submit the form
+    const form = document.getElementById('week_start').closest('form');
+    if (form) {
+        form.submit();
+    }
+}
 </script>
 
+<!-- Custom Date Range Modal -->
+<div class="modal fade" id="customDateModal" tabindex="-1" aria-labelledby="customDateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="customDateModalLabel">
+                    <i class="fas fa-calendar-day me-2"></i>Επιλογή Προσαρμοσμένου Εύρους Ημερομηνιών
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="custom_date_start" class="form-label">
+                            <i class="fas fa-calendar-check me-1"></i>Από Ημερομηνία
+                        </label>
+                        <input type="date" class="form-control" id="custom_date_start" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="custom_date_end" class="form-label">
+                            <i class="fas fa-calendar-check me-1"></i>Έως Ημερομηνία
+                        </label>
+                        <input type="date" class="form-control" id="custom_date_end" required>
+                    </div>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Επιλέξτε το εύρος ημερομηνιών για το οποίο θέλετε να δείτε πληρωμές
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Ακύρωση
+                </button>
+                <button type="button" class="btn btn-primary" onclick="applyCustomDateRange()">
+                    <i class="fas fa-check me-1"></i>Εφαρμογή
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php require_once 'views/includes/footer.php'; ?>
+
 

@@ -465,19 +465,45 @@ function handleImportCSV(input) {
  * Parse CSV and send to server
  */
 function parseAndImportCSV(content) {
-    // Simple CSV parser (handles quoted fields)
+    // Detect delimiter (comma or tab)
+    const firstLine = content.split('\n')[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    
+    // Simple CSV/TSV parser
     const lines = content.split('\n').filter(line => line.trim());
-    const headers = parseCSVLine(lines[0]);
+    const headers = parseCSVLine(lines[0], delimiter);
+    
+    // Clean headers - remove quotes and extra text
+    const cleanHeaders = headers.map(h => {
+        h = h.replace(/^"|"$/g, ''); // Remove quotes
+        h = h.replace(/\s*\(.*?\)\s*/g, ''); // Remove (€) etc
+        return h.trim();
+    });
     
     const materials = [];
     for (let i = 1; i < lines.length; i++) {
-        const values = parseCSVLine(lines[i]);
-        if (values.length === headers.length) {
+        const values = parseCSVLine(lines[i], delimiter);
+        if (values.length >= cleanHeaders.length) {
             const material = {};
-            headers.forEach((header, index) => {
-                material[header] = values[index];
+            cleanHeaders.forEach((header, index) => {
+                // Skip ID column
+                if (header !== 'ID' && index < values.length) {
+                    let value = values[index].replace(/^"|"$/g, '').trim();
+                    
+                    // Convert European number format (comma) to decimal point
+                    // Only for price fields
+                    if (header === 'Τιμή' && value) {
+                        value = value.replace(',', '.');
+                    }
+                    
+                    material[header] = value;
+                }
             });
-            materials.push(material);
+            
+            // Only add if has name
+            if (material['Όνομα']) {
+                materials.push(material);
+            }
         }
     }
     
@@ -517,7 +543,7 @@ function parseAndImportCSV(content) {
 /**
  * Parse a single CSV line (handles quoted fields with commas)
  */
-function parseCSVLine(line) {
+function parseCSVLine(line, delimiter = ',') {
     const result = [];
     let current = '';
     let inQuotes = false;
@@ -527,7 +553,7 @@ function parseCSVLine(line) {
         
         if (char === '"') {
             inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
+        } else if (char === delimiter && !inQuotes) {
             result.push(current.trim());
             current = '';
         } else {

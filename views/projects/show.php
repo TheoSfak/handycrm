@@ -123,11 +123,25 @@
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" type="button" role="tab">
             <i class="fas fa-hard-hat me-2"></i>Ημερομίσθια
+            <?php if (!empty($laborEntries) && count($laborEntries) > 0): ?>
+                <span class="badge bg-primary ms-1"><?= count($laborEntries) ?></span>
+            <?php endif; ?>
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials" type="button" role="tab">
             <i class="fas fa-boxes me-2"></i>Υλικά
+            <?php if (!empty($materialsSummary) && count($materialsSummary) > 0): ?>
+                <span class="badge bg-primary ms-1"><?= count($materialsSummary) ?></span>
+            <?php endif; ?>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="photos-tab" data-bs-toggle="tab" data-bs-target="#photos" type="button" role="tab">
+            <i class="fas fa-camera me-2"></i>Φωτογραφίες
+            <?php if ($totalPhotos > 0): ?>
+                <span class="badge bg-primary ms-1"><?= $totalPhotos ?></span>
+            <?php endif; ?>
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -687,14 +701,71 @@
     </div>
     <!-- End Materials Tab -->
 
+    <!-- Photos Tab -->
+    <div class="tab-pane fade" id="photos" role="tabpanel" aria-labelledby="photos-tab">
+        <?php if ($totalPhotos > 0): ?>
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Σύνολο: <?= $totalPhotos ?> φωτογραφίες</strong>
+                        <span class="ms-3">
+                            Πριν: <?= count($projectPhotos['before']) ?> |
+                            Κατά τη διάρκεια: <?= count($projectPhotos['during']) ?> |
+                            Μετά: <?= count($projectPhotos['after']) ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <?php foreach (['before' => 'Πριν', 'during' => 'Κατά τη διάρκεια', 'after' => 'Μετά'] as $type => $label): ?>
+                <?php if (!empty($projectPhotos[$type])): ?>
+                    <h4 class="mb-3">
+                        <i class="fas fa-camera me-2"></i><?= $label ?>
+                        <span class="badge bg-primary"><?= count($projectPhotos[$type]) ?></span>
+                    </h4>
+                    
+                    <div class="row g-3 mb-5">
+                        <?php foreach ($projectPhotos[$type] as $photo): ?>
+                            <div class="col-md-3 col-sm-6">
+                                <div class="card">
+                                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                       data-lightbox="project-<?= $project['id'] ?>-<?= $type ?>"
+                                       data-title="<?= htmlspecialchars($photo['task_description']) ?>">
+                                        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                             class="card-img-top" 
+                                             alt="<?= htmlspecialchars($photo['caption']) ?>"
+                                             style="height: 200px; object-fit: cover;">
+                                    </a>
+                                    <div class="card-body p-2">
+                                        <p class="card-text small mb-1">
+                                            <strong><?= htmlspecialchars($photo['task_description']) ?></strong>
+                                        </p>
+                                        <?php if (!empty($photo['caption'])): ?>
+                                            <p class="card-text small text-muted mb-0">
+                                                <?= htmlspecialchars($photo['caption']) ?>
+                                            </p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="text-center py-5">
+                <i class="fas fa-camera fa-4x text-muted mb-3"></i>
+                <h5 class="text-muted">Δεν υπάρχουν φωτογραφίες</h5>
+                <p class="text-muted">Προσθέστε φωτογραφίες στις εργασίες του έργου για να τις δείτε εδώ.</p>
+            </div>
+        <?php endif; ?>
+    </div>
+    <!-- End Photos Tab -->
+
     <!-- Statistics Tab -->
     <div class="tab-pane fade" id="statistics" role="tabpanel" aria-labelledby="statistics-tab">
         <?php
-        // Get statistics data
-        require_once 'models/ProjectTask.php';
-        $taskModel = new ProjectTask();
-        $statistics = $taskModel->getStatistics($project['id']);
-        
         // Include the statistics view
         if (file_exists(__DIR__ . '/statistics.php')) {
             include __DIR__ . '/statistics.php';

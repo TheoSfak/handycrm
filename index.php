@@ -646,6 +646,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         }
     } elseif ($currentRoute === '/users/delete') {
         $controller->delete();
+    } elseif ($currentRoute === '/users/toggleActive') {
+        $controller->toggleActive();
     } else {
         // 404 for users
         header('HTTP/1.0 404 Not Found');

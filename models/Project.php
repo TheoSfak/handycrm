@@ -114,6 +114,8 @@ class Project extends BaseModel {
                            c.customer_type,
                            t.first_name as tech_first_name, 
                            t.last_name as tech_last_name,
+                           p.material_cost,
+                           p.labor_cost,
                            COALESCE((SELECT SUM(tm.subtotal) 
                                      FROM task_materials tm 
                                      JOIN project_tasks pt ON tm.task_id = pt.id 

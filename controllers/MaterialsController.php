@@ -536,8 +536,13 @@ class MaterialsController extends BaseController {
                 ];
                 
                 // Insert material
-                if ($this->materialModel->create($insertData)) {
+                $result = $this->materialModel->create($insertData);
+                error_log("CSV Import - Material: " . $mappedData['name'] . " | Result: " . var_export($result, true) . " | Data: " . json_encode($insertData));
+                
+                if ($result) {
                     $imported++;
+                } else {
+                    $errors[] = "Γραμμή " . ($index + 2) . ": Αποτυχία εισαγωγής του " . $mappedData['name'];
                 }
                 
             } catch (Exception $e) {

@@ -465,12 +465,88 @@ function displaySelectedFiles() {
     
     uploadBtn.disabled = false;
     selectedFiles.innerHTML = `
-        <div class="alert alert-info">
+        <div class="alert alert-info mb-3">
             <i class="fas fa-check-circle"></i>
             <strong>${files.length}</strong> φωτογραφί${files.length === 1 ? 'α' : 'ες'} επιλέχθηκ${files.length === 1 ? 'ε' : 'αν'}
         </div>
+        <div class="row g-3" id="thumbnails"></div>
     `;
+    
+    // Generate thumbnails
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const col = document.createElement('div');
+            col.className = 'col-md-3 col-sm-6';
+            col.innerHTML = `
+                <div class="card">
+                    <img src="${e.target.result}" class="card-img-top" style="height: 150px; object-fit: cover;">
+                    <div class="card-body p-2">
+                        <small class="text-muted d-block text-truncate">${file.name}</small>
+                        <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+                    </div>
+                </div>
+            `;
+            thumbnailsContainer.appendChild(col);
+        };
+        reader.readAsDataURL(file);
+    });
 }
+
+// Handle form submission with progress
+document.getElementById('photoUploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const uploadBtn = document.getElementById('uploadBtn');
+    const selectedFilesDiv = document.getElementById('selectedFiles');
+    
+    // Disable upload button
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Φόρτωση...';
+    
+    // Add progress bar
+    selectedFilesDiv.insertAdjacentHTML('beforeend', `
+        <div class="mt-3" id="uploadProgress">
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" 
+                     style="width: 0%" id="progressBar">0%</div>
+            </div>
+        </div>
+    `);
+    
+    // Upload with progress tracking
+    const xhr = new XMLHttpRequest();
+    
+    xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = percentComplete + '%';
+            progressBar.textContent = percentComplete + '%';
+        }
+    });
+    
+    xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+            window.location.reload();
+        } else {
+            alert('Σφάλμα κατά την αποστολή των φωτογραφιών');
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Ανέβασμα Φωτογραφιών';
+        }
+    });
+    
+    xhr.addEventListener('error', () => {
+        alert('Σφάλμα δικτύου');
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Ανέβασμα Φωτογραφιών';
+    });
+    
+    xhr.open('POST', this.action);
+    xhr.send(formData);
+});
 
 // Lightbox configuration
 lightbox.option({

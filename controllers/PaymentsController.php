@@ -20,8 +20,8 @@ class PaymentsController extends BaseController {
      * Display payments page with filters
      */
     public function index() {
-        // Get all active technicians/assistants from users for dropdown
-        $technicians = $this->userModel->getByRole(['technician', 'assistant']);
+        // Get all active users for dropdown (all roles)
+        $technicians = $this->userModel->getAllActive();
         
         // Get filter parameters
         $selectedTechnician = $_GET['technician_id'] ?? null;

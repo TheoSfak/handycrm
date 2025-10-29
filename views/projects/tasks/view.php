@@ -211,15 +211,27 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                         <div class="row g-2 mb-3">
                             <?php foreach ($recentPhotos as $photo): ?>
                                 <div class="col-2">
-                                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
-                                       target="_blank" 
-                                       style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 6px; border: 1px solid #e0e0e0;">
-                                        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
-                                             alt="<?= htmlspecialchars($photo['caption']) ?>"
-                                             style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
-                                             onmouseover="this.style.transform='scale(1.1)'" 
-                                             onmouseout="this.style.transform='scale(1)'">
-                                    </a>
+                                    <div class="photo-thumbnail-wrapper" style="position: relative;">
+                                        <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                           target="_blank" 
+                                           style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 6px; border: 1px solid #e0e0e0;">
+                                            <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
+                                                 alt="<?= htmlspecialchars($photo['caption']) ?>"
+                                                 style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s;"
+                                                 onmouseover="this.style.transform='scale(1.1)'" 
+                                                 onmouseout="this.style.transform='scale(1)'">
+                                        </a>
+                                        <form action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos/<?= $photo['id'] ?>/delete" 
+                                              method="POST" 
+                                              class="photo-delete-form"
+                                              onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη φωτογραφία;');">
+                                            <button type="submit" 
+                                                    class="btn btn-danger btn-sm"
+                                                    title="Διαγραφή">
+                                                <i class="fas fa-trash" style="font-size: 10px;"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -341,6 +353,26 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
     <input type="hidden" name="task_id" id="copyTaskId">
 </form>
 
+<style>
+.photo-delete-form {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+}
+
+.photo-thumbnail-wrapper:hover .photo-delete-form {
+    opacity: 1;
+}
+
+.photo-delete-form button {
+    padding: 4px 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+</style>
+
 <script>
 function copyTask(taskId) {
     if (confirm('Θέλετε να αντιγράψετε αυτή την εργασία;\n\nΘα δημιουργηθεί μια νέα εργασία με τα ίδια υλικά και εργατικά.')) {
@@ -351,3 +383,4 @@ function copyTask(taskId) {
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
+

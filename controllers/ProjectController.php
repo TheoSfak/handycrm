@@ -303,6 +303,14 @@ class ProjectController extends BaseController {
             error_log("Materials loading error: " . $e->getMessage());
         }
         
+        // Get statistics
+        $statistics = [];
+        try {
+            $statistics = $taskModel->getStatistics($project['id']);
+        } catch (Exception $e) {
+            error_log("Statistics loading error: " . $e->getMessage());
+        }
+        
         $data = [
             'title' => 'Έργο: ' . $project['title'] . ' - ' . APP_NAME,
             'user' => $user,
@@ -315,7 +323,8 @@ class ProjectController extends BaseController {
             'totalPhotos' => $totalPhotos,
             'laborEntries' => $laborEntries,
             'materialsSummary' => $materialsSummary,
-            'materialsDetail' => $materialsDetail
+            'materialsDetail' => $materialsDetail,
+            'statistics' => $statistics
         ];
         
         parent::view('projects/show', $data);

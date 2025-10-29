@@ -163,11 +163,23 @@ class BaseController {
         }
         
         if (strpos($url, 'http') !== 0) {
-            // For PHP built-in server, use query parameter routing
-            // Replace ? with & for additional query parameters
-            $url = str_replace('?', '&', $url);
-            $url = '?route=' . $url;
+            // For internal routes, build an absolute URL to the front controller
+            // Replace ? with & so additional query params are preserved
+            $route = str_replace('?', '&', $url);
+
+            // Ensure the route starts with a leading slash
+            if (substr($route, 0, 1) !== '/') {
+                $route = '/' . ltrim($route, '/');
+            }
+
+            // Use BASE_URL if defined to form absolute path to index.php
+            $base = defined('BASE_URL') ? BASE_URL : '';
+            // Ensure base does not end with a slash
+            $base = rtrim($base, '/');
+
+            $url = $base . '/?route=' . $route;
         }
+
         header("Location: {$url}");
         exit;
     }

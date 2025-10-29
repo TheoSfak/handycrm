@@ -63,9 +63,9 @@ class DashboardController extends BaseController {
                                AND YEAR(created_at) = YEAR(CURRENT_DATE())");
             $stats['new_customers_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // Active projects (new, in_progress, and invoiced - not completed or cancelled)
+            // Active projects (only new and in_progress - not completed, invoiced or cancelled)
             $stmt = $db->query("SELECT COUNT(*) as total FROM projects 
-                               WHERE status IN ('new', 'in_progress', 'invoiced')");
+                               WHERE status IN ('new', 'in_progress')");
             $stats['active_projects'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
             // Appointments today
@@ -89,7 +89,7 @@ class DashboardController extends BaseController {
                 $stats['overdue_invoices'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             } else {
                 // If invoices table doesn't exist, calculate from invoiced/completed projects this month
-                // Calculate correct total from materials + labor instead of stale total_cost
+                // Calculate subtotals from tasks (materials + labor) - the stored fields may be incorrect
                 $stmt = $db->query("
                     SELECT COALESCE(SUM(
                         COALESCE((SELECT SUM(tm.subtotal) 

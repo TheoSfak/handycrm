@@ -74,6 +74,18 @@ class User extends BaseModel {
     }
     
     /**
+     * Get all active users regardless of role
+     */
+    public function getAllActive() {
+        $sql = "SELECT id, first_name, last_name, CONCAT(first_name, ' ', last_name) as name, 
+                role, hourly_rate, email, phone 
+                FROM {$this->table} 
+                WHERE is_active = 1 
+                ORDER BY first_name, last_name";
+        return $this->db->fetchAll($sql);
+    }
+    
+    /**
      * Check if email exists
      */
     public function emailExists($email, $excludeId = null) {
