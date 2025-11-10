@@ -18,14 +18,17 @@ if (!file_exists($configFile)) {
     exit;
 }
 
-// Load configuration
+// Load configuration (config.php handles session_start internally)
 require_once $configFile;
 require_once 'classes/Database.php';
 
 // Define BASE_URL for clean URLs
 if (!defined('BASE_URL')) {
-    $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
-    define('BASE_URL', $scriptPath === '/' ? '' : $scriptPath);
+    // For localhost/handycrm/index.php -> /handycrm
+    // For localhost/index.php -> /
+    $scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+    $scriptPath = rtrim($scriptPath, '/');
+    define('BASE_URL', $scriptPath);
 }
 
 // Test database connection
@@ -90,6 +93,8 @@ $router = new Router();
 $router->add('/', 'DashboardController', 'index');
 $router->add('/login', 'AuthController', 'login');
 $router->add('/logout', 'AuthController', 'logout');
+$router->add('/forgot-password', 'AuthController', 'forgotPassword');
+$router->add('/reset-password', 'AuthController', 'resetPassword');
 $router->add('/dashboard', 'DashboardController', 'index');
 
 // Customer routes
@@ -119,6 +124,19 @@ $router->add('/payments/mark-entries-unpaid', 'PaymentsController', 'markEntries
 $router->add('/payments/mark-week-paid', 'PaymentsController', 'markWeekPaid');
 $router->add('/payments/mark-week-unpaid', 'PaymentsController', 'markWeekUnpaid');
 $router->add('/payments/history', 'PaymentsController', 'history');
+
+// Transformer Maintenance routes
+$router->add('/maintenances', 'TransformerMaintenanceController', 'index');
+$router->add('/maintenances/create', 'TransformerMaintenanceController', 'create');
+$router->add('/maintenances/store', 'TransformerMaintenanceController', 'store', 'POST');
+$router->add('/maintenances/view/{id}', 'TransformerMaintenanceController', 'show');
+$router->add('/maintenances/sendEmail/{id}', 'TransformerMaintenanceController', 'sendEmail', 'POST');
+$router->add('/maintenances/edit/{id}', 'TransformerMaintenanceController', 'edit');
+$router->add('/maintenances/update/{id}', 'TransformerMaintenanceController', 'update', 'POST');
+$router->add('/maintenances/delete/{id}', 'TransformerMaintenanceController', 'delete', 'POST');
+$router->add('/maintenances/deletePhoto/{id}', 'TransformerMaintenanceController', 'deletePhoto', 'POST');
+$router->add('/maintenances/exportPDF/{id}', 'TransformerMaintenanceController', 'exportPDF');
+$router->add('/maintenances/exportExcel/{id}', 'TransformerMaintenanceController', 'exportExcel');
 
 // Appointment routes (future implementation)
 $router->add('/appointments', 'AppointmentController', 'index');
@@ -155,6 +173,26 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     require_once 'controllers/AuthController.php';
     $controller = new AuthController();
     $controller->logout();
+    
+} elseif ($currentRoute === '/forgot-password') {
+    require_once 'controllers/AuthController.php';
+    $controller = new AuthController();
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->processForgotPassword();
+    } else {
+        $controller->forgotPassword();
+    }
+    
+} elseif ($currentRoute === '/reset-password') {
+    require_once 'controllers/AuthController.php';
+    $controller = new AuthController();
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->processResetPassword();
+    } else {
+        $controller->resetPassword();
+    }
     
 } elseif (strpos($currentRoute, '/profile') === 0) {
     // Check if user is logged in
@@ -372,6 +410,43 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         }
     }
     
+} elseif (strpos($currentRoute, '/maintenances') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/TransformerMaintenanceController.php';
+    $controller = new TransformerMaintenanceController();
+    
+    if ($currentRoute === '/maintenances' || $currentRoute === '/maintenances/') {
+        $controller->index();
+    } elseif ($currentRoute === '/maintenances/create') {
+        $controller->create();
+    } elseif ($currentRoute === '/maintenances/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/\/maintenances\/view\/(\d+)/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
+    } elseif (preg_match('/\/maintenances\/sendEmail\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->sendEmail($matches[1]);
+    } elseif (preg_match('/\/maintenances\/edit\/(\d+)/', $currentRoute, $matches)) {
+        $controller->edit($matches[1]);
+    } elseif (preg_match('/\/maintenances\/update\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update($matches[1]);
+    } elseif (preg_match('/\/maintenances\/delete\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete($matches[1]);
+    } elseif (preg_match('/\/maintenances\/deletePhoto\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/maintenances\/exportPDF\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportPDF($matches[1]);
+    } elseif (preg_match('/\/maintenances\/exportExcel\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportExcel($matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Maintenance page not found</h1>";
+    }
+    
 } elseif (strpos($currentRoute, '/appointments') === 0) {
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
@@ -547,6 +622,16 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         }
     } elseif ($currentRoute === '/materials/import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->importCSV();
+    } elseif ($currentRoute === '/materials/bulk-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkDelete();
+    } elseif ($currentRoute === '/materials/bulk-activate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkActivate();
+    } elseif ($currentRoute === '/materials/bulk-deactivate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkDeactivate();
+    } elseif ($currentRoute === '/materials/check-duplicates') {
+        $controller->checkDuplicates();
+    } elseif ($currentRoute === '/materials/duplicates') {
+        $controller->duplicates();
     } elseif ($currentRoute === '/materials/add') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->store();
@@ -606,17 +691,14 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     $controller->apiCheckTechnicianOverlap();
     
 } elseif (strpos($currentRoute, '/users') === 0) {
-    // Check if user is logged in and is admin
+    // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
         header('Location: ?route=/login');
         exit;
     }
     
-    if ($_SESSION['role'] !== 'admin') {
-        $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης';
-        header('Location: ?route=/dashboard');
-        exit;
-    }
+    // Permission check is handled in UserController methods
+    // No hardcoded admin check here - let controller decide based on permissions
     
     require_once 'controllers/UserController.php';
     $controller = new UserController();
@@ -652,6 +734,46 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         // 404 for users
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - User page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/roles') === 0) {
+    // Check if user is logged in and is admin
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    if ($_SESSION['role'] !== 'admin') {
+        $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης';
+        header('Location: ?route=/dashboard');
+        exit;
+    }
+    
+    require_once 'controllers/RoleController.php';
+    $controller = new RoleController();
+    
+    if ($currentRoute === '/roles') {
+        $controller->index();
+    } elseif ($currentRoute === '/roles/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif (preg_match('/^\/roles\/edit\/(\d+)$/', $currentRoute, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($matches[1]);
+        } else {
+            $controller->edit($matches[1]);
+        }
+    } elseif (preg_match('/^\/roles\/delete\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->delete($matches[1]);
+    } elseif (preg_match('/^\/roles\/permissions\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->permissions($matches[1]);
+    } else {
+        // 404 for roles
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Role page not found</h1>";
     }
     
 } elseif (strpos($currentRoute, '/reports') === 0) {

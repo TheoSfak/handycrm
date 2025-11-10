@@ -43,24 +43,20 @@
                         <td><?= htmlspecialchars($u['phone'] ?: '-') ?></td>
                         <td>
                             <?php
-                            // Define role colors and labels
+                            // Define role colors
                             $roleColors = [
                                 'admin' => 'danger',
                                 'supervisor' => 'warning',
                                 'technician' => 'primary',
-                                'assistant' => 'info'
+                                'assistant' => 'info',
+                                'maintenance_technician' => 'success'
                             ];
-                            $roleLabels = [
-                                'admin' => __('users.admin'),
-                                'supervisor' => __('users.supervisor'),
-                                'technician' => __('users.technician'),
-                                'assistant' => __('users.assistant')
-                            ];
-                            $roleColor = $roleColors[$u['role']] ?? 'secondary';
-                            $roleLabel = $roleLabels[$u['role']] ?? ucfirst($u['role']);
+                            $roleName = $u['role_name'] ?? 'technician';
+                            $roleColor = $roleColors[$roleName] ?? 'secondary';
+                            $roleLabel = $u['role_display_name'] ?? ucfirst($roleName);
                             ?>
                             <span class="badge bg-<?= $roleColor ?>">
-                                <?= $roleLabel ?>
+                                <?= htmlspecialchars($roleLabel) ?>
                             </span>
                         </td>
                         <td>

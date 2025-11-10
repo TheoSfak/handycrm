@@ -242,11 +242,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Additional validation rules
         const validationRules = {
             first_name: { required: true, message: 'Το όνομα είναι υποχρεωτικό' },
-            last_name: { required: true, message: 'Το επώνυμο είναι υποχρεωτικό' },
             phone: { required: true, phone: true, message: 'Το τηλέφωνο είναι υποχρεωτικό' },
             address: { required: true, message: 'Η διεύθυνση είναι υποχρεωτική' },
             email: { email: true, message: 'Παρακαλώ εισάγετε έγκυρο email' }
         };
+        
+        // Add last_name validation only for individuals
+        if (customerType === 'individual') {
+            validationRules.last_name = { required: true, message: 'Το επώνυμο είναι υποχρεωτικό' };
+        }
         
         if (customerType === 'company') {
             validationRules.company_name = { required: true, message: 'Η επωνυμία εταιρείας είναι υποχρεωτική' };

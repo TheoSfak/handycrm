@@ -1,3 +1,22 @@
+<!-- Success/Error Messages -->
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>
+        <?= $_SESSION['success'] ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <?= $_SESSION['error'] ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+
 <!-- Project Header -->
 <div class="card mb-4 shadow-sm border-0">
     <div class="card-body">
@@ -1134,7 +1153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="<?= BASE_URL ?>/projects/report/<?= $project['id'] ?>" method="POST" target="_blank">
+            <form action="<?= BASE_URL ?>/projects/report/<?= $project['id'] ?>" method="POST" id="reportForm">
                 <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
                 <div class="modal-body">
                     <div class="alert alert-info">
@@ -1176,16 +1195,78 @@ document.addEventListener('DOMContentLoaded', function() {
                     <hr>
                     
                     <div class="mb-3">
+                        <label class="form-label"><strong>Περιεχόμενο Αναφοράς</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="report_content" id="contentBoth" value="both" checked>
+                            <label class="form-check-label" for="contentBoth">
+                                Υλικά & Εργατικά
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="report_content" id="contentMaterials" value="materials">
+                            <label class="form-check-label" for="contentMaterials">
+                                Μόνο Υλικά
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="report_content" id="contentLabor" value="labor">
+                            <label class="form-check-label" for="contentLabor">
+                                Μόνο Εργατικά
+                            </label>
+                        </div>
+                        <small class="text-muted">Επιλέξτε ποια στοιχεία θα εμφανίζονται στην αναφορά</small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
                         <label for="report_notes" class="form-label"><strong><?= __('projects.report_notes') ?></strong></label>
                         <textarea class="form-control" id="report_notes" name="report_notes" rows="4" placeholder="<?= __('projects.report_notes_placeholder') ?>"></textarea>
                         <small class="text-muted"><?= __('projects.report_notes_description') ?></small>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="sendByEmailCheck" name="send_by_email" value="1" onchange="toggleEmailInput()">
+                            <label class="form-check-label" for="sendByEmailCheck">
+                                <strong><i class="fas fa-envelope me-1"></i> Αποστολή με Email</strong>
+                            </label>
+                        </div>
+                        <div id="emailInputs" style="display: none;">
+                            <div class="mb-3">
+                                <label for="recipient_email" class="form-label">Email Παραλήπτη *</label>
+                                <input type="email" class="form-control" id="recipient_email" name="recipient_email" placeholder="example@email.com">
+                                <small class="text-muted">Γράψε το email για αποστολή της αναφοράς</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email_subject" class="form-label">Θέμα Email</label>
+                                <input type="text" class="form-control" id="email_subject" name="email_subject" value="Αναφορά Έργου - <?= htmlspecialchars($project['title'] ?? '') ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label for="email_message" class="form-label">Μήνυμα Email</label>
+                                <textarea class="form-control" id="email_message" name="email_message" rows="3">Αγαπητέ/ή,
+
+Σας αποστέλλουμε την αναφορά του έργου "<?= htmlspecialchars($project['title'] ?? '') ?>".
+
+Με εκτίμηση,
+Η Ομάδα ECOWATT</textarea>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="send_copy_to_me" name="send_copy_to_me" value="1">
+                                <label class="form-check-label" for="send_copy_to_me">
+                                    Αποστολή αντιγράφου σε μένα
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i> <?= __('common.cancel') ?>
                     </button>
-                    <button type="submit" class="btn btn-info">
+                    <button type="submit" class="btn btn-info" id="submitReportBtn">
                         <i class="fas fa-file-pdf"></i> <?= __('projects.generate_report') ?>
                     </button>
                 </div>
@@ -1213,6 +1294,41 @@ function toggleDateInputs() {
         toDate.setAttribute('required', 'required');
     }
 }
+
+function toggleEmailInput() {
+    const sendByEmailCheck = document.getElementById('sendByEmailCheck');
+    const emailInputs = document.getElementById('emailInputs');
+    const recipientEmail = document.getElementById('recipient_email');
+    const submitBtn = document.getElementById('submitReportBtn');
+    const reportForm = document.getElementById('reportForm');
+    
+    if (sendByEmailCheck.checked) {
+        emailInputs.style.display = 'block';
+        recipientEmail.setAttribute('required', 'required');
+        submitBtn.innerHTML = '<i class="fas fa-envelope"></i> Αποστολή με Email';
+        submitBtn.classList.remove('btn-info');
+        submitBtn.classList.add('btn-success');
+        // Remove target="_blank" for email sending (stay in same page)
+        reportForm.removeAttribute('target');
+    } else {
+        emailInputs.style.display = 'none';
+        recipientEmail.removeAttribute('required');
+        recipientEmail.value = '';
+        submitBtn.innerHTML = '<i class="fas fa-file-pdf"></i> <?= __("projects.generate_report") ?>';
+        submitBtn.classList.remove('btn-success');
+        submitBtn.classList.add('btn-info');
+        // Set target="_blank" for PDF download (open in new tab)
+        reportForm.setAttribute('target', '_blank');
+    }
+}
+
+// Initialize form with target="_blank" on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const reportForm = document.getElementById('reportForm');
+    if (reportForm) {
+        reportForm.setAttribute('target', '_blank');
+    }
+});
 </script>
 
 <style>

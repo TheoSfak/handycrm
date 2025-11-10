@@ -1,5 +1,238 @@
 # HandyCRM - Change Log
 
+## [1.5.0] - 2025-11-10
+
+### 🚀 Major Features
+
+#### Email Infrastructure
+- **SMTP Configuration System**
+  - New `smtp_settings` table for email server configuration
+  - Support for SSL/TLS encryption
+  - Configurable host, port, username, password
+  - From email and name customization
+  
+- **Email Templates**
+  - New `email_templates` table for customizable email templates
+  - HTML and plain text support
+  - Variable substitution system
+  - Template types: maintenance reports, project reports, notifications
+
+- **Email Notifications Log**
+  - New `email_notifications` table for tracking sent emails
+  - Status tracking: pending, sent, failed
+  - Error logging for debugging
+  - Related entity tracking (projects, maintenances, etc.)
+
+- **EmailService Class**
+  - Centralized email sending with PHPMailer 6.9+
+  - Automatic logging of all sent emails
+  - SMTP configuration from database
+  - Error handling and retry logic
+
+#### PDF Generation & Email Sending
+- **Maintenance Report Emails**
+  - Send maintenance reports directly via email from transformer maintenance view
+  - TCPDF integration for professional PDF generation
+  - Custom footer with ECOWATT company branding
+  - Greek UTF-8 character support with DejaVu Sans font
+  - Includes: customer info, maintenance dates, transformer details, measurements, observations
+  - Email modal with recipient selection and subject customization
+
+- **Project Report Emails**
+  - Send project reports via email with PDF attachment
+  - Same professional styling as maintenance reports
+  - Customer email auto-populated from project
+  - Proper redirects after sending
+
+- **CustomMaintenancePDF Class**
+  - Extends TCPDF for custom headers/footers
+  - ECOWATT company footer on every page
+  - A4 format with proper margins
+  - Professional table formatting
+
+#### Role & Permission System (RBAC)
+- **Database Schema**
+  - New `roles` table for role definitions
+  - New `permissions` table with module/action structure
+  - New `role_permissions` pivot table for many-to-many relationships
+  - New `user_role` pivot table for user-role assignments
+
+- **Permission Model**
+  - Full CRUD operations for permissions
+  - Module-based organization (customers, projects, tasks, maintenances, etc.)
+  - Action-based permissions (view, create, edit, delete, export)
+  - User permission checking and caching
+  - getUserPermissions(), checkPermission(), userHasRole() methods
+
+- **AuthMiddleware**
+  - Central authorization middleware class
+  - requirePermission() throws 403 on unauthorized access
+  - checkPermission() returns boolean
+  - Role checking: hasRole(), isAdmin(), isSupervisor()
+  - Global helper functions: can(), hasRole(), isAdmin(), isSupervisor()
+  - Resource ownership validation
+
+- **RoleController**
+  - Full CRUD for role management
+  - Admin-only access control
+  - Index: List all roles with permission counts
+  - Create/Edit: Role name and description
+  - Delete: Remove roles (POST only)
+  - Permissions management interface per role
+
+- **Role Management Views**
+  - `/roles` - Bootstrap 5 table with all roles
+  - `/roles/create` - Create new role form
+  - `/roles/edit/{id}` - Edit existing role
+  - `/roles/permissions/{id}` - Checkbox grid for permission assignment
+  - Select All / Deselect All per module
+  - CSRF protection on all forms
+
+- **Default Permissions**
+  - Customers: view, create, edit, delete, export
+  - Projects: view, create, edit, delete, export
+  - Tasks: view, create, edit, delete, assign
+  - Appointments: view, create, edit, delete
+  - Materials: view, create, edit, delete, export
+  - Maintenances: view, create, edit, delete, export
+  - Reports: view, export
+  - Users: view, create, edit, delete
+  - Roles: view, create, edit, delete, permissions
+  - Settings: view, edit
+
+### ✨ Enhancements
+
+#### User Roles
+- **New Role: maintenance_technician**
+  - Added to users.role ENUM
+  - Translation: "Τεχνικός Συντηρήσεων Υ/Σ"
+  - Specialized role for transformer maintenance specialists
+  - Updated user create/edit dropdowns
+
+#### Email Notification Types
+- **Extended ENUM values**
+  - Added `maintenance_report` type
+  - Added `project_report` type
+  - Existing types preserved: maintenance_reminder, task_assigned, payment_received, project_deadline, test_email
+
+#### Code Quality
+- **PHP 8.x Compatibility**
+  - Fixed null coalescing operators throughout codebase
+  - Proper handling of optional values
+  - No more undefined index warnings
+
+- **Character Encoding**
+  - UTF-8 encoding for all Greek characters
+  - TCPDF font configuration for Greek support
+  - Database charset: utf8mb4_unicode_ci
+
+### 🐛 Bug Fixes
+
+#### Routing Issues
+- **404 Errors Resolved**
+  - Fixed nested hardcoded routing in index.php
+  - Proper route handling for /roles module
+  - Correct redirects after email sending
+
+#### PDF Generation
+- **Class Declaration Error**
+  - Fixed "Class declarations may not be nested" error
+  - Moved CustomMaintenancePDF class outside controller
+  - Proper TCPDF library inclusion
+
+#### Project Field Names
+- **Database Column Mismatch**
+  - Changed $project['name'] to $project['title']
+  - Fixed empty project names in emails and filenames
+  - Updated ProjectReportController and views
+
+#### Redirect URLs
+- **Wrong Project URLs**
+  - Changed /projects/view/{slug} to /projects/{slug}
+  - Fixed 404 after sending project emails
+  - Consistent URL structure
+
+#### Success Messages
+- **Missing Email Feedback**
+  - Added success/error alerts to project view
+  - Auto-dismiss alerts after 5 seconds
+  - Session variable cleanup
+
+#### EmailService Access
+- **Method Visibility**
+  - Changed logEmail() from private to public
+  - Fixed parameter order: logEmail($email, $subject, $content, $status)
+  - Proper error handling
+
+#### Data Cleanup
+- **Deprecated Invoice Permissions**
+  - Removed all invoice module permissions from database
+  - Cleaned orphaned role_permissions entries
+  - No longer appear in role permission UI
+
+### 📦 Dependencies
+
+#### New Dependencies
+- **PHPMailer 6.9+**
+  - Installed via Composer
+  - SMTP email sending
+  - HTML email support
+  
+- **TCPDF**
+  - PDF generation library
+  - Located in /lib/tcpdf
+  - Custom headers/footers support
+
+### 🗄️ Database Changes
+
+#### New Tables
+- smtp_settings
+- email_templates
+- email_notifications
+- roles
+- permissions
+- role_permissions
+- user_role
+
+#### Modified Tables
+- users: role ENUM updated (added maintenance_technician)
+- email_notifications: type ENUM updated (added maintenance_report, project_report)
+
+#### Removed Data
+- permissions: Deleted all invoice module entries
+
+### 📋 Migration Notes
+
+#### For Fresh Installations
+- Run `migrations/v1.5.0_fresh_install_schema.sql`
+- Configure SMTP settings in admin panel
+- Create roles and assign permissions
+- Assign roles to users
+
+#### For Upgrades from v1.4.x
+- Run `migrations/v1.5.0_upgrade_from_1.4.sql`
+- Existing data preserved
+- SMTP configuration required
+- Default roles created automatically
+- Assign permissions to existing users
+
+### 🔒 Security
+
+- CSRF protection on all role/permission forms
+- Admin-only access to role management
+- Permission checks before sensitive operations
+- 403 errors for unauthorized access
+- Session-based authentication maintained
+
+### 📖 Documentation
+
+- Updated README.md with v1.5.0 features
+- Installation instructions for fresh install and upgrade
+- SMTP configuration guide
+- Permission system usage examples
+
+---
+
 ## [1.4.0] - 2025-10-29
 
 ### 🚀 Major Features

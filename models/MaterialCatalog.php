@@ -248,4 +248,82 @@ class MaterialCatalog extends BaseModel {
         $stmt = $this->execute($sql, []);
         return $stmt ? $stmt->fetchAll(PDO::FETCH_ASSOC) : [];
     }
+    
+    /**
+     * Update material status (active/inactive)
+     */
+    public function updateStatus($id, $status) {
+        $sql = "UPDATE {$this->table} SET is_active = ? WHERE id = ?";
+        $stmt = $this->execute($sql, [$status, $id]);
+        return $stmt !== false;
+    }
+    
+    /**
+     * Find duplicate materials based on name
+     * Returns groups of materials with similar names
+     */
+    public function findDuplicates() {
+        try {
+            // Find materials with exact same name (case-insensitive)
+            $sql = "SELECT LOWER(TRIM(name)) as normalized_name, 
+                           GROUP_CONCAT(id ORDER BY id) as ids, 
+                           COUNT(*) as count
+                    FROM {$this->table}
+                    GROUP BY normalized_name
+                    HAVING count > 1
+                    ORDER BY count DESC, normalized_name";
+            
+            $stmt = $this->execute($sql, []);
+            if (!$stmt) {
+                return [];
+            }
+            
+            $duplicateGroups = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $duplicates = [];
+            
+            foreach ($duplicateGroups as $group) {
+                $ids = explode(',', $group['ids']);
+                
+                // Get full details for each material in this duplicate group
+                $placeholders = implode(',', array_fill(0, count($ids), '?'));
+                $detailSql = "SELECT mc.*, cat.name as category_name 
+                             FROM {$this->table} mc
+                             LEFT JOIN material_categories cat ON mc.category_id = cat.id
+                             WHERE mc.id IN ($placeholders)
+                             ORDER BY mc.id";
+                
+                $detailStmt = $this->execute($detailSql, $ids);
+                if (!$detailStmt) {
+                    continue;
+                }
+                
+                $materials = $detailStmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                if (count($materials) > 1) {
+                    $simplifiedMaterials = [];
+                    foreach ($materials as $material) {
+                        $simplifiedMaterials[] = [
+                            'id' => $material['id'],
+                            'name' => $material['name'],
+                            'sku' => $material['sku'] ?? '',
+                            'category' => $material['category_name'] ?? 'N/A',
+                            'price' => $material['price'] ?? null
+                        ];
+                    }
+                    
+                    $duplicates[] = [
+                        'name' => $materials[0]['name'], // Use actual name, not normalized
+                        'count' => count($materials),
+                        'materials' => $simplifiedMaterials
+                    ];
+                }
+            }
+            
+            return $duplicates;
+            
+        } catch (Exception $e) {
+            error_log("MaterialCatalog findDuplicates error: " . $e->getMessage());
+            return [];
+        }
+    }
 }

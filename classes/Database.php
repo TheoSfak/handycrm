@@ -26,7 +26,7 @@ class Database {
     public function connect() {
         if ($this->pdo === null) {
             try {
-                $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset={$this->charset}";
+                $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset=utf8mb4";
                 $options = [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -35,6 +35,10 @@ class Database {
                 ];
                 
                 $this->pdo = new PDO($dsn, $this->username, $this->password, $options);
+                
+                // Extra safety: Execute SET NAMES after connection
+                $this->pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+                $this->pdo->exec("SET CHARACTER SET utf8mb4");
                 
             } catch (PDOException $e) {
                 if (DEBUG_MODE) {

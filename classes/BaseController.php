@@ -191,6 +191,11 @@ class BaseController {
         // Set UTF-8 encoding
         header('Content-Type: text/html; charset=UTF-8');
         
+        // Make BASE_URL available to all views
+        if (!isset($data['BASE_URL']) && defined('BASE_URL')) {
+            $data['BASE_URL'] = BASE_URL;
+        }
+        
         // Extract data to variables
         extract($data);
         
@@ -300,7 +305,16 @@ class BaseController {
     protected function getFlash() {
         if (isset($_SESSION['flash'])) {
             $flash = $_SESSION['flash'];
-            unset($_SESSION['flash']);
+            
+            // If flash has been displayed once, clear it
+            if (isset($_SESSION['flash_count'])) {
+                unset($_SESSION['flash']);
+                unset($_SESSION['flash_count']);
+            } else {
+                // Mark that flash has been read once
+                $_SESSION['flash_count'] = 1;
+            }
+            
             return $flash;
         }
         return null;

@@ -5,6 +5,7 @@
  */
 
 require_once 'classes/BaseController.php';
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
 require_once 'models/MaterialCatalog.php';
 require_once 'models/MaterialCategory.php';
 
@@ -24,6 +25,11 @@ class MaterialsController extends BaseController {
      */
     public function index() {
         $this->checkAuth();
+        
+        // Check permission for viewing materials
+        if (!$this->isAdmin() && !$this->isSupervisor() && !can('materials.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
         
         // Get pagination parameters
         $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -556,5 +562,150 @@ class MaterialsController extends BaseController {
             'errors' => $errors
         ]);
         exit;
+    }
+    
+    /**
+     * Bulk delete materials
+     */
+    public function bulkDelete() {
+        $this->checkAuth();
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ids = $input['ids'] ?? [];
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'error' => 'Δεν δόθηκαν υλικά για διαγραφή']);
+            exit;
+        }
+        
+        $deleted = 0;
+        $errors = [];
+        
+        foreach ($ids as $id) {
+            try {
+                if ($this->materialModel->delete($id)) {
+                    $deleted++;
+                } else {
+                    $errors[] = "Αποτυχία διαγραφής υλικού #$id";
+                }
+            } catch (Exception $e) {
+                $errors[] = "Σφάλμα στο υλικό #$id: " . $e->getMessage();
+            }
+        }
+        
+        echo json_encode([
+            'success' => $deleted > 0,
+            'deleted' => $deleted,
+            'errors' => $errors
+        ]);
+        exit;
+    }
+    
+    /**
+     * Bulk activate materials
+     */
+    public function bulkActivate() {
+        $this->checkAuth();
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ids = $input['ids'] ?? [];
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'error' => 'Δεν δόθηκαν υλικά για ενεργοποίηση']);
+            exit;
+        }
+        
+        $activated = 0;
+        
+        foreach ($ids as $id) {
+            if ($this->materialModel->updateStatus($id, 1)) {
+                $activated++;
+            }
+        }
+        
+        echo json_encode([
+            'success' => $activated > 0,
+            'activated' => $activated
+        ]);
+        exit;
+    }
+    
+    /**
+     * Bulk deactivate materials
+     */
+    public function bulkDeactivate() {
+        $this->checkAuth();
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit;
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $ids = $input['ids'] ?? [];
+        
+        if (empty($ids) || !is_array($ids)) {
+            echo json_encode(['success' => false, 'error' => 'Δεν δόθηκαν υλικά για απενεργοποίηση']);
+            exit;
+        }
+        
+        $deactivated = 0;
+        
+        foreach ($ids as $id) {
+            if ($this->materialModel->updateStatus($id, 0)) {
+                $deactivated++;
+            }
+        }
+        
+        echo json_encode([
+            'success' => $deactivated > 0,
+            'deactivated' => $deactivated
+        ]);
+        exit;
+    }
+    
+    /**
+     * Check for duplicate materials based on name
+     */
+    public function checkDuplicates() {
+        $this->checkAuth();
+        header('Content-Type: application/json');
+        
+        $duplicates = $this->materialModel->findDuplicates();
+        
+        echo json_encode([
+            'success' => true,
+            'duplicates' => $duplicates
+        ]);
+        exit;
+    }
+    
+    /**
+     * Show duplicates page
+     */
+    public function duplicates() {
+        $this->checkAuth();
+        
+        $duplicates = $this->materialModel->findDuplicates();
+        
+        $data = [
+            'title' => 'Διπλότυπα Υλικά - ' . APP_NAME,
+            'duplicates' => $duplicates
+        ];
+        
+        $this->view('materials/duplicates', $data);
     }
 }

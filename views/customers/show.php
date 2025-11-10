@@ -139,14 +139,11 @@
                 <a href="?route=/quotes/create&customer_id=<?= $customer['id'] ?>" class="list-group-item list-group-item-action">
                     <i class="fas fa-file-invoice text-info"></i> <?= __('customers.new_quote') ?>
                 </a>
-                <a href="?route=/invoices/create&customer_id=<?= $customer['id'] ?>" class="list-group-item list-group-item-action">
-                    <i class="fas fa-file-invoice-dollar text-warning"></i> <?= __('customers.new_invoice') ?>
-                </a>
             </div>
         </div>
     </div>
     
-    <!-- Projects, Appointments, Quotes, Invoices -->
+    <!-- Projects, Appointments, Quotes -->
     <div class="col-lg-8">
         <!-- Projects -->
         <div class="card mb-4">
@@ -362,76 +359,6 @@
                     </div>
                 <?php else: ?>
                     <p class="text-muted mb-0"><?= __('customers.no_quotes') ?></p>
-                <?php endif; ?>
-            </div>
-        </div>
-        
-        <!-- Invoices -->
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> <?= __('invoices.invoices') ?></h5>
-                <a href="?route=/invoices/create&customer_id=<?= $customer['id'] ?>" class="btn btn-sm btn-warning">
-                    <i class="fas fa-plus"></i> <?= __('common.new') ?>
-                </a>
-            </div>
-            <div class="card-body">
-                <?php if (!empty($customer['invoices'])): ?>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-hover">
-                            <thead>
-                                <tr>
-                                    <th><?= __('invoices.number') ?></th>
-                                    <th>Τίτλος</th>
-                                    <th><?= __('invoices.amount') ?></th>
-                                    <th>Κατάσταση</th>
-                                    <th><?= __('common.date') ?></th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($customer['invoices'] as $invoice): ?>
-                                <tr>
-                                    <td><?= htmlspecialchars($invoice['invoice_number']) ?></td>
-                                    <td>
-                                        <a href="<?= BASE_URL ?>/invoices/<?= $invoice['slug'] ?>">
-                                            <?= htmlspecialchars($invoice['title']) ?>
-                                        </a>
-                                    </td>
-                                    <td><?= formatCurrency($invoice['total_amount']) ?></td>
-                                    <td>
-                                        <?php
-                                        $statusClasses = [
-                                            'draft' => 'secondary',
-                                            'sent' => 'info',
-                                            'paid' => 'success',
-                                            'overdue' => 'danger',
-                                            'cancelled' => 'dark'
-                                        ];
-                                        $statusLabels = [
-                                            'draft' => __('invoices.draft'),
-                                            'sent' => __('invoices.sent'),
-                                            'paid' => __('invoices.paid'),
-                                            'overdue' => __('invoices.overdue'),
-                                            'cancelled' => __('invoices.cancelled')
-                                        ];
-                                        ?>
-                                        <span class="badge bg-<?= $statusClasses[$invoice['status']] ?? 'secondary' ?>">
-                                            <?= $statusLabels[$invoice['status']] ?? $invoice['status'] ?>
-                                        </span>
-                                    </td>
-                                    <td><?= formatDate($invoice['created_at']) ?></td>
-                                    <td>
-                                        <a href="<?= BASE_URL ?>/invoices/<?= $invoice['slug'] ?>" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                <?php else: ?>
-                    <p class="text-muted mb-0"><?= __('customers.no_invoices') ?></p>
                 <?php endif; ?>
             </div>
         </div>

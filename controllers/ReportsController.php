@@ -4,12 +4,19 @@
  * Handles analytics and reporting
  */
 
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
+
 class ReportsController extends BaseController {
     
     /**
      * Show reports dashboard
      */
     public function index() {
+        // Check permission for viewing reports
+        if (!$this->isAdmin() && !$this->isSupervisor() && !can('reports.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         $user = $this->getCurrentUser();
         
         // Get date range from query params (default: current month)
@@ -177,9 +184,10 @@ class ReportsController extends BaseController {
                     COALESCE(SUM(CASE WHEN p.status = 'invoiced' THEN p.total_cost END), 0) as total_revenue,
                     AVG(DATEDIFF(p.completion_date, p.start_date)) as avg_completion_days
                 FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
                 LEFT JOIN projects p ON u.id = p.assigned_technician
                     AND p.created_at BETWEEN ? AND ?
-                WHERE u.role = 'technician'
+                WHERE r.name = 'technician'
                 GROUP BY u.id
                 HAVING total_projects > 0
                 ORDER BY total_revenue DESC";

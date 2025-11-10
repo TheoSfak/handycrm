@@ -5,6 +5,7 @@
  */
 
 require_once 'classes/BaseController.php';
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
 
 class PaymentsController extends BaseController {
     private $paymentModel;
@@ -20,6 +21,11 @@ class PaymentsController extends BaseController {
      * Display payments page with filters
      */
     public function index() {
+        // Check permission for viewing payments
+        if (!$this->isAdmin() && !can('payments.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         // Get all active users for dropdown (all roles)
         $technicians = $this->userModel->getAllActive();
         

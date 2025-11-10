@@ -23,6 +23,9 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-boxes me-2"></i>Κατάλογος Υλικών</h2>
         <div>
+            <a href="<?= BASE_URL ?>/materials/duplicates" class="btn btn-warning me-2">
+                <i class="fas fa-exclamation-triangle me-1"></i>Έλεγχος Διπλότυπων
+            </a>
             <div class="btn-group me-2" role="group">
                 <button type="button" class="btn btn-success" onclick="exportMaterialsCSV()">
                     <i class="fas fa-file-export me-1"></i>Export CSV
@@ -40,6 +43,30 @@ require_once __DIR__ . '/../includes/header.php';
             <a href="<?= BASE_URL ?>/materials/add" class="btn btn-primary">
                 <i class="fas fa-plus me-1"></i>Νέο Υλικό
             </a>
+        </div>
+    </div>
+    
+    <!-- Bulk Actions Toolbar (hidden by default) -->
+    <div id="bulkActionsToolbar" class="alert alert-info mb-4" style="display: none;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-check-square me-2"></i>
+                <span id="selectedCount">0</span> επιλεγμένα υλικά
+            </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-danger" onclick="bulkDelete()">
+                    <i class="fas fa-trash me-1"></i>Διαγραφή Επιλεγμένων
+                </button>
+                <button type="button" class="btn btn-sm btn-success" onclick="bulkActivate()">
+                    <i class="fas fa-check me-1"></i>Ενεργοποίηση
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="bulkDeactivate()">
+                    <i class="fas fa-times me-1"></i>Απενεργοποίηση
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                    <i class="fas fa-times me-1"></i>Ακύρωση
+                </button>
+            </div>
         </div>
     </div>
     
@@ -177,8 +204,11 @@ require_once __DIR__ . '/../includes/header.php';
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th width="5%">#</th>
-                            <th width="25%">Ονομασία</th>
+                            <th width="3%">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                            </th>
+                            <th width="4%">#</th>
+                            <th width="23%">Ονομασία</th>
                             <th width="15%">Κατηγορία</th>
                             <th width="10%">Μονάδα</th>
                             <th width="10%">Τιμή</th>
@@ -192,6 +222,9 @@ require_once __DIR__ . '/../includes/header.php';
                             $rowNumber = ($currentPage - 1) * $perPage + $index + 1;
                         ?>
                         <tr>
+                            <td>
+                                <input type="checkbox" class="material-checkbox" value="<?= $material['id'] ?>" onchange="updateBulkActions()">
+                            </td>
                             <td><?= $rowNumber ?></td>
                             <td>
                                 <strong><?= htmlspecialchars($material['name']) ?></strong>
@@ -563,6 +596,163 @@ function parseCSVLine(line, delimiter = ',') {
     result.push(current.trim());
     
     return result;
+}
+
+// Bulk Actions Functions
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.material-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checked = document.querySelectorAll('.material-checkbox:checked');
+    const toolbar = document.getElementById('bulkActionsToolbar');
+    const count = document.getElementById('selectedCount');
+    const selectAllCheckbox = document.getElementById('selectAll');
+    
+    count.textContent = checked.length;
+    toolbar.style.display = checked.length > 0 ? 'block' : 'none';
+    
+    // Update select all checkbox state
+    const allCheckboxes = document.querySelectorAll('.material-checkbox');
+    selectAllCheckbox.checked = allCheckboxes.length > 0 && checked.length === allCheckboxes.length;
+}
+
+function getSelectedIds() {
+    const checked = document.querySelectorAll('.material-checkbox:checked');
+    return Array.from(checked).map(cb => cb.value);
+}
+
+function clearSelection() {
+    document.querySelectorAll('.material-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateBulkActions();
+}
+
+function bulkDelete() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('Δεν έχετε επιλέξει υλικά');
+        return;
+    }
+    
+    if (!confirm(`Είστε σίγουρος ότι θέλετε να διαγράψετε ${selectedIds.length} υλικά;`)) {
+        return;
+    }
+    
+    fetch('<?= BASE_URL ?>/materials/bulk-delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= $_SESSION['csrf_token'] ?? '' ?>'
+        },
+        body: JSON.stringify({ ids: selectedIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Διαγράφηκαν επιτυχώς ${data.deleted} υλικά`);
+            window.location.reload();
+        } else {
+            alert('Σφάλμα: ' + (data.error || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Σφάλμα κατά τη διαγραφή');
+    });
+}
+
+function bulkActivate() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('Δεν έχετε επιλέξει υλικά');
+        return;
+    }
+    
+    fetch('<?= BASE_URL ?>/materials/bulk-activate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= $_SESSION['csrf_token'] ?? '' ?>'
+        },
+        body: JSON.stringify({ ids: selectedIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Ενεργοποιήθηκαν επιτυχώς ${data.activated} υλικά`);
+            window.location.reload();
+        } else {
+            alert('Σφάλμα: ' + (data.error || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Σφάλμα κατά την ενεργοποίηση');
+    });
+}
+
+function bulkDeactivate() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('Δεν έχετε επιλέξει υλικά');
+        return;
+    }
+    
+    fetch('<?= BASE_URL ?>/materials/bulk-deactivate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<?= $_SESSION['csrf_token'] ?? '' ?>'
+        },
+        body: JSON.stringify({ ids: selectedIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Απενεργοποιήθηκαν επιτυχώς ${data.deactivated} υλικά`);
+            window.location.reload();
+        } else {
+            alert('Σφάλμα: ' + (data.error || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Σφάλμα κατά την απενεργοποίηση');
+    });
+}
+
+function checkDuplicates() {
+    fetch('<?= BASE_URL ?>/materials/check-duplicates', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.duplicates.length === 0) {
+                alert('Δεν βρέθηκαν διπλότυπα υλικά');
+            } else {
+                // Show duplicates in a modal or alert
+                let message = `Βρέθηκαν ${data.duplicates.length} ομάδες διπλότυπων:\n\n`;
+                data.duplicates.forEach((group, index) => {
+                    message += `Ομάδα ${index + 1}: ${group.name}\n`;
+                    message += `Υλικά: ${group.materials.map(m => `#${m.id}`).join(', ')}\n\n`;
+                });
+                alert(message);
+            }
+        } else {
+            alert('Σφάλμα: ' + (data.error || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Σφάλμα κατά τον έλεγχο διπλότυπων');
+    });
 }
 </script>
 

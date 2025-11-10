@@ -53,14 +53,16 @@ class Technician extends BaseModel {
      * @return array
      */
     public function getByRole($role, $activeOnly = true) {
-        $sql = "SELECT * FROM {$this->table} WHERE role = ?";
+        $sql = "SELECT t.* FROM {$this->table} t
+                LEFT JOIN roles r ON t.role_id = r.id
+                WHERE r.name = ?";
         $params = [$role];
         
         if ($activeOnly) {
-            $sql .= " AND is_active = 1";
+            $sql .= " AND t.is_active = 1";
         }
         
-        $sql .= " ORDER BY name ASC";
+        $sql .= " ORDER BY t.name ASC";
         
         return $this->query($sql, $params);
     }

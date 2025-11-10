@@ -4,12 +4,19 @@
  * Handles quote/proposal management operations
  */
 
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
+
 class QuoteController extends BaseController {
     
     /**
      * Show quotes list
      */
     public function index() {
+        // Check permission for viewing quotes
+        if (!$this->isAdmin() && !$this->isSupervisor() && !can('quotes.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         $user = $this->getCurrentUser();
         
         // Get filters from request

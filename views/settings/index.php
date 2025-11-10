@@ -43,6 +43,11 @@
                         <i class="fas fa-tools"></i> <?= __('settings.advanced') ?? 'Προχωρημένα' ?>
                     </button>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="smtp-tab" data-bs-toggle="tab" data-bs-target="#smtp" type="button" role="tab">
+                        <i class="fas fa-envelope"></i> SMTP Email
+                    </button>
+                </li>
             </ul>
 
             <!-- Tab Content -->
@@ -100,6 +105,17 @@
                                 <label for="company_name" class="form-label"><?= __('settings.company_name') ?></label>
                                 <input type="text" class="form-control" id="company_name" name="company_name" 
                                        value="<?= htmlspecialchars($settings['company_name']) ?>">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="company_display_name" class="form-label">
+                                    Διακριτικός Τίτλος Εταιρίας
+                                    <small class="text-muted">(προαιρετικό - αν είναι κενό χρησιμοποιείται το "HandyCRM")</small>
+                                </label>
+                                <input type="text" class="form-control" id="company_display_name" name="company_display_name" 
+                                       value="<?= htmlspecialchars($settings['company_display_name'] ?? '') ?>"
+                                       placeholder="π.χ. ECOWATT CRM">
+                                <small class="form-text text-muted">Αυτό το όνομα θα εμφανίζεται στη σελίδα login, emails και άλλα σημεία του συστήματος.</small>
                             </div>
                             
                             <div class="mb-3">
@@ -339,6 +355,9 @@
                                 </a>
                                 <a href="<?= BASE_URL ?>/users" class="btn btn-outline-secondary">
                                     <i class="fas fa-users"></i> <?= __('settings.user_management') ?>
+                                </a>
+                                <a href="<?= BASE_URL ?>/email/email-settings-phpmailer.php" class="btn btn-outline-warning">
+                                    <i class="fas fa-envelope"></i> Email Settings
                                 </a>
                             </div>
                         </div>

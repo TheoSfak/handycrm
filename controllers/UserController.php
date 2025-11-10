@@ -1,8 +1,11 @@
+
 <?php
 /**
  * User Controller
  * Handles user management (Admin only)
  */
+
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
 
 class UserController extends BaseController {
     
@@ -10,21 +13,34 @@ class UserController extends BaseController {
      * Show users list
      */
     public function index() {
-        // Only admin can view users list
-        $this->requireAdmin();
+        // Check permission for viewing users
+        if (!$this->isAdmin() && !can('users.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
         
         $user = $this->getCurrentUser();
         
         $database = new Database();
         $db = $database->connect();
         
-        $stmt = $db->query("SELECT * FROM users ORDER BY first_name");
+        // Get users with their role display names
+        $stmt = $db->query("
+            SELECT u.*, r.display_name as role_display_name, r.name as role_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            ORDER BY u.first_name
+        ");
         $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get all roles for the filter/reference
+        $rolesStmt = $db->query("SELECT * FROM roles ORDER BY display_name");
+        $roles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
         
         $data = [
             'title' => __('users.title') . ' - ' . APP_NAME,
             'user' => $user,
-            'users' => $users
+            'users' => $users,
+            'roles' => $roles
         ];
         
         $this->view('users/index', $data);
@@ -34,14 +50,23 @@ class UserController extends BaseController {
      * Show create form
      */
     public function create() {
-        // Only admin can create users
-        $this->requireAdmin();
+        // Check permission for creating users
+        if (!$this->isAdmin() && !can('users.create')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
         
         $user = $this->getCurrentUser();
         
+        // Get all roles from database
+        $database = new Database();
+        $db = $database->connect();
+        $rolesStmt = $db->query("SELECT * FROM roles ORDER BY display_name");
+        $roles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
+        
         $data = [
             'title' => __('users.new_user') . ' - ' . APP_NAME,
-            'user' => $user
+            'user' => $user,
+            'roles' => $roles
         ];
         
         $this->view('users/create', $data);
@@ -51,6 +76,11 @@ class UserController extends BaseController {
      * Store new user
      */
     public function store() {
+        // Check permission for creating users
+        if (!$this->isAdmin() && !can('users.create')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/users');
         }
@@ -87,6 +117,17 @@ class UserController extends BaseController {
             $this->redirect('/users/create');
         }
         
+        // Get role_id from role name
+        $roleName = $_POST['role'] ?? 'technician';
+        $roleStmt = $db->prepare("SELECT id FROM roles WHERE name = ?");
+        $roleStmt->execute([$roleName]);
+        $roleData = $roleStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$roleData) {
+            $_SESSION['error'] = 'Μη έγκυρος ρόλος';
+            $this->redirect('/users/create');
+        }
+        
         $userData = [
             'username' => trim($_POST['username']),
             'email' => trim($_POST['email']),
@@ -94,7 +135,7 @@ class UserController extends BaseController {
             'first_name' => trim($_POST['first_name']),
             'last_name' => trim($_POST['last_name']),
             'phone' => trim($_POST['phone'] ?? ''),
-            'role' => $_POST['role'] ?? 'technician',
+            'role_id' => $roleData['id'],
             'hourly_rate' => floatval($_POST['hourly_rate'] ?? 0),
             'is_active' => 1
         ];
@@ -115,6 +156,11 @@ class UserController extends BaseController {
      * Show edit form
      */
     public function edit() {
+        // Check permission for editing users
+        if (!$this->isAdmin() && !can('users.edit')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         $user = $this->getCurrentUser();
         $id = (int)($_GET['id'] ?? 0);
         
@@ -131,10 +177,17 @@ class UserController extends BaseController {
             $this->redirect('/users');
         }
         
+        // Get all roles from database
+        $database = new Database();
+        $db = $database->connect();
+        $rolesStmt = $db->query("SELECT * FROM roles ORDER BY display_name");
+        $roles = $rolesStmt->fetchAll(PDO::FETCH_ASSOC);
+        
         $data = [
             'title' => __('users.edit') . ' ' . __('users.title') . ' - ' . APP_NAME,
             'user' => $user,
-            'editUser' => $editUser
+            'editUser' => $editUser,
+            'roles' => $roles
         ];
         
         $this->view('users/edit', $data);
@@ -144,8 +197,10 @@ class UserController extends BaseController {
      * Update user
      */
     public function update() {
-        // Only admin can update users
-        $this->requireAdmin();
+        // Check permission for editing users
+        if (!$this->isAdmin() && !can('users.edit')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/users');
@@ -166,10 +221,16 @@ class UserController extends BaseController {
             }
         }
         
-        // Validate role
-        $allowedRoles = ['admin', 'supervisor', 'technician', 'assistant'];
-        $role = $_POST['role'] ?? 'technician';
-        if (!in_array($role, $allowedRoles)) {
+        // Get role_id from role name
+        $database = new Database();
+        $db = $database->connect();
+        
+        $roleName = trim($_POST['role'] ?? 'technician');
+        $roleStmt = $db->prepare("SELECT id FROM roles WHERE name = ?");
+        $roleStmt->execute([$roleName]);
+        $roleData = $roleStmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$roleData) {
             $_SESSION['error'] = 'Μη έγκυρος ρόλος χρήστη';
             $this->redirect('/users/edit?id=' . $id);
             return;
@@ -181,7 +242,7 @@ class UserController extends BaseController {
             'first_name' => trim($_POST['first_name']),
             'last_name' => trim($_POST['last_name']),
             'phone' => trim($_POST['phone'] ?? ''),
-            'role' => $role,
+            'role_id' => $roleData['id'],
             'hourly_rate' => floatval($_POST['hourly_rate'] ?? 0),
             'is_active' => isset($_POST['is_active']) ? 1 : 0
         ];
@@ -193,12 +254,12 @@ class UserController extends BaseController {
         
         try {
             $userModel = new User();
-            $success = $userModel->update($id, $userData);
+            $result = $userModel->update($id, $userData);
             
-            if ($success) {
+            if ($result) {
                 $_SESSION['success'] = 'Ο χρήστης ενημερώθηκε με επιτυχία';
             } else {
-                $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση του χρήστη';
+                $_SESSION['error'] = 'Αποτυχία ενημέρωσης χρήστη';
             }
         } catch (Exception $e) {
             $_SESSION['error'] = 'Σφάλμα: ' . $e->getMessage();
@@ -211,6 +272,11 @@ class UserController extends BaseController {
      * Delete user
      */
     public function delete() {
+        // Check permission for deleting users
+        if (!$this->isAdmin() && !can('users.delete')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/users');
         }
@@ -310,8 +376,13 @@ class UserController extends BaseController {
         $database = new Database();
         $db = $database->connect();
         
-        // Get user details
-        $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+        // Get user details with role information
+        $stmt = $db->prepare("
+            SELECT u.*, r.name as role_name, r.display_name as role_display_name
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE u.id = ?
+        ");
         $stmt->execute([$id]);
         $viewUser = $stmt->fetch(PDO::FETCH_ASSOC);
         
@@ -373,7 +444,7 @@ class UserController extends BaseController {
                 INNER JOIN projects p ON pt.project_id = p.id
                 INNER JOIN customers c ON p.customer_id = c.id
                 LEFT JOIN users paid_user ON tl.paid_by = paid_user.id
-                WHERE tl.user_id = ?
+                WHERE tl.technician_id = ?
                 ORDER BY COALESCE(pt.task_date, pt.date_from) DESC
                 LIMIT 100";
                 

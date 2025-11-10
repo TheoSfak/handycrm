@@ -4,6 +4,8 @@
  * Handles customer management operations
  */
 
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
+
 class CustomerController extends BaseController {
     private $customerModel;
     
@@ -16,6 +18,11 @@ class CustomerController extends BaseController {
      * Display customers list with pagination and search
      */
     public function index() {
+        // Check permission for viewing customers
+        if (!$this->isAdmin() && !can('customers.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+        
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $search = isset($_GET['search']) ? trim($_GET['search']) : '';
         $type = isset($_GET['type']) ? $_GET['type'] : '';
@@ -61,8 +68,15 @@ class CustomerController extends BaseController {
             // Sanitize input
             $data = $this->sanitize($_POST);
             
-            // Validate required fields
-            $required = ['first_name', 'last_name', 'phone', 'address'];
+            // Validate required fields based on customer type
+            $customerType = $data['customer_type'] ?? 'individual';
+            
+            if ($customerType === 'company') {
+                $required = ['first_name', 'company_name', 'phone', 'address'];
+            } else {
+                $required = ['first_name', 'last_name', 'phone', 'address'];
+            }
+            
             $errors = $this->validateRequired($data, $required);
             
             // Additional validations
@@ -210,8 +224,15 @@ class CustomerController extends BaseController {
             // Sanitize input
             $data = $this->sanitize($_POST);
             
-            // Validate required fields
-            $required = ['first_name', 'last_name', 'phone', 'address'];
+            // Validate required fields based on customer type
+            $customerType = $data['customer_type'] ?? 'individual';
+            
+            if ($customerType === 'company') {
+                $required = ['first_name', 'company_name', 'phone', 'address'];
+            } else {
+                $required = ['first_name', 'last_name', 'phone', 'address'];
+            }
+            
             $errors = $this->validateRequired($data, $required);
             
             // Additional validations

@@ -4,14 +4,18 @@
  * Handles project management operations
  */
 
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
+
 class ProjectController extends BaseController {
     
     /**
      * Show projects list
      */
     public function index() {
-        // Only admin and supervisor can view projects
-        $this->requireSupervisorOrAdmin();
+        // Check permission for viewing projects
+        if (!$this->isSupervisor() && !can('projects.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
         
         $user = $this->getCurrentUser();
         
@@ -36,7 +40,11 @@ class ProjectController extends BaseController {
         $db = $database->connect();
         
         // Get all technicians
-        $stmt = $db->query("SELECT id, first_name, last_name FROM users WHERE role IN ('admin', 'technician') AND is_active = 1 ORDER BY first_name");
+        $stmt = $db->query("SELECT u.id, u.first_name, u.last_name 
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE r.name IN ('admin', 'technician') AND u.is_active = 1 
+            ORDER BY u.first_name");
         $technicians = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Get project categories
@@ -347,7 +355,11 @@ class ProjectController extends BaseController {
         $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Get technicians
-        $stmt = $db->query("SELECT id, first_name, last_name FROM users WHERE role IN ('admin', 'technician') AND is_active = 1 ORDER BY first_name");
+        $stmt = $db->query("SELECT u.id, u.first_name, u.last_name 
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE r.name IN ('admin', 'technician') AND u.is_active = 1 
+            ORDER BY u.first_name");
         $technicians = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Categories
@@ -482,7 +494,11 @@ class ProjectController extends BaseController {
         $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Get technicians
-        $stmt = $db->query("SELECT id, first_name, last_name FROM users WHERE role IN ('admin', 'technician') AND is_active = 1 ORDER BY first_name");
+        $stmt = $db->query("SELECT u.id, u.first_name, u.last_name 
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            WHERE r.name IN ('admin', 'technician') AND u.is_active = 1 
+            ORDER BY u.first_name");
         $technicians = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Categories

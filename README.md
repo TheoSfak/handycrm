@@ -1,69 +1,72 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.4.0  
+**Version:** 1.5.0  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
-HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους και υδραυλικούς. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και τα τιμολόγια.
+HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους, υδραυλικούς και τεχνικές εταιρίες. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και την επικοινωνία.
 
-## 🎉 Τι Νέο στην v1.4.0
+## 🎉 Τι Νέο στην v1.5.0
 
-- 👥 **User Status Management** - Διαχείριση ενεργών/ανενεργών χρηστών
-  - **Toggle Active Status** - Κουμπί ενεργοποίησης/απενεργοποίησης χρηστών από τη σελίδα Users
-  - **Smart Filtering** - Οι ανενεργοί χρήστες δεν εμφανίζονται σε dropdowns και reports
-  - **Protection** - Δεν μπορείς να απενεργοποιήσεις τον εαυτό σου
-- 💼 **Payments Enhancements** - Βελτιώσεις στη σελίδα πληρωμών
-  - **Custom Date Range** - Modal για επιλογή custom ημερομηνιών
-  - **HTML5 Date Inputs** - Native date pickers για καλύτερη UX
-  - **All Users Support** - Αυτόματη υποστήριξη όλων των ρόλων χρηστών
-  - **Improved Labels** - "Από/Έως" αντί για "Αρχή/Τέλος Εβδομάδας"
-- 📄 **PDF Report Improvements** - Βελτιώσεις στις PDF αναφορές
-  - **Compressed Columns** - Συμπιεσμένες στήλες για καλύτερη εμφάνιση
-  - **Smaller Font Sizes** - 8px για πίνακα, 7px για status
-  - **Reduced Padding** - Μειωμένο padding για περισσότερα δεδομένα ανά σελίδα
-- 🔒 **Task Safety Features** - Προστασία από απώλεια δεδομένων
-  - **Unsaved Data Warning** - Προειδοποίηση όταν αποχωρείς με μη αποθηκευμένα materials/labor
-  - **Photo Delete Buttons** - Hover delete buttons σε φωτογραφίες tasks
-- 🐛 **Bug Fixes & Removals**
-  - **Complete Overlap Removal** - Πλήρης αφαίρεση του overlap check feature
-  - **Date Conversion Fix** - Διατήρηση date conversion helper (DD/MM/YYYY → YYYY-MM-DD)
-  - **Role Detection Fix** - Αυτόματη ανίχνευση όλων των ρόλων χρηστών (admin, administrator, κλπ)
+### � Email Infrastructure & PDF Reports
+- **SMTP Configuration** - Ολοκληρωμένο σύστημα αποστολής emails
+  - Διαμόρφωση SMTP server (host, port, encryption)
+  - Support για SSL/TLS
+  - Email templates με μεταβλητές
+  - Καταγραφή όλων των απεσταλμένων emails
+  
+- **Maintenance Report Emails** - Αποστολή αναφορών συντήρησης μετασχηματιστών
+  - Επιλογή αποστολής απευθείας με email από τη σελίδα συντήρησης
+  - PDF generation με TCPDF
+  - Ελληνικοί χαρακτήρες με DejaVu Sans font
+  - Custom footer με στοιχεία εταιρίας ECOWATT
+  - Περιλαμβάνει: στοιχεία πελάτη, ημερομηνίες, μετρήσεις, παρατηρήσεις
+  
+- **Project Report Emails** - Αποστολή αναφορών έργων
+  - Αυτόματη συμπλήρωση email πελάτη
+  - PDF attachment με professional formatting
+  - Modal interface για επιλογή παραλήπτη και θέμα
 
-### Προηγούμενα - v1.3.8
+### � Role & Permission System (RBAC)
+- **Σύστημα Ρόλων** - Πλήρης διαχείριση ρόλων
+  - CRUD λειτουργίες για ρόλους (δημιουργία, επεξεργασία, διαγραφή)
+  - Interface διαχείρισης με Bootstrap 5
+  - Default roles: Admin, Supervisor, Technician, Maintenance Technician
+  
+- **Σύστημα Δικαιωμάτων** - Granular access control
+  - Δικαιώματα ανά module (customers, projects, tasks, maintenances, etc.)
+  - Δικαιώματα ανά action (view, create, edit, delete, export)
+  - Checkbox grid interface για εύκολη ανάθεση
+  - Select All / Deselect All per module
+  
+- **AuthMiddleware** - Έλεγχος εξουσιοδότησης
+  - Global helper functions: `can()`, `hasRole()`, `isAdmin()`
+  - Permission checks σε controllers
+  - 403 errors για μη εξουσιοδοτημένη πρόσβαση
+  - Resource ownership validation
 
-- 💶 **VAT Display Settings** - Διαχείριση εμφάνισης ΦΠΑ σε τιμές
-  - **Admin Configuration** - Ρυθμίσεις για εμφάνιση σημειώσεων ΦΠΑ και αν οι τιμές περιλαμβάνουν ΦΠΑ
-  - **Live Preview** - Real-time προεπισκόπηση στις ρυθμίσεις
-  - **Automatic Labels** - Αυτόματη προσθήκη "(χωρίς ΦΠΑ)" ή "(με ΦΠΑ)" σε όλες τις τιμές
-  - **PDF Reports** - Υποστήριξη σημειώσεων ΦΠΑ σε PDF αναφορές
-- 📊 **Dashboard Improvements** - Βελτιώσεις στο dashboard
-  - **Fixed Statistics** - Διόρθωση υπολογισμών εσόδων και ενεργών έργων
-  - **Project Count Display** - Εμφάνιση αριθμού ολοκληρωμένων έργων
-  - **Calculated Totals** - Σωστός υπολογισμός κόστους από materials + labor
-- 🐛 **Bug Fixes**
-  - Διόρθωση υπολογισμού total_cost σε projects (χρήση calculated values αντί για stale data)
-  - Fix για missing invoices/quotes tables
-  - Σωστή χρήση technician_id αντί για user_id στο ProjectReportController
-  - Διόρθωση column names (completion_date, invoiced_at)
+### 👥 Νέος Ρόλος Χρήστη
+- **Maintenance Technician** - Τεχνικός Συντηρήσεων Μ/Σ
+  - Ειδικός ρόλος για τεχνικούς συντηρήσεων μετασχηματιστών
+  - Πρόσβαση μόνο σε maintenance modules
+  - Μετάφραση στα Ελληνικά: "Τεχνικός Συντηρήσεων Υ/Σ"
 
-### Προηγούμενα - v1.3.5
+### 🐛 Bug Fixes & Improvements
+- Διόρθωση routing issues (404 errors)
+- Fix για PDF class declaration errors
+- Σωστά field names (project.title αντί για project.name)
+- Διόρθωση redirect URLs
+- Success messages μετά από email sending
+- EmailService public methods
+- Καθαρισμός deprecated invoice permissions
 
-- 💰 **Advanced Payment Management** - Ολοκληρωμένο σύστημα διαχείρισης πληρωμών τεχνικών
-  - **Summary Statistics** - Grand totals card με συνολικά κέρδη, πληρωμένα/απλήρωτα ποσά και progress bar
-  - **Quick Date Presets** - Κουμπιά γρήγορης επιλογής (Τρέχουσα/Προηγούμενη Εβδομάδα, Τρέχων/Προηγούμενος Μήνας)
-  - **CSV Export** - Εξαγωγή όλων των εγγραφών πληρωμών με φίλτρα
-  - **Bulk Payment Actions** - Επισήμανση όλων των εγγραφών ως πληρωμένες με ένα κλικ
-  - **Visual Enhancements** - Progress bars, color-coded amounts, enhanced tooltips, role badges
-- 👥 **Role-Based Access Control** - Πλήρες σύστημα ρόλων και δικαιωμάτων
-  - **4 Επίπεδα Ρόλων**: Admin, Supervisor, Technician, Assistant
-  - **Διαβαθμισμένα Δικαιώματα**: Admin (πλήρης πρόσβαση), Supervisor (έργα/υλικά), Technician/Assistant (μόνο προσωπική καρτέλα)
-  - **Role-Based Menu** - Δυναμικό sidebar menu ανάλογα με το ρόλο
-  - **Permission Guards** - Έλεγχος δικαιωμάτων σε controllers
-- 🐛 **Critical Bug Fixes**
-  - Διόρθωση duplicate technician cards (PHP foreach reference bug)
-  - Συμπερίληψη supervisors στις λίστες πληρωμών
-  - Σωστή ανάγνωση ποσών από DOM elements
+### Προηγούμενα - v1.4.0
+
+- � **User Status Management** - Διαχείριση ενεργών/ανενεργών χρηστών
+- 💼 **Payments Enhancements** - Custom date range, βελτιωμένα labels
+- � **PDF Report Improvements** - Compressed columns, smaller fonts
+- � **Task Safety Features** - Unsaved data warnings, photo delete buttons
 
 Δείτε το [CHANGELOG.md](CHANGELOG.md) για πλήρη λίστα αλλαγών.
 
@@ -99,7 +102,7 @@ HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχεί�
 - Υπενθυμίσεις μέσω email
 - Ομαδικός προγραμματισμός για συνεργεία
 
-### � Διαχείριση Πληρωμών Τεχνικών (ΝΕΟ v1.3.5)
+### 💰 Διαχείριση Πληρωμών Τεχνικών
 - **📊 Summary Statistics** - Grand totals με συνολικά κέρδη, πληρωμένα/απλήρωτα
 - **⚡ Quick Date Filters** - Γρήγορη επιλογή περιόδων (εβδομάδα, μήνας)
 - **📥 CSV Export** - Εξαγωγή πληρωμών σε Excel
@@ -109,11 +112,30 @@ HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχεί�
 - Παρακολούθηση ωρών εργασίας και αμοιβών
 - Ανά τεχνικό/supervisor breakdown
 
-### 👥 Διαχείριση Χρηστών & Δικαιώματα (ΝΕΟ v1.3.5)
-- **4 Επίπεδα Ρόλων**: Admin, Supervisor, Technician, Assistant
-- **Role-Based Access Control**: Διαβαθμισμένα δικαιώματα ανά ρόλο
-- **Dynamic Menu**: Sidebar προσαρμόζεται στο ρόλο του χρήστη
-- **Permission Guards**: Έλεγχος πρόσβασης σε controllers
+### � Role & Permission System (ΝΕΟ v1.5.0)
+- **Σύστημα Ρόλων** - Δημιουργία και διαχείριση custom ρόλων
+- **Granular Permissions** - Δικαιώματα ανά module και action
+- **Permission Interface** - Checkbox grid για εύκολη ανάθεση
+- **AuthMiddleware** - Helper functions: `can()`, `hasRole()`, `isAdmin()`
+- **Default Roles**: Admin, Supervisor, Technician, Maintenance Technician
+- **Permission Modules**: customers, projects, tasks, maintenances, materials, reports, users, roles, settings
+- **Permission Actions**: view, create, edit, delete, export, assign, permissions
+
+### 📧 Email System (ΝΕΟ v1.5.0)
+- **SMTP Configuration** - Διαμόρφωση email server μέσω UI
+- **Email Templates** - Προσαρμόσιμα templates με μεταβλητές
+- **Email Log** - Καταγραφή όλων των απεσταλμένων emails
+- **PDF Attachments** - TCPDF integration με ελληνικούς χαρακτήρες
+- **Maintenance Reports** - Αποστολή αναφορών συντήρησης Μ/Σ
+- **Project Reports** - Αποστολή αναφορών έργων σε πελάτες
+- **Custom Branding** - Company footer στα PDFs
+
+### 👥 Διαχείριση Χρηστών
+- **5 Επίπεδα Ρόλων**: Admin, Supervisor, Technician, Assistant, Maintenance Technician
+- **Active/Inactive Status** - Toggle χρηστών με ένα κλικ
+- **Smart Filtering** - Ανενεργοί χρήστες δεν εμφανίζονται σε dropdowns
+- **Role-Based Menu** - Δυναμικό sidebar ανάλογα με δικαιώματα
+- **Permission Guards** - Έλεγχος πρόσβασης σε controllers
 - Προσωπική καρτέλα τεχνικού/βοηθού
 
 ### �📄 Προσφορές & Τιμολόγηση
@@ -138,48 +160,58 @@ HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχεί�
 
 ## 🛠️ Τεχνολογίες
 
-- **Backend**: PHP 7.4+ με MVC αρχιτεκτονική
+- **Backend**: PHP 7.4+ / 8.0+ με MVC αρχιτεκτονική
 - **Database**: MySQL 5.7+ / MariaDB 10.2+
+- **Email**: PHPMailer 6.9+ με SMTP support
+- **PDF Generation**: TCPDF με Greek UTF-8 support
 - **Frontend**: Bootstrap 5, JavaScript (ES6+)
 - **Charts**: Chart.js 4.4.0
 - **Styling**: Custom CSS με gradients
 - **Icons**: Font Awesome 6
+- **Dependencies**: Composer για package management
 
 ## 📋 Απαιτήσεις Συστήματος
 
-- PHP 7.4 ή νεότερο
+- PHP 7.4 ή νεότερο (8.0+ συνιστάται)
 - MySQL 5.7 ή MariaDB 10.2+
 - Apache ή Nginx web server
-- 50MB ελεύθερος χώρος δίσκου
-- SSL Certificate (προτείνεται)
+- Composer (για dependencies)
+- 100MB ελεύθερος χώρος δίσκου
+- SSL Certificate (προτείνεται για email encryption)
 
 ## 🚀 Εγκατάσταση
 
-### 1. Κλωνοποίηση του Repository
+### Επιλογή 1: Νέα Εγκατάσταση (Fresh Install)
+
+#### 1. Κλωνοποίηση του Repository
 
 ```bash
-git clone https://github.com/your-username/handycrm.git
+git clone https://github.com/TheoSfak/handycrm.git
 cd handycrm
 ```
 
-### 2. Ρύθμιση Βάσης Δεδομένων
+#### 2. Εγκατάσταση Dependencies
+
+```bash
+composer install
+```
+
+#### 3. Ρύθμιση Βάσης Δεδομένων
 
 1. Δημιουργήστε μια νέα βάση δεδομένων MySQL:
 ```sql
 CREATE DATABASE handycrm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'handycrm_user'@'localhost' IDENTIFIED BY 'your_secure_password';
+GRANT ALL PRIVILEGES ON handycrm.* TO 'handycrm_user'@'localhost';
+FLUSH PRIVILEGES;
 ```
 
-2. Εισάγετε το σχήμα της βάσης:
+2. Εισάγετε το σχήμα της βάσης για v1.5.0:
 ```bash
-mysql -u username -p handycrm < database/schema.sql
+mysql -u handycrm_user -p handycrm < migrations/v1.5.0_fresh_install_schema.sql
 ```
 
-3. Εισάγετε τα δεδομένα εκκίνησης:
-```bash
-mysql -u username -p handycrm < database/sample_data.sql
-```
-
-### 3. Ρύθμιση Εφαρμογής
+#### 4. Ρύθμιση Εφαρμογής
 
 1. Αντιγράψτε και επεξεργαστείτε το αρχείο ρυθμίσεων:
 ```bash
@@ -190,11 +222,65 @@ cp config/config.php.example config/config.php
 ```php
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'handycrm');
-define('DB_USER', 'your_username');
-define('DB_PASS', 'your_password');
+define('DB_USER', 'handycrm_user');
+define('DB_PASS', 'your_secure_password');
 ```
 
 3. Δημιουργήστε τον φάκελο για uploads:
+```bash
+mkdir uploads
+chmod 755 uploads
+```
+
+#### 5. Ρύθμιση Email (Προαιρετικό αλλά συνιστάται)
+
+Μετά την πρώτη σύνδεση, πηγαίνετε στο **Ρυθμίσεις → Email Settings** και ρυθμίστε:
+- SMTP Host (π.χ. smtp.titan.email)
+- SMTP Port (465 για SSL, 587 για TLS)
+- Encryption Type (SSL/TLS)
+- Username και Password
+- From Email και From Name
+
+### Επιλογή 2: Ενημέρωση από v1.4.x
+
+#### 1. Backup της Βάσης Δεδομένων
+
+```bash
+mysqldump -u handycrm_user -p handycrm > backup_before_1.5.0.sql
+```
+
+#### 2. Pull τις Τελευταίες Αλλαγές
+
+```bash
+cd handycrm
+git pull origin main
+```
+
+#### 3. Ενημέρωση Dependencies
+
+```bash
+composer update
+```
+
+#### 4. Εκτέλεση Migration Script
+
+```bash
+mysql -u handycrm_user -p handycrm < migrations/v1.5.0_upgrade_from_1.4.sql
+```
+
+Το migration script θα:
+- ✅ Δημιουργήσει τις νέες email tables (smtp_settings, email_templates, email_notifications)
+- ✅ Δημιουργήσει τις permissions tables (roles, permissions, role_permissions, user_role)
+- ✅ Ενημερώσει το users.role ENUM (προσθήκη maintenance_technician)
+- ✅ Εισάγει default permissions για όλα τα modules
+- ✅ Διαγράψει deprecated invoice permissions
+- ✅ Δημιουργήσει default roles
+
+#### 5. Ρύθμιση Email & Permissions
+
+1. Ρυθμίστε SMTP settings στο admin panel
+2. Ανθέστε δικαιώματα στους υπάρχοντες ρόλους
+3. Εκχωρήστε ρόλους στους χρήστες μέσω του `/roles` menu
 ```bash
 mkdir uploads
 chmod 755 uploads

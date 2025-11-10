@@ -80,6 +80,9 @@ class ProjectReportController extends BaseController {
         // Get hide prices option
         $hidePrices = isset($_POST['hide_prices']) && $_POST['hide_prices'] === '1';
         
+        // Get report content filter (materials, labor, or both)
+        $reportContent = isset($_POST['report_content']) ? $_POST['report_content'] : 'both';
+        
         // Get report notes
         $reportNotes = isset($_POST['report_notes']) && !empty($_POST['report_notes']) ? $_POST['report_notes'] : null;
         
@@ -98,11 +101,17 @@ class ProjectReportController extends BaseController {
         // Get tasks with date filter
         $tasks = $this->getTasks($projectId, $fromDate, $toDate);
         
-        // Get aggregated materials
-        $materials = $this->getAggregatedMaterials($projectId, $fromDate, $toDate);
+        // Get aggregated materials (only if needed)
+        $materials = [];
+        if ($reportContent === 'both' || $reportContent === 'materials') {
+            $materials = $this->getAggregatedMaterials($projectId, $fromDate, $toDate);
+        }
         
-        // Get aggregated labor
-        $labor = $this->getAggregatedLabor($projectId, $fromDate, $toDate);
+        // Get aggregated labor (only if needed)
+        $labor = [];
+        if ($reportContent === 'both' || $reportContent === 'labor') {
+            $labor = $this->getAggregatedLabor($projectId, $fromDate, $toDate);
+        }
         
         // Calculate totals
         $totals = $this->calculateTotals($materials, $labor);
@@ -305,9 +314,90 @@ class ProjectReportController extends BaseController {
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
         
-        // Close and output PDF document
-        $filename = 'project_report_' . $project['id'] . '_' . date('Y-m-d') . '.pdf';
-        $pdf->Output($filename, 'I');
+        // Check if email sending is requested
+        $sendByEmail = isset($_POST['send_by_email']) && $_POST['send_by_email'] == '1';
+        
+        if ($sendByEmail) {
+            // Send PDF via email
+            $recipientEmail = $_POST['recipient_email'] ?? '';
+            $subject = $_POST['email_subject'] ?? 'Αναφορά Έργου - ' . $project['title'];
+            $message = $_POST['email_message'] ?? '';
+            $sendCopy = isset($_POST['send_copy_to_me']);
+            
+            if (empty($recipientEmail)) {
+                $_SESSION['error'] = 'Το email παραλήπτη είναι υποχρεωτικό';
+                header('Location: ' . BASE_URL . '/projects/' . $project['slug']);
+                exit;
+            }
+            
+            // Generate PDF to temp file
+            // Transliterate Greek to Latin for filename compatibility
+            $customerName = !empty($customer['name']) ? $customer['name'] : (!empty($project['title']) ? $project['title'] : 'Report');
+            $customerName = $this->transliterateGreek($customerName);
+            $customerName = preg_replace('/[^a-zA-Z0-9\s]/', '', $customerName);
+            $customerName = str_replace(' ', '_', $customerName);
+            $dateFormatted = date('d_m_Y');
+            $filename = 'Anafora_Ergou_' . $customerName . '_' . $dateFormatted . '.pdf';
+            $tempPdfPath = sys_get_temp_dir() . '/' . $filename;
+            
+            $pdf->Output($tempPdfPath, 'F');
+            
+            // Send email with PHPMailer
+            require_once __DIR__ . '/../classes/EmailService.php';
+            $emailService = new EmailService();
+            
+            if (!$emailService->isConfigured()) {
+                $_SESSION['error'] = 'Το σύστημα email δεν είναι ρυθμισμένο';
+                unlink($tempPdfPath);
+                header('Location: ' . BASE_URL . '/projects/' . $project['slug']);
+                exit;
+            }
+            
+            try {
+                $mail = $emailService->createMailer();
+                $mail->addAddress($recipientEmail, $customer['name'] ?? '');
+                
+                if ($sendCopy && isset($_SESSION['email'])) {
+                    $mail->addCC($_SESSION['email']);
+                }
+                
+                $mail->isHTML(true);
+                $mail->Subject = $subject;
+                $mail->Body = nl2br(htmlspecialchars($message));
+                $mail->AltBody = strip_tags($message);
+                
+                // Attach PDF
+                $mail->addAttachment($tempPdfPath, $filename);
+                
+                $mail->send();
+                
+                // Log email (status should be 'sent' or 'failed')
+                $emailService->logEmail($recipientEmail, $subject, $message, 'sent');
+                
+                // Clean up temp file
+                unlink($tempPdfPath);
+                
+                $_SESSION['success'] = 'Η αναφορά στάλθηκε επιτυχώς στο ' . $recipientEmail;
+                header('Location: ' . BASE_URL . '/projects/' . $project['slug']);
+                exit;
+                
+            } catch (Exception $e) {
+                unlink($tempPdfPath);
+                $_SESSION['error'] = 'Αποτυχία αποστολής email: ' . $e->getMessage();
+                header('Location: ' . BASE_URL . '/projects/' . $project['slug']);
+                exit;
+            }
+        } else {
+            // Normal PDF download
+            // Transliterate Greek to Latin for filename compatibility
+            $customerName = !empty($customer['name']) ? $customer['name'] : (!empty($project['title']) ? $project['title'] : 'Report');
+            $customerName = $this->transliterateGreek($customerName);
+            $customerName = preg_replace('/[^a-zA-Z0-9\s]/', '', $customerName);
+            $customerName = str_replace(' ', '_', $customerName);
+            $dateFormatted = date('d_m_Y');
+            $filename = 'Anafora_Ergou_' . $customerName . '_' . $dateFormatted . '.pdf';
+            $pdf->Output($filename, 'I');
+        }
     }
     
     private function buildFooterContent($settings, $pageNum = 1, $totalPages = 1) {
@@ -708,5 +798,24 @@ class ProjectReportController extends BaseController {
         }
         
         return $html;
+    }
+    
+    /**
+     * Transliterate Greek characters to Latin
+     */
+    private function transliterateGreek($text) {
+        $greek = [
+            'Α' => 'A', 'Β' => 'B', 'Γ' => 'G', 'Δ' => 'D', 'Ε' => 'E', 'Ζ' => 'Z', 'Η' => 'H', 'Θ' => 'Th',
+            'Ι' => 'I', 'Κ' => 'K', 'Λ' => 'L', 'Μ' => 'M', 'Ν' => 'N', 'Ξ' => 'X', 'Ο' => 'O', 'Π' => 'P',
+            'Ρ' => 'R', 'Σ' => 'S', 'Τ' => 'T', 'Υ' => 'Y', 'Φ' => 'F', 'Χ' => 'Ch', 'Ψ' => 'Ps', 'Ω' => 'O',
+            'α' => 'a', 'β' => 'b', 'γ' => 'g', 'δ' => 'd', 'ε' => 'e', 'ζ' => 'z', 'η' => 'h', 'θ' => 'th',
+            'ι' => 'i', 'κ' => 'k', 'λ' => 'l', 'μ' => 'm', 'ν' => 'n', 'ξ' => 'x', 'ο' => 'o', 'π' => 'p',
+            'ρ' => 'r', 'σ' => 's', 'ς' => 's', 'τ' => 't', 'υ' => 'y', 'φ' => 'f', 'χ' => 'ch', 'ψ' => 'ps', 'ω' => 'o',
+            'ά' => 'a', 'έ' => 'e', 'ή' => 'h', 'ί' => 'i', 'ό' => 'o', 'ύ' => 'y', 'ώ' => 'o',
+            'Ά' => 'A', 'Έ' => 'E', 'Ή' => 'H', 'Ί' => 'I', 'Ό' => 'O', 'Ύ' => 'Y', 'Ώ' => 'O',
+            'ϊ' => 'i', 'ϋ' => 'y', 'ΐ' => 'i', 'ΰ' => 'y'
+        ];
+        
+        return strtr($text, $greek);
     }
 }

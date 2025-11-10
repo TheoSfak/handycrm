@@ -9,6 +9,7 @@
  */
 
 require_once 'classes/BaseController.php';
+require_once __DIR__ . '/../classes/AuthMiddleware.php';
 require_once 'models/Technician.php';
 
 class TechniciansController extends BaseController {
@@ -25,6 +26,11 @@ class TechniciansController extends BaseController {
      */
     public function index() {
         $this->checkAuth();
+        
+        // Check permission for viewing technicians
+        if (!$this->isAdmin() && !$this->isSupervisor() && !can('technicians.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
         
         // Get filter from query params
         $filter = $_GET['filter'] ?? 'active'; // active, all, technician, assistant

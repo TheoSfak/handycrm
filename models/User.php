@@ -8,10 +8,24 @@ class User extends BaseModel {
     protected $table = 'users';
     
     /**
+     * Override find to include role information
+     */
+    public function find($id) {
+        $sql = "SELECT u.*, r.name as role, r.display_name as role_display_name
+                FROM {$this->table} u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE u.id = ?";
+        return $this->db->fetchOne($sql, [$id]);
+    }
+    
+    /**
      * Authenticate user login
      */
     public function authenticate($username, $password) {
-        $sql = "SELECT * FROM {$this->table} WHERE (username = ? OR email = ?) AND is_active = 1";
+        $sql = "SELECT u.*, r.name as role 
+                FROM {$this->table} u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE (u.username = ? OR u.email = ?) AND u.is_active = 1";
         $user = $this->db->fetchOne($sql, [$username, $username]);
         
         if ($user && password_verify($password, $user['password'])) {
@@ -32,7 +46,7 @@ class User extends BaseModel {
         
         // Set default values
         $data['is_active'] = $data['is_active'] ?? 1;
-        $data['role'] = $data['role'] ?? 'technician';
+        // No longer set default role here - must be provided via role_id
         
         return $this->create($data);
     }
@@ -49,10 +63,11 @@ class User extends BaseModel {
      * Get all technicians (including assistants)
      */
     public function getTechnicians() {
-        $sql = "SELECT id, CONCAT(first_name, ' ', last_name) as name, email, phone, role 
-                FROM {$this->table} 
-                WHERE role IN ('technician', 'assistant', 'admin') AND is_active = 1 
-                ORDER BY first_name, last_name";
+        $sql = "SELECT u.id, CONCAT(u.first_name, ' ', u.last_name) as name, u.email, u.phone, r.name as role
+                FROM {$this->table} u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE r.name IN ('technician', 'assistant', 'admin') AND u.is_active = 1 
+                ORDER BY u.first_name, u.last_name";
         return $this->db->fetchAll($sql);
     }
     
@@ -65,11 +80,12 @@ class User extends BaseModel {
         }
         
         $placeholders = str_repeat('?,', count($roles) - 1) . '?';
-        $sql = "SELECT id, first_name, last_name, CONCAT(first_name, ' ', last_name) as name, 
-                role, hourly_rate, email, phone 
-                FROM {$this->table} 
-                WHERE role IN ($placeholders) AND is_active = 1 
-                ORDER BY first_name, last_name";
+        $sql = "SELECT u.id, u.first_name, u.last_name, CONCAT(u.first_name, ' ', u.last_name) as name, 
+                r.name as role, u.hourly_rate, u.email, u.phone 
+                FROM {$this->table} u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE r.name IN ($placeholders) AND u.is_active = 1 
+                ORDER BY u.first_name, u.last_name";
         return $this->db->fetchAll($sql, $roles);
     }
     
@@ -77,11 +93,12 @@ class User extends BaseModel {
      * Get all active users regardless of role
      */
     public function getAllActive() {
-        $sql = "SELECT id, first_name, last_name, CONCAT(first_name, ' ', last_name) as name, 
-                role, hourly_rate, email, phone 
-                FROM {$this->table} 
-                WHERE is_active = 1 
-                ORDER BY first_name, last_name";
+        $sql = "SELECT u.id, u.first_name, u.last_name, CONCAT(u.first_name, ' ', u.last_name) as name, 
+                r.name as role, u.hourly_rate, u.email, u.phone 
+                FROM {$this->table} u
+                LEFT JOIN roles r ON u.role_id = r.id
+                WHERE u.is_active = 1 
+                ORDER BY u.first_name, u.last_name";
         return $this->db->fetchAll($sql);
     }
     

@@ -73,10 +73,12 @@
                     <div class="mb-3">
                         <label for="role" class="form-label"><?= __('users.role') ?> <span class="text-danger">*</span></label>
                         <select class="form-select" id="role" name="role" required>
-                            <option value="admin" <?= $editUser['role'] === 'admin' ? 'selected' : '' ?>>Διαχειριστής</option>
-                            <option value="supervisor" <?= $editUser['role'] === 'supervisor' ? 'selected' : '' ?>>Υπεύθυνος Συνεργείου</option>
-                            <option value="technician" <?= $editUser['role'] === 'technician' ? 'selected' : '' ?>>Τεχνικός</option>
-                            <option value="assistant" <?= $editUser['role'] === 'assistant' ? 'selected' : '' ?>>Βοηθός Τεχνικού</option>
+                            <?php foreach ($roles as $role): ?>
+                                <option value="<?= htmlspecialchars($role['name']) ?>" 
+                                        <?= ($editUser['role_id'] ?? 0) == $role['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($role['display_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                     

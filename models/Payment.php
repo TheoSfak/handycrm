@@ -24,8 +24,9 @@ class Payment extends BaseModel {
                     u.last_name,
                     CONCAT(u.first_name, ' ', u.last_name) as technician_name,
                     u.hourly_rate,
-                    u.role
+                    r.name as role
                 FROM users u
+                LEFT JOIN roles r ON u.role_id = r.id
                 INNER JOIN (
                     SELECT DISTINCT tl.technician_id
                     FROM task_labor tl

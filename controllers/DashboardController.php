@@ -18,6 +18,28 @@ class DashboardController extends BaseController {
             return;
         }
         
+        // Check if user has permission to view dashboard
+        require_once __DIR__ . '/../classes/AuthMiddleware.php';
+        $userRole = $user['role'] ?? '';
+        
+        if ($userRole !== 'admin' && $userRole !== 'supervisor' && !can('dashboard.view')) {
+            // User doesn't have dashboard access, redirect to first available page
+            if (can('payments.view')) {
+                $this->redirect('/payments');
+                return;
+            } elseif (can('users.view')) {
+                $this->redirect('/users');
+                return;
+            } elseif (can('projects.view')) {
+                $this->redirect('/projects');
+                return;
+            } else {
+                // No permissions - redirect to profile
+                $this->redirect('/users/show/' . $user['id']);
+                return;
+            }
+        }
+        
         // Get dashboard statistics
         $stats = $this->getDashboardStats($user);
         

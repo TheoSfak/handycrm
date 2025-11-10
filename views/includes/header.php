@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="author" content="Theodore Sfakianakis - theodore.sfakianakis@gmail.com">
     <meta name="copyright" content="© 2025 Theodore Sfakianakis. All rights reserved.">
-    <title><?= $title ?? 'HandyCRM' ?></title>
+    <?php 
+    require_once __DIR__ . '/../../helpers/app_display_name.php';
+    $appName = getAppDisplayName();
+    ?>
+    <title><?= $title ?? $appName ?></title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -220,7 +224,10 @@
     <!-- Sidebar -->
     <?php if (isset($_SESSION['user_id'])): ?>
     <?php
-        // Get user role for permission checks
+        // Load AuthMiddleware for permission checks
+        require_once __DIR__ . '/../../classes/AuthMiddleware.php';
+        
+        // Get user role for permission checks (backward compatibility)
         $userRole = $_SESSION['role'] ?? 'technician';
         $isAdmin = $userRole === 'admin';
         $isSupervisor = $userRole === 'supervisor';
@@ -229,12 +236,12 @@
     ?>
     <nav class="sidebar" id="sidebar">
         <div class="logo">
-            <h4><i class="fas fa-tools"></i> HandyCRM</h4>
+            <h4><i class="fas fa-tools"></i> <?= $appName ?></h4>
         </div>
         
         <ul class="nav flex-column">
-            <!-- Dashboard - Admin & Supervisor only -->
-            <?php if ($isAdmin || $isSupervisor): ?>
+            <!-- Dashboard - Admin & Supervisor only (or anyone with dashboard permission) -->
+            <?php if ($isAdmin || $isSupervisor || can('dashboard.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= $currentRoute === '/' || $currentRoute === '' || $currentRoute === '/dashboard' ? 'active' : '' ?>" href="<?= BASE_URL ?>/dashboard">
                     <i class="fas fa-tachometer-alt"></i> <?= __('menu.dashboard') ?>
@@ -242,8 +249,8 @@
             </li>
             <?php endif; ?>
             
-            <!-- Customers - Admin only -->
-            <?php if ($isAdmin): ?>
+            <!-- Customers -->
+            <?php if ($isAdmin || can('customers.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/customers') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/customers">
                     <i class="fas fa-users"></i> <?= __('menu.customers') ?>
@@ -251,8 +258,8 @@
             </li>
             <?php endif; ?>
             
-            <!-- Projects - Admin & Supervisor -->
-            <?php if ($isAdmin || $isSupervisor): ?>
+            <!-- Projects -->
+            <?php if ($isAdmin || $isSupervisor || can('projects.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/projects') !== false && strpos($currentRoute, '/payments') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/projects">
                     <i class="fas fa-project-diagram"></i> <?= __('menu.projects') ?>
@@ -260,8 +267,8 @@
             </li>
             <?php endif; ?>
             
-            <!-- Payments - Admin only -->
-            <?php if ($isAdmin): ?>
+            <!-- Payments -->
+            <?php if ($isAdmin || can('payments.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/payments') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/payments">
                     <i class="fas fa-money-bill-wave"></i> <?= __('menu.payments') ?>
@@ -269,8 +276,17 @@
             </li>
             <?php endif; ?>
             
-            <!-- Appointments - Admin only -->
-            <?php if ($isAdmin): ?>
+            <!-- Transformer Maintenances -->
+            <?php if ($isAdmin || can('transformer_maintenance.view')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/maintenances') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/maintenances">
+                    <i class="fas fa-tools"></i> Συντηρήσεις Υ/Σ
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <!-- Appointments -->
+            <?php if ($isAdmin || can('appointments.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/appointments') !== false && strpos($currentRoute, '/calendar') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/appointments">
                     <i class="fas fa-calendar-alt"></i> <?= __('menu.appointments') ?>
@@ -284,8 +300,8 @@
             </li>
             <?php endif; ?>
             
-            <!-- Quotes - Admin only -->
-            <?php if ($isAdmin): ?>
+            <!-- Quotes -->
+            <?php if ($isAdmin || can('quotes.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/quotes') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/quotes">
                     <i class="fas fa-file-invoice"></i> <?= __('menu.quotes') ?>
@@ -293,8 +309,8 @@
             </li>
             <?php endif; ?>
             
-            <!-- Materials - Admin & Supervisor -->
-            <?php if ($isAdmin || $isSupervisor): ?>
+            <!-- Materials -->
+            <?php if ($isAdmin || $isSupervisor || can('materials.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/materials') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/materials">
                     <i class="fas fa-boxes"></i> <?= __('menu.materials') ?>
@@ -302,8 +318,8 @@
             </li>
             <?php endif; ?>
             
-            <!-- Reports - Admin only -->
-            <?php if ($isAdmin): ?>
+            <!-- Reports -->
+            <?php if ($isAdmin || can('reports.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/reports') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/reports">
                     <i class="fas fa-chart-line"></i> <?= __('menu.reports') ?>
@@ -329,14 +345,24 @@
             </li>
             <?php endif; ?>
             
-            <!-- Users & Settings - Admin only -->
-            <?php if ($isAdmin): ?>
+            <!-- Users & Settings -->
+            <?php if ($isAdmin || can('users.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/users') !== false && strpos($currentRoute, '/users/show') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/users">
                     <i class="fas fa-user-cog"></i> <?= __('menu.users') ?>
                 </a>
             </li>
+            <?php endif; ?>
             
+            <?php if ($isAdmin || can('roles.manage')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/roles') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/roles">
+                    <i class="fas fa-user-tag"></i> Ρόλοι & Δικαιώματα
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <?php if ($isAdmin || can('settings.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/settings') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/settings">
                     <i class="fas fa-cogs"></i> <?= __('menu.settings') ?>
@@ -369,6 +395,7 @@
                     $uri = $_SERVER['REQUEST_URI'];
                     if (strpos($uri, '/customers') !== false) $breadcrumb = __('menu.customers');
                     elseif (strpos($uri, '/projects') !== false) $breadcrumb = __('menu.projects');
+                    elseif (strpos($uri, '/maintenances') !== false) $breadcrumb = 'Συντηρήσεις Υ/Σ';
                     elseif (strpos($uri, '/appointments') !== false) $breadcrumb = __('menu.appointments');
                     elseif (strpos($uri, '/quotes') !== false) $breadcrumb = __('menu.quotes');
                     elseif (strpos($uri, '/materials') !== false) $breadcrumb = __('menu.materials');

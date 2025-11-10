@@ -13,11 +13,21 @@ define('FOOTER_RENDERED', true);
                 <div class="row align-items-center">
                     <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
                         <span class="text-muted">
-                            <i class="fas fa-briefcase"></i> <strong>HandyCRM</strong> 
+                            <?php 
+                            require_once __DIR__ . '/../../helpers/app_display_name.php';
+                            $appName = getAppDisplayName();
+                            ?>
+                            <i class="fas fa-briefcase"></i> <strong><?= $appName ?></strong> 
                             <span class="badge bg-primary ms-1">v<?php 
-                                require_once 'classes/UpdateChecker.php';
-                                $versionChecker = new UpdateChecker();
-                                echo $versionChecker->getCurrentVersion();
+                                if (file_exists(__DIR__ . '/../../classes/UpdateChecker.php')) {
+                                    require_once __DIR__ . '/../../classes/UpdateChecker.php';
+                                    $versionChecker = new UpdateChecker();
+                                    echo $versionChecker->getCurrentVersion();
+                                } elseif (defined('APP_VERSION')) {
+                                    echo APP_VERSION;
+                                } else {
+                                    echo '1.4.0';
+                                }
                             ?></span>
                         </span>
                     </div>

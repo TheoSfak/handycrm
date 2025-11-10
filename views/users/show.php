@@ -13,8 +13,21 @@ require_once 'views/includes/header.php';
                         <?= htmlspecialchars($viewUser['first_name'] . ' ' . $viewUser['last_name']) ?>
                     </h2>
                     <p class="text-muted mb-0">
-                        <span class="badge bg-<?= $viewUser['role'] === 'admin' ? 'danger' : ($viewUser['role'] === 'technician' ? 'primary' : 'info') ?>">
-                            <?= ucfirst($viewUser['role']) ?>
+                        <?php
+                        $roleName = $viewUser['role_name'] ?? 'technician';
+                        $roleDisplay = $viewUser['role_display_name'] ?? ucfirst($roleName);
+                        $roleColors = [
+                            'admin' => 'danger',
+                            'supervisor' => 'warning',
+                            'technician' => 'primary',
+                            'assistant' => 'info',
+                            'maintenance_technician' => 'success',
+                            'maintenance_tech' => 'success'
+                        ];
+                        $roleColor = $roleColors[$roleName] ?? 'secondary';
+                        ?>
+                        <span class="badge bg-<?= $roleColor ?>">
+                            <?= htmlspecialchars($roleDisplay) ?>
                         </span>
                         <span class="ms-2"><i class="fas fa-envelope me-1"></i><?= htmlspecialchars($viewUser['email']) ?></span>
                         <?php if (!empty($viewUser['phone'])): ?>
@@ -40,9 +53,9 @@ require_once 'views/includes/header.php';
             <div class="card bg-success text-white shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                        <div style="min-width: 180px;">
                             <h6 class="text-white-50 mb-1">Συνολικά Κέρδη</h6>
-                            <h3 class="mb-0"><?= formatCurrency($totalEarned) ?></h3>
+                            <h3 class="mb-0" style="white-space: nowrap; min-width: 150px;"><?= formatCurrency($totalEarned) ?></h3>
                         </div>
                         <div class="fs-1 opacity-50">
                             <i class="fas fa-coins"></i>
@@ -55,9 +68,9 @@ require_once 'views/includes/header.php';
             <div class="card bg-info text-white shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                        <div style="min-width: 180px;">
                             <h6 class="text-white-50 mb-1">Πληρωμένα</h6>
-                            <h3 class="mb-0"><?= formatCurrency($totalPaid) ?></h3>
+                            <h3 class="mb-0" style="white-space: nowrap; min-width: 150px;"><?= formatCurrency($totalPaid) ?></h3>
                         </div>
                         <div class="fs-1 opacity-50">
                             <i class="fas fa-check-circle"></i>
@@ -70,9 +83,9 @@ require_once 'views/includes/header.php';
             <div class="card bg-warning text-white shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                        <div style="min-width: 180px;">
                             <h6 class="text-white-50 mb-1">Απλήρωτα</h6>
-                            <h3 class="mb-0"><?= formatCurrency($totalUnpaid) ?></h3>
+                            <h3 class="mb-0" style="white-space: nowrap; min-width: 150px;"><?= formatCurrency($totalUnpaid) ?></h3>
                         </div>
                         <div class="fs-1 opacity-50">
                             <i class="fas fa-exclamation-circle"></i>
@@ -91,39 +104,41 @@ require_once 'views/includes/header.php';
                     <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Στοιχεία Χρήστη</h5>
                 </div>
                 <div class="card-body">
-                    <table class="table table-sm table-borderless">
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-user me-2"></i>Όνομα:</td>
-                            <td><strong><?= htmlspecialchars($viewUser['first_name']) ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-user me-2"></i>Επώνυμο:</td>
-                            <td><strong><?= htmlspecialchars($viewUser['last_name']) ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-envelope me-2"></i>Email:</td>
-                            <td><strong><?= htmlspecialchars($viewUser['email']) ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-phone me-2"></i>Τηλέφωνο:</td>
-                            <td><strong><?= htmlspecialchars($viewUser['phone'] ?? '-') ?></strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-user-tag me-2"></i>Ρόλος:</td>
-                            <td>
-                                <span class="badge bg-<?= $viewUser['role'] === 'admin' ? 'danger' : ($viewUser['role'] === 'technician' ? 'primary' : 'info') ?>">
-                                    <?= ucfirst($viewUser['role']) ?>
-                                </span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-euro-sign me-2"></i>Ωρομίσθιο:</td>
-                            <td><strong><?= formatCurrency($viewUser['hourly_rate'] ?? 0) ?>/h</strong></td>
-                        </tr>
-                        <tr>
-                            <td class="text-muted"><i class="fas fa-calendar me-2"></i>Δημιουργήθηκε:</td>
-                            <td><strong><?= formatDate($viewUser['created_at'], true) ?></strong></td>
-                        </tr>
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;"><i class="fas fa-user me-2"></i>Όνομα:</td>
+                                <td><strong><?= htmlspecialchars($viewUser['first_name']) ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;"><i class="fas fa-user me-2"></i>Επώνυμο:</td>
+                                <td><strong><?= htmlspecialchars($viewUser['last_name']) ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;"><i class="fas fa-envelope me-2"></i>Email:</td>
+                                <td><strong><?= htmlspecialchars($viewUser['email']) ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;"><i class="fas fa-phone me-2"></i>Τηλέφωνο:</td>
+                                <td><strong><?= htmlspecialchars($viewUser['phone'] ?? '-') ?></strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;"><i class="fas fa-user-tag me-2"></i>Ρόλος:</td>
+                                <td>
+                                    <span class="badge bg-<?= $roleColor ?>">
+                                        <?= htmlspecialchars($roleDisplay) ?>
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;"><i class="fas fa-euro-sign me-2"></i>Ωρομίσθιο:</td>
+                                <td><strong style="white-space: nowrap;"><?= formatCurrency($viewUser['hourly_rate'] ?? 0) ?>/h</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted" style="width: 140px; white-space: nowrap;"><i class="fas fa-calendar me-2"></i>Δημιουργήθηκε:</td>
+                                <td><strong style="white-space: nowrap;"><?= formatDate($viewUser['created_at'], true) ?></strong></td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -212,17 +227,17 @@ require_once 'views/includes/header.php';
                                 <tfoot class="table-light">
                                     <tr>
                                         <td colspan="6" class="text-end"><strong>Σύνολο:</strong></td>
-                                        <td class="text-end"><strong><?= formatCurrency($totalEarned) ?></strong></td>
+                                        <td class="text-end" style="white-space: nowrap; min-width: 100px;"><strong><?= formatCurrency($totalEarned) ?></strong></td>
                                         <td></td>
                                     </tr>
                                     <tr>
                                         <td colspan="6" class="text-end text-success"><strong>Πληρωμένα:</strong></td>
-                                        <td class="text-end text-success"><strong><?= formatCurrency($totalPaid) ?></strong></td>
+                                        <td class="text-end text-success" style="white-space: nowrap; min-width: 100px;"><strong><?= formatCurrency($totalPaid) ?></strong></td>
                                         <td></td>
                                     </tr>
                                     <tr>
                                         <td colspan="6" class="text-end text-warning"><strong>Απλήρωτα:</strong></td>
-                                        <td class="text-end text-warning"><strong><?= formatCurrency($totalUnpaid) ?></strong></td>
+                                        <td class="text-end text-warning" style="white-space: nowrap; min-width: 100px;"><strong><?= formatCurrency($totalUnpaid) ?></strong></td>
                                         <td></td>
                                     </tr>
                                 </tfoot>

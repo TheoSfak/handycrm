@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $title ?? 'Σύνδεση - HandyCRM' ?></title>
+    <?php 
+    require_once __DIR__ . '/../../helpers/app_display_name.php';
+    $appName = getAppDisplayName();
+    ?>
+    <title><?= $title ?? 'Σύνδεση - ' . $appName ?></title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -169,7 +173,7 @@
             <div class="logo">
                 <i class="fas fa-tools"></i>
             </div>
-            <h2>HandyCRM</h2>
+            <h2><?= $appName ?></h2>
             <p class="mb-0">Σύστημα Διαχείρισης Πελατών</p>
         </div>
         
@@ -227,12 +231,24 @@
             </form>
             
             <div class="forgot-password">
-                <a href="/forgot-password">Ξεχάσατε τον κωδικό σας;</a>
+                <a href="<?= BASE_URL ?>/forgot-password">
+                    <i class="fas fa-key me-1"></i>Ξεχάσατε τον κωδικό σας;
+                </a>
             </div>
             
             <div class="version-info">
-                HandyCRM v1.0.0<br>
-                <small>© 2024 HandyCRM. Όλα τα δικαιώματα διατηρούνται.</small>
+                <div class="mb-2">
+                    <strong><?= $appName ?></strong> <span class="badge bg-primary">v1.4.0</span>
+                </div>
+                <div class="text-muted small">
+                    <i class="fas fa-tools me-1"></i> Σύστημα Διαχείρισης Πελατών & Έργων
+                </div>
+                <div class="text-muted small mt-2">
+                    © <?= date('Y') ?> ECOWATT Ενεργειακές Λύσεις<br>
+                    <a href="https://ecowatt.gr" target="_blank" class="text-decoration-none">
+                        <i class="fas fa-globe me-1"></i>ecowatt.gr
+                    </a>
+                </div>
             </div>
         </div>
     </div>

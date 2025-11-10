@@ -28,6 +28,7 @@ class SettingsController extends BaseController {
         // Set defaults if not exists
         $defaults = [
             'company_name' => '',
+            'company_display_name' => '',
             'company_address' => '',
             'company_phone' => '',
             'company_email' => '',
@@ -102,6 +103,7 @@ class SettingsController extends BaseController {
             // List of allowed settings
             $allowedSettings = [
                 'company_name',
+                'company_display_name',
                 'company_address',
                 'company_phone',
                 'company_email',
