@@ -91,6 +91,55 @@
 - Added transformer_maintenance module permissions (6 new permissions)
 - Cleaned up deprecated invoice module permissions
 
+### 📦 Production Deployment
+For production server (ecowatt.gr/crm), execute this SQL migration:
+
+```sql
+-- Step 1: Add role_id column to task_labor
+ALTER TABLE task_labor ADD COLUMN role_id INT(11) NULL AFTER technician_role;
+
+-- Step 2: Migrate existing data from ENUM to role_id
+UPDATE task_labor tl
+LEFT JOIN roles r ON r.name = tl.technician_role
+SET tl.role_id = r.id
+WHERE tl.technician_role IS NOT NULL;
+
+-- Step 3: Add foreign key constraint
+ALTER TABLE task_labor ADD CONSTRAINT fk_task_labor_role 
+FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL;
+
+-- Step 4: Drop old ENUM column
+ALTER TABLE task_labor DROP COLUMN technician_role;
+
+-- Step 5: Add timestamp columns to transformer_maintenances
+ALTER TABLE transformer_maintenances 
+ADD COLUMN invoiced_at DATETIME NULL AFTER is_invoiced,
+ADD COLUMN report_sent_at DATETIME NULL AFTER report_sent;
+
+-- Step 6: Add transformer_maintenance permissions
+INSERT INTO permissions (module, action, display_name, description) VALUES
+('transformer_maintenance', 'view', 'Προβολή Συντηρήσεων Μ/Σ', 'Δικαίωμα προβολής λίστας συντηρήσεων μετασχηματιστών'),
+('transformer_maintenance', 'create', 'Δημιουργία Συντήρησης Μ/Σ', 'Δικαίωμα δημιουργίας νέας συντήρησης μετασχηματιστή'),
+('transformer_maintenance', 'edit', 'Επεξεργασία Συντήρησης Μ/Σ', 'Δικαίωμα επεξεργασίας υπάρχουσας συντήρησης'),
+('transformer_maintenance', 'delete', 'Διαγραφή Συντήρησης Μ/Σ', 'Δικαίωμα διαγραφής συντήρησης'),
+('transformer_maintenance', 'export', 'Εξαγωγή Αναφοράς Μ/Σ', 'Δικαίωμα εξαγωγής αναφοράς συντήρησης σε PDF'),
+('transformer_maintenance', 'send_email', 'Αποστολή Email Αναφοράς', 'Δικαίωμα αποστολής αναφοράς συντήρησης με email');
+
+-- Step 7: Remove deprecated invoice permissions
+DELETE FROM permissions WHERE module = 'invoices';
+```
+
+**Files to upload to production:**
+- `models/User.php` - Updated getAllActive() query
+- `models/TaskLabor.php` - Changed to use role_id
+- `models/ProjectTask.php` - Changed to use role_id
+- `models/TransformerMaintenance.php` - Added timestamp methods
+- `controllers/ProjectController.php` - Updated labor query with roles JOIN
+- `controllers/ProjectTasksController.php` - Changed to use role_id
+- `views/projects/tasks/view.php` - Display role_display badge
+- `views/maintenances/index.php` - Added timestamp display
+- `public/js/project-tasks.js` - Updated to use role_id
+
 ### 🔧 Technical Improvements
 - Full integration between roles system and labor management
 - No more hardcoded role values - everything dynamic from database
