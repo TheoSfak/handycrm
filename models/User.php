@@ -94,7 +94,7 @@ class User extends BaseModel {
      */
     public function getAllActive() {
         $sql = "SELECT u.id, u.first_name, u.last_name, CONCAT(u.first_name, ' ', u.last_name) as name, 
-                r.name as role, u.hourly_rate, u.email, u.phone 
+                u.role_id, r.name as role, r.display_name as role_display, u.hourly_rate, u.email, u.phone 
                 FROM {$this->table} u
                 LEFT JOIN roles r ON u.role_id = r.id
                 WHERE u.is_active = 1 

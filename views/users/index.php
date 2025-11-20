@@ -101,12 +101,12 @@
 
 <form id="deleteForm" method="POST" action="index.php?route=/users/delete">
     <input type="hidden" name="id" id="deleteUserId">
-    <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="<?= defined('CSRF_TOKEN_NAME') ? CSRF_TOKEN_NAME : 'csrf_token' ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
 </form>
 
 <form id="toggleActiveForm" method="POST" action="index.php?route=/users/toggleActive">
     <input type="hidden" name="id" id="toggleUserId">
-    <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
+    <input type="hidden" name="<?= defined('CSRF_TOKEN_NAME') ? CSRF_TOKEN_NAME : 'csrf_token' ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
 </form>
 
 <script>

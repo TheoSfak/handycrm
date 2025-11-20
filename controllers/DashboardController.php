@@ -95,62 +95,83 @@ class DashboardController extends BaseController {
                                WHERE DATE(appointment_date) = CURDATE() AND status != 'cancelled'");
             $stats['appointments_today'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
             
-            // Revenue this month - check if invoices table exists first
-            $checkTable = $db->query("SHOW TABLES LIKE 'invoices'");
-            error_log("Dashboard: Checking invoices table - rows: " . $checkTable->rowCount());
-            if ($checkTable->rowCount() > 0) {
-                $stmt = $db->query("SELECT COALESCE(SUM(total_amount), 0) as total FROM invoices 
-                                   WHERE paid_date IS NOT NULL 
-                                   AND MONTH(paid_date) = MONTH(CURRENT_DATE()) 
-                                   AND YEAR(paid_date) = YEAR(CURRENT_DATE())");
-                $stats['revenue_month'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-                
-                // Overdue invoices (sent or overdue status, and past due date)
-                $stmt = $db->query("SELECT COUNT(*) as total FROM invoices 
-                                   WHERE status IN ('sent', 'overdue') AND due_date < CURDATE()");
-                $stats['overdue_invoices'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-            } else {
-                // If invoices table doesn't exist, calculate from invoiced/completed projects this month
-                // Calculate subtotals from tasks (materials + labor) - the stored fields may be incorrect
-                $stmt = $db->query("
-                    SELECT COALESCE(SUM(
-                        COALESCE((SELECT SUM(tm.subtotal) 
-                                  FROM task_materials tm 
-                                  JOIN project_tasks pt ON tm.task_id = pt.id 
-                                  WHERE pt.project_id = p.id), 0) +
-                        COALESCE((SELECT SUM(tl.subtotal) 
-                                  FROM task_labor tl 
-                                  JOIN project_tasks pt ON tl.task_id = pt.id 
-                                  WHERE pt.project_id = p.id), 0)
-                    ), 0) as total 
-                    FROM projects p
-                    WHERE status IN ('completed', 'invoiced') 
-                    AND (
-                        (MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()))
-                        OR (completion_date IS NOT NULL AND MONTH(completion_date) = MONTH(CURRENT_DATE()) AND YEAR(completion_date) = YEAR(CURRENT_DATE()))
-                        OR (invoiced_at IS NOT NULL AND MONTH(invoiced_at) = MONTH(CURRENT_DATE()) AND YEAR(invoiced_at) = YEAR(CURRENT_DATE()))
-                    )
-                ");
-                $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                $stats['revenue_month'] = $result ? $result['total'] : 0;
-                error_log("Dashboard revenue calculation - Result: " . print_r($result, true) . " | revenue_month: " . $stats['revenue_month']);
-                
-                // Count completed/invoiced projects this month
-                $stmt = $db->query("
-                    SELECT COUNT(*) as count
-                    FROM projects p
-                    WHERE status IN ('completed', 'invoiced') 
-                    AND (
-                        (MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()))
-                        OR (completion_date IS NOT NULL AND MONTH(completion_date) = MONTH(CURRENT_DATE()) AND YEAR(completion_date) = YEAR(CURRENT_DATE()))
-                        OR (invoiced_at IS NOT NULL AND MONTH(invoiced_at) = MONTH(CURRENT_DATE()) AND YEAR(invoiced_at) = YEAR(CURRENT_DATE()))
-                    )
-                ");
-                $countResult = $stmt->fetch(PDO::FETCH_ASSOC);
-                $stats['completed_projects_count'] = $countResult ? $countResult['count'] : 0;
-                
-                $stats['overdue_invoices'] = 0;
-            }
+            // Revenue this month from multiple sources
+            $revenueFromProjects = 0;
+            $revenueFromMaintenance = 0;
+            $revenueFromDailyTasks = 0;
+            $completedProjectsCount = 0;
+            $completedMaintenanceCount = 0;
+            $completedDailyTasksCount = 0;
+            
+            // 1. Revenue from INVOICED projects (status = 'invoiced')
+            $stmt = $db->query("
+                SELECT COALESCE(SUM(
+                    COALESCE((SELECT SUM(tm.subtotal) 
+                              FROM task_materials tm 
+                              JOIN project_tasks pt ON tm.task_id = pt.id 
+                              WHERE pt.project_id = p.id), 0) +
+                    COALESCE((SELECT SUM(tl.subtotal) 
+                              FROM task_labor tl 
+                              JOIN project_tasks pt ON tl.task_id = pt.id 
+                              WHERE pt.project_id = p.id), 0)
+                ), 0) as total,
+                COUNT(*) as count
+                FROM projects p
+                WHERE status = 'invoiced'
+                AND (invoiced_at IS NOT NULL AND MONTH(invoiced_at) = MONTH(CURRENT_DATE()) AND YEAR(invoiced_at) = YEAR(CURRENT_DATE()))
+            ");
+            $projectResult = $stmt->fetch(PDO::FETCH_ASSOC);
+            $revenueFromProjects = $projectResult['total'] ?? 0;
+            $completedProjectsCount = $projectResult['count'] ?? 0;
+            
+            // 2. Revenue from INVOICED maintenance (is_invoiced = 1)
+            // Calculate amount based on number of transformers in transformers_data JSON
+            $stmt = $db->query("
+                SELECT 
+                    COUNT(*) as count,
+                    COALESCE(SUM(total_amount), 0) as total
+                FROM transformer_maintenances
+                WHERE is_invoiced = 1
+                AND (updated_at IS NOT NULL AND MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()))
+            ");
+            $maintenanceResult = $stmt->fetch(PDO::FETCH_ASSOC);
+            $revenueFromMaintenance = $maintenanceResult['total'] ?? 0;
+            $completedMaintenanceCount = $maintenanceResult['count'] ?? 0;
+            
+            // 3. Revenue from INVOICED daily tasks (is_invoiced = 1)
+            // Include both materials and labor costs
+            $stmt = $db->query("
+                SELECT COALESCE(SUM(
+                    COALESCE((SELECT SUM(dtm.subtotal) 
+                              FROM daily_task_materials dtm 
+                              WHERE dtm.daily_task_id = dt.id), 0) +
+                    COALESCE((SELECT SUM(dtt.hours_worked * u.hourly_rate)
+                              FROM daily_task_technicians dtt
+                              JOIN users u ON dtt.user_id = u.id
+                              WHERE dtt.daily_task_id = dt.id), 0)
+                ), 0) as total,
+                       COUNT(*) as count
+                FROM daily_tasks dt
+                WHERE is_invoiced = 1
+                AND (updated_at IS NOT NULL AND MONTH(updated_at) = MONTH(CURRENT_DATE()) AND YEAR(updated_at) = YEAR(CURRENT_DATE()))
+            ");
+            $dailyTasksResult = $stmt->fetch(PDO::FETCH_ASSOC);
+            $revenueFromDailyTasks = $dailyTasksResult['total'] ?? 0;
+            $completedDailyTasksCount = $dailyTasksResult['count'] ?? 0;
+            
+            // Total revenue and count
+            $stats['revenue_month'] = $revenueFromProjects + $revenueFromMaintenance + $revenueFromDailyTasks;
+            $stats['completed_projects_count'] = $completedProjectsCount + $completedMaintenanceCount + $completedDailyTasksCount;
+            $stats['revenue_breakdown'] = [
+                'projects' => $revenueFromProjects,
+                'projects_count' => $completedProjectsCount,
+                'maintenance' => $revenueFromMaintenance,
+                'maintenance_count' => $completedMaintenanceCount,
+                'daily_tasks' => $revenueFromDailyTasks,
+                'daily_tasks_count' => $completedDailyTasksCount
+            ];
+            
+            $stats['overdue_invoices'] = 0;
             
             // Pending quotes (draft and sent) - check if table exists
             $checkQuotes = $db->query("SHOW TABLES LIKE 'quotes'");

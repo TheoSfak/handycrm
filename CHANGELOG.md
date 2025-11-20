@@ -1,5 +1,104 @@
 # HandyCRM - Change Log
 
+## [1.6.0] - 2025-11-20
+
+### 🚀 Major Features
+
+#### Roles & Permissions System
+- **Permission Management**
+  - Dynamic permission system with module-based permissions (view, create, edit, delete, etc.)
+  - New `permissions` table with module, action, display_name, description
+  - New `roles` table for role definitions (admin, supervisor, technician, assistant, maintenance_technician)
+  - New `role_permissions` and `user_role` tables for many-to-many relationships
+  - Added transformer_maintenance permissions (view, create, edit, delete, export, send_email)
+  - Removed deprecated invoice permissions from system
+
+- **AuthMiddleware Class**
+  - Authorization middleware for permission checking
+  - Methods: checkPermission(), requirePermission(), hasRole(), isAdmin(), isSupervisor()
+  - Permission check with dot notation: can('module.action')
+  - Multiple permission checks: canAny(), canAll()
+  - Resource ownership validation: ownsResource()
+  - Global helper functions available throughout application
+
+- **RoleController**
+  - Full CRUD operations for role management
+  - Methods: index(), create(), store(), edit(), update(), delete()
+  - Permission assignment interface: permissions(), updatePermissions()
+  - Admin-only access with session validation
+  - Prevents deletion of system roles
+
+- **Role Management Views**
+  - `views/roles/index.php` - List all roles with permissions/users count
+  - `views/roles/create.php` - Create new role form
+  - `views/roles/edit.php` - Edit existing role
+  - `views/roles/permissions.php` - Manage role permissions with grouped checkboxes
+  - Bootstrap 5 UI with "Select All"/"Deselect All" per module
+  - Real-time permission counting
+
+#### Dynamic Role Integration in Labor Management
+- **Database Schema Changes**
+  - Migrated `task_labor.technician_role` from ENUM to `role_id` (foreign key to roles table)
+  - Data migration from hardcoded ENUM values to dynamic role references
+  - Added foreign key constraint: `fk_task_labor_role`
+  - Enables adding new roles without code changes
+
+- **User Model Updates**
+  - Updated `getAllActive()` to return `role_id`, `role_display` from roles table JOIN
+  - Dynamic role labels pulled from database instead of hardcoded
+
+- **JavaScript Updates**
+  - Updated `public/js/project-tasks.js` to use `role_id` instead of `technician_role`
+  - Dropdown options show `role_display` from database
+  - Hidden field sends `role_id` to controller
+  - Function `loadTechnicianData()` updated to handle role_id
+
+- **Controller & Model Updates**
+  - `ProjectController`: Updated labor query to JOIN roles table, return `role_display`
+  - `ProjectTasksController`: Changed labor array to use `role_id`
+  - `TaskLabor` model: Updated create/update methods for `role_id`
+  - `ProjectTask` model: Updated addLabor() method for `role_id`
+
+- **View Updates**
+  - `views/projects/tasks/view.php`: Display `role_display` badge dynamically
+  - Shows correct role name from roles table (e.g., "Τεχνικός Συντηρήσεων Μ/Σ")
+
+#### Maintenance Tracking Timestamps
+- **Timestamp Tracking**
+  - Added `invoiced_at` DATETIME column to `transformer_maintenances` table
+  - Added `report_sent_at` DATETIME column to `transformer_maintenances` table
+  - Timestamps automatically set when checkboxes are enabled
+  - Timestamps cleared when checkboxes are disabled
+
+- **UI Display**
+  - Timestamps displayed below checkboxes in format "20/11/2025 14:30"
+  - Small gray text, non-intrusive design
+  - JavaScript updates timestamp display in real-time without page reload
+
+- **Model Updates**
+  - `TransformerMaintenance::updateInvoicedStatus()`: Sets `invoiced_at = NOW()` when enabled
+  - `TransformerMaintenance::updateReportSentStatus()`: Sets `report_sent_at = NOW()` when enabled
+  - Both methods clear timestamps when status is disabled
+
+### 🐛 Bug Fixes
+- Fixed permission system data integrity issues (removed orphaned invoice permissions)
+- Fixed role display in task labor dropdowns (now pulls from roles table)
+- Fixed JavaScript caching issues with hard refresh requirement
+
+### 📝 Database Changes
+- Added columns: `transformer_maintenances.invoiced_at`, `transformer_maintenances.report_sent_at`
+- Migrated `task_labor.technician_role` from ENUM to `role_id` foreign key
+- Added transformer_maintenance module permissions (6 new permissions)
+- Cleaned up deprecated invoice module permissions
+
+### 🔧 Technical Improvements
+- Full integration between roles system and labor management
+- No more hardcoded role values - everything dynamic from database
+- Real-time UI updates for timestamp display
+- Proper foreign key constraints for data integrity
+
+---
+
 ## [1.5.0] - 2025-11-10
 
 ### 🚀 Major Features

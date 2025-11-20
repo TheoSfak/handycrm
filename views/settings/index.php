@@ -34,6 +34,11 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#pricing" type="button" role="tab">
+                        <i class="fas fa-euro-sign"></i> Τιμολόγηση
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab">
                         <i class="fas fa-sliders-h"></i> <?= __('settings.system_settings') ?>
                     </button>
@@ -253,6 +258,80 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pricing Tab -->
+                <div class="tab-pane fade" id="pricing" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-wrench"></i> Τιμές Συντηρήσεων Υποσταθμών</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-4">
+                                <i class="fas fa-info-circle"></i> 
+                                Ορίστε τις τιμές τιμολόγησης για συντηρήσεις υποσταθμών βάσει αριθμού μετασχηματιστών.
+                            </p>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="maintenance_price_1_transformer" class="form-label">
+                                        <i class="fas fa-bolt text-warning"></i> 1 Μετασχηματιστής
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="maintenance_price_1_transformer" 
+                                               name="maintenance_price_1_transformer" 
+                                               value="<?= htmlspecialchars($settings['maintenance_price_1_transformer'] ?? '400.00') ?>"
+                                               step="0.01"
+                                               min="0">
+                                        <span class="input-group-text">€</span>
+                                    </div>
+                                    <small class="text-muted">Χωρίς ΦΠΑ</small>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="maintenance_price_2_transformers" class="form-label">
+                                        <i class="fas fa-bolt text-warning"></i><i class="fas fa-bolt text-warning"></i> 2 Μετασχηματιστές
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="maintenance_price_2_transformers" 
+                                               name="maintenance_price_2_transformers" 
+                                               value="<?= htmlspecialchars($settings['maintenance_price_2_transformers'] ?? '600.00') ?>"
+                                               step="0.01"
+                                               min="0">
+                                        <span class="input-group-text">€</span>
+                                    </div>
+                                    <small class="text-muted">Χωρίς ΦΠΑ</small>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="maintenance_price_3_transformers" class="form-label">
+                                        <i class="fas fa-bolt text-warning"></i><i class="fas fa-bolt text-warning"></i><i class="fas fa-bolt text-warning"></i> 3+ Μετασχηματιστές
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="maintenance_price_3_transformers" 
+                                               name="maintenance_price_3_transformers" 
+                                               value="<?= htmlspecialchars($settings['maintenance_price_3_transformers'] ?? '900.00') ?>"
+                                               step="0.01"
+                                               min="0">
+                                        <span class="input-group-text">€</span>
+                                    </div>
+                                    <small class="text-muted">Χωρίς ΦΠΑ</small>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info mt-3">
+                                <i class="fas fa-lightbulb"></i> 
+                                <strong>Σημείωση:</strong> Όταν τιμολογείτε μια συντήρηση, το σύστημα θα υπολογίσει αυτόματα το ποσό 
+                                βάσει του αριθμού μετασχηματιστών που υπάρχουν στη συντήρηση.
                             </div>
                         </div>
                     </div>

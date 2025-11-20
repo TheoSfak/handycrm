@@ -285,6 +285,15 @@
             </li>
             <?php endif; ?>
             
+            <!-- Daily Tasks -->
+            <?php if ($isAdmin || can('daily_task.view')): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/daily-tasks') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/daily-tasks">
+                    <i class="fas fa-clipboard-list"></i> Εργασίες Ημέρας
+                </a>
+            </li>
+            <?php endif; ?>
+            
             <!-- Appointments -->
             <?php if ($isAdmin || can('appointments.view')): ?>
             <li class="nav-item">
@@ -358,6 +367,29 @@
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/roles') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/roles">
                     <i class="fas fa-user-tag"></i> Ρόλοι & Δικαιώματα
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <!-- Trash / Recycle Bin (Admin Only) -->
+            <?php if ($isAdmin): ?>
+            <?php
+                // Get trash counts (exclude project_task and task_labor as they're managed via cascade)
+                require_once __DIR__ . '/../../models/Trash.php';
+                $trashModel = new Trash($GLOBALS['db']->connect());
+                $trashedCounts = $trashModel->getDeletedCountByType();
+                // Only count user-actionable items (not cascade-deleted items)
+                $totalTrashed = ($trashedCounts['project'] ?? 0) 
+                              + ($trashedCounts['daily_task'] ?? 0) 
+                              + ($trashedCounts['maintenance'] ?? 0) 
+                              + ($trashedCounts['material'] ?? 0);
+            ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/trash') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/trash">
+                    <i class="fas fa-trash"></i> Κάδος Απορριμμάτων
+                    <?php if ($totalTrashed > 0): ?>
+                        <span class="badge bg-danger ms-2"><?= $totalTrashed ?></span>
+                    <?php endif; ?>
                 </a>
             </li>
             <?php endif; ?>

@@ -15,8 +15,8 @@ class SettingsController extends BaseController {
         $database = new Database();
         $db = $database->connect();
         
-        // Get all settings
-        $stmt = $db->query("SELECT * FROM settings");
+        // Get all settings from settings table
+        $stmt = $db->query("SELECT setting_key, setting_value FROM settings");
         $settingsArray = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         // Convert to key-value array
@@ -40,7 +40,10 @@ class SettingsController extends BaseController {
             'currency' => 'EUR',
             'currency_symbol' => '€',
             'date_format' => 'd/m/Y',
-            'items_per_page' => '20'
+            'items_per_page' => '20',
+            'maintenance_price_1_transformer' => '400.00',
+            'maintenance_price_2_transformers' => '600.00',
+            'maintenance_price_3_transformers' => '900.00'
         ];
         
         foreach ($defaults as $key => $value) {
@@ -118,6 +121,13 @@ class SettingsController extends BaseController {
                 'items_per_page'
             ];
             
+            // Maintenance pricing settings (stored in smtp_settings table)
+            $maintenancePricing = [
+                'maintenance_price_1_transformer',
+                'maintenance_price_2_transformers',
+                'maintenance_price_3_transformers'
+            ];
+            
             $stmt = $db->prepare("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?) 
                                   ON DUPLICATE KEY UPDATE setting_value = ?");
             
@@ -129,6 +139,17 @@ class SettingsController extends BaseController {
                 } elseif (isset($_POST[$key])) {
                     $value = trim($_POST[$key]);
                     $stmt->execute([$key, $value, $value]);
+                }
+            }
+            
+            // Save maintenance pricing to settings table
+            $settingsStmt = $db->prepare("INSERT INTO settings (setting_key, setting_value, setting_type) VALUES (?, ?, 'decimal') 
+                                      ON DUPLICATE KEY UPDATE setting_value = ?");
+            
+            foreach ($maintenancePricing as $key) {
+                if (isset($_POST[$key])) {
+                    $value = floatval($_POST[$key]);
+                    $settingsStmt->execute([$key, $value, $value]);
                 }
             }
             

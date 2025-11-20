@@ -1,15 +1,39 @@
 # HandyCRM - Σύστημα Διαχείρισης Πελατών για Τεχνικους-Τεχνικες Εταιρίες
 
-**Version:** 1.5.0  
+**Version:** 1.6.0  
 **Author:** Theodore Sfakianakis  
 **Email:** theodore.sfakianakis@gmail.com  
 **Copyright:** © 2025 Theodore Sfakianakis. All rights reserved.
 
 HandyCRM είναι ένα ολοκληρωμένο σύστημα διαχείρισης πελατών (CRM) σχεδιασμένο ειδικά για ηλεκτρολόγους, υδραυλικούς και τεχνικές εταιρίες. Παρέχει όλα τα εργαλεία που χρειάζεστε για να διαχειριστείτε τους πελάτες σας, τα έργα, τα ραντεβού, τις προσφορές και την επικοινωνία.
 
-## 🎉 Τι Νέο στην v1.5.0
+## 🎉 Τι Νέο στην v1.6.0
 
-### � Email Infrastructure & PDF Reports
+### 🔐 Roles & Permissions System
+- **Διαχείριση Ρόλων και Δικαιωμάτων**
+  - Δυναμικό σύστημα δικαιωμάτων με βάση modules (view, create, edit, delete κλπ)
+  - Πλήρης CRUD διαχείριση ρόλων μέσω UI
+  - Ανάθεση δικαιωμάτων σε ρόλους με grouped checkboxes
+  - AuthMiddleware class για έλεγχο πρόσβασης
+  - Global helper functions: can(), hasRole(), isAdmin()
+  - Support για maintenance_technician role
+  
+- **Δυναμική Ενσωμάτωση Ρόλων στα Εργατικά**
+  - Τα εργατικά (labor) πλέον χρησιμοποιούν dynamic roles από τη βάση
+  - Οι ρόλοι εμφανίζονται αυτόματα στα dropdowns κατά την προσθήκη τεχνικού σε εργασία
+  - Μετάβαση από hardcoded ENUM σε foreign key reference
+  - Προσθήκη νέων ρόλων χωρίς αλλαγές κώδικα
+  
+### ⏰ Timestamp Tracking
+- **Χρονοσήμανση Τιμολόγησης & Αποστολής Δελτίου**
+  - Αυτόματη καταγραφή ημερομηνίας/ώρας όταν σημειώνεται "Τιμολογημένο"
+  - Αυτόματη καταγραφή ημερομηνίας/ώρας όταν σημειώνεται "Δελτίο Συντ."
+  - Εμφάνιση timestamps κάτω από τα checkboxes
+  - Real-time update χωρίς ανανέωση σελίδας
+
+## 🎉 v1.5.0 Features
+
+### 📧 Email Infrastructure & PDF Reports
 - **SMTP Configuration** - Ολοκληρωμένο σύστημα αποστολής emails
   - Διαμόρφωση SMTP server (host, port, encryption)
   - Support για SSL/TLS

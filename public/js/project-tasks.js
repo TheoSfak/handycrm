@@ -183,30 +183,30 @@ function addLaborRow(data = null) {
     if (typeof technicians !== 'undefined' && technicians.length > 0) {
         technicians.forEach(tech => {
             const selected = data?.technician_id == tech.id ? 'selected' : '';
-            const role = tech.role === 'technician' ? 'Τεχνικός' : 'Βοηθός';
-            technicianOptions += `<option value="${tech.id}" data-rate="${tech.hourly_rate}" ${selected}>
-                ${tech.name} (${role} - ${parseFloat(tech.hourly_rate).toFixed(2)}€/ώρα)
+            const roleLabel = tech.role_display || tech.role || 'Χρήστης';
+            technicianOptions += `<option value="${tech.id}" data-rate="${tech.hourly_rate}" data-role-id="${tech.role_id || ''}" ${selected}>
+                ${tech.name} (${roleLabel} - ${parseFloat(tech.hourly_rate).toFixed(2)}€/ώρα)
             </option>`;
         });
     }
     
     // Determine technician name and role for hidden fields
     let techName = data?.technician_name || '';
-    let techRole = data?.technician_role || '';
+    let techRoleId = data?.role_id || '';
     
     // If we have a technician_id but no name, try to find it
     if (data?.technician_id && !techName && typeof technicians !== 'undefined') {
         const tech = technicians.find(t => t.id == data.technician_id);
         if (tech) {
             techName = tech.name;
-            techRole = tech.role;
+            techRoleId = tech.role_id;
         }
     }
     
     // If still no name, use default
     if (!techName && !data?.technician_id) {
         techName = 'Άλλο Εργατικό';
-        techRole = 'other';
+        techRoleId = '';
     }
     
     row.innerHTML = `
@@ -223,9 +223,9 @@ function addLaborRow(data = null) {
                        class="technician-name-hidden"
                        value="${techName}">
                 <input type="hidden" 
-                       name="labor[${laborCounter}][technician_role]" 
+                       name="labor[${laborCounter}][role_id]" 
                        class="technician-role-hidden"
-                       value="${techRole}">
+                       value="${techRoleId}">
             </div>
             <div class="col-md-6 mb-2">
                 <label class="form-label small">Τιμή/Ώρα (€)</label>
@@ -329,31 +329,32 @@ function loadTechnicianData(index) {
     const select = row.querySelector('.technician-select');
     const selectedOption = select.options[select.selectedIndex];
     const rate = selectedOption.dataset.rate;
+    const roleId = selectedOption.dataset.roleId;
     const techId = select.value;
     
     // Find technician in the technicians array
     let techName = '';
-    let techRole = '';
+    let techRoleId = '';
     
     if (techId && typeof technicians !== 'undefined') {
         const tech = technicians.find(t => t.id == techId);
         if (tech) {
             techName = tech.name;
-            techRole = tech.role;
+            techRoleId = tech.role_id;
         }
     }
     
     // If no technician selected, use "Other"
     if (!techName) {
         techName = 'Άλλο Εργατικό';
-        techRole = 'other';
+        techRoleId = '';
     }
     
     // Update hidden fields
     const nameField = row.querySelector('.technician-name-hidden');
     const roleField = row.querySelector('.technician-role-hidden');
     if (nameField) nameField.value = techName;
-    if (roleField) roleField.value = techRole;
+    if (roleField) roleField.value = techRoleId;
     
     // Update hourly rate
     if (rate) {

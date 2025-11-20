@@ -63,11 +63,11 @@
                     <!-- Section 2: Maintenance Info -->
                     <h6 class="mb-1 text-primary"><i class="fas fa-calendar"></i> <?= __('maintenances.maintenance_info') ?></h6>
                     <div class="row mb-1">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <strong><?= __('maintenances.maintenance_date') ?>:</strong>
                             <span><?= date('d/m/Y', strtotime($maintenance['maintenance_date'])) ?></span>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <strong><?= __('maintenances.next_maintenance_date') ?>:</strong>
                             <?php
                             $nextDate = new DateTime($maintenance['next_maintenance_date']);
@@ -86,9 +86,41 @@
                                 <small class="text-warning d-block">⏰ <?= __('maintenances.in_days', ['days' => $daysUntil]) ?></small>
                             <?php endif; ?>
                         </div>
+                        <div class="col-md-4">
+                            <strong><i class="fas fa-user-cog"></i> Υπεύθυνος Τεχνικός:</strong>
+                            <span class="badge bg-primary"><?= htmlspecialchars($maintenance['created_by_name'] ?? 'N/A') ?></span>
+                        </div>
                     </div>
-
-                    <hr class="my-1">
+                    
+                    <!-- Additional Technicians -->
+                    <?php 
+                    if (!empty($maintenance['additional_technicians'])):
+                        $additionalTechs = json_decode($maintenance['additional_technicians'], true);
+                        if (!empty($additionalTechs)):
+                            // Get technician names
+                            $userModel = new User();
+                            $techNames = [];
+                            foreach ($additionalTechs as $techId) {
+                                $tech = $userModel->find($techId);
+                                if ($tech) {
+                                    $techNames[] = $tech['first_name'] . ' ' . $tech['last_name'];
+                                }
+                            }
+                            if (!empty($techNames)):
+                    ?>
+                    <div class="row mb-1">
+                        <div class="col-md-12">
+                            <strong><i class="fas fa-users"></i> Επιπλέον Τεχνικοί:</strong>
+                            <?php foreach ($techNames as $name): ?>
+                                <span class="badge bg-info me-1"><?= htmlspecialchars($name) ?></span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php 
+                            endif;
+                        endif;
+                    endif; 
+                    ?>                    <hr class="my-1">
 
                     <!-- Section 3: Transformers Data -->
                     <?php
@@ -123,7 +155,7 @@
                     <?php foreach ($transformers as $index => $transformer): ?>
                     <div class="card mb-1 border-primary">
                         <div class="card-header bg-primary text-white py-1">
-                            <h6 class="mb-0 small"><i class="fas fa-bolt"></i> <?= __('maintenances.transformer_number', ['number' => $index + 1]) ?></h6>
+                            <h6 class="mb-0 small"><i class="fas fa-bolt"></i> <?= str_replace('{number}', $index + 1, __('maintenances.transformer_number')) ?></h6>
                         </div>
                         <div class="card-body py-1">
                             <!-- Transformer Power and Type -->
@@ -193,39 +225,58 @@
                                 </div>
                             </div>
                             <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
 
-                    <hr class="my-1">
-
-                    <!-- Section 5: Observations & Photo -->
-                    <h6 class="mb-1 text-primary"><i class="fas fa-comment-alt"></i> <?= __('maintenances.observations_and_photo') ?></h6>
-                    <div class="row mb-1">
-                        <div class="col-md-12">
-                            <strong><?= __('maintenances.observations') ?>:</strong>
-                            <div class="bg-light p-2 rounded small" style="max-height: 100px; overflow-y: auto;">
-                                <?= nl2br(htmlspecialchars($maintenance['observations'] ?? __('maintenances.no_observations'))) ?>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-1">
-                        <div class="col-md-12">
-                            <strong><?= __('maintenances.photo') ?>:</strong>
-                            <?php if (!empty($maintenance['photo_path'])): ?>
-                                <div class="mt-1">
-                                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($maintenance['photo_path']) ?>" target="_blank">
-                                        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($maintenance['photo_path']) ?>" 
-                                             class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
-                                    </a>
-                                    <br>
-                                    <small class="text-muted"><?= __('maintenances.click_to_enlarge') ?></small>
+                            <!-- Materials for this transformer -->
+                            <?php if (!empty($transformer['materials'])): ?>
+                            <div class="row mb-1 mt-2">
+                                <div class="col-md-12">
+                                    <strong><i class="fas fa-tools"></i> Υλικά:</strong>
+                                    <div class="bg-light p-2 rounded small">
+                                        <?= nl2br(htmlspecialchars($transformer['materials'])) ?>
+                                    </div>
                                 </div>
-                            <?php else: ?>
-                                <p class="text-muted"><?= __('maintenances.no_photo') ?></p>
+                            </div>
+                            <?php endif; ?>
+
+                            <!-- Observations for this transformer -->
+                            <?php if (!empty($transformer['observations'])): ?>
+                            <div class="row mb-1">
+                                <div class="col-md-12">
+                                    <strong><i class="fas fa-comment-alt"></i> <?= __('maintenances.observations') ?>:</strong>
+                                    <div class="bg-light p-2 rounded small">
+                                        <?= nl2br(htmlspecialchars($transformer['observations'])) ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+
+                            <!-- Photos for this transformer -->
+                            <?php if (!empty($transformer['photos']) && is_array($transformer['photos']) && count($transformer['photos']) > 0): ?>
+                            <div class="row mb-1">
+                                <div class="col-md-12">
+                                    <strong><i class="fas fa-images"></i> Φωτογραφίες (<?= count($transformer['photos']) ?>):</strong>
+                                    <div class="row g-2 mt-1">
+                                        <?php foreach ($transformer['photos'] as $photoIndex => $photo): ?>
+                                            <div class="col-md-2">
+                                                <div class="position-relative">
+                                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>" 
+                                                         class="img-thumbnail w-100" 
+                                                         style="height: 120px; object-fit: cover; cursor: pointer;"
+                                                         onclick="openLightbox(<?= $index ?>_<?= $photoIndex ?>)"
+                                                         alt="Φωτογραφία Μ/Σ <?= $index + 1 ?> - <?= $photoIndex + 1 ?>">
+                                                    <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-50 text-white px-2 py-1 small">
+                                                        #<?= $photoIndex + 1 ?>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
                             <?php endif; ?>
                         </div>
                     </div>
+                    <?php endforeach; ?>
 
                     <hr class="my-4">
 
@@ -348,4 +399,77 @@ function confirmDelete(id) {
         form.submit();
     }
 }
+</script>
+
+<!-- Lightbox Modal -->
+<div class="modal fade" id="lightboxModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-white" id="lightboxTitle">Φωτογραφία</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="lightboxImage" src="" class="img-fluid" style="max-height: 80vh;">
+            </div>
+            <div class="modal-footer border-0 justify-content-between">
+                <button type="button" class="btn btn-secondary" onclick="navigateLightbox(-1)">
+                    <i class="fas fa-chevron-left"></i> Προηγούμενη
+                </button>
+                <span class="text-white" id="lightboxCounter"></span>
+                <button type="button" class="btn btn-secondary" onclick="navigateLightbox(1)">
+                    Επόμενη <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Lightbox functionality
+const photos = <?= json_encode($maintenance['photos'] ?? []) ?>;
+let currentPhotoIndex = 0;
+
+function openLightbox(index) {
+    currentPhotoIndex = index;
+    updateLightbox();
+    const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
+    modal.show();
+}
+
+function navigateLightbox(direction) {
+    currentPhotoIndex += direction;
+    
+    // Loop around
+    if (currentPhotoIndex < 0) {
+        currentPhotoIndex = photos.length - 1;
+    } else if (currentPhotoIndex >= photos.length) {
+        currentPhotoIndex = 0;
+    }
+    
+    updateLightbox();
+}
+
+function updateLightbox() {
+    if (photos.length > 0) {
+        const photo = photos[currentPhotoIndex];
+        document.getElementById('lightboxImage').src = '<?= BASE_URL ?>/' + photo;
+        document.getElementById('lightboxTitle').textContent = `Φωτογραφία ${currentPhotoIndex + 1}`;
+        document.getElementById('lightboxCounter').textContent = `${currentPhotoIndex + 1} / ${photos.length}`;
+    }
+}
+
+// Keyboard navigation for lightbox
+document.addEventListener('keydown', function(e) {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('lightboxModal'));
+    if (modal && modal._isShown) {
+        if (e.key === 'ArrowLeft') {
+            navigateLightbox(-1);
+        } else if (e.key === 'ArrowRight') {
+            navigateLightbox(1);
+        } else if (e.key === 'Escape') {
+            modal.hide();
+        }
+    }
+});
 </script>

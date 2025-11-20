@@ -97,12 +97,14 @@ class TransformerMaintenanceController extends BaseController {
         $search = $_GET['search'] ?? null;
         $dateFrom = $_GET['date_from'] ?? null;
         $dateTo = $_GET['date_to'] ?? null;
+        $isInvoiced = isset($_GET['is_invoiced']) && $_GET['is_invoiced'] !== '' ? $_GET['is_invoiced'] : null;
+        $reportSent = isset($_GET['report_sent']) && $_GET['report_sent'] !== '' ? $_GET['report_sent'] : null;
         $page = $_GET['page'] ?? 1;
         $perPage = 20;
         
         // Get maintenances
-        $maintenances = $this->maintenanceModel->getAll($page, $perPage, $search, $dateFrom, $dateTo);
-        $totalCount = $this->maintenanceModel->getTotalCount($search, $dateFrom, $dateTo);
+        $maintenances = $this->maintenanceModel->getAll($page, $perPage, $search, $dateFrom, $dateTo, $isInvoiced, $reportSent);
+        $totalCount = $this->maintenanceModel->getTotalCount($search, $dateFrom, $dateTo, $isInvoiced, $reportSent);
         $totalPages = ceil($totalCount / $perPage);
         
         $this->view('maintenances/index', [
@@ -110,6 +112,8 @@ class TransformerMaintenanceController extends BaseController {
             'search' => $search,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
+            'isInvoiced' => $isInvoiced,
+            'reportSent' => $reportSent,
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'totalCount' => $totalCount
@@ -120,7 +124,13 @@ class TransformerMaintenanceController extends BaseController {
      * Show create form
      */
     public function create() {
-        $this->view('maintenances/create');
+        // Get ALL active users (not just technicians)
+        $userModel = new User();
+        $users = $userModel->getAllActive();
+        
+        $this->view('maintenances/create', [
+            'users' => $users
+        ]);
     }
     
     /**
@@ -167,25 +177,18 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
         
-        // Handle photo upload
-        $photoPath = null;
-        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-            $uploadResult = $this->uploadPhoto($_FILES['photo']);
-            if ($uploadResult['success']) {
-                $photoPath = $uploadResult['path'];
-            } else {
-                $_SESSION['error'] = $uploadResult['error'];
-                header('Location: ' . BASE_URL . '/maintenances/create');
-                exit;
-            }
-        }
-        
-        // Prepare transformers data as JSON
+        // Prepare transformers data as JSON with new fields
         $transformersData = [];
-        foreach ($_POST['transformers'] as $transformer) {
+        foreach ($_POST['transformers'] as $index => $transformer) {
+            // Handle photo uploads for this specific transformer
+            $transformerPhotos = [];
+            if (!empty($_FILES['transformer_photos']['name'][$index])) {
+                $transformerPhotos = $this->handleTransformerPhotoUploads($_FILES['transformer_photos'], $index);
+            }
+            
             $transformersData[] = [
                 'power' => $transformer['power'],
-                'type' => $transformer['type'] ?? 'oil', // Default to oil type for backward compatibility
+                'type' => $transformer['type'] ?? 'oil',
                 'insulation' => $transformer['insulation'],
                 'coil_resistance' => $transformer['coil_resistance'],
                 'grounding' => $transformer['grounding'],
@@ -193,11 +196,13 @@ class TransformerMaintenanceController extends BaseController {
                 'oil_v2' => $transformer['oil_v2'] ?? null,
                 'oil_v3' => $transformer['oil_v3'] ?? null,
                 'oil_v4' => $transformer['oil_v4'] ?? null,
-                'oil_v5' => $transformer['oil_v5'] ?? null
+                'oil_v5' => $transformer['oil_v5'] ?? null,
+                'materials' => $transformer['materials'] ?? null,
+                'observations' => $transformer['observations'] ?? null,
+                'photos' => $transformerPhotos
             ];
         }
         
-        $firstTransformer = $transformersData[0];
         $firstTransformer = $transformersData[0];
         
         // Prepare data
@@ -207,9 +212,9 @@ class TransformerMaintenanceController extends BaseController {
             'phone' => $_POST['phone'] ?? null,
             'other_details' => $_POST['other_details'] ?? null,
             'maintenance_date' => $_POST['maintenance_date'],
-            // Legacy fields (first transformer)
+            // Legacy fields (first transformer for backward compatibility)
             'transformer_power' => $firstTransformer['power'],
-            'transformer_type' => $firstTransformer['type'], // New field for transformer type
+            'transformer_type' => $firstTransformer['type'],
             'insulation_measurements' => $firstTransformer['insulation'],
             'coil_resistance_measurements' => $firstTransformer['coil_resistance'],
             'grounding_measurement' => $firstTransformer['grounding'],
@@ -218,11 +223,13 @@ class TransformerMaintenanceController extends BaseController {
             'oil_breakdown_v3' => $firstTransformer['oil_v3'],
             'oil_breakdown_v4' => $firstTransformer['oil_v4'],
             'oil_breakdown_v5' => $firstTransformer['oil_v5'],
-            'observations' => $_POST['observations'] ? trim(str_replace(["\r\n", "\r"], "\n", $_POST['observations'])) : null,
-            'photo_path' => $photoPath,
-            // New JSON field for all transformers
+            'observations' => $firstTransformer['observations'] ?? null,
+            'photos' => $firstTransformer['photos'] ?? [],
+            // New JSON field for all transformers with new fields
             'transformers_data' => json_encode($transformersData),
-            'created_by' => $_SESSION['user_id']
+            'created_by' => $_POST['created_by'] ?? $_SESSION['user_id'],
+            // Additional technicians (optional)
+            'additional_technicians' => !empty($_POST['additional_technicians']) ? $_POST['additional_technicians'] : []
         ];
         
         if ($this->maintenanceModel->create($data)) {
@@ -249,6 +256,13 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
         
+        // Parse photos from JSON
+        if (!empty($maintenance['photos'])) {
+            $maintenance['photos'] = json_decode($maintenance['photos'], true);
+        } else {
+            $maintenance['photos'] = [];
+        }
+        
         $this->view('maintenances/view', [
             'maintenance' => $maintenance
         ]);
@@ -268,8 +282,20 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
         
+        // Parse photos from JSON
+        if (!empty($maintenance['photos'])) {
+            $maintenance['photos'] = json_decode($maintenance['photos'], true);
+        } else {
+            $maintenance['photos'] = [];
+        }
+        
+        // Get all technicians for the dropdown
+        $userModel = new User();
+        $users = $userModel->getAllActive();
+        
         $this->view('maintenances/edit', [
-            'maintenance' => $maintenance
+            'maintenance' => $maintenance,
+            'users' => $users
         ]);
     }
     
@@ -311,25 +337,16 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
         
-        // Handle photo upload
-        $photoPath = $maintenance['photo_path'];
-        if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-            // Delete old photo if exists
-            if (!empty($photoPath)) {
-                $oldPhotoPath = __DIR__ . '/../' . $photoPath;
-                if (file_exists($oldPhotoPath)) {
-                    unlink($oldPhotoPath);
-                }
-            }
-            
-            $uploadResult = $this->uploadPhoto($_FILES['photo']);
-            if ($uploadResult['success']) {
-                $photoPath = $uploadResult['path'];
-            } else {
-                $_SESSION['error'] = $uploadResult['error'];
-                header("Location: " . BASE_URL . "/maintenances/edit/{$id}");
-                exit;
-            }
+        // Get existing photos (decode JSON to array)
+        $existingPhotos = !empty($maintenance['photos']) ? json_decode($maintenance['photos'], true) : [];
+        if (!is_array($existingPhotos)) {
+            $existingPhotos = [];
+        }
+        
+        // Handle multiple new photos (like daily-tasks)
+        if (!empty($_FILES['photos']['name'][0])) {
+            $newPhotos = $this->handlePhotoUploads($_FILES['photos']);
+            $existingPhotos = array_merge($existingPhotos, $newPhotos);
         }
         
         // Prepare transformers data as JSON
@@ -368,8 +385,10 @@ class TransformerMaintenanceController extends BaseController {
             'oil_breakdown_v4' => $firstTransformer['oil_v4'],
             'oil_breakdown_v5' => $firstTransformer['oil_v5'],
             'observations' => $_POST['observations'] ? trim(str_replace(["\r\n", "\r"], "\n", $_POST['observations'])) : null,
-            'photo_path' => $photoPath,
-            'transformers_data' => json_encode($transformersData)
+            'photos' => $existingPhotos,
+            'transformers_data' => json_encode($transformersData),
+            'created_by' => $_POST['created_by'] ?? $maintenance['created_by'],
+            'additional_technicians' => !empty($_POST['additional_technicians']) ? $_POST['additional_technicians'] : []
         ];
         
         if ($this->maintenanceModel->update($id, $data)) {
@@ -386,16 +405,142 @@ class TransformerMaintenanceController extends BaseController {
      * Delete maintenance
      */
     public function delete($id) {
-
+        // Get maintenance info for logging
+        $maintenance = $this->maintenanceModel->find($id);
+        if (!$maintenance) {
+            $_SESSION['error'] = 'Η συντήρηση δεν βρέθηκε';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
         
-        if ($this->maintenanceModel->delete($id)) {
-            $_SESSION['success'] = 'Η συντήρηση διαγράφηκε επιτυχώς';
+        // Soft delete the maintenance
+        $userId = $_SESSION['user_id'];
+        $db = new Database();
+        $conn = $db->connect();
+        
+        $sql = "UPDATE transformer_maintenances SET deleted_at = ?, deleted_by = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $success = $stmt->execute([date('Y-m-d H:i:s'), $userId, $id]);
+        
+        if ($success) {
+            $_SESSION['success'] = 'Η συντήρηση μεταφέρθηκε στον κάδο απορριμμάτων';
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά τη διαγραφή της συντήρησης';
         }
         
         header('Location: ' . BASE_URL . '/maintenances');
         exit;
+    }
+    
+    /**
+     * Handle multiple photo uploads (same as DailyTaskController)
+     */
+    private function handlePhotoUploads($files) {
+        $uploadDir = 'uploads/maintenances/';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $uploadedPhotos = [];
+        $fileCount = count($files['name']);
+        
+        for ($i = 0; $i < $fileCount; $i++) {
+            if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                $tmpName = $files['tmp_name'][$i];
+                $name = $files['name'][$i];
+                $size = $files['size'][$i];
+                
+                // Validate file type
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                $fileType = mime_content_type($tmpName);
+                
+                if (!in_array($fileType, $allowedTypes)) {
+                    continue;
+                }
+                
+                // Validate file size (max 5MB)
+                if ($size > 5 * 1024 * 1024) {
+                    continue;
+                }
+                
+                // Generate unique filename
+                $extension = pathinfo($name, PATHINFO_EXTENSION);
+                $filename = uniqid('maintenance_' . time() . '_') . '.' . $extension;
+                $destination = $uploadDir . $filename;
+                
+                if (move_uploaded_file($tmpName, $destination)) {
+                    $uploadedPhotos[] = $destination;
+                }
+            }
+        }
+        
+        return $uploadedPhotos;
+    }
+    
+    /**
+     * Handle photo uploads for a specific transformer
+     */
+    private function handleTransformerPhotoUploads($files, $transformerIndex) {
+        $uploadDir = 'uploads/maintenances/';
+        
+        // Create directory if it doesn't exist
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+        
+        $uploadedPhotos = [];
+        
+        // Check if this transformer has photos
+        if (!isset($files['name'][$transformerIndex]) || empty($files['name'][$transformerIndex])) {
+            return $uploadedPhotos;
+        }
+        
+        $transformerFiles = [
+            'name' => $files['name'][$transformerIndex],
+            'type' => $files['type'][$transformerIndex],
+            'tmp_name' => $files['tmp_name'][$transformerIndex],
+            'error' => $files['error'][$transformerIndex],
+            'size' => $files['size'][$transformerIndex]
+        ];
+        
+        // If it's an array of files for this transformer
+        if (is_array($transformerFiles['name'])) {
+            $fileCount = count($transformerFiles['name']);
+            
+            for ($i = 0; $i < $fileCount; $i++) {
+                if ($transformerFiles['error'][$i] === UPLOAD_ERR_OK) {
+                    $tmpName = $transformerFiles['tmp_name'][$i];
+                    $name = $transformerFiles['name'][$i];
+                    $size = $transformerFiles['size'][$i];
+                    
+                    // Validate file type
+                    $allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                    $fileType = mime_content_type($tmpName);
+                    
+                    if (!in_array($fileType, $allowedTypes)) {
+                        continue;
+                    }
+                    
+                    // Validate file size (max 5MB)
+                    if ($size > 5 * 1024 * 1024) {
+                        continue;
+                    }
+                    
+                    // Generate unique filename
+                    $extension = pathinfo($name, PATHINFO_EXTENSION);
+                    $filename = uniqid('transformer_' . $transformerIndex . '_' . time() . '_') . '.' . $extension;
+                    $destination = $uploadDir . $filename;
+                    
+                    if (move_uploaded_file($tmpName, $destination)) {
+                        $uploadedPhotos[] = $destination;
+                    }
+                }
+            }
+        }
+        
+        return $uploadedPhotos;
     }
     
     /**
@@ -432,35 +577,6 @@ class TransformerMaintenanceController extends BaseController {
         } else {
             return ['success' => false, 'error' => 'Σφάλμα κατά τη μεταφορά του αρχείου'];
         }
-    }
-    
-    /**
-     * Delete photo
-     */
-    public function deletePhoto($id) {
-
-        
-        $maintenance = $this->maintenanceModel->find($id);
-        
-        if (!$maintenance) {
-            echo json_encode(['success' => false, 'message' => 'Η συντήρηση δεν βρέθηκε']);
-            exit;
-        }
-        
-        if (!empty($maintenance['photo_path'])) {
-            $photoPath = __DIR__ . '/../' . $maintenance['photo_path'];
-            if (file_exists($photoPath)) {
-                unlink($photoPath);
-            }
-            
-            // Update database
-            $this->maintenanceModel->update($id, array_merge($maintenance, ['photo_path' => null]));
-            
-            echo json_encode(['success' => true, 'message' => 'Η φωτογραφία διαγράφηκε επιτυχώς']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Δεν υπάρχει φωτογραφία']);
-        }
-        exit;
     }
     
     /**
@@ -662,9 +778,6 @@ class TransformerMaintenanceController extends BaseController {
             $sheet->setCellValue('H' . ($baseRow + 27), $transformer['oil_v5'] ?? '');
         }
         
-        // Fill observations - search for "Πεδίο 16" placeholder and replace it
-        $foundPedio = false;
-        
         // Calculate search area based on template type and number of transformers
         if ($hasDryType) {
             // Dry type templates positioning
@@ -681,37 +794,91 @@ class TransformerMaintenanceController extends BaseController {
                              (($totalTransformers == 2) ? 120 : 160);
         }
         
-        $searchEndRow = $searchStartRow + 20;
+        $searchEndRow = $searchStartRow + 50;
+        
+        // Collect all materials and observations from all transformers
+        $allMaterials = [];
+        $allObservations = [];
+        
+        foreach ($transformers as $index => $transformer) {
+            $transformerNum = $index + 1;
+            
+            // Collect materials
+            if (!empty($transformer['materials'])) {
+                $materials = trim($transformer['materials']);
+                $materialLines = explode("\n", $materials);
+                foreach ($materialLines as $line) {
+                    $line = trim($line);
+                    if (!empty($line)) {
+                        $allMaterials[] = "Μ/Σ {$transformerNum}: " . $line;
+                    }
+                }
+            }
+            
+            // Collect observations
+            if (!empty($transformer['observations'])) {
+                $observations = trim($transformer['observations']);
+                $observationLines = explode("\n", $observations);
+                foreach ($observationLines as $line) {
+                    $line = trim($line);
+                    if (!empty($line)) {
+                        $allObservations[] = "Μ/Σ {$transformerNum}: " . $line;
+                    }
+                }
+            }
+        }
+        
+        // Find "Πεδίο 16" placeholder in the template
+        $pedio16Row = null;
+        $pedio16Col = null;
         
         for ($r = $searchStartRow; $r < $searchEndRow; $r++) {
             foreach (range('A', 'K') as $col) {
                 $cellValue = $sheet->getCell($col . $r)->getValue();
                 if ($cellValue && is_string($cellValue) && 
-                    (stripos($cellValue, 'Πεδίο') !== false || stripos($cellValue, 'Πεδιο') !== false)) {
-                    // Set observations with proper line breaks for Excel
-                    $observations = $maintenance['observations'] ?? '';
-                    // Convert HTML line breaks and normalize for Excel
-                    $observations = str_replace(['<br>', '<br/>', '<br />'], "\n", $observations);
-                    $sheet->setCellValue($col . $r, $observations);
-                    
-                    // Enable text wrapping for the cell
-                    $sheet->getStyle($col . $r)->getAlignment()->setWrapText(true);
-                    
-                    // Calculate and set appropriate row height based on content
-                    $lineCount = substr_count($observations, "\n") + 1; // Count lines
-                    $minHeight = 20; // Minimum height
-                    $lineHeight = 15; // Height per line
-                    $calculatedHeight = max($minHeight, $lineCount * $lineHeight);
-                    $sheet->getRowDimension($r)->setRowHeight($calculatedHeight);
-                    
-                    $foundPedio = true;
+                    (stripos($cellValue, 'Πεδίο 16') !== false || stripos($cellValue, 'Πεδιο 16') !== false)) {
+                    $pedio16Row = $r;
+                    $pedio16Col = $col;
                     break 2;
                 }
             }
         }
         
-        if (!$foundPedio) {
-            error_log("WARNING: Could not find 'Πεδίο' placeholder for observations");
+        // If we found "Πεδίο 16", start adding materials and observations from there
+        if ($pedio16Row !== null) {
+            $currentRow = $pedio16Row;
+            
+            // Add Materials Section
+            if (!empty($allMaterials)) {
+                $sheet->setCellValue($pedio16Col . $currentRow, 'ΥΛΙΚΑ:');
+                $sheet->getStyle($pedio16Col . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $currentRow++;
+                
+                foreach ($allMaterials as $materialLine) {
+                    $sheet->setCellValue($pedio16Col . $currentRow, $materialLine);
+                    $sheet->getStyle($pedio16Col . $currentRow)->getAlignment()->setWrapText(true);
+                    $sheet->getRowDimension($currentRow)->setRowHeight(20);
+                    $currentRow++;
+                }
+                
+                $currentRow++; // Add spacing
+            }
+            
+            // Add Observations Section
+            if (!empty($allObservations)) {
+                $sheet->setCellValue($pedio16Col . $currentRow, 'ΠΑΡΑΤΗΡΗΣΕΙΣ:');
+                $sheet->getStyle($pedio16Col . $currentRow)->getFont()->setBold(true)->setSize(12);
+                $currentRow++;
+                
+                foreach ($allObservations as $observationLine) {
+                    $sheet->setCellValue($pedio16Col . $currentRow, $observationLine);
+                    $sheet->getStyle($pedio16Col . $currentRow)->getAlignment()->setWrapText(true);
+                    $sheet->getRowDimension($currentRow)->setRowHeight(20);
+                    $currentRow++;
+                }
+            }
+        } else {
+            error_log("WARNING: Could not find 'Πεδίο 16' placeholder in template");
         }
         
         // Note: Photo is only for viewing in the app, not exported to Excel
@@ -952,8 +1119,8 @@ class TransformerMaintenanceController extends BaseController {
             h1 { color: #0066cc; font-size: 16px; font-weight: bold; margin-bottom: 15px; text-align: center; }
             .customer-info { background-color: #f8f9fa; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; }
             .customer-info table { width: 100%; }
-            .customer-info th { text-align: left; width: 35%; font-size: 9px; padding: 4px; }
-            .customer-info td { font-size: 9px; padding: 4px; font-weight: bold; }
+            .customer-info th { text-align: left; width: 30%; font-size: 8px; padding: 4px; }
+            .customer-info td { font-size: 8px; padding: 4px; font-weight: bold; }
             .transformer-section { page-break-inside: avoid; margin-bottom: 20px; border: 2px solid #0066cc; padding: 10px; }
             .transformer-header { background-color: #0066cc; color: white; padding: 8px; font-size: 12px; font-weight: bold; text-align: center; margin: -10px -10px 10px -10px; }
             .section-title { background-color: #e9ecef; padding: 5px; font-size: 10px; font-weight: bold; margin-top: 8px; margin-bottom: 5px; border-left: 3px solid #0066cc; }
@@ -965,6 +1132,8 @@ class TransformerMaintenanceController extends BaseController {
             .oil-table th, .oil-table td { padding: 5px; border: 1px solid #ddd; text-align: center; font-size: 9px; }
             .oil-table th { background-color: #fff3cd; font-weight: bold; }
             .observations { border: 1px solid #ddd; padding: 8px; margin-top: 10px; font-size: 9px; background-color: #f8f9fa; }
+            .materials-list, .observations-list { font-size: 9px; line-height: 1.6; margin: 5px 0; padding-left: 15px; }
+            .materials-list li, .observations-list li { margin-bottom: 3px; }
         </style>
         
         <h1>ΑΝΑΦΟΡΑ ΣΥΝΤΗΡΗΣΗΣ ΥΠΟΣΤΑΘΜΟΥ</h1>
@@ -974,20 +1143,20 @@ class TransformerMaintenanceController extends BaseController {
                 <tr>
                     <th>Όνομα Πελάτη:</th>
                     <td>' . $customerName . '</td>
-                    <th>Ημερομηνία Συντήρησης:</th>
-                    <td>' . date('d/m/Y', strtotime($maintenance['maintenance_date'])) . '</td>
+                    <th style="width: 25%;">Ημερομηνία Συντήρησης:</th>
+                    <td style="width: 20%;">' . date('d/m/Y', strtotime($maintenance['maintenance_date'])) . '</td>
                 </tr>
                 <tr>
                     <th>Διεύθυνση:</th>
                     <td>' . $address . '</td>
-                    <th>Επόμενη Συντήρηση:</th>
-                    <td>' . date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) . '</td>
+                    <th style="width: 25%;">Επόμενη Συντήρηση:</th>
+                    <td style="width: 20%;">' . date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) . '</td>
                 </tr>
                 <tr>
                     <th>Τηλέφωνο:</th>
                     <td>' . $phone . '</td>
-                    <th>Λοιπά Στοιχεία:</th>
-                    <td>' . $otherDetails . '</td>
+                    <th style="width: 25%;">Λοιπά Στοιχεία:</th>
+                    <td style="width: 20%;">' . $otherDetails . '</td>
                 </tr>
             </table>
         </div>';
@@ -1056,11 +1225,176 @@ class TransformerMaintenanceController extends BaseController {
         </div>'; // End transformer section
         }
         
-        // Observations at the end
-        $html .= '
-        <div class="section-title">ΓΕΝΙΚΕΣ ΠΑΡΑΤΗΡΗΣΕΙΣ</div>
-        <div class="observations">' . nl2br($observations) . '</div>';
+        // Collect all materials and observations from all transformers
+        $allMaterials = [];
+        $allObservations = [];
+        
+        foreach ($transformers as $index => $transformer) {
+            $transformerNum = $index + 1;
+            
+            // Collect materials
+            if (!empty($transformer['materials'])) {
+                $materials = trim($transformer['materials']);
+                $materialLines = explode("\n", $materials);
+                foreach ($materialLines as $line) {
+                    $line = trim($line);
+                    if (!empty($line)) {
+                        $allMaterials[] = '<li><strong>Μ/Σ ' . $transformerNum . ':</strong> ' . mb_convert_encoding($line, 'UTF-8', 'auto') . '</li>';
+                    }
+                }
+            }
+            
+            // Collect observations
+            if (!empty($transformer['observations'])) {
+                $observations = trim($transformer['observations']);
+                $observationLines = explode("\n", $observations);
+                foreach ($observationLines as $line) {
+                    $line = trim($line);
+                    if (!empty($line)) {
+                        $allObservations[] = '<li><strong>Μ/Σ ' . $transformerNum . ':</strong> ' . mb_convert_encoding($line, 'UTF-8', 'auto') . '</li>';
+                    }
+                }
+            }
+        }
+        
+        // Add Materials Section if available
+        if (!empty($allMaterials)) {
+            $html .= '
+        <div class="section-title">ΥΛΙΚΑ</div>
+        <ul class="materials-list">' . implode('', $allMaterials) . '</ul>';
+        }
+        
+        // Add Observations Section if available
+        if (!empty($allObservations)) {
+            $html .= '
+        <div class="section-title">ΠΑΡΑΤΗΡΗΣΕΙΣ</div>
+        <ul class="observations-list">' . implode('', $allObservations) . '</ul>';
+        }
         
         return $html;
+    }
+    
+    /**
+     * Toggle invoiced or report sent status (AJAX endpoint)
+     */
+    public function toggleStatus($id) {
+        // Set JSON header
+        header('Content-Type: application/json');
+        
+        // Only allow POST requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+        
+        // Get JSON input
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['type']) || !isset($input['status'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing required parameters']);
+            exit;
+        }
+        
+        $type = $input['type'];
+        $status = (int)$input['status'];
+        
+        // Validate type
+        if (!in_array($type, ['invoiced', 'report'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid status type']);
+            exit;
+        }
+        
+        try {
+            // Update the appropriate field
+            if ($type === 'invoiced') {
+                $result = $this->maintenanceModel->updateInvoicedStatus($id, $status);
+            } else {
+                $result = $this->maintenanceModel->updateReportSentStatus($id, $status);
+            }
+            
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Database update failed']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        
+        exit;
+    }
+    
+    /**
+     * Delete a photo from maintenance (AJAX endpoint)
+     */
+    public function deletePhoto($id) {
+        // Set JSON header
+        header('Content-Type: application/json');
+        
+        // Only allow POST requests
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method not allowed']);
+            exit;
+        }
+        
+        // Get JSON input
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input || !isset($input['photo'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Missing photo parameter']);
+            exit;
+        }
+        
+        $photoToDelete = $input['photo'];
+        
+        // Get maintenance record
+        $maintenance = $this->maintenanceModel->find($id);
+        if (!$maintenance) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Maintenance not found']);
+            exit;
+        }
+        
+        // Get current photos array
+        $photos = !empty($maintenance['photos']) ? json_decode($maintenance['photos'], true) : [];
+        
+        // Find and remove the photo
+        $photoIndex = array_search($photoToDelete, $photos);
+        if ($photoIndex === false) {
+            http_response_code(404);
+            echo json_encode(['success' => false, 'message' => 'Photo not found in maintenance record']);
+            exit;
+        }
+        
+        // Delete physical file
+        $photoPath = __DIR__ . '/../' . $photoToDelete;
+        if (file_exists($photoPath)) {
+            if (!unlink($photoPath)) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Failed to delete photo file']);
+                exit;
+            }
+        }
+        
+        // Remove from array
+        array_splice($photos, $photoIndex, 1);
+        
+        // Update database
+        $updateData = ['photos' => json_encode(array_values($photos))];
+        if ($this->maintenanceModel->update($id, $updateData)) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Failed to update database']);
+        }
+        
+        exit;
     }
 }

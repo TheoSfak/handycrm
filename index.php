@@ -135,6 +135,8 @@ $router->add('/maintenances/edit/{id}', 'TransformerMaintenanceController', 'edi
 $router->add('/maintenances/update/{id}', 'TransformerMaintenanceController', 'update', 'POST');
 $router->add('/maintenances/delete/{id}', 'TransformerMaintenanceController', 'delete', 'POST');
 $router->add('/maintenances/deletePhoto/{id}', 'TransformerMaintenanceController', 'deletePhoto', 'POST');
+$router->add('/maintenances/delete-photo/{id}', 'TransformerMaintenanceController', 'deletePhoto', 'POST');
+$router->add('/maintenances/toggle-status/{id}', 'TransformerMaintenanceController', 'toggleStatus', 'POST');
 $router->add('/maintenances/exportPDF/{id}', 'TransformerMaintenanceController', 'exportPDF');
 $router->add('/maintenances/exportExcel/{id}', 'TransformerMaintenanceController', 'exportExcel');
 
@@ -438,6 +440,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->delete($matches[1]);
     } elseif (preg_match('/\/maintenances\/deletePhoto\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/maintenances\/delete-photo\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/maintenances\/toggle-status\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->toggleStatus($matches[1]);
     } elseif (preg_match('/\/maintenances\/exportPDF\/(\d+)/', $currentRoute, $matches)) {
         $controller->exportPDF($matches[1]);
     } elseif (preg_match('/\/maintenances\/exportExcel\/(\d+)/', $currentRoute, $matches)) {
@@ -445,6 +451,43 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     } else {
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - Maintenance page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/daily-tasks') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/DailyTaskController.php';
+    $controller = new DailyTaskController();
+    
+    if ($currentRoute === '/daily-tasks' || $currentRoute === '/daily-tasks/') {
+        $controller->index();
+    } elseif ($currentRoute === '/daily-tasks/create') {
+        $controller->create();
+    } elseif ($currentRoute === '/daily-tasks/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/\/daily-tasks\/view\/(\d+)/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/edit\/(\d+)/', $currentRoute, $matches)) {
+        $controller->edit($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/update\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/delete\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/delete-photo\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/toggle-invoiced\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->toggleInvoiced($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/export-pdf\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportPdf($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/send-email\/(\d+)/', $currentRoute, $matches)) {
+        $controller->sendEmail($matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Daily task page not found</h1>";
     }
     
 } elseif (strpos($currentRoute, '/appointments') === 0) {
@@ -858,6 +901,36 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         // 404 for settings
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - Settings page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/trash') === 0) {
+    // Trash/Recycle Bin routes (admin only)
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/TrashController.php';
+    $controller = new TrashController($db->connect());
+    
+    if ($currentRoute === '/trash') {
+        $controller->index();
+    } elseif ($currentRoute === '/trash/restore' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->restore();
+    } elseif ($currentRoute === '/trash/permanent-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->permanentDelete();
+    } elseif ($currentRoute === '/trash/bulk-restore' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkRestore();
+    } elseif ($currentRoute === '/trash/bulk-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkDelete();
+    } elseif ($currentRoute === '/trash/empty' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->emptyTrash();
+    } elseif ($currentRoute === '/trash/log') {
+        $controller->viewLog();
+    } else {
+        // 404 for trash
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Trash page not found</h1>";
     }
     
 } else {

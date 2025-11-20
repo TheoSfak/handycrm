@@ -40,7 +40,7 @@ class TaskLabor extends BaseModel {
         $subtotal = $this->calculateSubtotal($data['hours_worked'], $data['hourly_rate']);
         
         $sql = "INSERT INTO {$this->table} 
-                (task_id, technician_id, technician_name, technician_role, is_temporary, 
+                (task_id, technician_id, technician_name, role_id, is_temporary, 
                  hours_worked, time_from, time_to, hourly_rate, subtotal, notes) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
@@ -48,7 +48,7 @@ class TaskLabor extends BaseModel {
             $data['task_id'],
             $data['technician_id'] ?? null,
             $data['technician_name'],
-            $data['technician_role'] ?? null,
+            $data['role_id'] ?? null,
             $data['is_temporary'] ?? 0,
             $data['hours_worked'],
             $data['time_from'] ?? null,
@@ -77,7 +77,7 @@ class TaskLabor extends BaseModel {
         $subtotal = $this->calculateSubtotal($data['hours_worked'], $data['hourly_rate']);
         
         $sql = "UPDATE {$this->table} 
-                SET technician_id = ?, technician_name = ?, technician_role = ?, 
+                SET technician_id = ?, technician_name = ?, role_id = ?, 
                     is_temporary = ?, hours_worked = ?, time_from = ?, time_to = ?, 
                     hourly_rate = ?, subtotal = ?, notes = ?
                 WHERE id = ?";
@@ -85,7 +85,7 @@ class TaskLabor extends BaseModel {
         $stmt = $this->db->execute($sql, [
             $data['technician_id'] ?? null,
             $data['technician_name'],
-            $data['technician_role'] ?? null,
+            $data['role_id'] ?? null,
             $data['is_temporary'] ?? 0,
             $data['hours_worked'],
             $data['time_from'] ?? null,

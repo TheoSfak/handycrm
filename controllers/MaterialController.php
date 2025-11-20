@@ -207,7 +207,7 @@ class MaterialController extends BaseController {
     /**
      * Delete material
      */
-    public function delete() {
+    public function delete($id = null) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials');
         }
@@ -221,17 +221,24 @@ class MaterialController extends BaseController {
             }
         }
         
-        $id = $_POST['id'] ?? 0;
+        // Get ID from parameter or POST
         if (!$id) {
+            $id = $_POST['id'] ?? 0;
+        }
+        
+        // Cast to integer
+        $id = (int)$id;
+        
+        if (!$id || $id <= 0) {
             $_SESSION['error'] = 'Μη έγκυρο αναγνωριστικό υλικού';
             $this->redirect('/materials');
         }
         
         $materialModel = new Material();
-        $success = $materialModel->delete($id);
         
-        if ($success) {
-            $_SESSION['success'] = 'Το υλικό διαγράφηκε με επιτυχία';
+        // Delete the material permanently
+        if ($materialModel->delete($id)) {
+            $_SESSION['success'] = 'Το υλικό διαγράφηκε επιτυχώς';
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά τη διαγραφή του υλικού';
         }

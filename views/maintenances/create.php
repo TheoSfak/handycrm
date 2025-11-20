@@ -43,15 +43,49 @@
                         <!-- Section 2: Maintenance Info (Πεδία 5-6) -->
                         <h5 class="mb-3 text-primary"><i class="fas fa-calendar"></i> Στοιχεία Συντήρησης</h5>
                         <div class="row mb-4">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Ημερομηνία Συντήρησης <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" name="maintenance_date" required onchange="calculateNextMaintenance()">
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label">Επόμενη Συντήρηση (Αυτόματα +1 έτος)</label>
                                 <input type="date" class="form-control" name="next_maintenance_date" readonly 
                                        style="background-color: #e9ecef;">
                                 <small class="text-muted">Υπολογίζεται αυτόματα</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Υπεύθυνος Τεχνικός <span class="text-danger">*</span></label>
+                                <select class="form-select" name="created_by" required>
+                                    <?php foreach ($users as $user): ?>
+                                        <option value="<?= $user['id'] ?>" <?= $user['id'] == $_SESSION['user_id'] ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($user['name']) ?>
+                                            <?php if (!empty($user['role'])): ?>
+                                                (<?= ucfirst($user['role']) ?>)
+                                            <?php endif; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="text-muted">Προεπιλεγμένος: Εσείς</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Technicians -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label"><i class="fas fa-users"></i> Επιπλέον Τεχνικοί (Προαιρετικό)</label>
+                                <select class="form-select" name="additional_technicians[]" multiple size="4">
+                                    <?php foreach ($users as $user): ?>
+                                        <?php if ($user['id'] != $_SESSION['user_id']): // Don't show current user ?>
+                                            <option value="<?= $user['id'] ?>">
+                                                <?= htmlspecialchars($user['name']) ?>
+                                                <?php if (!empty($user['role'])): ?>
+                                                    (<?= ucfirst($user['role']) ?>)
+                                                <?php endif; ?>
+                                            </option>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
+                                </select>
+                                <small class="text-muted">Κρατήστε πατημένο το Ctrl (ή Cmd) για να επιλέξετε πολλαπλούς</small>
                             </div>
                         </div>
 
@@ -69,29 +103,6 @@
                             <button type="button" class="btn btn-success" onclick="addTransformer()">
                                 <i class="fas fa-plus-circle"></i> Προσθήκη Μετασχηματιστή
                             </button>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- Section 5: Observations & Photo (Πεδία 16-17) -->
-                        <h5 class="mb-3 text-primary"><i class="fas fa-comment-alt"></i> Παρατηρήσεις & Φωτογραφία</h5>
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <label class="form-label">Παρατηρήσεις</label>
-                                <textarea class="form-control" name="observations" rows="4" 
-                                          placeholder="Εισάγετε τυχόν παρατηρήσεις..."></textarea>
-                            </div>
-                        </div>
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <label class="form-label">Φωτογραφία</label>
-                                <input type="file" class="form-control" name="photo" accept="image/*" 
-                                       onchange="previewPhoto(this)">
-                                <small class="text-muted">Επιτρεπόμενοι τύποι: JPG, PNG, GIF. Μέγιστο μέγεθος: 5MB</small>
-                                <div id="photoPreview" class="mt-3" style="display: none;">
-                                    <img id="previewImg" src="" style="max-width: 300px; max-height: 300px;" class="img-thumbnail">
-                                </div>
-                            </div>
                         </div>
 
                         <hr class="my-4">
@@ -126,23 +137,53 @@ document.querySelector('input[name="maintenance_date"]').addEventListener('chang
     }
 });
 
-// Photo preview
-function previewPhoto(input) {
-    const preview = document.getElementById('photoPreview');
-    const previewImg = document.getElementById('previewImg');
+// Photo preview for transformer-specific photos
+function previewTransformerPhotos(input, transformerIndex) {
+    const preview = document.getElementById('photo_preview_' + transformerIndex);
+    preview.innerHTML = '';
     
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            preview.style.display = 'block';
+    Array.from(input.files).forEach((file, index) => {
+        if (!file.type.match('image.*')) {
+            return;
         }
         
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.style.display = 'none';
-    }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const col = document.createElement('div');
+            col.className = 'col-md-2';
+            
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'position-relative';
+            imgContainer.innerHTML = `
+                <img src="${e.target.result}" class="img-thumbnail" style="width: 100%; height: 150px; object-fit: cover;">
+                <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
+                        onclick="removeTransformerPhoto(this, ${transformerIndex}, ${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            col.appendChild(imgContainer);
+            preview.appendChild(col);
+        };
+        
+        reader.readAsDataURL(file);
+    });
+}
+
+// Remove photo from transformer preview
+function removeTransformerPhoto(button, transformerIndex, photoIndex) {
+    const photoInput = document.querySelector(`input[name="transformer_photos[${transformerIndex}][]"]`);
+    const dt = new DataTransfer();
+    const files = Array.from(photoInput.files);
+    
+    files.forEach((file, i) => {
+        if (i !== photoIndex) {
+            dt.items.add(file);
+        }
+    });
+    
+    photoInput.files = dt.files;
+    button.closest('.col-md-2').remove();
 }
 
 // Warn before leaving if form has data
@@ -254,6 +295,36 @@ function addTransformer() {
                     <div class="col-md-3">
                         <label class="form-label">Τιμή 5 (kV)</label>
                         <input type="text" class="form-control oil-input" name="transformers[${transformerCount}][oil_v5]">
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <h6 class="text-secondary mt-3 mb-2"><i class="fas fa-tools"></i> Υλικά</h6>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <textarea class="form-control" name="transformers[${transformerCount}][materials]" rows="3" 
+                                  placeholder="Εισάγετε τα υλικά που χρησιμοποιήθηκαν..."></textarea>
+                    </div>
+                </div>
+
+                <h6 class="text-secondary mt-3 mb-2"><i class="fas fa-comment-alt"></i> Παρατηρήσεις</h6>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <textarea class="form-control" name="transformers[${transformerCount}][observations]" rows="3" 
+                                  placeholder="Εισάγετε τυχόν παρατηρήσεις για αυτόν τον μετασχηματιστή..."></textarea>
+                    </div>
+                </div>
+
+                <h6 class="text-secondary mt-3 mb-2"><i class="fas fa-camera"></i> Φωτογραφίες</h6>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <input type="file" class="form-control photo-input" name="transformer_photos[${transformerCount}][]" 
+                               multiple accept="image/*" onchange="previewTransformerPhotos(this, ${transformerCount})">
+                        <small class="text-muted">Μέγιστο μέγεθος αρχείου: 5MB ανά φωτογραφία. Επιτρεπόμενοι τύποι: JPG, PNG, GIF</small>
+                        
+                        <!-- Photo Preview for this transformer -->
+                        <div id="photo_preview_${transformerCount}" class="mt-3 row g-2"></div>
                     </div>
                 </div>
             </div>

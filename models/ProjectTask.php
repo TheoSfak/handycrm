@@ -23,7 +23,7 @@ class ProjectTask extends BaseModel {
      * @return array
      */
     public function getByProject($projectId, $filters = []) {
-        $sql = "SELECT * FROM {$this->table} WHERE project_id = ?";
+        $sql = "SELECT * FROM {$this->table} WHERE project_id = ? AND deleted_at IS NULL";
         $params = [$projectId];
         
         // Filter by task type
@@ -81,7 +81,7 @@ class ProjectTask extends BaseModel {
         $sql = "SELECT pt.*, p.title as project_name 
                 FROM {$this->table} pt
                 LEFT JOIN projects p ON pt.project_id = p.id
-                WHERE pt.id = ?";
+                WHERE pt.id = ? AND pt.deleted_at IS NULL";
         
         $result = $this->query($sql, [$id]);
         
@@ -243,7 +243,7 @@ class ProjectTask extends BaseModel {
      */
     private function addLabor($data) {
         $sql = "INSERT INTO task_labor 
-                (task_id, technician_id, technician_name, technician_role, is_temporary, 
+                (task_id, technician_id, technician_name, role_id, is_temporary, 
                  hours_worked, time_from, time_to, hourly_rate, subtotal, notes) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
@@ -253,7 +253,7 @@ class ProjectTask extends BaseModel {
             $data['task_id'],
             $data['technician_id'] ?? null,
             $data['technician_name'],
-            $data['technician_role'] ?? null,
+            $data['role_id'] ?? null,
             $data['is_temporary'] ?? 0,
             $data['hours_worked'],
             $data['time_from'] ?? null,

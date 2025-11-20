@@ -1,0 +1,28 @@
+-- Create transformer_maintenances table
+CREATE TABLE IF NOT EXISTS transformer_maintenances (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(255) NOT NULL COMMENT 'Πεδίο 1: Όνομα πελάτη',
+    address TEXT COMMENT 'Πεδίο 2: Διεύθυνση',
+    phone VARCHAR(50) COMMENT 'Πεδίο 3: Τηλέφωνο',
+    other_details TEXT COMMENT 'Πεδίο 4: Λοιπά Στοιχεία',
+    maintenance_date DATE NOT NULL COMMENT 'Πεδίο 5: Ημερομηνία συντήρησης',
+    next_maintenance_date DATE COMMENT 'Πεδίο 6: Ημ/νία επόμενης συντήρησης (auto +1 year)',
+    transformer_power VARCHAR(100) NOT NULL COMMENT 'Πεδίο 7: Ισχύς Μετασχηματιστή KVA',
+    insulation_measurements TEXT NOT NULL COMMENT 'Πεδίο 8: Μετρήσεις Μονώσεων',
+    coil_resistance_measurements TEXT NOT NULL COMMENT 'Πεδίο 9: Μετρήσεις Αντιστάσεων Πηνίων',
+    grounding_measurement VARCHAR(100) NOT NULL COMMENT 'Πεδίο 10: Μέτρηση Γείωσης',
+    oil_breakdown_v1 VARCHAR(100) COMMENT 'Πεδίο 11: Μέτρηση Διάσπασης Λαδιού V1',
+    oil_breakdown_v2 VARCHAR(100) COMMENT 'Πεδίο 12: Μέτρηση Διάσπασης Λαδιού V2',
+    oil_breakdown_v3 VARCHAR(100) COMMENT 'Πεδίο 13: Μέτρηση Διάσπασης Λαδιού V3',
+    oil_breakdown_v4 VARCHAR(100) COMMENT 'Πεδίο 14: Μέτρηση Διάσπασης Λαδιού V4',
+    oil_breakdown_v5 VARCHAR(100) COMMENT 'Πεδίο 15: Μέτρηση Διάσπασης Λαδιού V5',
+    observations TEXT COMMENT 'Πεδίο 16: Παρατηρήσεις',
+    photo_path VARCHAR(255) COMMENT 'Πεδίο 17: Φωτογραφία',
+    created_by INT NOT NULL COMMENT 'User ID του τεχνικού που δημιούργησε',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_maintenance_date (maintenance_date),
+    INDEX idx_customer_name (customer_name),
+    INDEX idx_created_by (created_by)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

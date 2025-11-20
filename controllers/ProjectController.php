@@ -39,11 +39,10 @@ class ProjectController extends BaseController {
         $database = new Database();
         $db = $database->connect();
         
-        // Get all technicians
+        // Get all technicians (all roles)
         $stmt = $db->query("SELECT u.id, u.first_name, u.last_name 
             FROM users u
-            LEFT JOIN roles r ON u.role_id = r.id
-            WHERE r.name IN ('admin', 'technician') AND u.is_active = 1 
+            WHERE u.is_active = 1 
             ORDER BY u.first_name");
         $technicians = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -186,19 +185,24 @@ class ProjectController extends BaseController {
                     pt.date_to,
                     pt.description as task_description,
                     tl.technician_id,
+                    tl.role_id,
+                    r.name as technician_role,
+                    r.display_name as technician_role_display,
+                    tl.technician_name,
                     tl.hours_worked as hours,
                     u.first_name,
                     u.last_name
                  FROM project_tasks pt
                  INNER JOIN task_labor tl ON pt.id = tl.task_id
                  LEFT JOIN users u ON tl.technician_id = u.id
+                 LEFT JOIN roles r ON tl.role_id = r.id
                  WHERE pt.project_id = ?
                  ORDER BY 
                     CASE 
                         WHEN pt.task_type = 'single_day' THEN pt.task_date
                         ELSE pt.date_from
                     END DESC,
-                    u.last_name, u.first_name",
+                    COALESCE(u.last_name, tl.technician_name), COALESCE(u.first_name, '')",
                 [$project['id']]
             );
         } catch (Exception $e) {
@@ -354,11 +358,10 @@ class ProjectController extends BaseController {
         $stmt = $db->query("SELECT * FROM customers WHERE is_active = 1 ORDER BY first_name, last_name");
         $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Get technicians
+        // Get technicians (all roles)
         $stmt = $db->query("SELECT u.id, u.first_name, u.last_name 
             FROM users u
-            LEFT JOIN roles r ON u.role_id = r.id
-            WHERE r.name IN ('admin', 'technician') AND u.is_active = 1 
+            WHERE u.is_active = 1 
             ORDER BY u.first_name");
         $technicians = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -493,11 +496,10 @@ class ProjectController extends BaseController {
         $stmt = $db->query("SELECT * FROM customers WHERE is_active = 1 ORDER BY first_name, last_name");
         $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Get technicians
+        // Get technicians (all roles)
         $stmt = $db->query("SELECT u.id, u.first_name, u.last_name 
             FROM users u
-            LEFT JOIN roles r ON u.role_id = r.id
-            WHERE r.name IN ('admin', 'technician') AND u.is_active = 1 
+            WHERE u.is_active = 1 
             ORDER BY u.first_name");
         $technicians = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
@@ -624,10 +626,48 @@ class ProjectController extends BaseController {
         }
         
         $projectModel = new Project();
-        $success = $projectModel->delete($id);
+        
+        // Get project info for logging
+        $project = $projectModel->getWithDetails($id);
+        if (!$project) {
+            $_SESSION['error'] = 'Το έργο δεν βρέθηκε';
+            $this->redirect('/projects');
+        }
+        
+        // Soft delete the project
+        $db = new Database();
+        $conn = $db->connect();
+        
+        $sql = "UPDATE projects SET deleted_at = ?, deleted_by = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $success = $stmt->execute([date('Y-m-d H:i:s'), $user['id'], $id]);
         
         if ($success) {
-            $_SESSION['success'] = 'Το έργο διαγράφηκε με επιτυχία';
+            // CASCADE: Soft delete all related project_tasks
+            require_once __DIR__ . '/../models/ProjectTask.php';
+            $taskModel = new ProjectTask();
+            $tasks = $taskModel->getByProject($id); // This will NOT include already deleted tasks
+            
+            foreach ($tasks as $task) {
+                // Soft delete the task
+                $taskSql = "UPDATE project_tasks SET deleted_at = ?, deleted_by = ? WHERE id = ?";
+                $taskStmt = $conn->prepare($taskSql);
+                $taskStmt->execute([date('Y-m-d H:i:s'), $user['id'], $task['id']]);
+                
+                // CASCADE: Soft delete all task_labor for this task
+                $laborSql = "UPDATE task_labor 
+                            SET deleted_at = ?, deleted_by = ? 
+                            WHERE task_id = ? AND deleted_at IS NULL";
+                $laborStmt = $conn->prepare($laborSql);
+                $laborStmt->execute([date('Y-m-d H:i:s'), $user['id'], $task['id']]);
+            }
+            
+            // Log the deletion
+            require_once __DIR__ . '/../models/Trash.php';
+            $trashModel = new Trash($conn);
+            $userName = $user['full_name'] ?? $user['username'];
+            
+            $_SESSION['success'] = 'Το έργο και όλα τα σχετικά δεδομένα μεταφέρθηκαν στον κάδο απορριμμάτων';
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά τη διαγραφή του έργου';
         }

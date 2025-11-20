@@ -158,9 +158,11 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                                                 <?php if ($entry['technician_name']): ?>
                                                     <i class="fas fa-user me-2"></i>
                                                     <?= htmlspecialchars($entry['technician_name']) ?>
-                                                    <span class="badge bg-<?= $entry['technician_role'] === 'technician' ? 'primary' : 'info' ?> ms-2">
-                                                        <?= $entry['technician_role'] === 'technician' ? 'Τεχνικός' : 'Βοηθός' ?>
-                                                    </span>
+                                                    <?php if (!empty($entry['technician_role_display'])): ?>
+                                                        <span class="badge bg-primary ms-2">
+                                                            <?= htmlspecialchars($entry['technician_role_display']) ?>
+                                                        </span>
+                                                    <?php endif; ?>
                                                 <?php else: ?>
                                                     <span class="text-muted">Άλλο Εργατικό</span>
                                                 <?php endif; ?>

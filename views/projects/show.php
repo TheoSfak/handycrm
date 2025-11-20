@@ -474,7 +474,15 @@
                                             <tr>
                                                 <td class="py-2">
                                                     <i class="fas fa-user-hard-hat text-muted me-2"></i>
-                                                    <small><?= htmlspecialchars($entry['last_name'] . ' ' . $entry['first_name']) ?></small>
+                                                    <small><?php 
+                                                        if (!empty($entry['last_name']) && !empty($entry['first_name'])) {
+                                                            echo htmlspecialchars($entry['last_name'] . ' ' . $entry['first_name']);
+                                                        } elseif (!empty($entry['technician_name'])) {
+                                                            echo htmlspecialchars($entry['technician_name']);
+                                                        } else {
+                                                            echo 'N/A';
+                                                        }
+                                                    ?></small>
                                                 </td>
                                                 <td class="text-end py-2">
                                                     <span class="badge bg-info">

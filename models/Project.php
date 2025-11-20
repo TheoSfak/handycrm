@@ -29,7 +29,7 @@ class Project extends BaseModel {
                 JOIN customers c ON p.customer_id = c.id 
                 JOIN users t ON p.assigned_technician = t.id 
                 JOIN users creator ON p.created_by = creator.id 
-                WHERE p.id = ?";
+                WHERE p.id = ? AND p.deleted_at IS NULL";
         
         $project = $this->db->fetchOne($sql, [$id]);
         
@@ -64,7 +64,7 @@ class Project extends BaseModel {
         $params = [];
         
         // Build WHERE clause
-        $whereConditions = ['1=1'];
+        $whereConditions = ['p.deleted_at IS NULL'];
         
         if (!empty($filters['status'])) {
             $whereConditions[] = "p.status = ?";

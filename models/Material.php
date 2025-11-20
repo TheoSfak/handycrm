@@ -5,7 +5,7 @@
  */
 
 class Material extends BaseModel {
-    protected $table = 'materials';
+    protected $table = 'materials_catalog';
     protected $primaryKey = 'id';
     
     /**
@@ -18,7 +18,7 @@ class Material extends BaseModel {
         $params = [];
         
         // Build WHERE clause
-        $whereConditions = ['1=1'];
+        $whereConditions = [];
         
         if (!empty($filters['category'])) {
             $whereConditions[] = "category = ?";
@@ -90,7 +90,7 @@ class Material extends BaseModel {
         
         try {
             $sql = "SELECT * FROM {$this->table} 
-                    WHERE current_stock <= min_stock 
+                    WHERE current_stock <= min_stock
                     ORDER BY current_stock ASC";
             
             $stmt = $db->query($sql);

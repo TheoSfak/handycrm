@@ -425,8 +425,11 @@ document.getElementById('perPageSelect').addEventListener('change', function() {
 
 <script>
 function confirmDelete(materialId, materialName) {
+    console.log('confirmDelete called with ID:', materialId, 'Name:', materialName);
     document.getElementById('deleteMaterialName').textContent = materialName;
-    document.getElementById('deleteForm').action = '<?= BASE_URL ?>/materials/' + materialId + '/delete';
+    const formAction = '<?= BASE_URL ?>/materials/' + materialId + '/delete';
+    console.log('Setting form action to:', formAction);
+    document.getElementById('deleteForm').action = formAction;
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();

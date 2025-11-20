@@ -38,24 +38,40 @@ class EmailService {
      */
     private function loadSMTPSettings() {
         try {
-            $stmt = $this->pdo->query("SELECT * FROM smtp_settings LIMIT 1");
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            // Query all settings as key-value pairs
+            $stmt = $this->pdo->query("SELECT setting_key, setting_value FROM smtp_settings");
             
-            if ($row) {
-                $this->smtp_settings = [
-                    'smtp_host' => $row['host'] ?? '',
-                    'smtp_port' => $row['port'] ?? 587,
-                    'smtp_username' => $row['username'] ?? '',
-                    'smtp_password' => $row['password'] ?? '',
-                    'smtp_encryption' => $row['encryption'] ?? 'tls',
-                    'from_email' => $row['from_email'] ?? '',
-                    'from_name' => $row['from_name'] ?? 'HandyCRM',
-                    'reply_to' => $row['from_email'] ?? ''
-                ];
-            } else {
-                $this->smtp_settings = [];
+            if ($stmt) {
+                $settings = [];
+                $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                
+                // Convert to associative array
+                foreach ($results as $row) {
+                    $settings[$row['setting_key']] = $row['setting_value'];
+                }
+                
+                if (count($settings) > 0) {
+                    // Map settings to internal format
+                    $this->smtp_settings = [
+                        'smtp_host' => $settings['smtp_host'] ?? $settings['host'] ?? '',
+                        'smtp_port' => $settings['smtp_port'] ?? $settings['port'] ?? 587,
+                        'smtp_username' => $settings['smtp_username'] ?? $settings['username'] ?? '',
+                        'smtp_password' => $settings['smtp_password'] ?? $settings['password'] ?? '',
+                        'smtp_encryption' => $settings['smtp_encryption'] ?? $settings['encryption'] ?? 'tls',
+                        'from_email' => $settings['from_email'] ?? $settings['smtp_username'] ?? '',
+                        'from_name' => $settings['from_name'] ?? 'HandyCRM',
+                        'reply_to' => $settings['reply_to'] ?? $settings['from_email'] ?? $settings['smtp_username'] ?? ''
+                    ];
+                    
+                    error_log("SMTP Settings loaded successfully from key-value pairs");
+                } else {
+                    error_log("No SMTP settings found in database");
+                    $this->smtp_settings = [];
+                }
             }
+            
         } catch (Exception $e) {
+            error_log("Failed to load SMTP settings: " . $e->getMessage());
             throw new Exception("Failed to load SMTP settings: " . $e->getMessage());
         }
     }

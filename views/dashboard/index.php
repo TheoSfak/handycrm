@@ -78,7 +78,7 @@ echo $updateChecker->getUpdateNotification();
 
 <div class="row">
     <!-- Recent Activities -->
-    <div class="col-lg-8 mb-4">
+    <div class="col-lg-4 mb-4">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-clock"></i> <?= __('dashboard.recent_activity') ?></h5>
@@ -166,6 +166,58 @@ echo $updateChecker->getUpdateNotification();
                     </a>
                 </div>
                 <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Daily Tasks & Revenue Card -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line"></i> Έσοδα Μήνα</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2"><i class="fas fa-tasks text-success"></i> Ημερήσιες Εργασίες</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Ολοκληρωμένες:</span>
+                        <span class="badge bg-success"><?= $stats['revenue_breakdown']['daily_tasks_count'] ?? 0 ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><strong>Έσοδα:</strong></span>
+                        <span class="text-success fw-bold"><?= formatCurrencyWithVAT($stats['revenue_breakdown']['daily_tasks'] ?? 0) ?></span>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2"><i class="fas fa-tools text-info"></i> Συντηρήσεις</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Ολοκληρωμένες:</span>
+                        <span class="badge bg-info"><?= $stats['revenue_breakdown']['maintenance_count'] ?? 0 ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><strong>Έσοδα:</strong></span>
+                        <span class="text-info fw-bold"><?= formatCurrencyWithVAT($stats['revenue_breakdown']['maintenance'] ?? 0) ?></span>
+                    </div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <h6 class="text-muted mb-2"><i class="fas fa-project-diagram text-primary"></i> Έργα</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Τιμολογημένα:</span>
+                        <span class="badge bg-primary"><?= $stats['revenue_breakdown']['projects_count'] ?? 0 ?></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span><strong>Έσοδα:</strong></span>
+                        <span class="text-primary fw-bold"><?= formatCurrencyWithVAT($stats['revenue_breakdown']['projects'] ?? 0) ?></span>
+                    </div>
+                </div>
+                <hr class="my-3">
+                <div class="text-center bg-light p-3 rounded">
+                    <small class="text-muted d-block mb-1">ΣΥΝΟΛΟ ΕΣΟΔΩΝ</small>
+                    <h4 class="mb-0 text-success"><?= formatCurrencyWithVAT($stats['revenue_month'] ?? 0) ?></h4>
+                    <small class="text-muted"><?= date('m/Y') ?></small>
+                </div>
             </div>
         </div>
     </div>
@@ -314,7 +366,7 @@ setInterval(function() {
 }, 300000);
 
 // Welcome message for new users
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     <?php if (isset($_SESSION['first_login']) && $_SESSION['first_login']): ?>
     // Show welcome modal or tour for first-time users
     // You can implement a welcome tour here

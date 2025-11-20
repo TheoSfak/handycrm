@@ -15,25 +15,41 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="<?= BASE_URL ?>/maintenances" class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label">Αναζήτηση</label>
                     <input type="text" class="form-control" name="search" 
                            placeholder="Όνομα, τηλέφωνο, διεύθυνση..." 
                            value="<?= htmlspecialchars($search ?? '') ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Από Ημερομηνία</label>
                     <input type="date" class="form-control" name="date_from" 
                            value="<?= htmlspecialchars($dateFrom ?? '') ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Έως Ημερομηνία</label>
                     <input type="date" class="form-control" name="date_to" 
                            value="<?= htmlspecialchars($dateTo ?? '') ?>">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-2">
+                    <label class="form-label">Τιμολογήθηκε</label>
+                    <select class="form-select" name="is_invoiced">
+                        <option value="">Όλες</option>
+                        <option value="1" <?= (isset($isInvoiced) && $isInvoiced === '1') ? 'selected' : '' ?>>Ναι</option>
+                        <option value="0" <?= (isset($isInvoiced) && $isInvoiced === '0') ? 'selected' : '' ?>>Όχι</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Δελτίο Στάλθηκε</label>
+                    <select class="form-select" name="report_sent">
+                        <option value="">Όλες</option>
+                        <option value="1" <?= (isset($reportSent) && $reportSent === '1') ? 'selected' : '' ?>>Ναι</option>
+                        <option value="0" <?= (isset($reportSent) && $reportSent === '0') ? 'selected' : '' ?>>Όχι</option>
+                    </select>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Αναζήτηση
+                        <i class="fas fa-search"></i>
                     </button>
                 </div>
             </form>
@@ -45,7 +61,7 @@
         <div class="card-header">
             <h5 class="mb-0">
                 Συνολικά: <?= $totalCount ?> συντηρήσεις
-                <?php if ($search || $dateFrom || $dateTo): ?>
+                <?php if ($search || $dateFrom || $dateTo || isset($isInvoiced) || isset($reportSent)): ?>
                     <a href="<?= BASE_URL ?>/maintenances" class="btn btn-sm btn-outline-secondary ms-2">
                         <i class="fas fa-times"></i> Καθαρισμός Φίλτρων
                     </a>
@@ -56,20 +72,22 @@
             <?php if (empty($maintenances)): ?>
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle"></i> 
-                    <?= $search || $dateFrom || $dateTo ? 'Δεν βρέθηκαν συντηρήσεις με τα κριτήρια αναζήτησης.' : 'Δεν υπάρχουν καταχωρημένες συντηρήσεις.' ?>
+                    <?= ($search || $dateFrom || $dateTo || isset($isInvoiced) || isset($reportSent)) ? 'Δεν βρέθηκαν συντηρήσεις με τα κριτήρια αναζήτησης.' : 'Δεν υπάρχουν καταχωρημένες συντηρήσεις.' ?>
                 </div>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th style="width: 10%;">Ημ/νία Συντήρησης</th>
-                                <th style="width: 20%;">Πελάτης</th>
+                                <th style="width: 8%;">Ημ/νία Συντήρησης</th>
+                                <th style="width: 18%;">Πελάτης</th>
                                 <th style="width: 10%;">Διεύθυνση</th>
                                 <th style="width: 10%;">Τηλέφωνο</th>
-                                <th style="width: 15%;">Ισχύς Μ/Σ</th>
+                                <th style="width: 12%;">Ισχύς Μ/Σ</th>
                                 <th style="width: 10%;">Επόμενη Συντήρηση</th>
-                                <th style="width: 20%;">Τεχνικός</th>
+                                <th style="width: 6%;" class="text-center">Τιμολογήθηκε</th>
+                                <th style="width: 6%;" class="text-center">Δελτίο Συντ.</th>
+                                <th style="width: 15%;">Τεχνικός</th>
                                 <th style="width: 5%;" class="text-end">Ενέργειες</th>
                             </tr>
                         </thead>
@@ -140,6 +158,34 @@
                                             <small class="text-warning d-block">Σε <?= $daysUntil ?> ημέρες</small>
                                         <?php endif; ?>
                                     </td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="invoiced_<?= $maintenance['id'] ?>"
+                                                   <?= $maintenance['is_invoiced'] ? 'checked' : '' ?>
+                                                   onchange="toggleStatus(<?= $maintenance['id'] ?>, 'invoiced', this.checked)">
+                                        </div>
+                                        <?php if (!empty($maintenance['invoiced_at'])): ?>
+                                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">
+                                                <?= date('d/m/Y H:i', strtotime($maintenance['invoiced_at'])) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="form-check form-switch d-inline-block">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   id="report_<?= $maintenance['id'] ?>"
+                                                   <?= $maintenance['report_sent'] ? 'checked' : '' ?>
+                                                   onchange="toggleStatus(<?= $maintenance['id'] ?>, 'report', this.checked)">
+                                        </div>
+                                        <?php if (!empty($maintenance['report_sent_at'])): ?>
+                                            <div class="text-muted small mt-1" style="font-size: 0.75rem;">
+                                                <?= date('d/m/Y H:i', strtotime($maintenance['report_sent_at'])) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
                                     <td>
                                         <?= htmlspecialchars($maintenance['technician_name'] ?? 'N/A') ?>
                                     </td>
@@ -175,6 +221,8 @@
                             if ($search) $queryParams['search'] = $search;
                             if ($dateFrom) $queryParams['date_from'] = $dateFrom;
                             if ($dateTo) $queryParams['date_to'] = $dateTo;
+                            if (isset($isInvoiced) && $isInvoiced !== '') $queryParams['is_invoiced'] = $isInvoiced;
+                            if (isset($reportSent) && $reportSent !== '') $queryParams['report_sent'] = $reportSent;
                             $queryString = http_build_query($queryParams);
                             $queryPrefix = $queryString ? '&' : '';
                             ?>
@@ -224,5 +272,85 @@ function confirmDelete(id) {
         form.action = BASE_URL_JS + '/maintenances/delete/' + id;
         form.submit();
     }
+}
+
+function toggleStatus(id, type, checked) {
+    const status = checked ? 1 : 0;
+    const checkboxId = type === 'invoiced' ? 'invoiced_' + id : 'report_' + id;
+    const checkbox = document.getElementById(checkboxId);
+    
+    // Disable checkbox during request
+    checkbox.disabled = true;
+    
+    const url = BASE_URL_JS + '/maintenances/toggle-status/' + id;
+    console.log('Calling URL:', url); // Debug
+    console.log('Payload:', { type: type, status: status }); // Debug
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            type: type,
+            status: status
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status); // Debug
+        if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data); // Debug
+        if (data.success) {
+            // Update timestamp display
+            const cell = checkbox.closest('td');
+            const existingTimestamp = cell.querySelector('.text-muted.small');
+            
+            if (checked) {
+                // Add or update timestamp
+                const now = new Date();
+                const timestamp = now.toLocaleDateString('el-GR', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                if (existingTimestamp) {
+                    existingTimestamp.textContent = timestamp;
+                } else {
+                    const timestampDiv = document.createElement('div');
+                    timestampDiv.className = 'text-muted small mt-1';
+                    timestampDiv.style.fontSize = '0.75rem';
+                    timestampDiv.textContent = timestamp;
+                    cell.appendChild(timestampDiv);
+                }
+            } else {
+                // Remove timestamp when unchecked
+                if (existingTimestamp) {
+                    existingTimestamp.remove();
+                }
+            }
+            
+            checkbox.disabled = false;
+        } else {
+            // Revert checkbox on error
+            checkbox.checked = !checked;
+            checkbox.disabled = false;
+            alert('Σφάλμα κατά την ενημέρωση: ' + (data.message || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error); // Debug
+        // Revert checkbox on error
+        checkbox.checked = !checked;
+        checkbox.disabled = false;
+        alert('Σφάλμα επικοινωνίας με τον server: ' + error.message);
+    });
 }
 </script>

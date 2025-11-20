@@ -92,8 +92,8 @@ class ProjectTasksController extends BaseController {
             return $this->store($projectId);
         }
         
-        // Get all active technicians (users with role technician or admin)
-        $technicians = $this->userModel->getByRole(['admin', 'technician', 'assistant']);
+        // Get all active users (all roles)
+        $technicians = $this->userModel->getAllActive();
         
         parent::view('projects/tasks/add', [
             'title' => 'Νέα Εργασία - ' . ($project['title'] ?? $project['name'] ?? 'Project'),
@@ -221,7 +221,7 @@ class ProjectTasksController extends BaseController {
                     $labor[] = [
                         'technician_id' => !$isTemporary ? intval($laborItem['technician_id']) : null,
                         'technician_name' => trim($laborItem['technician_name']),
-                        'technician_role' => $laborItem['technician_role'] ?? null,
+                        'role_id' => $laborItem['role_id'] ?? null,
                         'is_temporary' => $isTemporary ? 1 : 0,
                         'hours_worked' => $hoursWorked,
                         'time_from' => $laborItem['time_from'] ?? null,
@@ -255,8 +255,8 @@ class ProjectTasksController extends BaseController {
             return $this->update($projectId, $taskId);
         }
         
-        // Get all active technicians (users with role technician or admin)
-        $technicians = $this->userModel->getByRole(['admin', 'technician', 'assistant']);
+        // Get all active users (all roles)
+        $technicians = $this->userModel->getAllActive();
         
         // Get project
         require_once 'models/Project.php';
@@ -484,8 +484,23 @@ class ProjectTasksController extends BaseController {
             return;
         }
         
-        if ($this->taskModel->delete($taskId)) {
-            $_SESSION['success'] = 'Η εργασία διαγράφηκε επιτυχώς!';
+        // Soft delete the task
+        $userId = $_SESSION['user_id'];
+        require_once __DIR__ . '/../classes/Database.php';
+        $db = new Database();
+        $conn = $db->connect();
+        
+        $sql = "UPDATE project_tasks SET deleted_at = ?, deleted_by = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $success = $stmt->execute([date('Y-m-d H:i:s'), $userId, $taskId]);
+        
+        if ($success) {
+            // Log the deletion
+            require_once __DIR__ . '/../models/Trash.php';
+            $trashModel = new Trash($conn);
+            $userName = $_SESSION['full_name'] ?? $_SESSION['username'];
+            
+            $_SESSION['success'] = 'Η εργασία μεταφέρθηκε στον κάδο απορριμμάτων';
         } else {
             $_SESSION['error'] = 'Αποτυχία διαγραφής εργασίας';
         }
