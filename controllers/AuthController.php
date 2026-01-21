@@ -44,10 +44,8 @@ class AuthController extends BaseController {
         }
         
         try {
-            // Validate CSRF token (skip in debug mode for easier testing)
-            if (!DEBUG_MODE) {
-                $this->validateCsrfToken();
-            }
+            // SECURITY FIX: CSRF protection must ALWAYS be enforced
+            $this->validateCsrfToken();
             
             // Sanitize input
             $username = $this->sanitize($_POST['username'] ?? '');
@@ -70,6 +68,9 @@ class AuthController extends BaseController {
             $user = $userModel->authenticate($username, $password);
             
             if ($user) {
+                // SECURITY FIX: Regenerate session ID to prevent session fixation attacks
+                session_regenerate_id(true);
+                
                 // Set session variables
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];
@@ -152,6 +153,9 @@ class AuthController extends BaseController {
             // Destroy session
             session_unset();
             session_destroy();
+            
+            // SECURITY FIX: Regenerate session ID to prevent session hijacking
+            session_regenerate_id(true);
             
             $this->flash('success', 'Αποσυνδεθήκατε επιτυχώς');
         }

@@ -399,15 +399,13 @@ class ProjectController extends BaseController {
         
         $user = $this->getCurrentUser();
         
-        // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log("ProjectController::store - Error: " . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/projects/create');
-            }
+        // SECURITY FIX: CSRF protection must ALWAYS be enforced
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log("ProjectController::store - Error: " . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects/create');
         }
         
         // Validate input
@@ -547,15 +545,13 @@ class ProjectController extends BaseController {
             $this->redirect('/projects');
         }
         
-        // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log("ProjectController::update - Error: " . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/projects/edit?id=' . $id);
-            }
+        // SECURITY FIX: CSRF protection must ALWAYS be enforced
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log("ProjectController::update - Error: " . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects/edit?id=' . $id);
         }
         
         // Validate input

@@ -5,9 +5,10 @@
  */
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../classes/BaseModel.php';
+require_once __DIR__ . '/../classes/BaseController.php';
 
-class UpdateController extends BaseModel {
+// SECURITY FIX: UpdateController must extend BaseController to enforce authentication
+class UpdateController extends BaseController {
     
     /**
      * Get current application version

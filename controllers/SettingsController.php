@@ -73,14 +73,13 @@ class SettingsController extends BaseController {
             $this->redirect('/settings');
         }
         
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log('CSRF validation failed in SettingsController::saveGeneral: ' . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/settings');
-            }
+        // SECURITY FIX: CSRF protection must ALWAYS be enforced
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('CSRF validation failed in SettingsController::saveGeneral: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/settings');
         }
         
         $database = new Database();

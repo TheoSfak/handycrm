@@ -321,11 +321,17 @@ class BaseController {
     }
     
     /**
-     * Handle file upload
+     * Handle file upload with comprehensive security validation
+     * SECURITY FIX: Validates actual file content, not just client-supplied MIME type
      */
     protected function uploadFile($file, $allowedTypes = null, $maxSize = null) {
         if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
             throw new Exception("No file uploaded or upload error");
+        }
+        
+        // SECURITY: Verify file was actually uploaded via POST
+        if (!is_uploaded_file($file['tmp_name'])) {
+            throw new Exception("Invalid file upload");
         }
         
         $allowedTypes = $allowedTypes ?: explode(',', ALLOWED_FILE_TYPES);
@@ -336,14 +342,64 @@ class BaseController {
             throw new Exception("File too large. Maximum size: " . ($maxSize / 1024 / 1024) . "MB");
         }
         
-        // Check file type
+        // SECURITY: Verify ACTUAL file content type (not client-supplied)
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $actualMimeType = finfo_file($finfo, $file['tmp_name']);
+        finfo_close($finfo);
+        
+        // Map of allowed MIME types to extensions
+        $allowedMimeTypes = [
+            'image/jpeg' => ['jpg', 'jpeg'],
+            'image/png' => ['png'],
+            'image/gif' => ['gif'],
+            'application/pdf' => ['pdf'],
+            'application/msword' => ['doc'],
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['docx'],
+            'application/vnd.ms-excel' => ['xls'],
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => ['xlsx']
+        ];
+        
+        // SECURITY: Block dangerous file types that could execute code
+        $dangerousExtensions = ['php', 'phtml', 'php3', 'php4', 'php5', 'phar', 
+                                'exe', 'sh', 'bat', 'cmd', 'cgi', 'pl', 'py', 
+                                'rb', 'js', 'jsp', 'asp', 'aspx'];
+        
+        // Check file extension
         $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        
+        // SECURITY: Reject dangerous extensions immediately
+        if (in_array($fileExt, $dangerousExtensions)) {
+            throw new Exception("Dangerous file extension blocked: " . $fileExt);
+        }
+        
+        // SECURITY: Verify extension matches actual content type
+        $mimeTypeValid = false;
+        foreach ($allowedMimeTypes as $mime => $extensions) {
+            if ($actualMimeType === $mime && in_array($fileExt, $extensions)) {
+                $mimeTypeValid = true;
+                break;
+            }
+        }
+        
+        if (!$mimeTypeValid) {
+            throw new Exception("File type validation failed. Detected: " . $actualMimeType);
+        }
+        
+        // Check if extension is in allowed list
         if (!in_array($fileExt, $allowedTypes)) {
             throw new Exception("File type not allowed. Allowed types: " . implode(', ', $allowedTypes));
         }
         
-        // Generate unique filename
-        $filename = uniqid() . '_' . time() . '.' . $fileExt;
+        // SECURITY: Additional validation for images
+        if (strpos($actualMimeType, 'image/') === 0) {
+            $imageInfo = @getimagesize($file['tmp_name']);
+            if ($imageInfo === false) {
+                throw new Exception("Invalid image file");
+            }
+        }
+        
+        // SECURITY: Generate cryptographically secure random filename
+        $filename = bin2hex(random_bytes(16)) . '.' . $fileExt;
         $uploadPath = UPLOAD_PATH . $filename;
         
         // Create upload directory if it doesn't exist
@@ -358,7 +414,8 @@ class BaseController {
                 'original_name' => $file['name'],
                 'size' => $file['size'],
                 'path' => $uploadPath,
-                'url' => APP_URL . '/uploads/' . $filename
+                'url' => APP_URL . '/uploads/' . $filename,
+                'mime_type' => $actualMimeType
             ];
         } else {
             throw new Exception("Failed to upload file");

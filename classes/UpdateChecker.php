@@ -10,7 +10,7 @@ class UpdateChecker {
     private $updateCheckInterval = 86400; // 24 hours in seconds
     
     public function __construct() {
-        $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.6.0';
+        $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.6.8';
         
         // Clear cached update info if version changed (handles upgrades)
         if (isset($_SESSION['cached_version']) && $_SESSION['cached_version'] !== $this->currentVersion) {
