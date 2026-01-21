@@ -337,24 +337,53 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
         
-        // Get existing photos (decode JSON to array)
-        $existingPhotos = !empty($maintenance['photos']) ? json_decode($maintenance['photos'], true) : [];
-        if (!is_array($existingPhotos)) {
-            $existingPhotos = [];
+        // Get existing transformers data
+        $existingTransformersData = [];
+        if (!empty($maintenance['transformers_data'])) {
+            $existingTransformersData = json_decode($maintenance['transformers_data'], true);
+            if (!is_array($existingTransformersData)) {
+                $existingTransformersData = [];
+            }
         }
         
-        // Handle multiple new photos (like daily-tasks)
-        if (!empty($_FILES['photos']['name'][0])) {
-            $newPhotos = $this->handlePhotoUploads($_FILES['photos']);
-            $existingPhotos = array_merge($existingPhotos, $newPhotos);
-        }
-        
-        // Prepare transformers data as JSON
+        // Prepare transformers data as JSON with photo uploads
         $transformersData = [];
-        foreach ($_POST['transformers'] as $transformer) {
+        $transformerDbIndex = 0; // Database uses 0-based index
+        foreach ($_POST['transformers'] as $formIndex => $transformer) {
+            // Get existing photos for this transformer (using DB index, not form index)
+            $existingPhotos = [];
+            if (isset($existingTransformersData[$transformerDbIndex]['photos']) && is_array($existingTransformersData[$transformerDbIndex]['photos'])) {
+                $existingPhotos = $existingTransformersData[$transformerDbIndex]['photos'];
+            }
+            
+            // Handle photo uploads for this specific transformer
+            $transformerPhotos = $existingPhotos;
+            
+            // Check if files were uploaded for this transformer (form uses formIndex for file input names)
+            $hasFiles = false;
+            if (isset($_FILES['transformer_photos']['name'][$formIndex])) {
+                if (is_array($_FILES['transformer_photos']['name'][$formIndex])) {
+                    // Multiple files - check if any are not empty
+                    foreach ($_FILES['transformer_photos']['name'][$formIndex] as $fileName) {
+                        if (!empty($fileName)) {
+                            $hasFiles = true;
+                            break;
+                        }
+                    }
+                } else {
+                    // Single file
+                    $hasFiles = !empty($_FILES['transformer_photos']['name'][$formIndex]);
+                }
+            }
+            
+            if ($hasFiles) {
+                $newPhotos = $this->handleTransformerPhotoUploads($_FILES['transformer_photos'], $formIndex);
+                $transformerPhotos = array_merge($existingPhotos, $newPhotos);
+            }
+            
             $transformersData[] = [
                 'power' => $transformer['power'],
-                'type' => $transformer['type'] ?? 'oil', // Default to oil type for backward compatibility
+                'type' => $transformer['type'] ?? 'oil',
                 'insulation' => $transformer['insulation'],
                 'coil_resistance' => $transformer['coil_resistance'],
                 'grounding' => $transformer['grounding'],
@@ -362,8 +391,13 @@ class TransformerMaintenanceController extends BaseController {
                 'oil_v2' => $transformer['oil_v2'] ?? null,
                 'oil_v3' => $transformer['oil_v3'] ?? null,
                 'oil_v4' => $transformer['oil_v4'] ?? null,
-                'oil_v5' => $transformer['oil_v5'] ?? null
+                'oil_v5' => $transformer['oil_v5'] ?? null,
+                'materials' => $transformer['materials'] ?? null,
+                'observations' => $transformer['observations'] ?? null,
+                'photos' => $transformerPhotos
             ];
+            
+            $transformerDbIndex++; // Increment for next iteration
         }
         $firstTransformer = $transformersData[0];
         
@@ -375,7 +409,7 @@ class TransformerMaintenanceController extends BaseController {
             'other_details' => $_POST['other_details'] ?? null,
             'maintenance_date' => $_POST['maintenance_date'],
             'transformer_power' => $firstTransformer['power'],
-            'transformer_type' => $firstTransformer['type'], // New field for transformer type
+            'transformer_type' => $firstTransformer['type'],
             'insulation_measurements' => $firstTransformer['insulation'],
             'coil_resistance_measurements' => $firstTransformer['coil_resistance'],
             'grounding_measurement' => $firstTransformer['grounding'],
@@ -384,8 +418,8 @@ class TransformerMaintenanceController extends BaseController {
             'oil_breakdown_v3' => $firstTransformer['oil_v3'],
             'oil_breakdown_v4' => $firstTransformer['oil_v4'],
             'oil_breakdown_v5' => $firstTransformer['oil_v5'],
-            'observations' => $_POST['observations'] ? trim(str_replace(["\r\n", "\r"], "\n", $_POST['observations'])) : null,
-            'photos' => $existingPhotos,
+            'observations' => $firstTransformer['observations'] ?? null,
+            'photos' => $firstTransformer['photos'] ?? [],
             'transformers_data' => json_encode($transformersData),
             'created_by' => $_POST['created_by'] ?? $maintenance['created_by'],
             'additional_technicians' => !empty($_POST['additional_technicians']) ? $_POST['additional_technicians'] : []
@@ -460,23 +494,116 @@ class TransformerMaintenanceController extends BaseController {
                     continue;
                 }
                 
-                // Validate file size (max 5MB)
-                if ($size > 5 * 1024 * 1024) {
+                // Validate file size (max 10MB for upload, will be resized)
+                if ($size > 10 * 1024 * 1024) {
                     continue;
                 }
                 
                 // Generate unique filename
                 $extension = pathinfo($name, PATHINFO_EXTENSION);
-                $filename = uniqid('maintenance_' . time() . '_') . '.' . $extension;
+                $filename = uniqid('maintenance_' . time() . '_') . '.jpg'; // Always save as JPG
                 $destination = $uploadDir . $filename;
                 
-                if (move_uploaded_file($tmpName, $destination)) {
+                // Resize and optimize the image
+                if ($this->resizeImage($tmpName, $destination, 1920, 1080, 85)) {
                     $uploadedPhotos[] = $destination;
                 }
             }
         }
         
         return $uploadedPhotos;
+    }
+    
+    /**
+     * Resize and optimize image
+     * Max dimensions: 1920x1080, JPEG quality: 85%
+     */
+    private function resizeImage($sourcePath, $destinationPath, $maxWidth = 1920, $maxHeight = 1080, $quality = 85) {
+        // Get image info
+        $imageInfo = getimagesize($sourcePath);
+        if (!$imageInfo) {
+            return false;
+        }
+        
+        list($origWidth, $origHeight, $imageType) = $imageInfo;
+        
+        // Calculate new dimensions maintaining aspect ratio
+        $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
+        
+        // If image is already smaller than max dimensions, just copy with optimization
+        if ($ratio >= 1) {
+            $newWidth = $origWidth;
+            $newHeight = $origHeight;
+        } else {
+            $newWidth = round($origWidth * $ratio);
+            $newHeight = round($origHeight * $ratio);
+        }
+        
+        // Create image resource from source
+        switch ($imageType) {
+            case IMAGETYPE_JPEG:
+                $sourceImage = imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $sourceImage = imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_GIF:
+                $sourceImage = imagecreatefromgif($sourcePath);
+                break;
+            default:
+                return false;
+        }
+        
+        if (!$sourceImage) {
+            return false;
+        }
+        
+        // Create new image
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency for PNG and GIF
+        if ($imageType == IMAGETYPE_PNG || $imageType == IMAGETYPE_GIF) {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+        
+        // Resize
+        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+        
+        // Save optimized image (always save as JPEG for smaller file size, except PNG with transparency)
+        $result = false;
+        if ($imageType == IMAGETYPE_PNG) {
+            // Check if PNG has transparency
+            $hasTransparency = false;
+            for ($x = 0; $x < $origWidth; $x++) {
+                for ($y = 0; $y < $origHeight; $y++) {
+                    $rgba = imagecolorat($sourceImage, $x, $y);
+                    $alpha = ($rgba & 0x7F000000) >> 24;
+                    if ($alpha > 0) {
+                        $hasTransparency = true;
+                        break 2;
+                    }
+                }
+            }
+            
+            if ($hasTransparency) {
+                $result = imagepng($newImage, $destinationPath, 9);
+            } else {
+                // Convert to JPEG for better compression
+                $result = imagejpeg($newImage, $destinationPath, $quality);
+            }
+        } else {
+            // Save as JPEG
+            $result = imagejpeg($newImage, $destinationPath, $quality);
+        }
+        
+        // Free memory
+        imagedestroy($sourceImage);
+        imagedestroy($newImage);
+        
+        return $result;
     }
     
     /**
@@ -523,17 +650,18 @@ class TransformerMaintenanceController extends BaseController {
                         continue;
                     }
                     
-                    // Validate file size (max 5MB)
-                    if ($size > 5 * 1024 * 1024) {
+                    // Validate file size (max 10MB for upload, will be resized)
+                    if ($size > 10 * 1024 * 1024) {
                         continue;
                     }
                     
                     // Generate unique filename
                     $extension = pathinfo($name, PATHINFO_EXTENSION);
-                    $filename = uniqid('transformer_' . $transformerIndex . '_' . time() . '_') . '.' . $extension;
+                    $filename = uniqid('transformer_' . $transformerIndex . '_' . time() . '_') . '.jpg'; // Always save as JPG
                     $destination = $uploadDir . $filename;
                     
-                    if (move_uploaded_file($tmpName, $destination)) {
+                    // Resize and optimize the image
+                    if ($this->resizeImage($tmpName, $destination, 1920, 1080, 85)) {
                         $uploadedPhotos[] = $destination;
                     }
                 }
@@ -1072,6 +1200,7 @@ class TransformerMaintenanceController extends BaseController {
                 }
                 
             } catch (Exception $e) {
+                error_log('Email sending failed in TransformerMaintenanceController::sendEmail: ' . $e->getMessage());
                 $_SESSION['error'] = __('maintenances.email_sent_error', 'Σφάλμα κατά την αποστολή email') . ': ' . $e->getMessage();
             }
             
@@ -1322,6 +1451,7 @@ class TransformerMaintenanceController extends BaseController {
                 echo json_encode(['success' => false, 'message' => 'Database update failed']);
             }
         } catch (Exception $e) {
+            error_log('Update maintenance date failed in TransformerMaintenanceController::updateMaintenanceDate: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -1333,11 +1463,15 @@ class TransformerMaintenanceController extends BaseController {
      * Delete a photo from maintenance (AJAX endpoint)
      */
     public function deletePhoto($id) {
+        // Suppress any output before JSON
+        ob_start();
+        
         // Set JSON header
         header('Content-Type: application/json');
         
         // Only allow POST requests
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            ob_end_clean();
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Method not allowed']);
             exit;
@@ -1347,6 +1481,7 @@ class TransformerMaintenanceController extends BaseController {
         $input = json_decode(file_get_contents('php://input'), true);
         
         if (!$input || !isset($input['photo'])) {
+            ob_end_clean();
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Missing photo parameter']);
             exit;
@@ -1357,42 +1492,80 @@ class TransformerMaintenanceController extends BaseController {
         // Get maintenance record
         $maintenance = $this->maintenanceModel->find($id);
         if (!$maintenance) {
+            ob_end_clean();
             http_response_code(404);
             echo json_encode(['success' => false, 'message' => 'Maintenance not found']);
             exit;
         }
         
-        // Get current photos array
-        $photos = !empty($maintenance['photos']) ? json_decode($maintenance['photos'], true) : [];
+        // Get transformers data
+        $transformersData = !empty($maintenance['transformers_data']) ? json_decode($maintenance['transformers_data'], true) : [];
         
-        // Find and remove the photo
-        $photoIndex = array_search($photoToDelete, $photos);
-        if ($photoIndex === false) {
+        // Find and remove the photo from transformers data
+        $photoFound = false;
+        foreach ($transformersData as $index => &$transformer) {
+            if (!empty($transformer['photos']) && is_array($transformer['photos'])) {
+                $photoIndex = array_search($photoToDelete, $transformer['photos']);
+                if ($photoIndex !== false) {
+                    // Delete physical file
+                    $photoPath = __DIR__ . '/../' . $photoToDelete;
+                    if (file_exists($photoPath)) {
+                        @unlink($photoPath); // Suppress warnings
+                    }
+                    
+                    // Remove from array
+                    array_splice($transformer['photos'], $photoIndex, 1);
+                    $transformer['photos'] = array_values($transformer['photos']);
+                    $photoFound = true;
+                    break;
+                }
+            }
+        }
+        unset($transformer); // Break reference
+        
+        if (!$photoFound) {
+            ob_end_clean();
             http_response_code(404);
             echo json_encode(['success' => false, 'message' => 'Photo not found in maintenance record']);
             exit;
         }
         
-        // Delete physical file
-        $photoPath = __DIR__ . '/../' . $photoToDelete;
-        if (file_exists($photoPath)) {
-            if (!unlink($photoPath)) {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'Failed to delete photo file']);
-                exit;
-            }
+        // Also update legacy photos field for backward compatibility
+        $legacyPhotos = !empty($maintenance['photos']) ? json_decode($maintenance['photos'], true) : [];
+        if (!is_array($legacyPhotos)) {
+            $legacyPhotos = [];
+        }
+        $legacyPhotoIndex = array_search($photoToDelete, $legacyPhotos);
+        if ($legacyPhotoIndex !== false) {
+            array_splice($legacyPhotos, $legacyPhotoIndex, 1);
         }
         
-        // Remove from array
-        array_splice($photos, $photoIndex, 1);
-        
-        // Update database
-        $updateData = ['photos' => json_encode(array_values($photos))];
-        if ($this->maintenanceModel->update($id, $updateData)) {
-            echo json_encode(['success' => true]);
-        } else {
+        try {
+            // Use direct SQL to update ONLY the photo fields
+            // Don't touch other fields to avoid JSON encoding issues
+            $sql = "UPDATE transformer_maintenances 
+                    SET transformers_data = ?, 
+                        photos = ?, 
+                        updated_at = NOW() 
+                    WHERE id = ?";
+            
+            $stmt = $this->maintenanceModel->execute($sql, [
+                json_encode($transformersData),
+                json_encode(array_values($legacyPhotos)),
+                $id
+            ]);
+            
+            ob_end_clean();
+            if ($stmt) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Update failed']);
+            }
+        } catch (Exception $e) {
+            error_log('Soft delete maintenance failed in TransformerMaintenanceController::softDelete: ' . $e->getMessage());
+            ob_end_clean();
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Failed to update database']);
+            echo json_encode(['success' => false, 'message' => 'Exception: ' . $e->getMessage()]);
         }
         
         exit;

@@ -552,6 +552,7 @@ class MaterialsController extends BaseController {
                 }
                 
             } catch (Exception $e) {
+                error_log('Material import failed in MaterialsController::import line ' . ($index + 2) . ': ' . $e->getMessage());
                 $errors[] = "Γραμμή " . ($index + 2) . ": " . $e->getMessage();
             }
         }
@@ -595,6 +596,7 @@ class MaterialsController extends BaseController {
                     $errors[] = "Αποτυχία διαγραφής υλικού #$id";
                 }
             } catch (Exception $e) {
+                error_log('Material deletion failed in MaterialsController::bulkDelete for material #' . $id . ': ' . $e->getMessage());
                 $errors[] = "Σφάλμα στο υλικό #$id: " . $e->getMessage();
             }
         }

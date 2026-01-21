@@ -350,7 +350,7 @@ class AuthController extends BaseController {
                                 <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
                                 
                                 <p style="color: #999; font-size: 12px; text-align: center; margin: 0;">
-                                    © 2024 ECOWATT Ενεργειακές Λύσεις | ' . htmlspecialchars($appName) . ' v1.4.0<br>
+                                    © 2024 ECOWATT Ενεργειακές Λύσεις | ' . htmlspecialchars($appName) . ' v' . APP_VERSION . '<br>
                                     Αυτό είναι ένα αυτοματοποιημένο email. Παρακαλώ μην απαντήσετε.
                                 </p>
                             </div>

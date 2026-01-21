@@ -69,6 +69,7 @@ class ProfileController extends BaseController {
             $_SESSION['success'] = 'Το προφίλ ενημερώθηκε με επιτυχία';
             
         } catch (Exception $e) {
+            error_log('Profile update failed in ProfileController::updateProfile: ' . $e->getMessage());
             $_SESSION['error'] = $e->getMessage();
         }
         
@@ -122,6 +123,7 @@ class ProfileController extends BaseController {
             $_SESSION['success'] = 'Το password άλλαξε με επιτυχία';
             
         } catch (Exception $e) {
+            error_log('Password change failed in ProfileController::changePassword: ' . $e->getMessage());
             $_SESSION['error'] = $e->getMessage();
         }
         

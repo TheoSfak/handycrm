@@ -238,7 +238,7 @@
             
             <div class="version-info">
                 <div class="mb-2">
-                    <strong><?= $appName ?></strong> <span class="badge bg-primary">v1.4.0</span>
+                    <strong><?= $appName ?></strong> <span class="badge bg-primary">v<?= defined('APP_VERSION') ? APP_VERSION : '1.6.0' ?></span>
                 </div>
                 <div class="text-muted small">
                     <i class="fas fa-tools me-1"></i> Σύστημα Διαχείρισης Πελατών & Έργων

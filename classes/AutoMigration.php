@@ -176,6 +176,7 @@ class AutoMigration {
             ];
             
         } catch (Exception $e) {
+            error_log("AutoMigration::executeMigrationFile - Error executing {$filename}: " . $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage()
@@ -209,6 +210,7 @@ class AutoMigration {
             $stmt = $this->db->execute($sql, [$filename]);
             return $stmt->fetchColumn() > 0;
         } catch (Exception $e) {
+            error_log("AutoMigration::isExecuted - Error checking migration {$filename}: " . $e->getMessage());
             return false;
         }
     }
@@ -224,6 +226,7 @@ class AutoMigration {
             $stmt = $this->db->execute($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("AutoMigration::getExecutedMigrations - Error fetching migrations: " . $e->getMessage());
             return [];
         }
     }

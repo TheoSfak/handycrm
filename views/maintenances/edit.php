@@ -354,22 +354,20 @@ function deleteTransformerPhoto(button, maintenanceId, transformerIndex, photoPa
         return;
     }
     
-    fetch(`<?= BASE_URL ?>/maintenances/delete-transformer-photo/${maintenanceId}`, {
+    fetch(`<?= BASE_URL ?>/maintenances/deletePhoto/${maintenanceId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-            photo: photoPath,
-            transformerIndex: transformerIndex
+            photo: photoPath
         })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const photoContainer = button.closest('[data-photo]');
-            photoContainer.remove();
-            alert('Η φωτογραφία διαγράφηκε επιτυχώς');
+            // Reload the page to show updated photos from database
+            location.reload();
         } else {
             alert('Σφάλμα κατά τη διαγραφή: ' + (data.message || 'Άγνωστο σφάλμα'));
         }

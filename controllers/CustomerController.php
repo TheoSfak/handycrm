@@ -153,6 +153,7 @@ class CustomerController extends BaseController {
             }
             
         } catch (Exception $e) {
+            error_log("CustomerController::create - Error creating customer: " . $e->getMessage());
             $this->flash('error', 'Σφάλμα: ' . $e->getMessage());
             $this->redirect('/customers/create');
         }
@@ -300,6 +301,7 @@ class CustomerController extends BaseController {
             }
             
         } catch (Exception $e) {
+            error_log("CustomerController::update - Error updating customer {$id}: " . $e->getMessage());
             $this->flash('error', 'Σφάλμα: ' . $e->getMessage());
             $this->redirect('/customers/edit?id=' . $id);
         }
@@ -343,6 +345,7 @@ class CustomerController extends BaseController {
             }
             
         } catch (Exception $e) {
+            error_log("CustomerController::delete - Error deleting customer {$id}: " . $e->getMessage());
             $this->flash('error', 'Σφάλμα: ' . $e->getMessage());
         }
         
@@ -388,6 +391,7 @@ class CustomerController extends BaseController {
             $this->flash('success', 'Η επικοινωνία καταγράφηκε επιτυχώς');
             
         } catch (Exception $e) {
+            error_log("CustomerController::addCommunication - Error for customer {$id}: " . $e->getMessage());
             $this->flash('error', 'Σφάλμα: ' . $e->getMessage());
         }
         
@@ -705,6 +709,7 @@ class CustomerController extends BaseController {
                         $importCount++;
                     }
                 } catch (Exception $e) {
+                    error_log("CustomerController::csvImport - Error importing row: " . $e->getMessage());
                     $errors[] = $e->getMessage();
                 }
             }
@@ -719,6 +724,7 @@ class CustomerController extends BaseController {
             }
             
         } catch (Exception $e) {
+            error_log("CustomerController::csvImport - Critical error: " . $e->getMessage());
             $_SESSION['error'] = __('customers.csv_import_error') . ': ' . $e->getMessage();
         }
         

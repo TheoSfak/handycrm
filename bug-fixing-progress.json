@@ -1,0 +1,35 @@
+{
+  "session_id": "session_2026-01-21",
+  "started_at": "2026-01-21T00:00:00Z",
+  "status": "READY",
+  "total_bugs": 214,
+  "critical_bugs": 12,
+  "current_bug": null,
+  "bugs_fixed": 0,
+  "bugs_failed": 0,
+  "bugs_remaining": 214,
+  "success_rate": 0,
+  "statistics": {
+    "total_iterations": 0,
+    "approved_first_try": 0,
+    "needed_revision": 0,
+    "rejected": 0
+  },
+  "completed_bugs": [],
+  "failed_bugs": [],
+  "current_phase": null,
+  "agents": {
+    "builder": {
+      "status": "IDLE",
+      "current_task": null
+    },
+    "tester": {
+      "status": "IDLE",
+      "current_task": null
+    },
+    "evaluator": {
+      "status": "IDLE",
+      "current_task": null
+    }
+  }
+}

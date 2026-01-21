@@ -76,6 +76,7 @@ class MigrationManager {
             }
             
         } catch (Exception $e) {
+            error_log("MigrationManager::migrate - Migration error: " . $e->getMessage());
             $results['success'] = false;
             $results['errors'][] = $e->getMessage();
         }
@@ -123,6 +124,7 @@ class MigrationManager {
             $result = $this->db->fetchOne($sql, [$version, $migrationName]);
             return $result && $result['count'] > 0;
         } catch (Exception $e) {
+            error_log("MigrationManager::isMigrationExecuted - Error checking migration {$migrationName}: " . $e->getMessage());
             return false;
         }
     }
@@ -160,6 +162,7 @@ class MigrationManager {
                     if (strpos($errorMsg, 'Duplicate column') === false &&
                         strpos($errorMsg, 'already exists') === false &&
                         strpos($errorMsg, 'Table') === false) {
+                        error_log("MigrationManager::executeMigration - SQL statement error: " . $errorMsg);
                         $errors[] = $errorMsg;
                     }
                 }
@@ -174,6 +177,7 @@ class MigrationManager {
             ];
             
         } catch (Exception $e) {
+            error_log("MigrationManager::executeMigration - Critical error: " . $e->getMessage());
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
@@ -249,6 +253,7 @@ class MigrationManager {
             $stmt = $this->db->execute($sql);
             return $stmt->fetchAll();
         } catch (Exception $e) {
+            error_log("MigrationManager::getExecutedMigrations - Error fetching migrations: " . $e->getMessage());
             return [];
         }
     }

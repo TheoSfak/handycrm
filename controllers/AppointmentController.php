@@ -166,6 +166,7 @@ class AppointmentController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("AppointmentController::create - CSRF validation failed: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/appointments/create');
             }
@@ -302,6 +303,7 @@ class AppointmentController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("AppointmentController::update - CSRF validation failed: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/appointments/edit?id=' . $id);
             }
@@ -346,6 +348,7 @@ class AppointmentController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("AppointmentController::delete - CSRF validation failed: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/appointments');
             }

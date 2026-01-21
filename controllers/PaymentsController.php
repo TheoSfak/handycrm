@@ -213,6 +213,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markPaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -246,6 +247,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markUnpaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -306,6 +308,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markEntriesPaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -339,6 +342,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markEntriesUnpaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -381,6 +385,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markWeekPaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -416,6 +421,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markWeekUnpaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -499,6 +505,7 @@ class PaymentsController extends BaseController {
             ]);
             
         } catch (Exception $e) {
+            error_log("PaymentsController::markAllPaid - Error: " . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => $e->getMessage()

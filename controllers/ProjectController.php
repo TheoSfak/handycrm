@@ -132,6 +132,7 @@ class ProjectController extends BaseController {
             $tasks = $taskModel->getByProject($project['id'], $filters);
             $summary = $taskModel->getSummary($project['id'], $filters);
         } catch (Exception $e) {
+            error_log("ProjectController::details - Error: " . $e->getMessage());
             // Tasks feature not available yet
         }
         
@@ -403,6 +404,7 @@ class ProjectController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("ProjectController::store - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/projects/create');
             }
@@ -550,6 +552,7 @@ class ProjectController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("ProjectController::update - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/projects/edit?id=' . $id);
             }
@@ -759,6 +762,7 @@ class ProjectController extends BaseController {
             $this->redirect('/projects/show?id=' . $projectId);
             
         } catch (Exception $e) {
+            error_log("ProjectController::updateStatus - Error: " . $e->getMessage());
             $_SESSION['error'] = $e->getMessage();
             if (isset($_POST['project_id'])) {
                 $this->redirect('/projects/show?id=' . $_POST['project_id']);
@@ -998,6 +1002,7 @@ class ProjectController extends BaseController {
                         $importCount++;
                     }
                 } catch (Exception $e) {
+                    error_log("ProjectController::importCsv - Error: " . $e->getMessage());
                     $errors[] = $e->getMessage();
                 }
             }
@@ -1012,6 +1017,7 @@ class ProjectController extends BaseController {
             }
             
         } catch (Exception $e) {
+            error_log("ProjectController::importCsv - Error: " . $e->getMessage());
             $_SESSION['error'] = __('projects.csv_import_error') . ': ' . $e->getMessage();
         }
         

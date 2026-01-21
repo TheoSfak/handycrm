@@ -41,6 +41,7 @@ class UpdateController extends BaseModel {
             
             return $result ? $result['version'] : '1.0.0';
         } catch (Exception $e) {
+            error_log('Failed to get current version in UpdateController::getCurrentVersion: ' . $e->getMessage());
             return '1.0.0';
         }
     }
@@ -179,6 +180,7 @@ class UpdateController extends BaseModel {
             ];
             
         } catch (Exception $e) {
+            error_log('Update application failed in UpdateController::applyUpdates: ' . $e->getMessage());
             $this->db->rollBack();
             
             return [
@@ -247,6 +249,7 @@ class UpdateController extends BaseModel {
             $result = $this->applyUpdates();
             echo json_encode($result);
         } catch (Exception $e) {
+            error_log('Update process failed in UpdateController::process: ' . $e->getMessage());
             echo json_encode([
                 'success' => false,
                 'message' => 'Σφάλμα: ' . $e->getMessage()

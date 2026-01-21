@@ -74,9 +74,9 @@ class TaskPhoto extends BaseModel {
             return false;
         }
         
-        // Generate unique filename
+        // Generate unique filename (always save as JPG for better compression)
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $filename = 'task_' . $taskId . '_' . time() . '_' . uniqid() . '.' . $extension;
+        $filename = 'task_' . $taskId . '_' . time() . '_' . uniqid() . '.jpg';
         
         // Create upload directory if not exists
         $uploadDir = __DIR__ . '/../uploads/task_photos/' . date('Y') . '/' . date('m');
@@ -87,13 +87,10 @@ class TaskPhoto extends BaseModel {
         $filePath = $uploadDir . '/' . $filename;
         $relativeePath = 'uploads/task_photos/' . date('Y') . '/' . date('m') . '/' . $filename;
         
-        // Move uploaded file
-        if (!move_uploaded_file($file['tmp_name'], $filePath)) {
+        // Resize and optimize image (max 1920x1080, 85% quality)
+        if (!$this->resizeImage($file['tmp_name'], $filePath, 1920, 1080, 85)) {
             return false;
         }
-        
-        // Resize image for web (max 1920px width)
-        $this->resizeImage($filePath, 1920);
         
         // Get file size after resize
         $fileSize = filesize($filePath);
@@ -131,7 +128,7 @@ class TaskPhoto extends BaseModel {
             return false;
         }
         
-        // Check file size (max 10MB)
+        // Check file size (max 10MB, will be resized)
         if ($file['size'] > 10 * 1024 * 1024) {
             return false;
         }
@@ -152,81 +149,81 @@ class TaskPhoto extends BaseModel {
     }
     
     /**
-     * Resize image to max width while maintaining aspect ratio
+     * Resize and optimize image
+     * Max dimensions: 1920x1080, JPEG quality: 85%
      * 
-     * @param string $filePath Path to image file
+     * @param string $sourcePath Source file path
+     * @param string $destinationPath Destination file path
      * @param int $maxWidth Maximum width
+     * @param int $maxHeight Maximum height
+     * @param int $quality JPEG quality (0-100)
      * @return bool
      */
-    private function resizeImage($filePath, $maxWidth) {
-        $imageInfo = getimagesize($filePath);
+    private function resizeImage($sourcePath, $destinationPath, $maxWidth = 1920, $maxHeight = 1080, $quality = 85) {
+        // Get image info
+        $imageInfo = getimagesize($sourcePath);
         if (!$imageInfo) {
             return false;
         }
         
-        list($width, $height, $type) = $imageInfo;
+        list($origWidth, $origHeight, $imageType) = $imageInfo;
         
-        // Don't resize if already smaller
-        if ($width <= $maxWidth) {
-            return true;
+        // Calculate new dimensions maintaining aspect ratio
+        $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
+        
+        // If image is already smaller, still process for optimization
+        if ($ratio >= 1) {
+            $newWidth = $origWidth;
+            $newHeight = $origHeight;
+        } else {
+            $newWidth = round($origWidth * $ratio);
+            $newHeight = round($origHeight * $ratio);
         }
         
-        // Calculate new dimensions
-        $newWidth = $maxWidth;
-        $newHeight = floor($height * ($maxWidth / $width));
-        
-        // Load image based on type
-        switch ($type) {
+        // Create image resource from source
+        switch ($imageType) {
             case IMAGETYPE_JPEG:
-                $source = imagecreatefromjpeg($filePath);
+                $sourceImage = imagecreatefromjpeg($sourcePath);
                 break;
             case IMAGETYPE_PNG:
-                $source = imagecreatefrompng($filePath);
+                $sourceImage = imagecreatefrompng($sourcePath);
                 break;
             case IMAGETYPE_GIF:
-                $source = imagecreatefromgif($filePath);
+                $sourceImage = imagecreatefromgif($sourcePath);
                 break;
             case IMAGETYPE_WEBP:
-                $source = imagecreatefromwebp($filePath);
+                $sourceImage = imagecreatefromwebp($sourcePath);
                 break;
             default:
                 return false;
         }
         
-        // Create new image
-        $destination = imagecreatetruecolor($newWidth, $newHeight);
+        if (!$sourceImage) {
+            return false;
+        }
         
-        // Preserve transparency for PNG and GIF
-        if ($type == IMAGETYPE_PNG || $type == IMAGETYPE_GIF) {
-            imagealphablending($destination, false);
-            imagesavealpha($destination, true);
-            $transparent = imagecolorallocatealpha($destination, 255, 255, 255, 127);
-            imagefilledrectangle($destination, 0, 0, $newWidth, $newHeight, $transparent);
+        // Create new image
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency for PNG
+        if ($imageType == IMAGETYPE_PNG) {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
         }
         
         // Resize
-        imagecopyresampled($destination, $source, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
         
-        // Save based on type
-        switch ($type) {
-            case IMAGETYPE_JPEG:
-                imagejpeg($destination, $filePath, 85);
-                break;
-            case IMAGETYPE_PNG:
-                imagepng($destination, $filePath, 8);
-                break;
-            case IMAGETYPE_GIF:
-                imagegif($destination, $filePath);
-                break;
-            case IMAGETYPE_WEBP:
-                imagewebp($destination, $filePath, 85);
-                break;
-        }
+        // Always save as JPEG for smaller file size (web photos don't need transparency)
+        $result = imagejpeg($newImage, $destinationPath, $quality);
         
-        imagedestroy($source);
-        imagedestroy($destination);
+        // Free memory
+        imagedestroy($sourceImage);
+        imagedestroy($newImage);
         
-        return true;
+        return $result;
     }
     
     /**

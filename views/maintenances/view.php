@@ -130,6 +130,9 @@
                         $transformers = json_decode($maintenance['transformers_data'], true);
                     }
                     
+                    // Make transformersData available for photo indexing
+                    $transformersData = $transformers;
+                    
                     // Fallback to legacy single transformer fields
                     if (empty($transformers)) {
                         $transformers = [[
@@ -256,13 +259,26 @@
                                 <div class="col-md-12">
                                     <strong><i class="fas fa-images"></i> Φωτογραφίες (<?= count($transformer['photos']) ?>):</strong>
                                     <div class="row g-2 mt-1">
-                                        <?php foreach ($transformer['photos'] as $photoIndex => $photo): ?>
+                                        <?php 
+                                        // Calculate global photo index for lightbox
+                                        $globalPhotoIndex = 0;
+                                        foreach ($transformersData as $prevIndex => $prevTransformer) {
+                                            if ($prevIndex < $index) {
+                                                if (!empty($prevTransformer['photos'])) {
+                                                    $globalPhotoIndex += count($prevTransformer['photos']);
+                                                }
+                                            }
+                                        }
+                                        
+                                        foreach ($transformer['photos'] as $photoIndex => $photo): 
+                                            $currentGlobalIndex = $globalPhotoIndex + $photoIndex;
+                                        ?>
                                             <div class="col-md-2">
                                                 <div class="position-relative">
                                                     <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>" 
                                                          class="img-thumbnail w-100" 
                                                          style="height: 120px; object-fit: cover; cursor: pointer;"
-                                                         onclick="openLightbox(<?= $index ?>_<?= $photoIndex ?>)"
+                                                         onclick="openLightbox(<?= $currentGlobalIndex ?>)"
                                                          alt="Φωτογραφία Μ/Σ <?= $index + 1 ?> - <?= $photoIndex + 1 ?>">
                                                     <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-50 text-white px-2 py-1 small">
                                                         #<?= $photoIndex + 1 ?>
@@ -285,7 +301,7 @@
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <strong><?= __('maintenances.technician') ?>:</strong>
-                            <p><?= htmlspecialchars($maintenance['technician_name']) ?></p>
+                            <p><?= htmlspecialchars($maintenance['technician_name'] ?? '') ?></p>
                         </div>
                         <div class="col-md-4">
                             <strong><?= __('maintenances.created_at') ?>:</strong>
@@ -416,7 +432,12 @@ function confirmDelete(id) {
                 <button type="button" class="btn btn-secondary" onclick="navigateLightbox(-1)">
                     <i class="fas fa-chevron-left"></i> Προηγούμενη
                 </button>
-                <span class="text-white" id="lightboxCounter"></span>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="text-white" id="lightboxCounter"></span>
+                    <button type="button" class="btn btn-danger" onclick="deleteCurrentPhoto()">
+                        <i class="fas fa-trash"></i> Διαγραφή
+                    </button>
+                </div>
                 <button type="button" class="btn btn-secondary" onclick="navigateLightbox(1)">
                     Επόμενη <i class="fas fa-chevron-right"></i>
                 </button>
@@ -426,12 +447,23 @@ function confirmDelete(id) {
 </div>
 
 <script>
-// Lightbox functionality
-const photos = <?= json_encode($maintenance['photos'] ?? []) ?>;
+// Build photos array from transformers data
+const photos = [];
+<?php 
+$transformersData = json_decode($maintenance['transformers_data'] ?? '[]', true);
+foreach ($transformersData as $transformerIndex => $transformer) {
+    if (!empty($transformer['photos']) && is_array($transformer['photos'])) {
+        foreach ($transformer['photos'] as $photoIndex => $photoPath) {
+            echo "photos.push({ path: " . json_encode($photoPath) . ", transformer: " . ($transformerIndex + 1) . ", index: " . ($photoIndex + 1) . " });\n";
+        }
+    }
+}
+?>
+
 let currentPhotoIndex = 0;
 
-function openLightbox(index) {
-    currentPhotoIndex = index;
+function openLightbox(globalIndex) {
+    currentPhotoIndex = globalIndex;
     updateLightbox();
     const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
     modal.show();
@@ -453,10 +485,52 @@ function navigateLightbox(direction) {
 function updateLightbox() {
     if (photos.length > 0) {
         const photo = photos[currentPhotoIndex];
-        document.getElementById('lightboxImage').src = '<?= BASE_URL ?>/' + photo;
-        document.getElementById('lightboxTitle').textContent = `Φωτογραφία ${currentPhotoIndex + 1}`;
+        document.getElementById('lightboxImage').src = '<?= BASE_URL ?>/' + photo.path;
+        document.getElementById('lightboxTitle').textContent = `Μ/Σ ${photo.transformer} - Φωτογραφία ${photo.index}`;
         document.getElementById('lightboxCounter').textContent = `${currentPhotoIndex + 1} / ${photos.length}`;
     }
+}
+
+function deleteCurrentPhoto() {
+    if (photos.length === 0) return;
+    
+    if (!confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη φωτογραφία;')) {
+        return;
+    }
+    
+    const photo = photos[currentPhotoIndex];
+    
+    // Send AJAX request to delete the photo
+    fetch('<?= BASE_URL ?>/maintenances/deletePhoto/<?= $maintenance['id'] ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            photo: photo.path
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal first
+            const modal = bootstrap.Modal.getInstance(document.getElementById('lightboxModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Wait a bit for modal to close, then reload
+            setTimeout(() => {
+                location.reload();
+            }, 300);
+        } else {
+            alert('Σφάλμα κατά τη διαγραφή της φωτογραφίας: ' + (data.message || 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Σφάλμα κατά τη διαγραφή της φωτογραφίας');
+    });
 }
 
 // Keyboard navigation for lightbox

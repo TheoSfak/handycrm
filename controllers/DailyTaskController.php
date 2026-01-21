@@ -203,14 +203,18 @@ class DailyTaskController extends BaseController {
                     'hours_worked' => floatval($_POST['primary_technician_hours'] ?? 8),
                     'is_primary' => 1
                 ]);
-                error_log("Primary technician save result: " . ($result ? 'SUCCESS' : 'FAILED'));
-                error_log("Primary technician data: taskId=$taskId, userId={$_POST['technician_id']}, hours=" . floatval($_POST['primary_technician_hours'] ?? 8));
+                if (DEBUG_MODE) {
+                    error_log("DailyTaskController - Primary technician save: " . ($result ? 'SUCCESS' : 'FAILED'));
+                    error_log("DailyTaskController - Primary technician: taskId=$taskId, userId={$_POST['technician_id']}, hours=" . floatval($_POST['primary_technician_hours'] ?? 8));
+                }
             }
             
             // Save additional technicians
             if (!empty($_POST['additional_technicians']) && is_array($_POST['additional_technicians'])) {
-                error_log("Additional technicians POST: " . print_r($_POST['additional_technicians'], true));
-                error_log("Technician hours POST: " . print_r($_POST['technician_hours'] ?? [], true));
+                if (DEBUG_MODE) {
+                    error_log("DailyTaskController - Additional technicians: " . print_r($_POST['additional_technicians'], true));
+                    error_log("DailyTaskController - Technician hours: " . print_r($_POST['technician_hours'] ?? [], true));
+                }
                 foreach ($_POST['additional_technicians'] as $techId) {
                     if (!empty($techId)) {
                         $hours = floatval($_POST['technician_hours'][$techId] ?? 8);
@@ -220,7 +224,9 @@ class DailyTaskController extends BaseController {
                             'hours_worked' => $hours,
                             'is_primary' => 0
                         ]);
-                        error_log("Additional technician save result for techId=$techId, hours=$hours: " . ($result ? 'SUCCESS' : 'FAILED'));
+                        if (DEBUG_MODE) {
+                            error_log("DailyTaskController - Additional technician save for techId=$techId, hours=$hours: " . ($result ? 'SUCCESS' : 'FAILED'));
+                        }
                     }
                 }
             }
@@ -565,6 +571,7 @@ class DailyTaskController extends BaseController {
                 echo json_encode(['success' => false, 'message' => 'Database update failed']);
             }
         } catch (Exception $e) {
+            error_log('Update invoiced status failed in DailyTaskController::updateInvoicedStatus: ' . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
@@ -572,6 +579,66 @@ class DailyTaskController extends BaseController {
         exit;
     }
     
+    /**
+     * Resize and optimize image
+     * Max dimensions: 1920x1080, JPEG quality: 85%
+     */
+    private function resizeImage($sourcePath, $destinationPath, $maxWidth = 1920, $maxHeight = 1080, $quality = 85) {
+        // Get image info
+        $imageInfo = getimagesize($sourcePath);
+        if (!$imageInfo) {
+            return false;
+        }
+        
+        list($origWidth, $origHeight, $imageType) = $imageInfo;
+        
+        // Calculate new dimensions maintaining aspect ratio
+        $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
+        
+        // If image is already smaller, still process for optimization
+        if ($ratio >= 1) {
+            $newWidth = $origWidth;
+            $newHeight = $origHeight;
+        } else {
+            $newWidth = round($origWidth * $ratio);
+            $newHeight = round($origHeight * $ratio);
+        }
+        
+        // Create image resource from source
+        switch ($imageType) {
+            case IMAGETYPE_JPEG:
+                $sourceImage = imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $sourceImage = imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_GIF:
+                $sourceImage = imagecreatefromgif($sourcePath);
+                break;
+            default:
+                return false;
+        }
+        
+        if (!$sourceImage) {
+            return false;
+        }
+        
+        // Create new image
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Resize
+        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+        
+        // Always save as JPEG for smaller file size
+        $result = imagejpeg($newImage, $destinationPath, $quality);
+        
+        // Free memory
+        imagedestroy($sourceImage);
+        imagedestroy($newImage);
+        
+        return $result;
+    }
+
     /**
      * Handle multiple photo uploads
      */
@@ -600,17 +667,18 @@ class DailyTaskController extends BaseController {
                     continue;
                 }
                 
-                // Validate file size (max 5MB)
-                if ($size > 5 * 1024 * 1024) {
+                // Validate file size (max 10MB, will be resized)
+                if ($size > 10 * 1024 * 1024) {
                     continue;
                 }
                 
-                // Generate unique filename
+                // Generate unique filename (always save as JPG)
                 $extension = pathinfo($name, PATHINFO_EXTENSION);
-                $filename = uniqid('task_' . time() . '_') . '.' . $extension;
+                $filename = uniqid('task_' . time() . '_') . '.jpg';
                 $destination = $uploadDir . $filename;
                 
-                if (move_uploaded_file($tmpName, $destination)) {
+                // Resize and optimize the image
+                if ($this->resizeImage($tmpName, $destination, 1920, 1080, 85)) {
                     $uploadedPhotos[] = $destination;
                 }
             }
@@ -680,13 +748,15 @@ class DailyTaskController extends BaseController {
                 }
                 
                 // DEBUG: Log SMTP settings
-                error_log("=== EMAIL DEBUG START ===");
-                error_log("EmailService created");
-                error_log("isConfigured: " . ($emailService->isConfigured() ? 'YES' : 'NO'));
+                if (DEBUG_MODE) {
+                    error_log("=== EMAIL DEBUG START ===");
+                    error_log("EmailService created");
+                    error_log("isConfigured: " . ($emailService->isConfigured() ? 'YES' : 'NO'));
+                }
                 
                 // Check if email is configured
                 if (!$emailService->isConfigured()) {
-                    error_log("SMTP NOT CONFIGURED - Stopping");
+                    if (DEBUG_MODE) error_log("SMTP NOT CONFIGURED - Stopping");
                     throw new Exception('Οι ρυθμίσεις SMTP δεν έχουν ρυθμιστεί. Παρακαλώ ρυθμίστε τα στοιχεία email από τις Ρυθμίσεις Συστήματος.');
                 }
                 
@@ -763,9 +833,11 @@ class DailyTaskController extends BaseController {
                 $pdf->Output($tempPdfPath, 'F');
                 
                 // Send email with PHPMailer
-                error_log("Creating mailer and preparing email");
-                error_log("Recipient: " . $recipientEmail);
-                error_log("Subject: " . $subject);
+                if (DEBUG_MODE) {
+                    error_log("DailyTaskController - Creating mailer and preparing email");
+                    error_log("DailyTaskController - Recipient: " . $recipientEmail);
+                    error_log("DailyTaskController - Subject: " . $subject);
+                }
                 
                 $mail = $emailService->createMailer();
                 $mail->addAddress($recipientEmail, $task['customer_name']);
@@ -776,7 +848,7 @@ class DailyTaskController extends BaseController {
                     // Skip .local domains (they're not real emails)
                     if (!str_ends_with($userEmail, '.local')) {
                         $mail->addCC($userEmail);
-                        error_log("Added CC: " . $userEmail);
+                        if (DEBUG_MODE) error_log("DailyTaskController - Added CC: " . $userEmail);
                     }
                 }
                 
@@ -785,22 +857,22 @@ class DailyTaskController extends BaseController {
                 $mail->Body = nl2br(htmlspecialchars($message));
                 $mail->addAttachment($tempPdfPath, $filename);
                 
-                error_log("Attempting to send email...");
+                if (DEBUG_MODE) error_log("DailyTaskController - Attempting to send email...");
                 
                 if ($mail->send()) {
-                    error_log("Email sent successfully!");
+                    if (DEBUG_MODE) error_log("DailyTaskController - Email sent successfully!");
                     // Delete temp file
                     unlink($tempPdfPath);
                     
                     $_SESSION['success'] = 'Το email στάλθηκε επιτυχώς';
                 } else {
-                    error_log("Email send returned false");
+                    if (DEBUG_MODE) error_log("DailyTaskController - Email send returned false");
                     throw new Exception('Email sending failed');
                 }
                 
             } catch (Exception $e) {
-                error_log("EMAIL ERROR: " . $e->getMessage());
-                error_log("=== EMAIL DEBUG END ===");
+                error_log("DailyTaskController::emailTask - EMAIL ERROR: " . $e->getMessage());
+                if (DEBUG_MODE) error_log("=== EMAIL DEBUG END ===");
                 $_SESSION['error'] = 'Σφάλμα κατά την αποστολή email: ' . $e->getMessage();
             }
             

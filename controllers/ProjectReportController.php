@@ -382,6 +382,7 @@ class ProjectReportController extends BaseController {
                 exit;
                 
             } catch (Exception $e) {
+                error_log('Email project report failed in ProjectReportController::emailReport: ' . $e->getMessage());
                 unlink($tempPdfPath);
                 $_SESSION['error'] = 'Αποτυχία αποστολής email: ' . $e->getMessage();
                 header('Location: ' . BASE_URL . '/projects/' . $project['slug']);

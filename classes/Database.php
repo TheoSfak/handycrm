@@ -41,6 +41,7 @@ class Database {
                 $this->pdo->exec("SET CHARACTER SET utf8mb4");
                 
             } catch (PDOException $e) {
+                error_log("Database::connect - Connection failed: " . $e->getMessage());
                 if (DEBUG_MODE) {
                     die("Database connection failed: " . $e->getMessage());
                 } else {
@@ -89,6 +90,7 @@ class Database {
             $stmt->execute($params);
             return $stmt;
         } catch (PDOException $e) {
+            error_log("Database::execute - Query error: " . $e->getMessage() . " | SQL: " . $sql);
             if (DEBUG_MODE) {
                 throw new Exception("Database error: " . $e->getMessage() . " SQL: " . $sql);
             } else {

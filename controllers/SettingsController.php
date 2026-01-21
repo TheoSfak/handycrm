@@ -77,6 +77,7 @@ class SettingsController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log('CSRF validation failed in SettingsController::saveGeneral: ' . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/settings');
             }
@@ -176,7 +177,7 @@ class SettingsController extends BaseController {
     private function handleLogoUpload($file) {
         // Validate file
         $allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-        $maxSize = 2 * 1024 * 1024; // 2MB
+        $maxSize = 10 * 1024 * 1024; // 10MB (will be resized)
         
         if (!in_array($file['type'], $allowedTypes)) {
             $_SESSION['error'] = 'Μη έγκυρος τύπος αρχείου. Χρησιμοποιήστε PNG, JPG, GIF ή WebP';
@@ -184,7 +185,7 @@ class SettingsController extends BaseController {
         }
         
         if ($file['size'] > $maxSize) {
-            $_SESSION['error'] = 'Το αρχείο είναι πολύ μεγάλο. Μέγιστο μέγεθος: 2MB';
+            $_SESSION['error'] = 'Το αρχείο είναι πολύ μεγάλο. Μέγιστο μέγεθος: 10MB';
             return false;
         }
         
@@ -194,18 +195,112 @@ class SettingsController extends BaseController {
             mkdir($uploadDir, 0755, true);
         }
         
+        // Check if image has transparency (keep PNG if it does)
+        $imageInfo = getimagesize($file['tmp_name']);
+        $hasTransparency = false;
+        $extension = 'jpg';
+        
+        if ($imageInfo[2] == IMAGETYPE_PNG) {
+            // Check for transparency in PNG
+            $img = imagecreatefrompng($file['tmp_name']);
+            if ($img) {
+                for ($x = 0; $x < min(imagesx($img), 100); $x += 10) {
+                    for ($y = 0; $y < min(imagesy($img), 100); $y += 10) {
+                        $rgba = imagecolorat($img, $x, $y);
+                        $alpha = ($rgba & 0x7F000000) >> 24;
+                        if ($alpha > 0) {
+                            $hasTransparency = true;
+                            $extension = 'png';
+                            break 2;
+                        }
+                    }
+                }
+                imagedestroy($img);
+            }
+        }
+        
         // Generate unique filename
-        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
         $filename = 'logo_' . time() . '_' . uniqid() . '.' . $extension;
         $targetPath = $uploadDir . $filename;
         
-        // Move uploaded file
-        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            // Return relative path for database (without leading slash for BASE_URL compatibility)
+        // Resize and optimize logo (max 800x600 for logos)
+        if ($this->resizeImageLogo($file['tmp_name'], $targetPath, 800, 600, $hasTransparency)) {
             return 'uploads/company/' . $filename;
         }
         
         return false;
+    }
+    
+    /**
+     * Resize and optimize logo image
+     */
+    private function resizeImageLogo($sourcePath, $destinationPath, $maxWidth = 800, $maxHeight = 600, $keepTransparency = false) {
+        $imageInfo = getimagesize($sourcePath);
+        if (!$imageInfo) {
+            return false;
+        }
+        
+        list($origWidth, $origHeight, $imageType) = $imageInfo;
+        
+        // Calculate new dimensions maintaining aspect ratio
+        $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
+        
+        if ($ratio >= 1) {
+            $newWidth = $origWidth;
+            $newHeight = $origHeight;
+        } else {
+            $newWidth = round($origWidth * $ratio);
+            $newHeight = round($origHeight * $ratio);
+        }
+        
+        // Create image resource
+        switch ($imageType) {
+            case IMAGETYPE_JPEG:
+                $sourceImage = imagecreatefromjpeg($sourcePath);
+                break;
+            case IMAGETYPE_PNG:
+                $sourceImage = imagecreatefrompng($sourcePath);
+                break;
+            case IMAGETYPE_GIF:
+                $sourceImage = imagecreatefromgif($sourcePath);
+                break;
+            case IMAGETYPE_WEBP:
+                $sourceImage = imagecreatefromwebp($sourcePath);
+                break;
+            default:
+                return false;
+        }
+        
+        if (!$sourceImage) {
+            return false;
+        }
+        
+        // Create new image
+        $newImage = imagecreatetruecolor($newWidth, $newHeight);
+        
+        // Preserve transparency if needed (for logos)
+        if ($keepTransparency) {
+            imagealphablending($newImage, false);
+            imagesavealpha($newImage, true);
+            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
+            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
+        }
+        
+        // Resize
+        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
+        
+        // Save as PNG if transparency, otherwise JPEG
+        $result = false;
+        if ($keepTransparency) {
+            $result = imagepng($newImage, $destinationPath, 9);
+        } else {
+            $result = imagejpeg($newImage, $destinationPath, 90);
+        }
+        
+        imagedestroy($sourceImage);
+        imagedestroy($newImage);
+        
+        return $result;
     }
     
     /**

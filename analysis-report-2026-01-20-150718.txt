@@ -1,0 +1,1125 @@
+HandyCRM System Analysis Report
+Generated: 2026-01-20 15:07:18
+Version: 1.6.0
+================================================================================
+
+SUMMARY
+--------------------------------------------------------------------------------
+Files Scanned: 141
+Total Issues: 214
+Critical: 12
+Warning: 117
+Notice: 85
+Info: 0
+
+================================================================================
+CATEGORY: Version (15 issues)
+================================================================================
+
+[CRITICAL] Issue #1
+File: config/config.php
+Problem: APP_VERSION is 1.5.0 but should be 1.6.0
+Suggestion: Update APP_VERSION to '1.6.0'
+
+[CRITICAL] Issue #2
+File: config/config.example.php
+Problem: APP_VERSION is 1.4.0 but should be 1.6.0
+Suggestion: Update APP_VERSION to '1.6.0'
+
+[WARNING] Issue #3
+File: classes\UpdateChecker.php:13
+Problem: Hardcoded old version reference: 1.0.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #4
+File: controllers\AuthController.php:353
+Problem: Hardcoded old version reference: 1.4.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #5
+File: controllers\UpdateController.php:4
+Problem: Hardcoded old version reference: 1.2.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #6
+File: controllers\UpdateController.php:20
+Problem: Hardcoded old version reference: 1.0.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #7
+File: controllers\UpdateController.php:31
+Problem: Hardcoded old version reference: 1.0.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #8
+File: controllers\UpdateController.php:42
+Problem: Hardcoded old version reference: 1.0.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #9
+File: controllers\UpdateController.php:44
+Problem: Hardcoded old version reference: 1.0.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #10
+File: controllers\UpdateController.php:71
+Problem: Hardcoded old version reference: 1.2.5
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #11
+File: views\auth\login.php:241
+Problem: Hardcoded old version reference: 1.4.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #12
+File: views\includes\footer.php:29
+Problem: Hardcoded old version reference: 1.4.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #13
+File: migrations\migrate_to_1.1.0.php:3
+Problem: Hardcoded old version reference: 1.1.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #14
+File: migrations\migrate_to_1.1.0.php:43
+Problem: Hardcoded old version reference: 1.1.0
+Suggestion: Review if this needs updating to 1.6.0
+
+[WARNING] Issue #15
+File: migrations\migrate_to_1.1.0.php:196
+Problem: Hardcoded old version reference: 1.1.0
+Suggestion: Review if this needs updating to 1.6.0
+
+================================================================================
+CATEGORY: Database (1 issues)
+================================================================================
+
+[CRITICAL] Issue #1
+File: config/config.php
+Problem: Cannot connect to database: SQLSTATE[HY000] [1045] Access denied for user 'handycrm_user'@'localhost' (using password: YES)
+Suggestion: Check database credentials and ensure MySQL is running
+
+================================================================================
+CATEGORY: Code Quality (150 issues)
+================================================================================
+
+[WARNING] Issue #1
+File: classes\AutoMigration.php:157
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #2
+File: classes\AutoMigration.php:178
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #3
+File: classes\AutoMigration.php:211
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #4
+File: classes\AutoMigration.php:226
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #5
+File: classes\Database.php:43
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #6
+File: classes\EmailService_OLD.php:307
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #7
+File: classes\EmailService_OLD.php:338
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #8
+File: classes\EmailService_OLD.php:443
+Problem: Code marker: TODO - // TODO: Implement PHPMailer for better SMTP support
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #9
+File: classes\MigrationManager.php:78
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #10
+File: classes\MigrationManager.php:125
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #11
+File: classes\MigrationManager.php:155
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #12
+File: classes\MigrationManager.php:176
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #13
+File: classes\MigrationManager.php:251
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #14
+File: classes\VersionManager.php:76
+Problem: Debug function found: error_log('Migration warnings: ' . print_r($migrationResult['errors'], true));
+Suggestion: Remove debug output or comment it out
+
+[WARNING] Issue #15
+File: controllers\AppointmentController.php:168
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #16
+File: controllers\AppointmentController.php:304
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #17
+File: controllers\AppointmentController.php:348
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #18
+File: controllers\AuthController.php:47
+Problem: Code marker: bug - // Validate CSRF token (skip in debug mode for easier testing)
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #19
+File: controllers\AuthController.php:212
+Problem: Code marker: bug - // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #20
+File: controllers\AuthController.php:214
+Problem: Code marker: BUG - error_log("DEBUG: Forgot password request for email: " . $email);
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #21
+File: controllers\AuthController.php:233
+Problem: Code marker: bug - // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #22
+File: controllers\AuthController.php:236
+Problem: Code marker: BUG - error_log("DEBUG: User found - ID: " . $user['id'] . ", Name: " . $user['first_name'] . ", Active: " . $user['is_active']);
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #23
+File: controllers\AuthController.php:238
+Problem: Code marker: BUG - error_log("DEBUG: WARNING - User is not active!");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #24
+File: controllers\AuthController.php:241
+Problem: Code marker: BUG - error_log("DEBUG: No user found with email: " . $emailSearch);
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #25
+File: controllers\AuthController.php:251
+Problem: Code marker: bug - // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #26
+File: controllers\AuthController.php:253
+Problem: Code marker: BUG - error_log("DEBUG: Generated token, updating database for user ID: " . $user['id']);
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #27
+File: controllers\AuthController.php:260
+Problem: Code marker: bug - // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #28
+File: controllers\AuthController.php:262
+Problem: Code marker: BUG - error_log("DEBUG: Token saved to database, proceeding to send email");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #29
+File: controllers\AuthController.php:269
+Problem: Code marker: bug - // Debug: Log attempt
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #30
+File: controllers\AuthController.php:271
+Problem: Code marker: BUG - error_log("DEBUG: Attempting to create EmailService");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #31
+File: controllers\AuthController.php:277
+Problem: Code marker: BUG - error_log("DEBUG: EmailService created, checking if configured");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #32
+File: controllers\AuthController.php:284
+Problem: Code marker: bug - // In debug mode, show warning
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #33
+File: controllers\AuthController.php:291
+Problem: Code marker: BUG - error_log("DEBUG: SMTP is configured, creating mailer");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #34
+File: controllers\AuthController.php:298
+Problem: Code marker: BUG - error_log("DEBUG: Mailer created, preparing email content");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #35
+File: controllers\AuthController.php:370
+Problem: Code marker: BUG - error_log("DEBUG: Email content prepared, attempting to send to: " . $user['email']);
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #36
+File: controllers\AuthController.php:376
+Problem: Code marker: BUG - error_log("DEBUG: Email sent successfully!");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #37
+File: controllers\AuthController.php:382
+Problem: Code marker: bug - // Debug success message
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #38
+File: controllers\AuthController.php:391
+Problem: Code marker: bug - // In debug mode, show the actual error
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #39
+File: controllers\AuthController_OLD.php:47
+Problem: Code marker: bug - // Validate CSRF token (skip in debug mode for easier testing)
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #40
+File: controllers\AuthController_OLD.php:239
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #41
+File: controllers\CustomerController.php:155
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #42
+File: controllers\CustomerController.php:302
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #43
+File: controllers\CustomerController.php:345
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #44
+File: controllers\CustomerController.php:390
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #45
+File: controllers\CustomerController.php:707
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #46
+File: controllers\CustomerController.php:721
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #47
+File: controllers\DailyTaskController.php:212
+Problem: Debug function found: error_log("Additional technicians POST: " . print_r($_POST['additional_technicians'], true));
+Suggestion: Remove debug output or comment it out
+
+[WARNING] Issue #48
+File: controllers\DailyTaskController.php:213
+Problem: Debug function found: error_log("Technician hours POST: " . print_r($_POST['technician_hours'] ?? [], true));
+Suggestion: Remove debug output or comment it out
+
+[WARNING] Issue #49
+File: controllers\DailyTaskController.php:567
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #50
+File: controllers\DailyTaskController.php:738
+Problem: Code marker: bug - // Clear any debug messages
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #51
+File: controllers\DailyTaskController.php:743
+Problem: Code marker: BUG - // DEBUG: Log SMTP settings
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #52
+File: controllers\DailyTaskController.php:744
+Problem: Code marker: BUG - error_log("=== EMAIL DEBUG START ===");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #53
+File: controllers\DailyTaskController.php:864
+Problem: Code marker: BUG - error_log("=== EMAIL DEBUG END ===");
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #54
+File: controllers\MaterialController.php:72
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #55
+File: controllers\MaterialController.php:163
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #56
+File: controllers\MaterialController.php:218
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #57
+File: controllers\MaterialController.php:394
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #58
+File: controllers\MaterialController.php:445
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #59
+File: controllers\MaterialsController.php:554
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #60
+File: controllers\MaterialsController.php:597
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #61
+File: controllers\PaymentReportController.php:53
+Problem: Code marker: BUG - // DEBUG: Write to file
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #62
+File: controllers\PaymentReportController.php:55
+Problem: Code marker: bug - $debugContent = "PDF Report Debug - " . date('Y-m-d H:i:s') . "\n";
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #63
+File: controllers\PaymentReportController.php:76
+Problem: Code marker: BUG - // DEBUG: Append to file
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #64
+File: controllers\PaymentsController.php:215
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #65
+File: controllers\PaymentsController.php:248
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #66
+File: controllers\PaymentsController.php:308
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #67
+File: controllers\PaymentsController.php:341
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #68
+File: controllers\PaymentsController.php:383
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #69
+File: controllers\PaymentsController.php:418
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #70
+File: controllers\PaymentsController.php:465
+Problem: Code marker: bug - // Debug logging
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #71
+File: controllers\PaymentsController.php:466
+Problem: Code marker: BUG - error_log("=== BULK PAYMENT DEBUG ===");
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #72
+File: controllers\PaymentsController.php:501
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #73
+File: controllers\ProfileController.php:71
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #74
+File: controllers\ProfileController.php:124
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #75
+File: controllers\ProjectController.php:134
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #76
+File: controllers\ProjectController.php:405
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #77
+File: controllers\ProjectController.php:552
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #78
+File: controllers\ProjectController.php:761
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #79
+File: controllers\ProjectController.php:1000
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #80
+File: controllers\ProjectController.php:1014
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #81
+File: controllers\ProjectReportController.php:92
+Problem: Abrupt termination without error context
+Suggestion: Consider proper error handling instead of die/exit
+
+[NOTICE] Issue #82
+File: controllers\ProjectReportController.php:196
+Problem: Code marker: bug - // Debug: Log the materials
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #83
+File: controllers\ProjectReportController.php:197
+Problem: Code marker: BUG - error_log("=== MATERIALS QUERY DEBUG ===");
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #84
+File: controllers\ProjectReportController.php:384
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #85
+File: controllers\ProjectTasksController.php:623
+Problem: Abrupt termination without error context
+Suggestion: Consider proper error handling instead of die/exit
+
+[NOTICE] Issue #86
+File: controllers\QuoteController.php:364
+Problem: Code marker: bug - // Skip CSRF validation in debug mode or GET requests
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #87
+File: controllers\QuoteController.php:379
+Problem: Code marker: bug - // Debug: Log the delete attempt
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #88
+File: controllers\QuoteController.php:384
+Problem: Code marker: bug - // Debug: Log the result
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #89
+File: controllers\SettingsController.php:79
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #90
+File: controllers\TransformerMaintenanceController.php:1022
+Problem: Code marker: bug - // Debug: Log the customer name to see what we're getting
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #91
+File: controllers\TransformerMaintenanceController.php:1023
+Problem: Code marker: BUG - error_log("DEBUG - Customer name from DB: '" . $maintenance['customer_name'] . "'");
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #92
+File: controllers\TransformerMaintenanceController.php:1024
+Problem: Code marker: BUG - error_log("DEBUG - Customer name used: '" . $customerName . "'");
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #93
+File: controllers\TransformerMaintenanceController.php:1202
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #94
+File: controllers\TransformerMaintenanceController.php:1452
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #95
+File: controllers\TransformerMaintenanceController.php:1562
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #96
+File: controllers\UpdateController.php:43
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #97
+File: controllers\UpdateController.php:181
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #98
+File: controllers\UpdateController.php:249
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #99
+File: controllers\UserController.php:91
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #100
+File: controllers\UserController.php:218
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #101
+File: controllers\UserController.php:264
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #102
+File: controllers\UserController.php:287
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #103
+File: controllers\UserController.php:328
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[CRITICAL] Issue #104
+File: views\appointments\calendar.php:361
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[CRITICAL] Issue #105
+File: views\appointments\calendar.php:362
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[WARNING] Issue #106
+File: views\appointments\calendar.php:371
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #107
+File: views\daily-tasks\edit.php:443
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #108
+File: views\daily-tasks\index.php:281
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[CRITICAL] Issue #109
+File: views\maintenances\create.php:135
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[CRITICAL] Issue #110
+File: views\maintenances\create.php:213
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[WARNING] Issue #111
+File: views\maintenances\edit.php:375
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[CRITICAL] Issue #112
+File: views\maintenances\edit.php:386
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[CRITICAL] Issue #113
+File: views\maintenances\edit.php:415
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[NOTICE] Issue #114
+File: views\maintenances\index.php:286
+Problem: Code marker: bug - console.log('Calling URL:', url); // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #115
+File: views\maintenances\index.php:287
+Problem: Code marker: bug - console.log('Payload:', { type: type, status: status }); // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #116
+File: views\maintenances\index.php:300
+Problem: Code marker: bug - console.log('Response status:', response.status); // Debug
+Suggestion: Address this marker or remove if completed
+
+[NOTICE] Issue #117
+File: views\maintenances\index.php:307
+Problem: Code marker: bug - console.log('Response data:', data); // Debug
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #118
+File: views\maintenances\index.php:348
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #119
+File: views\maintenances\index.php:349
+Problem: Code marker: bug - console.error('Fetch error:', error); // Debug
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #120
+File: views\maintenances\view.php:530
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #121
+File: views\materials\duplicates.php:196
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #122
+File: views\materials\duplicates.php:233
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #123
+File: views\materials\duplicates.php:293
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[CRITICAL] Issue #124
+File: views\materials\index.php:505
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[CRITICAL] Issue #125
+File: views\materials\index.php:509
+Problem: Deprecated function: split
+Suggestion: Use modern alternatives (PDO, preg_*, explode)
+
+[WARNING] Issue #126
+File: views\materials\index.php:574
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #127
+File: views\materials\index.php:664
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #128
+File: views\materials\index.php:694
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #129
+File: views\materials\index.php:724
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #130
+File: views\materials\index.php:755
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #131
+File: views\materials\regenerate_aliases.php:13
+Problem: Abrupt termination without error context
+Suggestion: Consider proper error handling instead of die/exit
+
+[WARNING] Issue #132
+File: views\payments\index.php:693
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #133
+File: views\payments\index.php:731
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #134
+File: views\payments\index.php:772
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #135
+File: views\payments\index.php:815
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #136
+File: views\payments\index.php:913
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #137
+File: views\payments\index_old.php:302
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #138
+File: views\payments\index_old.php:342
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #139
+File: views\projects\show.php:1026
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #140
+File: views\projects\show.php:1079
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #141
+File: views\settings\update.php:1179
+Problem: Code marker: bug - <i class="fas fa-bug me-2"></i> Report Issue
+Suggestion: Address this marker or remove if completed
+
+[WARNING] Issue #142
+File: views\update\index.php:256
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #143
+File: helpers\app_display_name.php:24
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #144
+File: api\check-updates.php:42
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[WARNING] Issue #145
+File: migrations\regenerate_material_aliases.php:61
+Problem: Empty or silent catch block
+Suggestion: Log errors or handle exceptions properly
+
+[NOTICE] Issue #146
+File: migrations\regenerate_material_aliases.php:63
+Problem: Abrupt termination without error context
+Suggestion: Consider proper error handling instead of die/exit
+
+[NOTICE] Issue #147
+File: classes/EmailService_OLD.php
+Problem: Old/backup file found in codebase
+Suggestion: Remove deprecated files or move to separate backup directory
+
+[NOTICE] Issue #148
+File: controllers/AuthController_OLD.php
+Problem: Old/backup file found in codebase
+Suggestion: Remove deprecated files or move to separate backup directory
+
+[NOTICE] Issue #149
+File: controllers/AuthController.php.backup
+Problem: Old/backup file found in codebase
+Suggestion: Remove deprecated files or move to separate backup directory
+
+[NOTICE] Issue #150
+File: controllers/SettingsController.php.backup
+Problem: Old/backup file found in codebase
+Suggestion: Remove deprecated files or move to separate backup directory
+
+================================================================================
+CATEGORY: Configuration (1 issues)
+================================================================================
+
+[NOTICE] Issue #1
+File: config/config-WORKING.php.backup
+Problem: Backup config file found
+Suggestion: Consider removing old backup files from production
+
+================================================================================
+CATEGORY: Migrations (25 issues)
+================================================================================
+
+[NOTICE] Issue #1
+File: migrations/007_create_payments_table.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #2
+File: migrations/008_add_paid_status_to_task_labor.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #3
+File: migrations/add_company_display_name.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #4
+File: migrations/add_daily_task_materials.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #5
+File: migrations/add_daily_task_technicians.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #6
+File: migrations/add_email_notification_system.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #7
+File: migrations/add_language_column.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #8
+File: migrations/add_maintenance_pricing.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #9
+File: migrations/add_maintenance_technician_role.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #10
+File: migrations/add_materials_aliases.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #11
+File: migrations/add_missing_permissions.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #12
+File: migrations/add_password_reset_fields.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #13
+File: migrations/add_project_tasks_system.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #14
+File: migrations/add_task_photos.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #15
+File: migrations/add_transformer_type_field.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #16
+File: migrations/create_transformer_maintenances.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #17
+File: migrations/ensure_materials_catalog.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #18
+File: migrations/hotfix_1.3.5_paid_by.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #19
+File: migrations/load_electrical_materials.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #20
+File: migrations/load_electrical_materials_part2.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #21
+File: migrations/remove_duplicate_maintenances.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #22
+File: migrations/set_admin_only_system_role.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #23
+File: migrations/update_transformer_maintenances_multiple.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #24
+File: migrations/update_user_roles.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+[NOTICE] Issue #25
+File: migrations/verify_1.3.5_ready.sql
+Problem: Migration file doesn't follow naming convention
+Suggestion: Use format: migrate_x.x.x_to_y.y.y.sql or vX.X.X_*.sql
+
+================================================================================
+CATEGORY: Security (6 issues)
+================================================================================
+
+[CRITICAL] Issue #1
+File: uploads/
+Problem: No .htaccess protection in uploads directory
+Suggestion: Add .htaccess to prevent direct PHP execution in uploads
+
+[WARNING] Issue #2
+File: .git/config
+Problem: Git configuration exposed
+Suggestion: Ensure .htaccess or web server config blocks access
+
+[WARNING] Issue #3
+File: composer.json
+Problem: Composer file accessible
+Suggestion: Ensure .htaccess or web server config blocks access
+
+[WARNING] Issue #4
+File: config/config.php
+Problem: Config file may be accessible
+Suggestion: Ensure .htaccess or web server config blocks access
+
+[WARNING] Issue #5
+File: config/config.php
+Problem: HttpOnly cookie flag not set
+Suggestion: Set session.cookie_httponly = 1 for XSS protection
+
+[NOTICE] Issue #6
+File: config/config.php
+Problem: Secure cookie flag not configured
+Suggestion: Set session.cookie_secure = 1 for HTTPS-only cookies
+
+================================================================================
+CATEGORY: Translations (1 issues)
+================================================================================
+
+[WARNING] Issue #1
+File: languages/
+Problem: No language files found
+Suggestion: Add at least one language file (e.g., el.php, en.php)
+
+================================================================================
+CATEGORY: Cleanup (15 issues)
+================================================================================
+
+[NOTICE] Issue #1
+File: controllers/AuthController.php.backup
+Problem: Backup or temporary file found
+Suggestion: Clean up backup files from production environment
+
+[NOTICE] Issue #2
+File: controllers/SettingsController.php.backup
+Problem: Backup or temporary file found
+Suggestion: Clean up backup files from production environment
+
+[NOTICE] Issue #3
+File: classes/EmailService_OLD.php
+Problem: Backup or temporary file found
+Suggestion: Clean up backup files from production environment
+
+[NOTICE] Issue #4
+File: controllers/AuthController_OLD.php
+Problem: Backup or temporary file found
+Suggestion: Clean up backup files from production environment
+
+[WARNING] Issue #5
+File: debug-routes.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #6
+File: debug_current_state.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #7
+File: debug_email.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #8
+File: debug_maintenance_photos.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #9
+File: debug_maintenances.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #10
+File: debug_maintenances_redirect.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #11
+File: debug_roles.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #12
+File: debug_session.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #13
+File: test_transformer_controller.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #14
+File: test_trash_system.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+[WARNING] Issue #15
+File: test_users_query.php
+Problem: Debug/test file found in root directory
+Suggestion: Remove debug files from production or move to /dev directory
+
+================================================================================
+RECOMMENDED ACTION PLAN
+================================================================================
+
+1. Address all CRITICAL issues first (security and functionality)
+2. Fix WARNING issues (potential bugs and code quality)
+3. Review NOTICE items (cleanup and optimization)
+4. Consider INFO suggestions for future improvements
+

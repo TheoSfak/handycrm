@@ -26,7 +26,7 @@ define('FOOTER_RENDERED', true);
                                 } elseif (defined('APP_VERSION')) {
                                     echo APP_VERSION;
                                 } else {
-                                    echo '1.4.0';
+                                    echo '1.6.0';
                                 }
                             ?></span>
                         </span>

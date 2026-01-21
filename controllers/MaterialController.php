@@ -70,6 +70,7 @@ class MaterialController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("MaterialController::store - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/materials/create');
             }
@@ -161,6 +162,7 @@ class MaterialController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("MaterialController::update - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/materials/edit?id=' . $id);
             }
@@ -216,6 +218,7 @@ class MaterialController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log("MaterialController::delete - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/materials');
             }
@@ -392,6 +395,7 @@ class MaterialController extends BaseController {
                 }
                 
             } catch (Exception $e) {
+                error_log("MaterialController::import - Error: " . $e->getMessage());
                 $errors[] = "Σειρά " . ($index + 2) . ": " . $e->getMessage();
             }
         }
@@ -443,6 +447,7 @@ class MaterialController extends BaseController {
                     $errors[] = "Αποτυχία διαγραφής υλικού #$id";
                 }
             } catch (Exception $e) {
+                error_log("MaterialController::bulkDelete - Error: " . $e->getMessage());
                 $errors[] = "Σφάλμα στο υλικό #$id: " . $e->getMessage();
             }
         }

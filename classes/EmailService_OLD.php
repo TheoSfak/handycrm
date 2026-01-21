@@ -217,6 +217,7 @@ class EmailService {
             $stmt->execute([$type]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
+            error_log("EmailService_OLD::getEmailTemplate - Error fetching template '{$type}': " . $e->getMessage());
             return null;
         }
     }
@@ -305,6 +306,7 @@ class EmailService {
                 }
             }
         } catch (Exception $e) {
+            error_log("EmailService_OLD::sendMaintenanceReminders - Error: " . $e->getMessage());
             $errors[] = "Failed to process maintenance reminders: " . $e->getMessage();
         }
         
@@ -336,6 +338,7 @@ class EmailService {
             
             return $stats;
         } catch (Exception $e) {
+            error_log("EmailService_OLD::getEmailStats - Error fetching stats: " . $e->getMessage());
             return ['today' => 0, 'this_week' => 0, 'failed_today' => 0];
         }
     }

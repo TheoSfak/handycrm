@@ -20,7 +20,7 @@ define('DB_CHARSET', 'utf8mb4');
 // Application Configuration
 define('APP_ROOT', __DIR__ . '/..');
 define('APP_NAME', 'HandyCRM');
-define('APP_VERSION', '1.4.0');
+define('APP_VERSION', '1.6.5');
 define('BASE_URL', 'http://' . $_SERVER['HTTP_HOST'] . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/'));
 
 // Session Configuration

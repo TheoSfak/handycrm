@@ -89,6 +89,7 @@ class UserController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log('CSRF validation failed in UserController::create: ' . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/users/create');
             }
@@ -216,6 +217,7 @@ class UserController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log('CSRF validation failed in UserController::edit: ' . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/users/edit?id=' . $id);
             }
@@ -262,6 +264,7 @@ class UserController extends BaseController {
                 $_SESSION['error'] = 'Αποτυχία ενημέρωσης χρήστη';
             }
         } catch (Exception $e) {
+            error_log('User update failed in UserController::update: ' . $e->getMessage());
             $_SESSION['error'] = 'Σφάλμα: ' . $e->getMessage();
         }
         
@@ -285,6 +288,7 @@ class UserController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log('CSRF validation failed in UserController::delete: ' . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/users');
             }
@@ -326,6 +330,7 @@ class UserController extends BaseController {
             try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
+                error_log('CSRF validation failed in UserController::toggleActive: ' . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/users');
             }
