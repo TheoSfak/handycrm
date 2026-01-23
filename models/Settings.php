@@ -46,7 +46,7 @@ class Settings extends BaseModel {
         
         $stmt = $this->db->execute($query, [$key, $value, $type, $group, $description]);
         
-        if ($stmt) {
+        if ($stmt && $this->db->rowCount($stmt) > 0) {
             // Clear cache for this key
             unset(self::$cache[$key]);
             return true;
@@ -104,7 +104,7 @@ class Settings extends BaseModel {
         $query = "DELETE FROM " . $this->table . " WHERE setting_key = ?";
         $stmt = $this->db->execute($query, [$key]);
         
-        if ($stmt) {
+        if ($this->db->rowCount($stmt) > 0) {
             unset(self::$cache[$key]);
             return true;
         }
