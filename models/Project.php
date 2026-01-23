@@ -58,8 +58,7 @@ class Project extends BaseModel {
      * Get projects with pagination and filters
      */
     public function getPaginated($page = 1, $perPage = ITEMS_PER_PAGE, $filters = []) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         $offset = ($page - 1) * $perPage;
         $params = [];
         

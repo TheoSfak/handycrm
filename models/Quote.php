@@ -11,8 +11,7 @@ class Quote extends BaseModel {
      * Get quote with customer and items details
      */
     public function getWithDetails($id) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             $sql = "SELECT q.*, 
@@ -54,8 +53,7 @@ class Quote extends BaseModel {
      * Get quotes with pagination and filters
      */
     public function getPaginated($page = 1, $perPage = ITEMS_PER_PAGE, $filters = []) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         $offset = ($page - 1) * $perPage;
         $params = [];
         
@@ -140,8 +138,7 @@ class Quote extends BaseModel {
      * Generate next quote number
      */
     public function generateQuoteNumber() {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             $year = date('Y');
@@ -175,8 +172,7 @@ class Quote extends BaseModel {
      * Create new quote
      */
     public function create($data) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             // Map tax_rate/tax_amount to vat_rate/vat_amount (database column names)
@@ -215,8 +211,7 @@ class Quote extends BaseModel {
      * Update existing quote
      */
     public function update($id, $data) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             // Map tax_rate/tax_amount to vat_rate/vat_amount (database column names)
@@ -263,8 +258,7 @@ class Quote extends BaseModel {
      * Delete quote and its items
      */
     public function delete($id) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             // Delete quote items first
