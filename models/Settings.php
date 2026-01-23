@@ -46,7 +46,9 @@ class Settings extends BaseModel {
         
         $stmt = $this->db->execute($query, [$key, $value, $type, $group, $description]);
         
-        if ($stmt && $this->db->rowCount($stmt) > 0) {
+        // execute() returns statement on success, throws exception on failure
+        // For INSERT...ON DUPLICATE KEY, rowCount may be 0,1,2 - all success cases
+        if ($stmt) {
             // Clear cache for this key
             unset(self::$cache[$key]);
             return true;
@@ -104,7 +106,8 @@ class Settings extends BaseModel {
         $query = "DELETE FROM " . $this->table . " WHERE setting_key = ?";
         $stmt = $this->db->execute($query, [$key]);
         
-        if ($this->db->rowCount($stmt) > 0) {
+        // Check if statement executed and rows were deleted
+        if ($stmt && $this->db->rowCount($stmt) > 0) {
             unset(self::$cache[$key]);
             return true;
         }
