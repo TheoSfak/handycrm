@@ -11,8 +11,7 @@ class Appointment extends BaseModel {
      * Get appointment with customer and technician details
      */
     public function getWithDetails($id) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             $sql = "SELECT a.*, 
@@ -50,8 +49,7 @@ class Appointment extends BaseModel {
      * Get appointments with pagination and filters
      */
     public function getPaginated($page = 1, $perPage = ITEMS_PER_PAGE, $filters = []) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         $offset = ($page - 1) * $perPage;
         $params = [];
         
@@ -153,8 +151,7 @@ class Appointment extends BaseModel {
      * Get appointments for calendar view
      */
     public function getForCalendar($startDate, $endDate, $technicianId = null) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         $params = [$startDate, $endDate];
         $whereClause = "WHERE a.appointment_date BETWEEN ? AND ?";
@@ -193,8 +190,7 @@ class Appointment extends BaseModel {
      * Get upcoming appointments
      */
     public function getUpcoming($limit = 5, $technicianId = null) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         $params = [];
         $whereClause = "WHERE a.appointment_date >= NOW() AND a.status IN ('scheduled', 'confirmed')";

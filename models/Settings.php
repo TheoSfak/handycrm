@@ -3,15 +3,9 @@
  * System Settings Model
  * Handles system-wide configuration settings
  */
-class Settings {
-    private $db;
-    private $table = 'system_settings';
+class Settings extends BaseModel {
+    protected $table = 'system_settings';
     private static $cache = [];
-
-    public function __construct() {
-        $database = new Database();
-        $this->db = $database->getConnection();
-    }
 
     /**
      * Get a setting value by key
@@ -26,13 +20,10 @@ class Settings {
         $instance = new self();
         $query = "SELECT setting_value, setting_type FROM " . $instance->table . " WHERE setting_key = ? LIMIT 1";
         
-        $stmt = $instance->db->prepare($query);
-        $stmt->bind_param('s', $key);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $result = $instance->db->fetchOne($query, [$key]);
         
-        if ($row = $result->fetch_assoc()) {
-            $value = $instance->castValue($row['setting_value'], $row['setting_type']);
+        if ($result) {
+            $value = $instance->castValue($result['setting_value'], $result['setting_type']);
             self::$cache[$key] = $value;
             return $value;
         }
@@ -53,10 +44,9 @@ class Settings {
                   setting_group = VALUES(setting_group),
                   description = VALUES(description)";
         
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param('sssss', $key, $value, $type, $group, $description);
+        $stmt = $this->db->execute($query, [$key, $value, $type, $group, $description]);
         
-        if ($stmt->execute()) {
+        if ($stmt) {
             // Clear cache for this key
             unset(self::$cache[$key]);
             return true;
@@ -70,13 +60,10 @@ class Settings {
      */
     public function getByGroup($group) {
         $query = "SELECT * FROM " . $this->table . " WHERE setting_group = ? ORDER BY setting_key";
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param('s', $group);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $results = $this->db->fetchAll($query, [$group]);
         
         $settings = [];
-        while ($row = $result->fetch_assoc()) {
+        foreach ($results as $row) {
             $settings[$row['setting_key']] = [
                 'value' => $this->castValue($row['setting_value'], $row['setting_type']),
                 'type' => $row['setting_type'],
@@ -92,10 +79,10 @@ class Settings {
      */
     public function getAll() {
         $query = "SELECT * FROM " . $this->table . " ORDER BY setting_group, setting_key";
-        $result = $this->db->query($query);
+        $results = $this->db->fetchAll($query);
         
         $settings = [];
-        while ($row = $result->fetch_assoc()) {
+        foreach ($results as $row) {
             if (!isset($settings[$row['setting_group']])) {
                 $settings[$row['setting_group']] = [];
             }
@@ -115,10 +102,9 @@ class Settings {
      */
     public function delete($key) {
         $query = "DELETE FROM " . $this->table . " WHERE setting_key = ?";
-        $stmt = $this->db->prepare($query);
-        $stmt->bind_param('s', $key);
+        $stmt = $this->db->execute($query, [$key]);
         
-        if ($stmt->execute()) {
+        if ($stmt) {
             unset(self::$cache[$key]);
             return true;
         }

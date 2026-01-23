@@ -12,8 +12,7 @@ class Material extends BaseModel {
      * Get paginated materials with filters
      */
     public function getPaginated($page = 1, $perPage = ITEMS_PER_PAGE, $filters = []) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         $offset = ($page - 1) * $perPage;
         $params = [];
         
@@ -85,8 +84,7 @@ class Material extends BaseModel {
      * Get low stock materials
      */
     public function getLowStock() {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             $sql = "SELECT * FROM {$this->table} 
@@ -106,8 +104,7 @@ class Material extends BaseModel {
      * Get material statistics
      */
     public function getStatistics() {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         
         try {
             $sql = "SELECT 
@@ -136,8 +133,7 @@ class Material extends BaseModel {
      * Get all materials for export (no pagination)
      */
     public function getAllForExport($filters = []) {
-        $database = new Database();
-        $db = $database->connect();
+        $db = $this->db->connect();
         $params = [];
         
         // Build WHERE clause
