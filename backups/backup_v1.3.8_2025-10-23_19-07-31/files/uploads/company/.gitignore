@@ -1,7 +1,0 @@
-# This directory stores company logo uploads
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.webp
-!.gitkeep
