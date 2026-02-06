@@ -1,0 +1,35 @@
+# Configuration files with credentials
+/config/config.php
+
+# Uploads directory (user-generated content)
+/uploads/*
+!/uploads/.gitkeep
+!/uploads/company/
+/uploads/company/*
+!/uploads/company/.gitignore
+
+# Backup directory
+/backups/*
+!/backups/.gitkeep
+!/backups/.htaccess
+
+# Vendor directory (managed by Composer)
+/vendor/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Temporary and cache files
+*.log
+*.tmp
+*.cache
+.phpunit.result.cache
+
+# Environment files
+.env
+.env.local
