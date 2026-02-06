@@ -1,0 +1,180 @@
+# HandyCRM .htaccess Configuration
+# Enable URL rewriting for clean URLs
+
+RewriteEngine On
+
+# Redirect to HTTPS (uncomment if you have SSL)
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Block access to sensitive files
+<FilesMatch "^(config|database|classes|models|controllers)">
+    Require all denied
+</FilesMatch>
+
+# Block access to .php files in specific directories
+<Files "*.php">
+    <If "%{REQUEST_URI} =~ m#^/(config|database|classes|models|controllers)/#">
+        Require all denied
+    </If>
+</Files>
+
+# Block access to version control files
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Friendly URL routes
+# Project details by slug: /projects/project-name -> /projects/details?slug=project-name
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^projects/([a-z0-9-]+)$ index.php?route=/projects/details&slug=$1 [QSA,L]
+
+# Project edit by ID: /projects/edit/123 -> /projects/edit?id=123
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^projects/edit/([0-9]+)$ index.php?route=/projects/edit&id=$1 [QSA,L]
+
+# Customer details by slug: /customers/john-doe -> /customers/show?slug=john-doe
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^customers/([a-z0-9-]+)$ index.php?route=/customers/show&slug=$1 [QSA,L]
+
+# Customer edit by ID: /customers/edit/123 -> /customers/edit?id=123
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^customers/edit/([0-9]+)$ index.php?route=/customers/edit&id=$1 [QSA,L]
+
+# Invoice details by slug: /invoices/inv-2025-0001 -> /invoices/details?slug=inv-2025-0001
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^invoices/([a-z0-9-]+)$ index.php?route=/invoices/details&slug=$1 [QSA,L]
+
+# Invoice edit by ID: /invoices/edit/123 -> /invoices/edit?id=123
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^invoices/edit/([0-9]+)$ index.php?route=/invoices/edit&id=$1 [QSA,L]
+
+# Quote details by slug: /quotes/pro-2025-0001 -> /quotes/details?slug=pro-2025-0001
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^quotes/([a-z0-9-]+)$ index.php?route=/quotes/details&slug=$1 [QSA,L]
+
+# Quote edit by ID: /quotes/edit/123 -> /quotes/edit?id=123
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^quotes/edit/([0-9]+)$ index.php?route=/quotes/edit&id=$1 [QSA,L]
+
+# Quote delete by ID: /quotes/delete/123 -> /quotes/delete?id=123
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^quotes/delete/([0-9]+)$ index.php?route=/quotes/delete&id=$1 [QSA,L]
+
+# Main rewrite rule - send all requests to index.php with route parameter
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/(uploads|assets)/
+RewriteRule ^(.*)$ index.php?route=/$1 [QSA,L]
+
+# Security headers
+<IfModule mod_headers.c>
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options nosniff
+    
+    # Enable XSS protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Prevent clickjacking
+    Header always set X-Frame-Options DENY
+    
+    # Referrer policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Remove server signature
+    Header unset Server
+    
+    # Content Security Policy (adjust as needed)
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https://cdnjs.cloudflare.com; connect-src 'self' https://cdn.jsdelivr.net;"
+</IfModule>
+
+# Enable compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# Enable browser caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType application/pdf "access plus 1 month"
+</IfModule>
+
+# File upload restrictions
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
+    <If "%{REQUEST_URI} =~ m#^/uploads/#">
+        Require all denied
+    </If>
+</FilesMatch>
+
+# Limit file upload size (adjust as needed)
+php_value upload_max_filesize 15M
+php_value post_max_size 15M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Error pages (create these files as needed)
+# ErrorDocument 403 /errors/403.html
+# ErrorDocument 404 /errors/404.html
+# ErrorDocument 500 /errors/500.html
+
+# Disable directory browsing
+Options -Indexes
+
+# Protect against common attacks
+<IfModule mod_rewrite.c>
+    # Block access to xmlrpc.php
+    RewriteRule ^xmlrpc\.php$ - [F,L]
+    
+    # Block suspicious query strings
+    RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*object.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} (\<|%3C).*embed.*(\>|%3E) [NC,OR]
+    RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+    RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+    RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+    RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2})
+    RewriteRule .* - [F]
+    
+    # Block suspicious user agents
+    RewriteCond %{HTTP_USER_AGENT} ^$ [OR]
+    RewriteCond %{HTTP_USER_AGENT} ^(-|\.|') [OR]
+    RewriteCond %{HTTP_USER_AGENT} ^(.*)(<|>|%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+    RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|\"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC]
+    RewriteRule .* - [F]
+</IfModule>
+
+# MySQL injection protection
+<IfModule mod_rewrite.c>
+    RewriteCond %{QUERY_STRING} union.*select.*\( [NC,OR]
+    RewriteCond %{QUERY_STRING} union.*all.*select.* [NC,OR]
+    RewriteCond %{QUERY_STRING} concat.*\( [NC]
+    RewriteRule .* - [F]
+</IfModule>

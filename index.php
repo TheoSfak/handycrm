@@ -1,0 +1,885 @@
+<?php
+/**
+ * HandyCRM - Main Entry Point
+ * 
+ * @author Theodore Sfakianakis
+ * @email theodore.sfakianakis@gmail.com
+ * @copyright 2025 Theodore Sfakianakis. All rights reserved.
+ * 
+ * Checks if system is installed and routes accordingly
+ */
+
+// Check if system is installed
+$configFile = __DIR__ . '/config/config.php';
+
+if (!file_exists($configFile)) {
+    // System not installed, redirect to installation
+    header('Location: install.php');
+    exit;
+}
+
+// Load configuration (config.php handles session_start internally)
+require_once $configFile;
+require_once 'classes/Database.php';
+
+// Define BASE_URL for clean URLs
+if (!defined('BASE_URL')) {
+    // For localhost/handycrm/index.php -> /handycrm
+    // For localhost/index.php -> /
+    $scriptPath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+    $scriptPath = rtrim($scriptPath, '/');
+    define('BASE_URL', $scriptPath);
+}
+
+// Test database connection
+try {
+    $db = new Database();
+    $connection = $db->connect();
+    
+    // Check if tables exist
+    $stmt = $connection->query("SHOW TABLES LIKE 'users'");
+    if ($stmt->rowCount() === 0) {
+        // Database not properly set up - redirect to installation
+        header('Location: install.php');
+        exit;
+    }
+    
+    // Auto-run pending migrations (silent, non-blocking)
+    require_once 'classes/AutoMigration.php';
+    $autoMigration = new AutoMigration($db);
+    $migrationResults = $autoMigration->checkAndRun();
+    
+    // Log migration results if any were executed
+    if ($migrationResults['executed'] > 0) {
+        error_log("HandyCRM: Auto-executed {$migrationResults['executed']} pending migrations");
+    }
+    
+    // Log errors if any (but don't block application)
+    if (!empty($migrationResults['errors'])) {
+        foreach ($migrationResults['errors'] as $error) {
+            error_log("HandyCRM Migration Error ({$error['file']}): {$error['error']}");
+        }
+    }
+    
+} catch (Exception $e) {
+    // Database connection failed - redirect to installation
+    header('Location: install.php');
+    exit;
+}
+
+// System is properly installed, load the application
+// Session is already started in config.php
+
+// Auto-load classes
+spl_autoload_register(function ($class) {
+    $paths = [
+        'classes/' . $class . '.php',
+        'models/' . $class . '.php',
+        'controllers/' . $class . '.php'
+    ];
+    
+    foreach ($paths as $path) {
+        if (file_exists($path)) {
+            require_once $path;
+            return;
+        }
+    }
+});
+
+// Initialize language manager
+require_once 'classes/LanguageManager.php';
+
+// Get current route from URL
+$currentRoute = $_GET['route'] ?? '/';
+
+// Simple routing for PHP built-in server
+if ($currentRoute === '/' || $currentRoute === '/dashboard') {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    // Load dashboard
+    require_once 'controllers/DashboardController.php';
+    $controller = new DashboardController();
+    $controller->index();
+    
+} elseif ($currentRoute === '/login') {
+    require_once 'controllers/AuthController.php';
+    $controller = new AuthController();
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->authenticate();
+    } else {
+        $controller->login();
+    }
+    
+} elseif ($currentRoute === '/logout') {
+    require_once 'controllers/AuthController.php';
+    $controller = new AuthController();
+    $controller->logout();
+    
+} elseif ($currentRoute === '/forgot-password') {
+    require_once 'controllers/AuthController.php';
+    $controller = new AuthController();
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->processForgotPassword();
+    } else {
+        $controller->forgotPassword();
+    }
+    
+} elseif ($currentRoute === '/reset-password') {
+    require_once 'controllers/AuthController.php';
+    $controller = new AuthController();
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->processResetPassword();
+    } else {
+        $controller->resetPassword();
+    }
+    
+} elseif (strpos($currentRoute, '/profile') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/ProfileController.php';
+    $controller = new ProfileController();
+    
+    if ($currentRoute === '/profile') {
+        $controller->index();
+    } elseif ($currentRoute === '/profile/update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update();
+    } elseif ($currentRoute === '/profile/change-password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->changePassword();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/customers') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/CustomerController.php';
+    $controller = new CustomerController();
+    
+    if ($currentRoute === '/customers') {
+        $controller->index();
+    } elseif ($currentRoute === '/customers/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif ($currentRoute === '/customers/export-csv') {
+        $controller->exportCsv();
+    } elseif ($currentRoute === '/customers/import-csv') {
+        $controller->importCsv();
+    } elseif ($currentRoute === '/customers/demo-csv') {
+        $controller->downloadDemoCsv();
+    } elseif ($currentRoute === '/customers/show') {
+        $id = $_GET['id'] ?? 0;
+        $controller->show($id);
+    } elseif ($currentRoute === '/customers/edit') {
+        $id = $_GET['id'] ?? 0;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($id);
+        } else {
+            $controller->edit($id);
+        }
+    } elseif ($currentRoute === '/customers/delete') {
+        $id = $_GET['id'] ?? 0;
+        $controller->delete($id);
+    } elseif (preg_match('/\/customers\/view\/(\d+)/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
+    } elseif (preg_match('/\/customers\/edit\/(\d+)/', $currentRoute, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($matches[1]);
+        } else {
+            $controller->edit($matches[1]);
+        }
+    } elseif ($currentRoute === '/customers/delete') {
+        $id = $_GET['id'] ?? $_POST['id'] ?? 0;
+        $controller->delete($id);
+    } elseif (preg_match('/\/customers\/delete\/(\d+)/', $currentRoute, $matches)) {
+        $controller->delete($matches[1]);
+    } else {
+        // 404 for customers
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Customer page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/projects') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/ProjectController.php';
+    $controller = new ProjectController();
+    
+    if ($currentRoute === '/projects') {
+        $controller->index();
+    } elseif ($currentRoute === '/projects/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif ($currentRoute === '/projects/export-csv') {
+        $controller->exportCsv();
+    } elseif ($currentRoute === '/projects/import-csv') {
+        $controller->importCsv();
+    } elseif ($currentRoute === '/projects/demo-csv') {
+        $controller->downloadDemoCsv();
+    } elseif (preg_match('/\/projects\/report\/(\d+)/', $currentRoute, $matches)) {
+        require_once 'controllers/ProjectReportController.php';
+        $reportController = new ProjectReportController();
+        $reportController->generate($matches[1]);
+    } elseif (preg_match('/\/projects\/show\/(\d+)/', $currentRoute, $matches)) {
+        $_GET['id'] = $matches[1];
+        $controller->show();
+    } elseif ($currentRoute === '/projects/show') {
+        $controller->details();
+    } elseif ($currentRoute === '/projects/details') {
+        $controller->details();
+    } elseif ($currentRoute === '/projects/edit') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
+    } elseif ($currentRoute === '/projects/update-status') {
+        $controller->updateStatus();
+    } elseif ($currentRoute === '/projects/delete') {
+        $controller->delete();
+    } elseif (preg_match('/\/projects\/(\d+)\/tasks/', $currentRoute, $projectMatches)) {
+        // Project Tasks routes - moved inside projects block
+        require_once 'controllers/ProjectTasksController.php';
+        $tasksController = new ProjectTasksController();
+        $projectId = $projectMatches[1];
+        
+        if (preg_match('/\/projects\/(\d+)\/tasks$/', $currentRoute)) {
+            $tasksController->index($projectId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/export-csv/', $currentRoute)) {
+            $tasksController->exportCsv($projectId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/add/', $currentRoute)) {
+            $tasksController->add($projectId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/edit\/(\d+)/', $currentRoute, $matches)) {
+            $taskId = $matches[2];
+            $tasksController->edit($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/view\/(\d+)/', $currentRoute, $matches)) {
+            $taskId = $matches[2];
+            $tasksController->viewTask($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/breakdown/', $currentRoute, $matches)) {
+            $taskId = $matches[2];
+            $tasksController->breakdown($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos\/(\d+)\/delete/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $matches[2];
+            $photoId = $matches[3];
+            $tasksController->deletePhoto($projectId, $taskId, $photoId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos\/(\d+)\/update/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $matches[2];
+            $photoId = $matches[3];
+            $tasksController->updatePhotoDetails($projectId, $taskId, $photoId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos\/upload/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $matches[2];
+            $tasksController->uploadPhoto($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/(\d+)\/photos/', $currentRoute, $matches)) {
+            $taskId = $matches[2];
+            $tasksController->photos($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/copy/', $currentRoute) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $_POST['task_id'] ?? 0;
+            $tasksController->copy($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/delete/', $currentRoute) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $_POST['task_id'] ?? 0;
+            $tasksController->delete($projectId);
+        } else {
+            header('HTTP/1.0 404 Not Found');
+            echo "<h1>404 - Project task page not found</h1>";
+        }
+    } else {
+        // 404 for projects
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Project page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/payments') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    if ($currentRoute === '/payments/report') {
+        require_once 'controllers/PaymentReportController.php';
+        $controller = new PaymentReportController();
+        $controller->generate();
+    } elseif ($currentRoute === '/payments/export') {
+        require_once 'controllers/PaymentExportController.php';
+        $controller = new PaymentExportController();
+        $controller->exportCSV();
+    } else {
+        require_once 'controllers/PaymentsController.php';
+        $controller = new PaymentsController();
+        
+        if ($currentRoute === '/payments' || $currentRoute === '/payments/') {
+            $controller->index();
+        } elseif ($currentRoute === '/payments/mark-paid') {
+            $controller->markPaid();
+        } elseif ($currentRoute === '/payments/mark-unpaid') {
+            $controller->markUnpaid();
+        } elseif ($currentRoute === '/payments/mark-all-paid') {
+            $controller->markAllPaid();
+        } elseif ($currentRoute === '/payments/mark-entries-paid') {
+            $controller->markEntriesPaid();
+        } elseif ($currentRoute === '/payments/mark-entries-unpaid') {
+            $controller->markEntriesUnpaid();
+        } elseif ($currentRoute === '/payments/mark-week-paid') {
+            $controller->markWeekPaid();
+        } elseif ($currentRoute === '/payments/mark-week-unpaid') {
+            $controller->markWeekUnpaid();
+        } elseif ($currentRoute === '/payments/history') {
+            $controller->history();
+        } else {
+            header('HTTP/1.0 404 Not Found');
+            echo "<h1>404 - Payments page not found</h1>";
+        }
+    }
+    
+} elseif (strpos($currentRoute, '/maintenances') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/TransformerMaintenanceController.php';
+    $controller = new TransformerMaintenanceController();
+    
+    if ($currentRoute === '/maintenances' || $currentRoute === '/maintenances/') {
+        $controller->index();
+    } elseif ($currentRoute === '/maintenances/create') {
+        $controller->create();
+    } elseif ($currentRoute === '/maintenances/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/\/maintenances\/view\/(\d+)/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
+    } elseif (preg_match('/\/maintenances\/sendEmail\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->sendEmail($matches[1]);
+    } elseif (preg_match('/\/maintenances\/edit\/(\d+)/', $currentRoute, $matches)) {
+        $controller->edit($matches[1]);
+    } elseif (preg_match('/\/maintenances\/update\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update($matches[1]);
+    } elseif (preg_match('/\/maintenances\/delete\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete($matches[1]);
+    } elseif (preg_match('/\/maintenances\/deletePhoto\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/maintenances\/delete-photo\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/maintenances\/toggle-status\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->toggleStatus($matches[1]);
+    } elseif (preg_match('/\/maintenances\/exportPDF\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportPDF($matches[1]);
+    } elseif (preg_match('/\/maintenances\/exportExcel\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportExcel($matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Maintenance page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/daily-tasks') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/DailyTaskController.php';
+    $controller = new DailyTaskController();
+    
+    if ($currentRoute === '/daily-tasks' || $currentRoute === '/daily-tasks/') {
+        $controller->index();
+    } elseif ($currentRoute === '/daily-tasks/create') {
+        $controller->create();
+    } elseif ($currentRoute === '/daily-tasks/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/\/daily-tasks\/view\/(\d+)/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/edit\/(\d+)/', $currentRoute, $matches)) {
+        $controller->edit($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/update\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/delete\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/delete-photo\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deletePhoto($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/toggle-invoiced\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->toggleInvoiced($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/export-pdf\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportPdf($matches[1]);
+    } elseif (preg_match('/\/daily-tasks\/send-email\/(\d+)/', $currentRoute, $matches)) {
+        $controller->sendEmail($matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Daily task page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/appointments') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/AppointmentController.php';
+    $controller = new AppointmentController();
+    
+    if ($currentRoute === '/appointments') {
+        $controller->index();
+    } elseif ($currentRoute === '/appointments/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif ($currentRoute === '/appointments/details') {
+        $controller->details();
+    } elseif ($currentRoute === '/appointments/edit') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
+    } elseif ($currentRoute === '/appointments/delete') {
+        $controller->delete();
+    } elseif ($currentRoute === '/appointments/calendar') {
+        $controller->calendar();
+    } elseif ($currentRoute === '/appointments/api/list') {
+        $controller->apiList();
+    } else {
+        // 404 for appointments
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Appointment page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/quotes') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/QuoteController.php';
+    $controller = new QuoteController();
+    
+    if ($currentRoute === '/quotes') {
+        $controller->index();
+    } elseif ($currentRoute === '/quotes/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif ($currentRoute === '/quotes/details') {
+        $controller->details();
+    } elseif ($currentRoute === '/quotes/export-pdf') {
+        require_once 'controllers/QuoteExportController.php';
+        $exportController = new QuoteExportController();
+        $exportController->generatePDF();
+    } elseif ($currentRoute === '/quotes/edit') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
+    } elseif ($currentRoute === '/quotes/delete') {
+        $controller->delete();
+    } else {
+        // 404 for quotes
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Quote page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/materials-inventory') === 0) {
+    // OLD INVENTORY SYSTEM - Changed route to /materials-inventory to avoid conflict
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/MaterialController.php';
+    $controller = new MaterialController();
+    
+    if ($currentRoute === '/materials-inventory') {
+        $controller->index();
+    } elseif ($currentRoute === '/materials-inventory/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif ($currentRoute === '/materials-inventory/edit') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
+    } elseif ($currentRoute === '/materials-inventory/delete') {
+        $controller->delete();
+    } else {
+        // 404 for materials
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Material inventory page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/technicians') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/TechniciansController.php';
+    $controller = new TechniciansController();
+    
+    if ($currentRoute === '/technicians') {
+        $controller->index();
+    } elseif ($currentRoute === '/technicians/add') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->add();
+        } else {
+            $controller->add();
+        }
+    } elseif (preg_match('/\/technicians\/edit\/(\d+)/', $currentRoute, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->edit($matches[1]);
+        } else {
+            $controller->edit($matches[1]);
+        }
+    } elseif (preg_match('/\/technicians\/view\/(\d+)/', $currentRoute, $matches)) {
+        $controller->view($matches[1]);
+    } elseif ($currentRoute === '/technicians/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete();
+    } elseif ($currentRoute === '/technicians/activate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->activate();
+    } elseif (preg_match('/\/api\/technicians\/(\d+)/', $currentRoute, $matches)) {
+        $controller->apiGet($matches[1]);
+    } elseif ($currentRoute === '/api/technicians') {
+        $controller->apiList();
+    } else {
+        // 404 for technicians
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Technician page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/materials') === 0 || strpos($currentRoute, '/api/materials') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        if (strpos($currentRoute, '/api/') === 0) {
+            header('Content-Type: application/json');
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+        } else {
+            header('Location: ?route=/login');
+        }
+        exit;
+    }
+    
+    require_once 'controllers/MaterialsController.php';
+    $controller = new MaterialsController();
+    
+    // Materials CRUD
+    if ($currentRoute === '/materials') {
+        // Check if export is requested
+        if (isset($_GET['export']) && $_GET['export'] === 'csv') {
+            $controller->exportCSV();
+        } else {
+            $controller->index();
+        }
+    } elseif ($currentRoute === '/materials/import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->importCSV();
+    } elseif ($currentRoute === '/materials/bulk-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkDelete();
+    } elseif ($currentRoute === '/materials/bulk-activate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkActivate();
+    } elseif ($currentRoute === '/materials/bulk-deactivate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkDeactivate();
+    } elseif ($currentRoute === '/materials/check-duplicates') {
+        $controller->checkDuplicates();
+    } elseif ($currentRoute === '/materials/duplicates') {
+        $controller->duplicates();
+    } elseif ($currentRoute === '/materials/add') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->add();
+        }
+    } elseif (preg_match('/\/materials\/(\d+)\/edit/', $currentRoute, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($matches[1]);
+        } else {
+            $controller->edit($matches[1]);
+        }
+    } elseif (preg_match('/\/materials\/(\d+)\/delete/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete($matches[1]);
+    // Category Management
+    } elseif ($currentRoute === '/materials/categories') {
+        $controller->categories();
+    } elseif ($currentRoute === '/materials/categories/add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->addCategory();
+    } elseif (preg_match('/\/materials\/categories\/(\d+)\/update/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->updateCategory($matches[1]);
+    } elseif (preg_match('/\/materials\/categories\/(\d+)\/delete/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deleteCategory($matches[1]);
+    // Admin Tools
+    } elseif ($currentRoute === '/materials/regenerate-aliases') {
+        $controller->regenerateAliases();
+    // API Endpoints
+    } elseif ($currentRoute === '/api/materials/search') {
+        $controller->search();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Materials page not found</h1>";
+    }
+    
+} elseif ($currentRoute === '/api/tasks/check-overlap' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // API endpoint for overlap checking
+    if (!isset($_SESSION['user_id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+    
+    require_once 'controllers/ProjectTasksController.php';
+    $controller = new ProjectTasksController();
+    $controller->apiCheckOverlap();
+    
+} elseif ($currentRoute === '/api/tasks/check-technician-overlap') {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Unauthorized']);
+        exit;
+    }
+    
+    require_once 'controllers/ProjectTasksController.php';
+    $controller = new ProjectTasksController();
+    $controller->apiCheckTechnicianOverlap();
+    
+} elseif (strpos($currentRoute, '/users') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    // Permission check is handled in UserController methods
+    // No hardcoded admin check here - let controller decide based on permissions
+    
+    require_once 'controllers/UserController.php';
+    $controller = new UserController();
+    
+    if ($currentRoute === '/users') {
+        $controller->index();
+    } elseif ($currentRoute === '/users/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif (preg_match('/^\/users\/show\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->show($matches[1]);
+    } elseif (preg_match('/^\/users\/edit\/(\d+)$/', $currentRoute, $matches)) {
+        $_GET['id'] = $matches[1]; // Set the ID for the edit method
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
+    } elseif ($currentRoute === '/users/edit') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->edit();
+        }
+    } elseif ($currentRoute === '/users/delete') {
+        $controller->delete();
+    } elseif ($currentRoute === '/users/toggleActive') {
+        $controller->toggleActive();
+    } else {
+        // 404 for users
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - User page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/roles') === 0) {
+    // Check if user is logged in and is admin
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    if ($_SESSION['role'] !== 'admin') {
+        $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης';
+        header('Location: ?route=/dashboard');
+        exit;
+    }
+    
+    require_once 'controllers/RoleController.php';
+    $controller = new RoleController();
+    
+    if ($currentRoute === '/roles') {
+        $controller->index();
+    } elseif ($currentRoute === '/roles/create') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->store();
+        } else {
+            $controller->create();
+        }
+    } elseif (preg_match('/^\/roles\/edit\/(\d+)$/', $currentRoute, $matches)) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update($matches[1]);
+        } else {
+            $controller->edit($matches[1]);
+        }
+    } elseif (preg_match('/^\/roles\/delete\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->delete($matches[1]);
+    } elseif (preg_match('/^\/roles\/permissions\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->permissions($matches[1]);
+    } else {
+        // 404 for roles
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Role page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/reports') === 0) {
+    // Check if user is logged in
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/ReportsController.php';
+    $controller = new ReportsController();
+    
+    if ($currentRoute === '/reports') {
+        $controller->index();
+    } else {
+        // 404 for reports
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Reports page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/update') === 0) {
+    // Application Update System
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    if ($_SESSION['role'] !== 'admin') {
+        $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης';
+        header('Location: ?route=/dashboard');
+        exit;
+    }
+    
+    require_once 'controllers/UpdateController.php';
+    $controller = new UpdateController();
+    
+    if ($currentRoute === '/update') {
+        $controller->index();
+    } elseif ($currentRoute === '/update/status') {
+        $controller->status();
+    } elseif ($currentRoute === '/update/process') {
+        $controller->process();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Update page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/settings') === 0) {
+    // Check if user is logged in and is admin
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    if ($_SESSION['role'] !== 'admin') {
+        $_SESSION['error'] = 'Δεν έχετε δικαίωμα πρόσβασης';
+        header('Location: ?route=/dashboard');
+        exit;
+    }
+    
+    require_once 'controllers/SettingsController.php';
+    $controller = new SettingsController();
+    
+    if ($currentRoute === '/settings') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->update();
+        } else {
+            $controller->index();
+        }
+    } elseif ($currentRoute === '/settings/reset-data') {
+        $controller->resetData();
+    } elseif ($currentRoute === '/settings/migrations') {
+        require_once 'views/settings/migrations.php';
+    } elseif ($currentRoute === '/settings/update') {
+        // Update checker page - already handled separately
+        require_once 'views/settings/update.php';
+    } elseif ($currentRoute === '/settings/translations') {
+        $controller->translations();
+    } elseif ($currentRoute === '/settings/change-language') {
+        $controller->changeLanguage();
+    } else {
+        // 404 for settings
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Settings page not found</h1>";
+    }
+    
+} elseif (strpos($currentRoute, '/trash') === 0) {
+    // Trash/Recycle Bin routes (admin only)
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    
+    require_once 'controllers/TrashController.php';
+    $controller = new TrashController();
+    
+    if ($currentRoute === '/trash') {
+        $controller->index();
+    } elseif ($currentRoute === '/trash/restore' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->restore();
+    } elseif ($currentRoute === '/trash/permanent-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->permanentDelete();
+    } elseif ($currentRoute === '/trash/bulk-restore' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkRestore();
+    } elseif ($currentRoute === '/trash/bulk-delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->bulkDelete();
+    } elseif ($currentRoute === '/trash/empty' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->emptyTrash();
+    } elseif ($currentRoute === '/trash/log') {
+        $controller->viewLog();
+    } else {
+        // 404 for trash
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Trash page not found</h1>";
+    }
+    
+} else {
+    // 404 - Not found
+    header('HTTP/1.0 404 Not Found');
+    include 'views/errors/404.php';
+}
+?>
