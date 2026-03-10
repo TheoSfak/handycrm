@@ -107,7 +107,7 @@ class ProjectTask extends BaseModel {
      * @return int
      */
     public function countByProject($projectId) {
-        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE project_id = ?";
+        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE project_id = ? AND deleted_at IS NULL";
         $result = $this->query($sql, [$projectId]);
         return $result ? (int)$result[0]['count'] : 0;
     }

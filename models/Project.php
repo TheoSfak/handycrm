@@ -119,11 +119,11 @@ class Project extends BaseModel {
                            COALESCE((SELECT SUM(tm.subtotal) 
                                      FROM task_materials tm 
                                      JOIN project_tasks pt ON tm.task_id = pt.id 
-                                     WHERE pt.project_id = p.id), 0) +
+                                     WHERE pt.project_id = p.id AND pt.deleted_at IS NULL), 0) +
                            COALESCE((SELECT SUM(tl.subtotal) 
                                      FROM task_labor tl 
                                      JOIN project_tasks pt ON tl.task_id = pt.id 
-                                     WHERE pt.project_id = p.id), 0) as calculated_total_cost
+                                     WHERE pt.project_id = p.id AND pt.deleted_at IS NULL), 0) as calculated_total_cost
                     FROM {$this->table} p 
                     JOIN customers c ON p.customer_id = c.id 
                     JOIN users t ON p.assigned_technician = t.id 
@@ -192,6 +192,7 @@ class Project extends BaseModel {
                     FROM project_tasks pt
                     LEFT JOIN task_labor tl ON pt.id = tl.task_id
                     LEFT JOIN task_materials tm ON pt.id = tm.task_id
+                    WHERE pt.deleted_at IS NULL
                     GROUP BY pt.project_id
                 ) costs ON p.id = costs.project_id
                 ORDER BY p.created_at DESC";

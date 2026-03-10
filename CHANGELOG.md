@@ -1,5 +1,13 @@
 # HandyCRM - Change Log
 
+## [1.7.0] - 2026-03-10
+
+### 🐛 Bug Fixes
+- **Project Tasks - Duplicate & Delete**: Fixed critical bug where deleting a duplicated task left materials and labor costs doubled. All cost/materials/labor queries now exclude soft-deleted tasks (`deleted_at IS NULL`).
+- **PDF Report (Αναφορά)**: Fixed aggregated materials and labor in the PDF report including data from deleted tasks — totals were doubled after deleting a duplicate.
+- **Task Count Badge**: Fixed task count on project page showing deleted tasks in the count.
+- **Project List Costs**: Fixed `calculated_total_cost` in project list and `getAll()` including costs from deleted tasks.
+
 ## [1.6.9] - 2026-02-06
 
 ### 🔴 Critical Fixes

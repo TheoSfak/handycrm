@@ -150,7 +150,7 @@ class ProjectReportController extends BaseController {
     
     private function getTasks($projectId, $fromDate = null, $toDate = null) {
         $pdo = $this->db->getPdo();
-        $sql = "SELECT * FROM project_tasks WHERE project_id = ?";
+        $sql = "SELECT * FROM project_tasks WHERE project_id = ? AND deleted_at IS NULL";
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
@@ -177,7 +177,7 @@ class ProjectReportController extends BaseController {
                 SUM(tm.subtotal) as total_cost
             FROM task_materials tm
             LEFT JOIN project_tasks pt ON tm.task_id = pt.id
-            WHERE pt.project_id = ?
+            WHERE pt.project_id = ? AND pt.deleted_at IS NULL
         ";
         $params = [$projectId];
         
@@ -240,7 +240,7 @@ class ProjectReportController extends BaseController {
             FROM task_labor tl
             LEFT JOIN project_tasks pt ON tl.task_id = pt.id
             LEFT JOIN users u ON $userIdField = u.id
-            WHERE pt.project_id = ?
+            WHERE pt.project_id = ? AND pt.deleted_at IS NULL
         ";
         $params = [$projectId];
         

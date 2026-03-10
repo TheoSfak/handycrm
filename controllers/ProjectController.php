@@ -197,7 +197,7 @@ class ProjectController extends BaseController {
                  INNER JOIN task_labor tl ON pt.id = tl.task_id
                  LEFT JOIN users u ON tl.technician_id = u.id
                  LEFT JOIN roles r ON tl.role_id = r.id
-                 WHERE pt.project_id = ?
+                 WHERE pt.project_id = ? AND pt.deleted_at IS NULL
                  ORDER BY 
                     CASE 
                         WHEN pt.task_type = 'single_day' THEN pt.task_date
@@ -270,7 +270,7 @@ class ProjectController extends BaseController {
                  INNER JOIN project_tasks pt ON tm.task_id = pt.id
                  LEFT JOIN materials_catalog mcat ON tm.catalog_material_id = mcat.id
                  LEFT JOIN material_categories mc ON mcat.category_id = mc.id
-                 WHERE pt.project_id = ?{$dateFilter}
+                 WHERE pt.project_id = ? AND pt.deleted_at IS NULL{$dateFilter}
                  GROUP BY tm.name, tm.unit, mc.name
                  ORDER BY tm.name",
                 $params
@@ -289,7 +289,7 @@ class ProjectController extends BaseController {
                     pt.description
                  FROM project_tasks pt
                  INNER JOIN task_materials tm ON pt.id = tm.task_id
-                 WHERE pt.project_id = ?{$dateFilter}
+                 WHERE pt.project_id = ? AND pt.deleted_at IS NULL{$dateFilter}
                  ORDER BY task_date DESC",
                 $params
             );
