@@ -1,5 +1,11 @@
 # HandyCRM - Change Log
 
+## [1.7.6] - 2026-03-11
+
+### 📄 Changes
+- **Συμφωνητικό όροι**: Updated "ΓΕΝΙΚΟΙ ΟΡΟΙ ΤΙΜΟΛΟΓΙΟΥ" with full legal terms (10 numbered items) covering materials, labor, equipment, taxes, and ΙΚΑ insurance contributions.
+- **Συμφωνητικό λοιποί όροι**: Updated "ΛΟΙΠΟΙ ΟΡΟΙ" with 4 full legal clauses: contractor default/expulsion, workmanship, worker safety/liability, and price revision/jurisdiction (Heraklion courts).
+
 ## [1.7.5] - 2026-03-11
 
 ### 🔄 Changes
