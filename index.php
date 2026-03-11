@@ -241,6 +241,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->importCsv();
     } elseif ($currentRoute === '/projects/demo-csv') {
         $controller->downloadDemoCsv();
+    } elseif (preg_match('/\/projects\/contract\/(\d+)/', $currentRoute, $matches)) {
+        require_once 'controllers/ContractController.php';
+        $contractController = new ContractController();
+        $contractController->generate((int)$matches[1]);
     } elseif (preg_match('/\/projects\/report\/(\d+)/', $currentRoute, $matches)) {
         require_once 'controllers/ProjectReportController.php';
         $reportController = new ProjectReportController();

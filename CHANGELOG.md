@@ -1,5 +1,10 @@
 # HandyCRM - Change Log
 
+## [1.7.1] - 2026-03-11
+
+### ✨ New Features
+- **Συμφωνητικό (Contract) Button on Projects**: Added a new "Συμφωνητικό" button on the project detail page (`/projects/show/{id}`) that generates and downloads a Word (.docx) contract document pre-filled with project and customer data. Implemented via new `ContractController` with route `/projects/contract/{id}`.
+
 ## [1.7.0] - 2026-03-10
 
 ### 🐛 Bug Fixes

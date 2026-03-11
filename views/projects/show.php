@@ -66,6 +66,13 @@
                 </div>
             </div>
             <div class="text-end">
+                <!-- Contract (Word) Button -->
+                <a href="?route=/projects/contract/<?= $project['id'] ?>"
+                   class="btn btn-success mb-1 me-1"
+                   title="Λήψη Συμφωνητικού Word">
+                    <i class="fas fa-file-word"></i> Συμφωνητικό
+                </a>
+
                 <!-- Project Report Button -->
                 <button type="button" class="btn btn-info mb-1 me-1" data-bs-toggle="modal" data-bs-target="#reportModal">
                     <i class="fas fa-file-pdf"></i> <?= __('projects.project_report') ?>
