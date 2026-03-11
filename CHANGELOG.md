@@ -1,5 +1,11 @@
 # HandyCRM - Change Log
 
+## [1.7.3] - 2026-03-11
+
+### 🐛 Bug Fixes
+- **Συμφωνητικό filename**: Renamed downloaded file prefix from `SYMFWNHTIKO_` to `Συμφωνητικό_`. Added RFC 5987 UTF-8 encoding to `Content-Disposition` header so Greek filenames display correctly in all browsers.
+- **Συμφωνητικό city**: Changed default city fallback from `Αρκαλοχώρι` to `Ηράκλειο Κρήτης` in the contract intro line.
+
 ## [1.7.2] - 2026-03-11
 
 ### 🐛 Bug Fixes

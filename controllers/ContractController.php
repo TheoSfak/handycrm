@@ -112,7 +112,7 @@ class ContractController extends BaseController {
         $safeTitle = strtr($proj['title'], $translitMap);
         $safeTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', $safeTitle);
         $safeTitle = trim(preg_replace('/_+/', '_', $safeTitle), '_');
-        $filename  = 'SYMFWNHTIKO_' . $safeTitle . '_' . date('Y-m-d') . '.docx';
+        $filename  = 'Συμφωνητικό_' . $safeTitle . '_' . date('Y-m-d') . '.docx';
 
         $contractDir = APP_ROOT . '/uploads/contracts';
         if (!is_dir($contractDir)) {
@@ -139,8 +139,10 @@ class ContractController extends BaseController {
         }
 
         // Stream file as a download — forces browser to save instead of open.
+        // Use RFC 5987 encoding so Greek filename works in all browsers.
+        $encodedFilename = rawurlencode($filename);
         header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Disposition: attachment; filename="' . $filename . '"; filename*=UTF-8\'\'' . $encodedFilename);
         header('Content-Length: ' . filesize($filePath));
         header('Cache-Control: no-store, no-cache, must-revalidate');
         header('Pragma: no-cache');
@@ -202,7 +204,7 @@ class ContractController extends BaseController {
         $coDoy   = $settings['company_tax_office'] ?? '';
         $coPhone = $settings['company_phone']      ?? '';
         $coRep   = $settings['company_legal_rep']  ?? '';
-        $coCity  = $settings['company_city']       ?? 'Αρκαλοχώρι';
+        $coCity  = $settings['company_city']       ?? 'Ηράκλειο Κρήτης';
 
         $custAddr = trim(($p['cust_address'] ?? '') . ($p['cust_city'] ? ', ' . $p['cust_city'] : ''), ', ');
 
@@ -232,7 +234,7 @@ class ContractController extends BaseController {
         // ── INTRO – PARTIES ───────────────────────────────────────────────
         $trIntro = $section->addTextRun($justify + ['spaceAfter' => 140]);
         $trIntro->addText('Στο ');
-        $trIntro->addText($coCity ?: 'Αρκαλοχώρι', $bold);
+        $trIntro->addText($coCity ?: 'Ηράκλειο Κρήτης', $bold);
         $trIntro->addText(' σήμερα στις  ');
         $trIntro->addText($signDate, $bold);
         $trIntro->addText(', οι παρακάτω συμβαλλόμενοι:');
