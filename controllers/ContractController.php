@@ -138,10 +138,14 @@ class ContractController extends BaseController {
             return;
         }
 
-        // Redirect to the static file — let Apache serve it directly.
-        // This avoids any PHP output buffering / display_errors corruption.
-        $fileUrl = BASE_URL . '/uploads/contracts/' . rawurlencode($filename);
-        header('Location: ' . $fileUrl);
+        // Stream file as a download — forces browser to save instead of open.
+        header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filePath));
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        ob_end_clean();
+        readfile($filePath);
         exit;
     }
 

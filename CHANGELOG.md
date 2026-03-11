@@ -1,5 +1,10 @@
 # HandyCRM - Change Log
 
+## [1.7.2] - 2026-03-11
+
+### 🐛 Bug Fixes
+- **Συμφωνητικό Download**: Fixed contract Word file opening in browser instead of downloading. File is now streamed with `Content-Disposition: attachment` headers, forcing a proper download in all browsers.
+
 ## [1.7.1] - 2026-03-11
 
 ### ✨ New Features
