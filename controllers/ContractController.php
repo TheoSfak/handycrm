@@ -352,7 +352,7 @@ class ContractController extends BaseController {
             $section->addText('Αναλυτικό χρονοδιάγραμμα εργασιών:', null, ['spaceAfter' => 40, 'spaceBefore' => 60]);
             $tblT = $section->addTable(['borderSize' => 6, 'borderColor' => 'AAAAAA', 'cellMargin' => 70]);
             $thT  = $tblT->addRow();
-            foreach ([[2000, 'Περίοδος'], [5200, 'Περιγραφή Εργασίας'], [1300, 'Κόστος']] as [$w, $h]) {
+            foreach ([[2000, 'Περίοδος'], [6500, 'Περιγραφή Εργασίας']] as [$w, $h]) {
                 $thT->addCell($w, ['bgColor' => '1F497D'])->addText($h, ['bold' => true, 'color' => 'FFFFFF', 'size' => 9]);
             }
             foreach ($tasks as $tk) {
@@ -361,8 +361,7 @@ class ContractController extends BaseController {
                     : ($fDate((string)($tk['date_from'] ?? '')) . ' - ' . $fDate((string)($tk['date_to'] ?? '')));
                 $tr = $tblT->addRow();
                 $tr->addCell(2000)->addText($period, ['size' => 9]);
-                $tr->addCell(5200)->addText($tk['description'] ?? '', ['size' => 9]);
-                $tr->addCell(1300)->addText($fEur((float)$tk['daily_total']), ['size' => 9]);
+                $tr->addCell(6500)->addText($tk['description'] ?? '', ['size' => 9]);
             }
         }
         $section->addTextBreak(1);

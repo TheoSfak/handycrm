@@ -1,5 +1,10 @@
 # HandyCRM - Change Log
 
+## [1.7.5] - 2026-03-11
+
+### 🔄 Changes
+- **Συμφωνητικό χρονοδιάγραμμα**: Removed "Κόστος" column from the task schedule table. Table now shows only date period and task description.
+
 ## [1.7.4] - 2026-03-11
 
 ### 🔄 Changes
