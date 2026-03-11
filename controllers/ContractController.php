@@ -304,18 +304,8 @@ class ContractController extends BaseController {
 
         // cost table
         $tblC = $section->addTable(['borderSize' => 6, 'borderColor' => 'AAAAAA', 'cellMargin' => 90]);
-        if ($mat > 0) {
-            $r = $tblC->addRow();
-            $r->addCell(7000)->addText('Αξία Υλικών');
-            $r->addCell(2500)->addText($fEur($mat));
-        }
-        if ($lab > 0) {
-            $r = $tblC->addRow();
-            $r->addCell(7000)->addText('Αξία Εργασίας');
-            $r->addCell(2500)->addText($fEur($lab));
-        }
         $rSub = $tblC->addRow();
-        $rSub->addCell(7000, ['bgColor' => 'EFEFEF'])->addText('ΣΥΝΟΛΟ ΠΡΟΫΠΟΛΟΓΙΣΜΟΥ ΕΡΓΑΣΙΩΝ  (Άνευ ΦΠΑ ' . number_format($vatRate, 0) . '%)', $bold);
+        $rSub->addCell(7000, ['bgColor' => 'EFEFEF'])->addText('Κόστος υλικών και εργασίας  (Άνευ ΦΠΑ ' . number_format($vatRate, 0) . '%)', $bold);
         $rSub->addCell(2500, ['bgColor' => 'EFEFEF'])->addText($subtotal > 0 ? $fEur($subtotal) : $dots, $bold);
         $rVat = $tblC->addRow();
         $rVat->addCell(7000)->addText('ΦΠΑ ' . number_format($vatRate, 0) . '%');

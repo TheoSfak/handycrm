@@ -1,5 +1,10 @@
 # HandyCRM - Change Log
 
+## [1.7.4] - 2026-03-11
+
+### 🔄 Changes
+- **Συμφωνητικό κόστος**: Merged separate "Αξία Υλικών" and "Αξία Εργασίας" rows into a single "Κόστος υλικών και εργασίας = X €" line in the contract cost table.
+
 ## [1.7.3] - 2026-03-11
 
 ### 🐛 Bug Fixes
