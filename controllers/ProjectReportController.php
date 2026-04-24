@@ -753,7 +753,8 @@ class ProjectReportController extends BaseController {
             $html .= '</table>';
         }
         
-        // Summary Cards
+        // Summary Cards — wrapped in nobr so they never split across pages
+        $html .= '<div nobr="true">';
         $html .= '<h2 style="margin-top: 100px; margin-bottom: 15px;">ΣΥΓΚΕΝΤΡΩΤΙΚΑ ΣΤΟΙΧΕΙΑ</h2>';
         $html .= '<div style="border-top: 2px solid #3498db; margin-bottom: 20px;"></div>';
         
@@ -826,8 +827,7 @@ class ProjectReportController extends BaseController {
         
         $html .= '</tr>';
         $html .= '</table>';
-        
-        // Report Notes Section
+        $html .= '</div>'; // end nobr summary cards
         if (!empty($reportNotes)) {
             $html .= '<h2 style="margin-top: 40px; margin-bottom: 15px;">ΠΑΡΑΤΗΡΗΣΕΙΣ</h2>';
             $html .= '<div style="border-top: 2px solid #3498db; margin-bottom: 20px;"></div>';
