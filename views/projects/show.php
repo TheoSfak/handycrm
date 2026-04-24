@@ -150,7 +150,8 @@
         <button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" type="button" role="tab">
             <i class="fas fa-hard-hat me-2"></i>Ημερομίσθια
             <?php if (!empty($laborEntries) && count($laborEntries) > 0): ?>
-                <span class="badge bg-primary ms-1"><?= count($laborEntries) ?></span>
+                <?php $totalHmeromisthiaBadge = array_sum(array_map(fn($e) => ceil($e['hours'] / 8), $laborEntries)); ?>
+                <span class="badge bg-primary ms-1"><?= $totalHmeromisthiaBadge ?></span>
             <?php endif; ?>
         </button>
     </li>
@@ -530,6 +531,9 @@
                                     $grandTotal = array_sum(array_column($laborEntries, 'hours'));
                                     echo number_format($grandTotal, 1); 
                                     ?> ώρες
+                                </span>
+                                <span class="badge bg-primary fs-4 ms-2">
+                                    <?= array_sum(array_map(fn($e) => ceil($e['hours'] / 8), $laborEntries)) ?> ημερομίσθια
                                 </span>
                             </h3>
                         </div>

@@ -1,5 +1,13 @@
 # HandyCRM - Change Log
 
+## [1.7.15] - 2026-04-24
+
+### 🐛 Bug Fixes
+- **Ημερομίσθια Tab**: Badge now shows `SUM(CEIL(hours/8))` instead of row count — matches PDF report total
+- **Ημερομίσθια Tab**: Grand total footer now shows both total hours and total ημερομίσθια
+
+---
+
 ## [1.7.14] - 2026-04-24
 
 ### 🐛 Bug Fixes
