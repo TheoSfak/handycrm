@@ -662,7 +662,12 @@ class ProjectReportController extends BaseController {
                 }
 
                 $html .= '<tr>';
-                $html .= '<td style="width: 20%;">' . date('d/m/Y', strtotime($displayDate)) . '</td>';
+                if (($task['task_type'] ?? 'single_day') === 'date_range' && !empty($task['date_from']) && !empty($task['date_to'])) {
+                    $dateCell = date('d/m/Y', strtotime($task['date_from'])) . '<br><span style="font-size:9px; color:#7f8c8d;">έως ' . date('d/m/Y', strtotime($task['date_to'])) . '</span>';
+                } else {
+                    $dateCell = date('d/m/Y', strtotime($displayDate));
+                }
+                $html .= '<td style="width: 20%;">' . $dateCell . '</td>';
                 $html .= '<td style="width: 55%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
                 if (!empty($task['notes'])) {
                     $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';

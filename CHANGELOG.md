@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.7.10] - 2026-04-24
+
+### 🐛 Bug Fixes
+- **ProjectReport - Εργασίες**: `date_range` tasks now show full date range (e.g. 19/11/2025 έως 25/11/2025) instead of just the start date, preventing confusion with same-date single-day tasks
+
+---
+
 ## [1.7.9] - 2026-04-24
 
 ### ✨ New Features
