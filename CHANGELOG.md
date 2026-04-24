@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.9] - 2026-04-24
+
+### ✨ New Features
+- **ProjectReport - Εργασίες**: Added new "ΗΜΕΡΟΜΙΣΘΙΑ" column in tasks table showing per-task technician count and ημερομίσθια (e.g. "Τεχνικοί: 3 / Ημερομίσθια: 4 (8ωρα)" or "Τεχνικοί: -" when no labor recorded)
+- **ProjectReport - Εργασίες**: Fixed date display for `date_range` tasks (was showing NULL, now uses `date_from`)
+- **ProjectReport - Εργασίες**: Long descriptions now wrap cleanly in the table
+
+---
+
 ## [1.7.8] - 2026-04-24
 
 ### 🔄 Changes

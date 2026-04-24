@@ -150,13 +150,21 @@ class ProjectReportController extends BaseController {
     
     private function getTasks($projectId, $fromDate = null, $toDate = null) {
         $pdo = $this->db->getPdo();
-        $sql = "SELECT * FROM project_tasks WHERE project_id = ? AND deleted_at IS NULL";
+        $sql = "
+            SELECT pt.*,
+                   COALESCE(pt.task_date, pt.date_from) as display_date,
+                   COUNT(DISTINCT tl.technician_name) as tech_count,
+                   COALESCE(SUM(tl.hours_worked), 0) as task_total_hours
+            FROM project_tasks pt
+            LEFT JOIN task_labor tl ON tl.task_id = pt.id
+            WHERE pt.project_id = ? AND pt.deleted_at IS NULL
+        ";
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
             $sql .= " AND (
-                (task_type = 'single_day' AND task_date BETWEEN ? AND ?)
-                OR (task_type = 'date_range' AND date_from <= ? AND date_to >= ?)
+                (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
             )";
             $params[] = $fromDate;
             $params[] = $toDate;
@@ -164,7 +172,7 @@ class ProjectReportController extends BaseController {
             $params[] = $fromDate;
         }
         
-        $sql .= " ORDER BY COALESCE(task_date, date_from) ASC";
+        $sql .= " GROUP BY pt.id ORDER BY COALESCE(pt.task_date, pt.date_from) ASC";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -639,17 +647,28 @@ class ProjectReportController extends BaseController {
             $html .= '<h2><i class="fas fa-tasks"></i> ΕΡΓΑΣΙΕΣ</h2>';
             $html .= '<table>';
             $html .= '<thead nobr="true">';
-            $html .= '<tr nobr="true"><th style="width: 25%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 75%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th></tr>';
+            $html .= '<tr nobr="true"><th style="width: 20%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 55%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 25%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
             $html .= '</thead>';
             $html .= '<tbody>';
             foreach ($tasks as $task) {
+                $displayDate = $task['display_date'] ?? ($task['task_date'] ?? $task['date_from']);
+                $techCount = (int)($task['tech_count'] ?? 0);
+                $taskDays = $techCount > 0 ? (int) ceil((float)$task['task_total_hours'] / 8) : 0;
+
+                if ($techCount > 0) {
+                    $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $taskDays . ' (8ωρα)</span>';
+                } else {
+                    $laborCell = 'Τεχνικοί: -';
+                }
+
                 $html .= '<tr>';
-                $html .= '<td style="width: 25%;">' . date('d/m/Y', strtotime($task['task_date'])) . '</td>';
-                $html .= '<td style="width: 75%;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong><br>';
+                $html .= '<td style="width: 20%;">' . date('d/m/Y', strtotime($displayDate)) . '</td>';
+                $html .= '<td style="width: 55%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
                 if (!empty($task['notes'])) {
-                    $html .= '<span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
+                    $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
                 }
                 $html .= '</td>';
+                $html .= '<td style="width: 25%; text-align: center; font-size: 9px;">' . $laborCell . '</td>';
                 $html .= '</tr>';
             }
             $html .= '</tbody>';
