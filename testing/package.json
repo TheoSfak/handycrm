@@ -1,0 +1,27 @@
+{
+  "name": "handycrm-ai-tester",
+  "version": "1.0.0",
+  "description": "AI-powered automated testing agent for HandyCRM",
+  "main": "test-agent.js",
+  "scripts": {
+    "test": "node test-agent.js",
+    "test:full": "node test-agent.js --full",
+    "test:auth": "node test-agent.js --scenario=auth",
+    "test:customers": "node test-agent.js --scenario=customers",
+    "test:projects": "node test-agent.js --scenario=projects",
+    "install-browsers": "npx playwright install"
+  },
+  "keywords": [
+    "testing",
+    "automation",
+    "ai",
+    "playwright"
+  ],
+  "author": "HandyCRM",
+  "license": "MIT",
+  "dependencies": {
+    "@playwright/test": "^1.40.0",
+    "playwright": "^1.40.0",
+    "chalk": "^4.1.2"
+  }
+}

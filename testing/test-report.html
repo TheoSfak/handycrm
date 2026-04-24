@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HandyCRM Test Report - 6/2/2026, 3:26:09 μ.μ.</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; background: #f5f7fa; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; }
+        header h1 { font-size: 28px; margin-bottom: 10px; }
+        header .meta { opacity: 0.9; font-size: 14px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 30px; background: #f8f9fa; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-card .label { color: #6c757d; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .stat-card .value { font-size: 32px; font-weight: bold; }
+        .stat-card.passed .value { color: #28a745; }
+        .stat-card.failed .value { color: #dc3545; }
+        .stat-card.warnings .value { color: #ffc107; }
+        .results { padding: 30px; }
+        .result-section { margin-bottom: 30px; }
+        .result-section h2 { font-size: 20px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e9ecef; }
+        .result-item { padding: 15px; margin-bottom: 10px; border-radius: 6px; border-left: 4px solid #dee2e6; }
+        .result-item.passed { background: #d4edda; border-left-color: #28a745; }
+        .result-item.failed { background: #f8d7da; border-left-color: #dc3545; }
+        .result-item.warning { background: #fff3cd; border-left-color: #ffc107; }
+        .result-item .test-name { font-weight: 600; margin-bottom: 5px; }
+        .result-item .details { font-size: 14px; color: #6c757d; }
+        .result-item .error { color: #dc3545; margin-top: 5px; font-family: 'Courier New', monospace; font-size: 13px; }
+        .result-item .timestamp { font-size: 12px; color: #adb5bd; margin-top: 5px; }
+        .screenshot { max-width: 100%; margin-top: 10px; border: 1px solid #dee2e6; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 HandyCRM AI Test Report</h1>
+            <div class="meta">
+                Generated: 6/2/2026, 3:26:09 μ.μ.<br>
+                Duration: 69.65s | Pass Rate: 100.0%
+            </div>
+        </header>
+        
+        <div class="stats">
+            <div class="stat-card passed">
+                <div class="label">Passed</div>
+                <div class="value">27</div>
+            </div>
+            <div class="stat-card failed">
+                <div class="label">Failed</div>
+                <div class="value">0</div>
+            </div>
+            <div class="stat-card warnings">
+                <div class="label">Warnings</div>
+                <div class="value">4</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Total Tests</div>
+                <div class="value">27</div>
+            </div>
+        </div>
+        
+        <div class="results">
+            
+            
+            
+            <div class="result-section">
+                <h2>⚠️ Warnings</h2>
+                
+                    <div class="result-item warning">
+                        <div class="test-name">Login Validation</div>
+                        <div class="details">No clear error message for wrong credentials</div>
+                        <div class="timestamp">6/2/2026, 3:26:13 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item warning">
+                        <div class="test-name">Maintenance Create</div>
+                        <div class="details">Creation may have validation errors</div>
+                        <div class="timestamp">6/2/2026, 3:26:57 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item warning">
+                        <div class="test-name">Cleanup Project</div>
+                        <div class="details">Delete button not found</div>
+                        <div class="timestamp">6/2/2026, 3:27:17 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item warning">
+                        <div class="test-name">Cleanup Customer</div>
+                        <div class="details">Delete button not found - may be soft deleted</div>
+                        <div class="timestamp">6/2/2026, 3:27:18 μ.μ.</div>
+                    </div>
+                
+            </div>
+            
+            
+            
+            <div class="result-section">
+                <h2>✅ Passed Tests</h2>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Login Success</div>
+                        <div class="details">Successfully logged in and redirected to dashboard</div>
+                        <div class="timestamp">6/2/2026, 3:26:16 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Customer Create</div>
+                        <div class="details">Customer created successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:23 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Customer Search</div>
+                        <div class="details">Found created customer in search results</div>
+                        <div class="timestamp">6/2/2026, 3:26:26 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Customer Update</div>
+                        <div class="details">Customer updated successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:30 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Project Create</div>
+                        <div class="details">Project created successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:38 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Project Filter</div>
+                        <div class="details">Status filter works, found test project</div>
+                        <div class="timestamp">6/2/2026, 3:26:41 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Project Update</div>
+                        <div class="details">Project updated successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:45 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Payments Page</div>
+                        <div class="details">Page loaded successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:46 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Quote Create</div>
+                        <div class="details">Quote created successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:48 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Materials Page</div>
+                        <div class="details">Page loaded successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:50 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Material Search</div>
+                        <div class="details">Search functionality works</div>
+                        <div class="timestamp">6/2/2026, 3:26:52 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Maintenance Page</div>
+                        <div class="details">Page loaded successfully</div>
+                        <div class="timestamp">6/2/2026, 3:26:54 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Dashboard</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:26:58 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Customers</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:26:59 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Projects</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:27:01 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Payments</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:27:02 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Materials</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:27:03 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Quotes</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:27:04 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Reports</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:27:05 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Navigation - Settings</div>
+                        <div class="details">Page loaded without errors</div>
+                        <div class="timestamp">6/2/2026, 3:27:07 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Settings Page</div>
+                        <div class="details">Page loaded successfully</div>
+                        <div class="timestamp">6/2/2026, 3:27:08 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Settings Form</div>
+                        <div class="details">Settings form is accessible</div>
+                        <div class="timestamp">6/2/2026, 3:27:08 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Reports Page</div>
+                        <div class="details">Page loaded successfully</div>
+                        <div class="timestamp">6/2/2026, 3:27:09 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Form Validation</div>
+                        <div class="details">Empty form submission prevented</div>
+                        <div class="timestamp">6/2/2026, 3:27:12 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Responsive - Desktop</div>
+                        <div class="details">Renders correctly at 1920x1080</div>
+                        <div class="timestamp">6/2/2026, 3:27:13 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Responsive - Tablet</div>
+                        <div class="details">Renders correctly at 768x1024</div>
+                        <div class="timestamp">6/2/2026, 3:27:14 μ.μ.</div>
+                    </div>
+                
+                    <div class="result-item passed">
+                        <div class="test-name">Responsive - Mobile</div>
+                        <div class="details">Renders correctly at 375x667</div>
+                        <div class="timestamp">6/2/2026, 3:27:16 μ.μ.</div>
+                    </div>
+                
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>
+    

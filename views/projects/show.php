@@ -1230,12 +1230,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     <hr>
                     
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="hidePricesCheck" name="hide_prices" value="1">
-                        <label class="form-check-label" for="hidePricesCheck">
-                            <strong><?= __('projects.hide_prices') ?></strong>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="hideLaborPricesCheck" name="hide_labor_prices" value="1">
+                        <label class="form-check-label" for="hideLaborPricesCheck">
+                            <strong>Απόκρυψη Τιμών Εργατικών</strong>
                             <br>
-                            <small class="text-muted"><?= __('projects.hide_prices_description') ?></small>
+                            <small class="text-muted">Ωρομίσθια και κόστη εργατικών δεν θα εμφανίζονται</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="hideMaterialsPricesCheck" name="hide_materials_prices" value="1">
+                        <label class="form-check-label" for="hideMaterialsPricesCheck">
+                            <strong>Απόκρυψη Τιμών Υλικών</strong>
+                            <br>
+                            <small class="text-muted">Τιμές και κόστη υλικών δεν θα εμφανίζονται</small>
                         </label>
                     </div>
                     

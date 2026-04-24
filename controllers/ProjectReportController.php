@@ -77,8 +77,14 @@ class ProjectReportController extends BaseController {
         $fromDate = isset($_POST['from_date']) && !empty($_POST['from_date']) ? $_POST['from_date'] : null;
         $toDate = isset($_POST['to_date']) && !empty($_POST['to_date']) ? $_POST['to_date'] : null;
         
-        // Get hide prices option
-        $hidePrices = isset($_POST['hide_prices']) && $_POST['hide_prices'] === '1';
+        // Get hide prices options
+        $hideLaborPrices     = isset($_POST['hide_labor_prices'])     && $_POST['hide_labor_prices']     === '1';
+        $hideMaterialsPrices = isset($_POST['hide_materials_prices']) && $_POST['hide_materials_prices'] === '1';
+        // Legacy: old single checkbox still works
+        if (isset($_POST['hide_prices']) && $_POST['hide_prices'] === '1') {
+            $hideLaborPrices = true;
+            $hideMaterialsPrices = true;
+        }
         
         // Get report content filter (materials, labor, or both)
         $reportContent = isset($_POST['report_content']) ? $_POST['report_content'] : 'both';
@@ -117,7 +123,7 @@ class ProjectReportController extends BaseController {
         $totals = $this->calculateTotals($materials, $labor);
         
         // Generate PDF
-        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices, $reportNotes);
+        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes);
     }
     
     private function getProject($projectId) {
@@ -307,7 +313,7 @@ class ProjectReportController extends BaseController {
         ];
     }
     
-    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices = false, $reportNotes = null) {
+    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null) {
         // Create new PDF document with custom footer
         $pdf = new CustomPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         
@@ -333,7 +339,7 @@ class ProjectReportController extends BaseController {
         $pdf->SetFont('dejavusans', '', 10);
         
         // Build HTML content
-        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices, $reportNotes);
+        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes);
         
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -464,7 +470,7 @@ class ProjectReportController extends BaseController {
         return $html;
     }
     
-    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hidePrices = false, $reportNotes = null) {
+    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null) {
         // Always use HTML entity for euro to avoid server encoding issues
         // The database might have corrupted € character depending on server charset
         $currencySymbol = '&euro;';
@@ -688,7 +694,7 @@ class ProjectReportController extends BaseController {
             $html .= '<thead nobr="true">';
             
             // Table headers
-            if ($hidePrices) {
+            if ($hideMaterialsPrices) {
                 $html .= '<tr nobr="true"><th style="width: 50%;">ΥΛΙΚΟ</th><th class="text-center" style="width: 50%;">ΠΟΣΟΤΗΤΑ</th></tr>';
             } else {
                 $html .= '<tr nobr="true"><th style="width: 40%;">ΥΛΙΚΟ</th><th class="text-center" style="width: 20%;">ΠΟΣΟΤΗΤΑ</th><th class="text-right" style="width: 20%;">ΤΙΜΗ ΜΟΝ.</th><th class="text-right" style="width: 20%;">ΣΥΝΟΛΟ</th></tr>';
@@ -700,7 +706,7 @@ class ProjectReportController extends BaseController {
             foreach ($materials as $material) {
                 $html .= '<tr nobr="true">';
                 
-                if ($hidePrices) {
+                if ($hideMaterialsPrices) {
                     $html .= '<td style="width: 50%;">' . htmlspecialchars($material['material_name']) . '</td>';
                     $html .= '<td class="text-center" style="width: 50%;">' . number_format($material['total_quantity'], 2, ',', '.') . ' ' . htmlspecialchars($material['unit']) . '</td>';
                 } else {
@@ -724,7 +730,7 @@ class ProjectReportController extends BaseController {
             $html .= '<thead nobr="true">';
             
             // Table headers
-            if ($hidePrices) {
+            if ($hideLaborPrices) {
                 $html .= '<tr nobr="true"><th style="width: 60%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 40%;">ΩΡΕΣ</th></tr>';
             } else {
                 $html .= '<tr nobr="true"><th style="width: 35%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 20%;">ΩΡΕΣ</th><th class="text-right" style="width: 22%;">ΩΡΟΜΙΣΘΙΟ</th><th class="text-right" style="width: 23%;">ΣΥΝΟΛΟ</th></tr>';
@@ -736,7 +742,7 @@ class ProjectReportController extends BaseController {
             foreach ($labor as $worker) {
                 $html .= '<tr nobr="true">';
                 
-                if ($hidePrices) {
+                if ($hideLaborPrices) {
                     $html .= '<td style="width: 60%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
                     $html .= '<td class="text-center" style="width: 40%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
                 } else {
@@ -761,60 +767,48 @@ class ProjectReportController extends BaseController {
         $html .= '<table style="margin-bottom: 20px; border: none;">';
         $html .= '<tr>';
         
-        if ($hidePrices) {
-            // Show only counts when hiding prices
-            
-            // Materials Card
-            $html .= '<td style="width: 50%; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
+        // Determine column count for layout
+        $bothHidden  = $hideLaborPrices && $hideMaterialsPrices;
+        $noneHidden  = !$hideLaborPrices && !$hideMaterialsPrices;
+        $colWidth    = $noneHidden ? '33.33%' : '50%';
+        
+        // Materials Card
+        $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+        $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
+        $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+        $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
+        if ($hideMaterialsPrices) {
             $html .= '<div style="font-size: 24px; font-weight: bold; color: white; margin-top: 5px;">' . $totals['total_materials'] . '</div>';
             $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">είδη</div>';
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-            
-            // Labor Card
-            $html .= '<td style="width: 50%; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-            
         } else {
-            // Show prices (original version)
-            
-            // Materials Card
-            $html .= '<td style="width: 33.33%; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
             $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
             $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
             $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_materials'] . ' είδη</div>';
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-            
-            // Labor Card
-            $html .= '<td style="width: 33.33%; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
+        }
+        $html .= '</td></tr>';
+        $html .= '</table>';
+        $html .= '</td>';
+        
+        // Labor Card
+        $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+        $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
+        $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+        $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
+        if ($hideLaborPrices) {
+            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
+        } else {
             $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
             $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
             $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-            
-            // Total Card
-            $html .= '<td style="width: 33.33%; border: none; padding: 5px;">';
+        }
+        $html .= '</td></tr>';
+        $html .= '</table>';
+        $html .= '</td>';
+        
+        // Grand Total Card — only when at least one section shows prices
+        if (!$bothHidden) {
+            $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
             $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';

@@ -1,5 +1,15 @@
 # HandyCRM - Change Log
 
+## [1.7.20] - 2026-04-24
+
+### ✨ New Features
+- **Granular price hiding in PDF report**: Replaced single "Απόκρυψη Τιμών" checkbox with two independent checkboxes:
+  - **Απόκρυψη Τιμών Εργατικών** — hides hourly rates and labor costs from the PDF
+  - **Απόκρυψη Τιμών Υλικών** — hides unit prices and material costs from the PDF
+- Summary cards in PDF adapt dynamically: show count-only for hidden sections, keep prices for visible sections; grand total card only appears when at least one section shows prices
+
+---
+
 ## [1.7.19] - 2026-04-24
 
 ### 🐛 Bug Fixes
