@@ -152,9 +152,10 @@ class ProjectReportController extends BaseController {
         $pdo = $this->db->getPdo();
         $sql = "
             SELECT pt.*,
-                   COALESCE(pt.task_date, pt.date_from) as display_date,
+                   CASE WHEN pt.task_type = 'single_day' THEN pt.task_date ELSE pt.date_from END as display_date,
                    COUNT(DISTINCT tl.technician_name) as tech_count,
-                   COALESCE(SUM(tl.hours_worked), 0) as task_total_hours
+                   COALESCE(SUM(tl.hours_worked), 0) as task_total_hours,
+                   COALESCE(SUM(CEIL(tl.hours_worked / 8)), 0) as task_hmeromisthia
             FROM project_tasks pt
             LEFT JOIN task_labor tl ON tl.task_id = pt.id
             WHERE pt.project_id = ? AND pt.deleted_at IS NULL
@@ -172,7 +173,7 @@ class ProjectReportController extends BaseController {
             $params[] = $fromDate;
         }
         
-        $sql .= " GROUP BY pt.id ORDER BY COALESCE(pt.task_date, pt.date_from) ASC";
+        $sql .= " GROUP BY pt.id ORDER BY CASE WHEN pt.task_type = 'single_day' THEN pt.task_date ELSE pt.date_from END ASC";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -252,6 +253,7 @@ class ProjectReportController extends BaseController {
             SELECT 
                 $workerNameField as worker_name,
                 SUM($hoursField) as total_hours,
+                SUM(CEIL($hoursField / 8)) as total_days,
                 COUNT(DISTINCT pt.id) as days_worked,
                 AVG(tl.hourly_rate) as hourly_rate,
                 SUM(tl.subtotal) as total_cost
@@ -291,7 +293,7 @@ class ProjectReportController extends BaseController {
         $totalHours = 0;
         foreach ($labor as $worker) {
             $laborCost += $worker['total_cost'];
-            $totalDays += (int) ceil($worker['total_hours'] / 8);
+            $totalDays += (int)($worker['total_days'] ?? (int) ceil($worker['total_hours'] / 8));
             $totalHours += $worker['total_hours'];
         }
         
@@ -653,7 +655,7 @@ class ProjectReportController extends BaseController {
             foreach ($tasks as $task) {
                 $displayDate = $task['display_date'] ?? ($task['task_date'] ?? $task['date_from']);
                 $techCount = (int)($task['tech_count'] ?? 0);
-                $taskDays = $techCount > 0 ? (int) ceil((float)$task['task_total_hours'] / 8) : 0;
+                $taskDays = (int)($task['task_hmeromisthia'] ?? 0);
 
                 if ($techCount > 0) {
                     $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $taskDays . ' (8ωρα)</span>';

@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.11] - 2026-04-24
+
+### 🐛 Bug Fixes
+- **ProjectReport - Εργασίες**: Fixed wrong sort order for `date_range` tasks — tasks with a stale `task_date` column now sort correctly by `date_from` using `CASE WHEN task_type` instead of `COALESCE`
+- **ProjectReport - Ημερομίσθια**: Per-task ημερομίσθια now uses `SUM(CEIL(worker_hours/8))` instead of `CEIL(SUM(all_hours)/8)` — correctly counts each worker’s days individually
+- **ProjectReport - Σύνολο**: Summary card total ημερομίσθια now matches tasks table total (both use same per-worker-per-task calculation)
+
+---
+
 ## [1.7.10] - 2026-04-24
 
 ### 🐛 Bug Fixes
