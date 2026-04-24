@@ -154,12 +154,17 @@ class ProjectReportController extends BaseController {
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
-            $sql .= " AND task_date BETWEEN ? AND ?";
+            $sql .= " AND (
+                (task_type = 'single_day' AND task_date BETWEEN ? AND ?)
+                OR (task_type = 'date_range' AND date_from <= ? AND date_to >= ?)
+            )";
             $params[] = $fromDate;
             $params[] = $toDate;
+            $params[] = $toDate;
+            $params[] = $fromDate;
         }
         
-        $sql .= " ORDER BY task_date ASC";
+        $sql .= " ORDER BY COALESCE(task_date, date_from) ASC";
         
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
@@ -182,9 +187,14 @@ class ProjectReportController extends BaseController {
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
-            $sql .= " AND pt.task_date BETWEEN ? AND ?";
+            $sql .= " AND (
+                (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+            )";
             $params[] = $fromDate;
             $params[] = $toDate;
+            $params[] = $toDate;
+            $params[] = $fromDate;
         }
         
         $sql .= " GROUP BY tm.description, tm.unit_type ORDER BY tm.description";
@@ -245,9 +255,14 @@ class ProjectReportController extends BaseController {
         $params = [$projectId];
         
         if ($fromDate && $toDate) {
-            $sql .= " AND pt.task_date BETWEEN ? AND ?";
+            $sql .= " AND (
+                (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
+                OR (pt.task_type = 'date_range' AND pt.date_from <= ? AND pt.date_to >= ?)
+            )";
             $params[] = $fromDate;
             $params[] = $toDate;
+            $params[] = $toDate;
+            $params[] = $fromDate;
         }
         
         $sql .= " GROUP BY $groupByField ORDER BY worker_name";

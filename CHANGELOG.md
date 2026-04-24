@@ -1,5 +1,16 @@
 # HandyCRM - Change Log
 
+## [1.7.7] - 2026-04-24
+
+### 🔴 Bug Fixes
+- **ProjectReport**: Fixed custom date filter not working — PDF now always opens in a new tab (`target="_blank"` hardcoded on form, removed unreliable JS-only approach)
+- **ProjectReport**: Fixed SQL date filter completely ignoring `date_range` tasks. Filter now correctly matches both `single_day` (`task_date BETWEEN`) and `date_range` (`date_from <= to AND date_to >= from`) task types across all three queries (tasks, materials, labor)
+
+### 🔒 Security
+- **Trash View**: Added missing CSRF tokens to restore, permanent-delete, bulk-restore, bulk-delete and empty-trash forms/JS-submitted requests
+
+---
+
 ## [1.7.6] - 2026-03-11
 
 ### 📄 Changes

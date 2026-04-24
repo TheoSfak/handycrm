@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="<?= BASE_URL ?>/projects/report/<?= $project['id'] ?>" method="POST" id="reportForm">
+            <form action="<?= BASE_URL ?>/projects/report/<?= $project['id'] ?>" method="POST" id="reportForm" target="_blank">
                 <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $_SESSION['csrf_token'] ?>">
                 <div class="modal-body">
                     <div class="alert alert-info">
@@ -1337,13 +1337,7 @@ function toggleEmailInput() {
     }
 }
 
-// Initialize form with target="_blank" on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const reportForm = document.getElementById('reportForm');
-    if (reportForm) {
-        reportForm.setAttribute('target', '_blank');
-    }
-});
+
 </script>
 
 <style>

@@ -171,6 +171,7 @@
                                             </td>
                                             <td>
                                                 <form method="POST" action="?route=/trash/restore" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                                     <input type="hidden" name="type" value="<?= htmlspecialchars($type) ?>">
                                                     <input type="hidden" name="id" value="<?= $item['id'] ?>">
                                                     <button type="submit" class="btn btn-sm btn-success" 
@@ -182,6 +183,7 @@
                                                 <form method="POST" action="?route=/trash/permanent-delete" 
                                                       class="d-inline" 
                                                       onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε οριστικά αυτό το στοιχείο; Η ενέργεια αυτή δεν μπορεί να αναιρεθεί!');">
+                                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
                                                     <input type="hidden" name="type" value="<?= htmlspecialchars($type) ?>">
                                                     <input type="hidden" name="id" value="<?= $item['id'] ?>">
                                                     <button type="submit" class="btn btn-sm btn-danger" 
@@ -263,6 +265,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.method = 'POST';
                 form.action = '?route=/trash/bulk-restore';
                 
+                // CSRF Token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = '<?= $_SESSION['csrf_token'] ?? '' ?>';
+                form.appendChild(csrfInput);
+                
                 const typeInput = document.createElement('input');
                 typeInput.type = 'hidden';
                 typeInput.name = 'type';
@@ -296,6 +305,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 form.method = 'POST';
                 form.action = '?route=/trash/bulk-delete';
                 
+                // CSRF Token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = '<?= $_SESSION['csrf_token'] ?? '' ?>';
+                form.appendChild(csrfInput);
+                
                 const typeInput = document.createElement('input');
                 typeInput.type = 'hidden';
                 typeInput.name = 'type';
@@ -323,6 +339,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '?route=/trash/empty';
+                
+                // CSRF Token
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = '<?= $_SESSION['csrf_token'] ?? '' ?>';
+                form.appendChild(csrfInput);
                 
                 const typeInput = document.createElement('input');
                 typeInput.type = 'hidden';
