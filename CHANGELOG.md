@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.13] - 2026-04-24
+
+### ✨ New Features
+- **Task Labor**: New labor rows now default to 08:00 - 16:00 for time fields instead of blank
+- **Task Labor**: Entering 8 hours automatically sets/confirms time fields to 08:00 - 16:00
+- **Task Duplicate**: Duplicated tasks now show technicians with correct 08:00 - 16:00 times instead of 12:00 - 00:00
+
+---
+
 ## [1.7.12] - 2026-04-24
 
 ### 🐛 Bug Fixes

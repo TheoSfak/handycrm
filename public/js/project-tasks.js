@@ -256,7 +256,7 @@ function addLaborRow(data = null) {
                 <input type="time" 
                        class="form-control labor-time-from" 
                        name="labor[${laborCounter}][time_from]" 
-                       value="${data?.time_from ? data.time_from.substring(0, 5) : ''}"
+                       value="${data?.time_from ? data.time_from.substring(0, 5) : '08:00'}"
                        onchange="calculateHoursFromTime(${laborCounter})">
             </div>
             <div class="col-md-3">
@@ -264,7 +264,7 @@ function addLaborRow(data = null) {
                 <input type="time" 
                        class="form-control labor-time-to" 
                        name="labor[${laborCounter}][time_to]" 
-                       value="${data?.time_to ? data.time_to.substring(0, 5) : ''}"
+                       value="${data?.time_to ? data.time_to.substring(0, 5) : '16:00'}"
                        onchange="calculateHoursFromTime(${laborCounter})">
             </div>
             <div class="col-md-2">
@@ -403,11 +403,25 @@ function calculateLaborSubtotal(index) {
     const row = document.querySelector(`.labor-row[data-index="${index}"]`);
     if (!row) return;
     
-    const hours = parseFloat(row.querySelector('.labor-hours').value) || 0;
+    const hoursInput = row.querySelector('.labor-hours');
+    const hours = parseFloat(hoursInput.value) || 0;
     const rate = parseFloat(row.querySelector('.labor-rate').value) || 0;
     const subtotal = hours * rate;
     
     row.querySelector('.labor-subtotal').value = subtotal.toFixed(2);
+
+    // Auto-fill time 08:00-16:00 when hours = 8 and times are still default or empty
+    if (hours === 8) {
+        const timeFrom = row.querySelector('.labor-time-from');
+        const timeTo = row.querySelector('.labor-time-to');
+        if (timeFrom && (!timeFrom.value || timeFrom.value === '08:00')) {
+            timeFrom.value = '08:00';
+        }
+        if (timeTo && (!timeTo.value || timeTo.value === '16:00')) {
+            timeTo.value = '16:00';
+        }
+    }
+
     calculateGrandTotal();
 }
 
