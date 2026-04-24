@@ -283,7 +283,7 @@ class ProjectReportController extends BaseController {
         $totalHours = 0;
         foreach ($labor as $worker) {
             $laborCost += $worker['total_cost'];
-            $totalDays += $worker['days_worked'];
+            $totalDays += (int) ceil($worker['total_hours'] / 8);
             $totalHours += $worker['total_hours'];
         }
         
@@ -700,9 +700,9 @@ class ProjectReportController extends BaseController {
             
             // Table headers
             if ($hidePrices) {
-                $html .= '<tr nobr="true"><th style="width: 50%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 25%;">ΩΡΕΣ</th><th class="text-center" style="width: 25%;">ΗΜΕΡΕΣ</th></tr>';
+                $html .= '<tr nobr="true"><th style="width: 50%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 25%;">ΩΡΕΣ</th><th class="text-center" style="width: 25%;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
             } else {
-                $html .= '<tr nobr="true"><th style="width: 30%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 15%;">ΩΡΕΣ</th><th class="text-center" style="width: 15%;">ΗΜΕΡΕΣ</th><th class="text-right" style="width: 20%;">ΩΡΟΜΙΣΘΙΟ</th><th class="text-right" style="width: 20%;">ΣΥΝΟΛΟ</th></tr>';
+                $html .= '<tr nobr="true"><th style="width: 30%;">ΤΕΧΝΙΚΟΣ</th><th class="text-center" style="width: 15%;">ΩΡΕΣ</th><th class="text-center" style="width: 15%;">ΗΜΕΡΟΜΙΣΘΙΑ</th><th class="text-right" style="width: 20%;">ΩΡΟΜΙΣΘΙΟ</th><th class="text-right" style="width: 20%;">ΣΥΝΟΛΟ</th></tr>';
             }
             
             $html .= '</thead>';
@@ -714,11 +714,11 @@ class ProjectReportController extends BaseController {
                 if ($hidePrices) {
                     $html .= '<td style="width: 50%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
                     $html .= '<td class="text-center" style="width: 25%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td class="text-center" style="width: 25%;">' . $worker['days_worked'] . '</td>';
+                    $html .= '<td class="text-center" style="width: 25%;">' . (int) ceil($worker['total_hours'] / 8) . '</td>';
                 } else {
                     $html .= '<td style="width: 30%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
                     $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td class="text-center" style="width: 15%;">' . $worker['days_worked'] . '</td>';
+                    $html .= '<td class="text-center" style="width: 15%;">' . (int) ceil($worker['total_hours'] / 8) . '</td>';
                     $html .= '<td class="text-right" style="width: 20%;">' . formatCurrencyWithVAT($worker['hourly_rate']) . '/h</td>';
                     $html .= '<td class="text-right" style="width: 20%;"><strong>' . formatCurrencyWithVAT($worker['total_cost']) . '</strong></td>';
                 }
@@ -757,7 +757,7 @@ class ProjectReportController extends BaseController {
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
             $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_workers'] . ' τεχνικοί × ' . $totals['total_days'] . ' ημέρες</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';
@@ -784,7 +784,7 @@ class ProjectReportController extends BaseController {
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
             $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
             $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί × ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';

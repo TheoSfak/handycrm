@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.8] - 2026-04-24
+
+### 🔄 Changes
+- **ProjectReport - Ημερομίσθια**: Column renamed from "ΗΜΕΡΕΣ" to "ΗΜΕΡΟΜΙΣΘΙΑ" in labor table
+- **ProjectReport - Ημερομίσθια**: Calculation changed to `ceil(total_hours / 8)` (rounds up) instead of counting distinct task days. e.g. 6.1h → 1, 41.5h → 6, 160h → 20
+- **ProjectReport - Summary card**: Both hide-prices and show-prices labor cards now display total ημερομίσθια count
+
+---
+
 ## [1.7.7] - 2026-04-24
 
 ### 🔴 Bug Fixes
