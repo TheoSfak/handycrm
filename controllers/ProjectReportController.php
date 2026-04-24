@@ -663,7 +663,7 @@ class ProjectReportController extends BaseController {
                     $laborCell = 'Τεχνικοί: -';
                 }
 
-                $html .= '<tr>';
+                $html .= '<tr nobr="true">';
                 if (($task['task_type'] ?? 'single_day') === 'date_range' && !empty($task['date_from']) && !empty($task['date_to'])) {
                     $dateCell = date('d/m/Y', strtotime($task['date_from'])) . '<br><span style="font-size:9px; color:#7f8c8d;">έως ' . date('d/m/Y', strtotime($task['date_to'])) . '</span>';
                 } else {
@@ -699,7 +699,7 @@ class ProjectReportController extends BaseController {
             $html .= '<tbody>';
             
             foreach ($materials as $material) {
-                $html .= '<tr>';
+                $html .= '<tr nobr="true">';
                 
                 if ($hidePrices) {
                     $html .= '<td style="width: 50%;">' . htmlspecialchars($material['material_name']) . '</td>';
@@ -735,16 +735,16 @@ class ProjectReportController extends BaseController {
             $html .= '<tbody>';
             
             foreach ($labor as $worker) {
-                $html .= '<tr>';
+                $html .= '<tr nobr="true">';
                 
                 if ($hidePrices) {
                     $html .= '<td style="width: 50%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
                     $html .= '<td class="text-center" style="width: 25%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td class="text-center" style="width: 25%;">' . (int) ceil($worker['total_hours'] / 8) . '</td>';
+                    $html .= '<td class="text-center" style="width: 25%;">' . (int)($worker['total_days'] ?? (int)ceil($worker['total_hours'] / 8)) . '</td>';
                 } else {
                     $html .= '<td style="width: 30%;">' . htmlspecialchars($worker['worker_name']) . '</td>';
                     $html .= '<td class="text-center" style="width: 15%;">' . number_format($worker['total_hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td class="text-center" style="width: 15%;">' . (int) ceil($worker['total_hours'] / 8) . '</td>';
+                    $html .= '<td class="text-center" style="width: 15%;">' . (int)($worker['total_days'] ?? (int)ceil($worker['total_hours'] / 8)) . '</td>';
                     $html .= '<td class="text-right" style="width: 20%;">' . formatCurrencyWithVAT($worker['hourly_rate']) . '/h</td>';
                     $html .= '<td class="text-right" style="width: 20%;"><strong>' . formatCurrencyWithVAT($worker['total_cost']) . '</strong></td>';
                 }

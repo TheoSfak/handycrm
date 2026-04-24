@@ -1,5 +1,13 @@
 # HandyCRM - Change Log
 
+## [1.7.12] - 2026-04-24
+
+### 🐛 Bug Fixes
+- **ProjectReport**: Added `nobr="true"` to all table body rows (tasks, materials, labor) to prevent rows from being split across PDF page breaks
+- **ProjectReport - Ημερομίσθια table**: Labor table now uses pre-calculated `total_days` from SQL instead of re-computing `ceil(hours/8)` in PHP
+
+---
+
 ## [1.7.11] - 2026-04-24
 
 ### 🐛 Bug Fixes
