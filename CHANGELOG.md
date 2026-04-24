@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.14] - 2026-04-24
+
+### 🐛 Bug Fixes
+- **Task Labor**: Fixed browser caching old JS — added `filemtime()` cache-busting to script tags in add/edit views
+- **Task Labor**: Duplicate tasks with stored `12:00`/`00:00` times are now normalized to `08:00`/`16:00`
+- **Task Labor**: Entering 8 hours now always auto-fills `08:00`-`16:00` regardless of current time field value
+
+---
+
 ## [1.7.13] - 2026-04-24
 
 ### ✨ New Features
