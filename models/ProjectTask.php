@@ -742,10 +742,11 @@ class ProjectTask extends BaseModel {
             }
         }
         
-        // Calculate ημερομίσθια: CEIL(SUM(hours)/8) per technician, then sum
+        // Calculate ημερομίσθια: CEIL(total_hours / 8) - single rounding on grand total
+        $stats['total_hmeromisthia'] = (int) ceil($stats['total_hours'] / 8);
+        // Also set per-tech hmeromisthia for display in statistics
         foreach ($stats['technicians'] as &$tech) {
             $tech['hmeromisthia'] = (int) ceil($tech['total_hours'] / 8);
-            $stats['total_hmeromisthia'] += $tech['hmeromisthia'];
         }
         unset($tech);
         

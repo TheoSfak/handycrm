@@ -289,13 +289,12 @@ class ProjectReportController extends BaseController {
         }
         
         $laborCost = 0;
-        $totalDays = 0;
         $totalHours = 0;
         foreach ($labor as $worker) {
             $laborCost += $worker['total_cost'];
-            $totalDays += (int)($worker['total_days'] ?? (int) ceil($worker['total_hours'] / 8));
             $totalHours += $worker['total_hours'];
         }
+        $totalDays = (int) ceil($totalHours / 8);
         
         return [
             'materials_cost' => $materialsCost,

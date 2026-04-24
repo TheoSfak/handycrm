@@ -150,14 +150,7 @@
         <button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" type="button" role="tab">
             <i class="fas fa-hard-hat me-2"></i>Ημερομίσθια
             <?php if (!empty($laborEntries) && count($laborEntries) > 0): ?>
-                <?php
-                $techHoursBadge = [];
-                foreach ($laborEntries as $e) {
-                    $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : ($e['technician_name'] ?? 'other');
-                    $techHoursBadge[$key] = ($techHoursBadge[$key] ?? 0) + $e['hours'];
-                }
-                $totalHmeromisthiaBadge = array_sum(array_map(fn($h) => ceil($h / 8), $techHoursBadge));
-                ?>
+                <?php $totalHmeromisthiaBadge = (int) ceil(array_sum(array_column($laborEntries, 'hours')) / 8); ?>
                 <span class="badge bg-primary ms-1"><?= $totalHmeromisthiaBadge ?></span>
             <?php endif; ?>
         </button>
@@ -540,14 +533,7 @@
                                     ?> ώρες
                                 </span>
                                 <span class="badge bg-primary fs-4 ms-2">
-                                    <?php
-                                    $techHoursFooter = [];
-                                    foreach ($laborEntries as $e) {
-                                        $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : ($e['technician_name'] ?? 'other');
-                                        $techHoursFooter[$key] = ($techHoursFooter[$key] ?? 0) + $e['hours'];
-                                    }
-                                    echo array_sum(array_map(fn($h) => ceil($h / 8), $techHoursFooter));
-                                    ?> ημερομίσθια
+                                    <?= (int) ceil(array_sum(array_column($laborEntries, 'hours')) / 8) ?> ημερομίσθια
                                 </span>
                             </h3>
                         </div>
