@@ -207,8 +207,8 @@ const projectId = <?= $project['id'] ?>;
 let materialCounter = 0;
 let laborCounter = 0;
 </script>
-<script src="<?= BASE_URL ?>/public/js/material-autocomplete.js"></script>
-<script src="<?= BASE_URL ?>/public/js/project-tasks.js"></script>
+<script src="<?= BASE_URL ?>/public/js/material-autocomplete.js?v=<?= filemtime(__DIR__ . '/../../../public/js/material-autocomplete.js') ?>"></script>
+<script src="<?= BASE_URL ?>/public/js/project-tasks.js?v=<?= filemtime(__DIR__ . '/../../../public/js/project-tasks.js') ?>"></script>
 
 <script>
 // Task type toggle

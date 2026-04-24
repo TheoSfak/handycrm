@@ -190,7 +190,8 @@ function addLaborRow(data = null) {
         });
     }
     
-    // Determine technician name and role for hidden fields
+    const defaultTimeFrom = (data?.time_from && data.time_from.substring(0,5) !== '12:00') ? data.time_from.substring(0, 5) : '08:00';
+    const defaultTimeTo   = (data?.time_to   && data.time_to.substring(0,5)   !== '00:00') ? data.time_to.substring(0, 5)   : '16:00';
     let techName = data?.technician_name || '';
     let techRoleId = data?.role_id || '';
     
@@ -256,7 +257,7 @@ function addLaborRow(data = null) {
                 <input type="time" 
                        class="form-control labor-time-from" 
                        name="labor[${laborCounter}][time_from]" 
-                       value="${data?.time_from ? data.time_from.substring(0, 5) : '08:00'}"
+                       value="${defaultTimeFrom}"
                        onchange="calculateHoursFromTime(${laborCounter})">
             </div>
             <div class="col-md-3">
@@ -264,7 +265,7 @@ function addLaborRow(data = null) {
                 <input type="time" 
                        class="form-control labor-time-to" 
                        name="labor[${laborCounter}][time_to]" 
-                       value="${data?.time_to ? data.time_to.substring(0, 5) : '16:00'}"
+                       value="${defaultTimeTo}"
                        onchange="calculateHoursFromTime(${laborCounter})">
             </div>
             <div class="col-md-2">
@@ -410,16 +411,12 @@ function calculateLaborSubtotal(index) {
     
     row.querySelector('.labor-subtotal').value = subtotal.toFixed(2);
 
-    // Auto-fill time 08:00-16:00 when hours = 8 and times are still default or empty
+    // Auto-fill time 08:00-16:00 whenever hours = 8
     if (hours === 8) {
         const timeFrom = row.querySelector('.labor-time-from');
         const timeTo = row.querySelector('.labor-time-to');
-        if (timeFrom && (!timeFrom.value || timeFrom.value === '08:00')) {
-            timeFrom.value = '08:00';
-        }
-        if (timeTo && (!timeTo.value || timeTo.value === '16:00')) {
-            timeTo.value = '16:00';
-        }
+        if (timeFrom) timeFrom.value = '08:00';
+        if (timeTo)   timeTo.value   = '16:00';
     }
 
     calculateGrandTotal();
