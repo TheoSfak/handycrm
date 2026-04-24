@@ -47,9 +47,9 @@ $stats = $statistics ?? [];
             <div class="col-md-3">
                 <div class="card border-warning shadow-sm">
                     <div class="card-body text-center">
-                        <i class="fas fa-calendar-alt fa-2x text-warning mb-2"></i>
-                        <h3 class="mb-0"><?= $stats['total_days'] ?></h3>
-                        <small class="text-muted">Ημέρες Εργασίας</small>
+                        <i class="fas fa-hard-hat fa-2x text-warning mb-2"></i>
+                        <h3 class="mb-0"><?= $stats['total_hmeromisthia'] ?? 0 ?></h3>
+                        <small class="text-muted">Ημερομίσθια</small>
                     </div>
                 </div>
             </div>
@@ -122,6 +122,7 @@ $stats = $statistics ?? [];
                                         <tr>
                                             <th>Τεχνικός</th>
                                             <th class="text-center">Ώρες</th>
+                                            <th class="text-center">Ημερομίσθια</th>
                                             <th class="text-end">Κόστος</th>
                                             <th class="text-center">Εργασίες</th>
                                         </tr>
@@ -149,6 +150,9 @@ $stats = $statistics ?? [];
                                                 </td>
                                                 <td class="text-center">
                                                     <span class="badge bg-primary"><?= number_format($tech['total_hours'], 1) ?>h</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-warning text-dark"><?= $tech['hmeromisthia'] ?? ceil($tech['total_hours'] / 8) ?></span>
                                                 </td>
                                                 <td class="text-end">
                                                     <strong><?= number_format($tech['total_cost'], 2) ?> €</strong>

@@ -150,7 +150,14 @@
         <button class="nav-link" id="labor-tab" data-bs-toggle="tab" data-bs-target="#labor" type="button" role="tab">
             <i class="fas fa-hard-hat me-2"></i>Ημερομίσθια
             <?php if (!empty($laborEntries) && count($laborEntries) > 0): ?>
-                <?php $totalHmeromisthiaBadge = array_sum(array_map(fn($e) => ceil($e['hours'] / 8), $laborEntries)); ?>
+                <?php
+                $techHoursBadge = [];
+                foreach ($laborEntries as $e) {
+                    $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : ($e['technician_name'] ?? 'other');
+                    $techHoursBadge[$key] = ($techHoursBadge[$key] ?? 0) + $e['hours'];
+                }
+                $totalHmeromisthiaBadge = array_sum(array_map(fn($h) => ceil($h / 8), $techHoursBadge));
+                ?>
                 <span class="badge bg-primary ms-1"><?= $totalHmeromisthiaBadge ?></span>
             <?php endif; ?>
         </button>
@@ -533,10 +540,45 @@
                                     ?> ώρες
                                 </span>
                                 <span class="badge bg-primary fs-4 ms-2">
-                                    <?= array_sum(array_map(fn($e) => ceil($e['hours'] / 8), $laborEntries)) ?> ημερομίσθια
+                                    <?php
+                                    $techHoursFooter = [];
+                                    foreach ($laborEntries as $e) {
+                                        $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : ($e['technician_name'] ?? 'other');
+                                        $techHoursFooter[$key] = ($techHoursFooter[$key] ?? 0) + $e['hours'];
+                                    }
+                                    echo array_sum(array_map(fn($h) => ceil($h / 8), $techHoursFooter));
+                                    ?> ημερομίσθια
                                 </span>
                             </h3>
                         </div>
+                    </div>
+                    <!-- Per-technician breakdown -->
+                    <div class="row mt-3">
+                        <?php
+                        // Build per-tech display: name => [hours, hmeromisthia]
+                        $techBreakdown = [];
+                        foreach ($laborEntries as $e) {
+                            $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : ($e['technician_name'] ?? 'other');
+                            if (!isset($techBreakdown[$key])) {
+                                if (!empty($e['last_name']) && !empty($e['first_name'])) {
+                                    $displayName = $e['last_name'] . ' ' . $e['first_name'];
+                                } else {
+                                    $displayName = $e['technician_name'] ?? 'Άλλο';
+                                }
+                                $techBreakdown[$key] = ['name' => $displayName, 'hours' => 0];
+                            }
+                            $techBreakdown[$key]['hours'] += $e['hours'];
+                        }
+                        foreach ($techBreakdown as $t):
+                            $hmer = ceil($t['hours'] / 8);
+                        ?>
+                        <div class="col-auto">
+                            <small class="text-success">
+                                <strong><?= htmlspecialchars($t['name']) ?></strong>:
+                                <?= number_format($t['hours'], 1) ?>h = <span class="badge bg-success"><?= $hmer ?></span>
+                            </small>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
             </div>

@@ -645,6 +645,7 @@ class ProjectTask extends BaseModel {
             'labor_total' => 0,
             'total_hours' => 0,
             'total_days' => 0,
+            'total_hmeromisthia' => 0,
             'single_day_tasks' => 0,
             'date_range_tasks' => 0,
             'technicians' => [],
@@ -740,6 +741,13 @@ class ProjectTask extends BaseModel {
                 }
             }
         }
+        
+        // Calculate ημερομίσθια: CEIL(SUM(hours)/8) per technician, then sum
+        foreach ($stats['technicians'] as &$tech) {
+            $tech['hmeromisthia'] = (int) ceil($tech['total_hours'] / 8);
+            $stats['total_hmeromisthia'] += $tech['hmeromisthia'];
+        }
+        unset($tech);
         
         // Sort top expensive tasks
         usort($stats['top_expensive_tasks'], function($a, $b) {

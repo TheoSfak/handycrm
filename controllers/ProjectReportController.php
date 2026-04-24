@@ -253,7 +253,7 @@ class ProjectReportController extends BaseController {
             SELECT 
                 $workerNameField as worker_name,
                 SUM($hoursField) as total_hours,
-                SUM(CEIL($hoursField / 8)) as total_days,
+                CEIL(SUM($hoursField) / 8) as total_days,
                 COUNT(DISTINCT pt.id) as days_worked,
                 AVG(tl.hourly_rate) as hourly_rate,
                 SUM(tl.subtotal) as total_cost
