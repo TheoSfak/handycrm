@@ -304,6 +304,9 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         } elseif (preg_match('/\/projects\/(\d+)\/tasks\/copy/', $currentRoute) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $taskId = $_POST['task_id'] ?? 0;
             $tasksController->copy($projectId, $taskId);
+        } elseif (preg_match('/\/projects\/(\d+)\/tasks\/move/', $currentRoute) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taskId = $_POST['task_id'] ?? 0;
+            $tasksController->move($projectId, $taskId);
         } elseif (preg_match('/\/projects\/(\d+)\/tasks\/delete/', $currentRoute) && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $taskId = $_POST['task_id'] ?? 0;
             $tasksController->delete($projectId);

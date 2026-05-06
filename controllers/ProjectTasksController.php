@@ -61,12 +61,19 @@ class ProjectTasksController extends BaseController {
             return;
         }
         
+        // Get all other projects (for move-to modal)
+        $otherProjects = $projectModel->getAll();
+        $otherProjects = array_filter($otherProjects, function($p) use ($projectId) {
+            return $p['id'] != $projectId && empty($p['deleted_at']);
+        });
+
         parent::view('projects/tasks/index', [
             'title' => 'Εργασίες - ' . ($project['title'] ?? $project['name'] ?? 'Project'),
             'project' => $project,
             'tasks' => $tasks,
             'summary' => $summary,
-            'filters' => $filters
+            'filters' => $filters,
+            'otherProjects' => array_values($otherProjects)
         ]);
     }
     
@@ -367,6 +374,12 @@ class ProjectTasksController extends BaseController {
         $photoCount = $photoModel->getCountByType($taskId);
         $totalPhotos = $photoCount['total'];
         
+        // Get other projects for move modal
+        $otherProjects = $projectModel->getAll();
+        $otherProjects = array_values(array_filter($otherProjects, function($p) use ($projectId) {
+            return $p['id'] != $projectId && empty($p['deleted_at']);
+        }));
+
         parent::view('projects/tasks/view', [
             'title' => 'Προβολή Εργασίας - ' . ($project['title'] ?? $project['name'] ?? 'Project'),
             'project' => $project,
@@ -374,7 +387,8 @@ class ProjectTasksController extends BaseController {
             'materials' => $task['materials'] ?? [],
             'labor' => $task['labor'] ?? [],
             'recentPhotos' => $recentPhotos,
-            'totalPhotos' => $totalPhotos
+            'totalPhotos' => $totalPhotos,
+            'otherProjects' => $otherProjects
         ]);
     }
     
@@ -460,6 +474,51 @@ class ProjectTasksController extends BaseController {
         }
     }
     
+    /**
+     * Move task to another project
+     * POST /projects/{project_id}/tasks/move
+     */
+    public function move($projectId, $taskId) {
+        $this->checkAuth();
+
+        $task = $this->taskModel->getById($taskId);
+
+        if (!$task || $task['project_id'] != $projectId) {
+            $_SESSION['error'] = 'Η εργασία δεν βρέθηκε';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
+        $targetProjectId = intval($_POST['target_project_id'] ?? 0);
+
+        if (!$targetProjectId || $targetProjectId == $projectId) {
+            $_SESSION['error'] = 'Μη έγκυρο έργο προορισμού';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
+        // Verify target project exists
+        require_once 'models/Project.php';
+        $projectModel = new Project();
+        $targetProject = $projectModel->find($targetProjectId);
+
+        if (!$targetProject) {
+            $_SESSION['error'] = 'Το έργο προορισμού δεν βρέθηκε';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
+        $result = $this->taskModel->moveTask($taskId, $targetProjectId);
+
+        if ($result) {
+            $_SESSION['success'] = 'Η εργασία μεταφέρθηκε επιτυχώς στο έργο: ' . htmlspecialchars($targetProject['title'] ?? $targetProject['name'] ?? '');
+            $this->redirect('/projects/' . $targetProjectId . '/tasks');
+        } else {
+            $_SESSION['error'] = 'Αποτυχία μεταφοράς εργασίας';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+        }
+    }
+
     /**
      * Delete task
      * POST /projects/{project_id}/tasks/delete

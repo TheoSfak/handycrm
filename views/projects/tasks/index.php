@@ -258,6 +258,12 @@ if (!isset($isTabView)) {
                                                 <i class="fas fa-copy"></i>
                                             </button>
                                             <button type="button" 
+                                                    class="btn btn-outline-info" 
+                                                    title="Μεταφορά σε άλλο Έργο"
+                                                    onclick="openMoveModal(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes($task['description'])) ?>')">
+                                                <i class="fas fa-exchange-alt"></i>
+                                            </button>
+                                            <button type="button" 
                                                     class="btn btn-outline-danger" 
                                                     title="Διαγραφή"
                                                     onclick="deleteTask(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes($task['description'])) ?>')">
@@ -312,10 +318,48 @@ if (!isset($isTabView)) {
     <input type="hidden" name="task_id" id="copyTaskId">
 </form>
 
+<!-- Move Task Form (Hidden) -->
+<form id="moveTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/move" style="display:none;">
+    <input type="hidden" name="task_id" id="moveTaskId">
+    <input type="hidden" name="target_project_id" id="moveTargetProjectId">
+</form>
+
 <!-- Delete Task Form (Hidden) -->
 <form id="deleteTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/delete" style="display:none;">
     <input type="hidden" name="task_id" id="deleteTaskId">
 </form>
+
+<!-- Move Task Modal -->
+<div class="modal fade" id="moveTaskModal" tabindex="-1" aria-labelledby="moveTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moveTaskModalLabel">
+                    <i class="fas fa-exchange-alt me-2"></i>Μεταφορά Εργασίας σε άλλο Έργο
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Εργασία: <strong id="moveTaskDescription"></strong></p>
+                <label for="moveProjectSelect" class="form-label">Επιλέξτε Έργο προορισμού:</label>
+                <select id="moveProjectSelect" class="form-select">
+                    <option value="">— Επιλέξτε έργο —</option>
+                    <?php foreach ($otherProjects ?? [] as $op): ?>
+                        <option value="<?= $op['id'] ?>">
+                            <?= htmlspecialchars($op['title'] ?? $op['name'] ?? '') ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                <button type="button" class="btn btn-info text-white" onclick="confirmMove()">
+                    <i class="fas fa-exchange-alt me-2"></i>Μεταφορά
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 function copyTask(taskId) {
@@ -323,6 +367,24 @@ function copyTask(taskId) {
         document.getElementById('copyTaskId').value = taskId;
         document.getElementById('copyTaskForm').submit();
     }
+}
+
+function openMoveModal(taskId, description) {
+    document.getElementById('moveTaskId').value = taskId;
+    document.getElementById('moveTaskDescription').textContent = description;
+    document.getElementById('moveProjectSelect').value = '';
+    var modal = new bootstrap.Modal(document.getElementById('moveTaskModal'));
+    modal.show();
+}
+
+function confirmMove() {
+    var targetId = document.getElementById('moveProjectSelect').value;
+    if (!targetId) {
+        alert('Παρακαλώ επιλέξτε έργο προορισμού.');
+        return;
+    }
+    document.getElementById('moveTargetProjectId').value = targetId;
+    document.getElementById('moveTaskForm').submit();
 }
 
 function deleteTask(taskId, description) {

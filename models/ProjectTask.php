@@ -630,6 +630,21 @@ class ProjectTask extends BaseModel {
     }
     
     /**
+     * Move task to a different project
+     *
+     * @param int $taskId Task ID to move
+     * @param int $targetProjectId Target project ID
+     * @return bool Success
+     */
+    public function moveTask($taskId, $targetProjectId) {
+        $sql = "UPDATE project_tasks SET project_id = :project_id, updated_at = NOW() WHERE id = :id AND deleted_at IS NULL";
+        return $this->db->execute($sql, [
+            'project_id' => intval($targetProjectId),
+            'id'         => intval($taskId)
+        ]);
+    }
+    
+    /**
      * Get detailed statistics for a project
      * 
      * @param int $projectId Project ID
