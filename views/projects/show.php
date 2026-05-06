@@ -409,6 +409,17 @@
         <?php
         // Include the tasks index view
         $isTabView = true; // Flag to indicate we're in a tab context
+
+        // Load other projects for the Move Task modal
+        if (!isset($otherProjects)) {
+            require_once __DIR__ . '/../../models/Project.php';
+            $_pm = new Project();
+            $otherProjects = array_values(array_filter($_pm->getAll(), function($p) use ($project) {
+                return $p['id'] != $project['id'] && empty($p['deleted_at']);
+            }));
+            unset($_pm);
+        }
+
         if (file_exists(__DIR__ . '/tasks/index.php')) {
             include __DIR__ . '/tasks/index.php';
         } else {
