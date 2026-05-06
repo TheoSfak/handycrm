@@ -21,11 +21,13 @@ class ProjectController extends BaseController {
         
         // Get filters from request
         $filters = [
-            'status' => $_GET['status'] ?? '',
-            'category' => $_GET['category'] ?? '',
+            'status'     => $_GET['status'] ?? '',
+            'category'   => $_GET['category'] ?? '',
             'technician' => $_GET['technician'] ?? '',
-            'customer' => $_GET['customer'] ?? '',
-            'search' => $_GET['search'] ?? ''
+            'customer'   => $_GET['customer'] ?? '',
+            'search'     => $_GET['search'] ?? '',
+            'sort'       => $_GET['sort'] ?? '',
+            'dir'        => $_GET['dir'] ?? '',
         ];
         
         // Get current page

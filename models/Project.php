@@ -94,6 +94,20 @@ class Project extends BaseModel {
         
         $whereClause = implode(' AND ', $whereConditions);
         
+        // Sorting - whitelist to prevent SQL injection
+        $sortWhitelist = [
+            'title'      => 'p.title',
+            'customer'   => 'c.last_name',
+            'category'   => 'p.category',
+            'technician' => 't.last_name',
+            'status'     => 'p.status',
+            'start_date' => 'p.start_date',
+            'cost'       => 'calculated_total_cost',
+            'created_at' => 'p.created_at',
+        ];
+        $sortCol = $sortWhitelist[$filters['sort'] ?? ''] ?? 'p.created_at';
+        $sortDir = strtoupper($filters['dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+        
         try {
             // Get total count
             $countSql = "SELECT COUNT(*) as total 
@@ -128,7 +142,7 @@ class Project extends BaseModel {
                     JOIN customers c ON p.customer_id = c.id 
                     JOIN users t ON p.assigned_technician = t.id 
                     WHERE {$whereClause} 
-                    ORDER BY p.created_at DESC 
+                    ORDER BY {$sortCol} {$sortDir} 
                     LIMIT ? OFFSET ?";
             
             $params[] = $perPage;

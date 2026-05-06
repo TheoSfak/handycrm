@@ -91,14 +91,32 @@
         <div class="table-responsive">
             <table class="table table-hover">
                 <thead>
+                    <?php
+                    // Helper to build a sort URL for a given column
+                    $currentSort = $filters['sort'] ?? '';
+                    $currentDir  = strtoupper($filters['dir'] ?? '') === 'ASC' ? 'ASC' : 'DESC';
+                    $sortParams   = array_filter($filters, fn($v) => $v !== '', ARRAY_FILTER_USE_BOTH);
+                    $buildSortUrl = function($col) use ($currentSort, $currentDir, $sortParams) {
+                        $nextDir = ($currentSort === $col && $currentDir === 'ASC') ? 'DESC' : 'ASC';
+                        $p = array_merge($sortParams, ['sort' => $col, 'dir' => $nextDir]);
+                        unset($p['sort']); unset($p['dir']); // rebuild cleanly
+                        return '?route=/projects&sort=' . $col . '&dir=' . $nextDir . ($p ? '&' . http_build_query($p) : '');
+                    };
+                    $sortIcon = function($col) use ($currentSort, $currentDir) {
+                        if ($currentSort !== $col) return '<i class="fas fa-sort ms-1 text-muted opacity-50"></i>';
+                        return $currentDir === 'ASC'
+                            ? '<i class="fas fa-sort-up ms-1 text-primary"></i>'
+                            : '<i class="fas fa-sort-down ms-1 text-primary"></i>';
+                    };
+                    ?>
                     <tr>
-                        <th><?= __('projects.title_column') ?></th>
-                        <th><?= __('projects.customer_column') ?></th>
-                        <th><?= __('projects.category_column') ?></th>
-                        <th><?= __('projects.technician_column') ?></th>
-                        <th><?= __('projects.status_column') ?></th>
-                        <th><?= __('projects.start_date_column') ?></th>
-                        <th><?= __('projects.cost_column') ?></th>
+                        <th><a href="<?= $buildSortUrl('title') ?>" class="sort-link"><?= __('projects.title_column') ?><?= $sortIcon('title') ?></a></th>
+                        <th><a href="<?= $buildSortUrl('customer') ?>" class="sort-link"><?= __('projects.customer_column') ?><?= $sortIcon('customer') ?></a></th>
+                        <th><a href="<?= $buildSortUrl('category') ?>" class="sort-link"><?= __('projects.category_column') ?><?= $sortIcon('category') ?></a></th>
+                        <th><a href="<?= $buildSortUrl('technician') ?>" class="sort-link"><?= __('projects.technician_column') ?><?= $sortIcon('technician') ?></a></th>
+                        <th><a href="<?= $buildSortUrl('status') ?>" class="sort-link"><?= __('projects.status_column') ?><?= $sortIcon('status') ?></a></th>
+                        <th><a href="<?= $buildSortUrl('start_date') ?>" class="sort-link"><?= __('projects.start_date_column') ?><?= $sortIcon('start_date') ?></a></th>
+                        <th><a href="<?= $buildSortUrl('cost') ?>" class="sort-link"><?= __('projects.cost_column') ?><?= $sortIcon('cost') ?></a></th>
                         <th><?= __('projects.actions_column') ?></th>
                     </tr>
                 </thead>
@@ -208,6 +226,18 @@
         <?php endif; ?>
     </div>
 </div>
+
+<style>
+.sort-link {
+    color: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.sort-link:hover {
+    color: var(--bs-primary);
+    text-decoration: none;
+}
+</style>
 
 <!-- Delete Confirmation Modal -->
 <form id="deleteForm" method="POST" action="index.php?route=/projects/delete">
