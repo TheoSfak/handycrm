@@ -195,7 +195,7 @@ class TechniciansController extends BaseController {
      * View technician details with work history
      * GET /technicians/view/{id}
      */
-    public function view($id) {
+    public function show($id) {
         $this->checkAuth();
         
         $technician = $this->technicianModel->getById($id);

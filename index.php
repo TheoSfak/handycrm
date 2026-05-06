@@ -575,7 +575,7 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
             $controller->edit($matches[1]);
         }
     } elseif (preg_match('/\/technicians\/view\/(\d+)/', $currentRoute, $matches)) {
-        $controller->view($matches[1]);
+        $controller->show($matches[1]);
     } elseif ($currentRoute === '/technicians/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->delete();
     } elseif ($currentRoute === '/technicians/activate' && $_SERVER['REQUEST_METHOD'] === 'POST') {
