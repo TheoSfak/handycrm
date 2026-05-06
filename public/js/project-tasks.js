@@ -246,10 +246,10 @@ function addLaborRow(data = null) {
                        class="form-control labor-hours" 
                        name="labor[${laborCounter}][hours_worked]" 
                        value="${data?.hours_worked || ''}"
-                       step="0.5" 
+                       step="any" 
                        min="0"
                        placeholder="0.0"
-                       onchange="calculateLaborSubtotal(${laborCounter})"
+                       onchange="calculateTimeToFromHours(${laborCounter})"
                        required>
             </div>
             <div class="col-md-3">
@@ -362,6 +362,34 @@ function loadTechnicianData(index) {
         row.querySelector('.labor-rate').value = parseFloat(rate).toFixed(2);
         calculateLaborSubtotal(index);
     }
+}
+
+/**
+ * Calculate time_to from time_from + hours_worked
+ * Called when the user edits the hours field directly
+ * @param {number} index - Row index
+ */
+function calculateTimeToFromHours(index) {
+    const row = document.querySelector(`.labor-row[data-index="${index}"]`);
+    if (!row) return;
+
+    const hoursInput = row.querySelector('.labor-hours');
+    const hours = parseFloat(hoursInput.value);
+
+    const timeFromInput = row.querySelector('.labor-time-from');
+    const timeFrom = timeFromInput ? timeFromInput.value : '';
+
+    if (timeFrom && !isNaN(hours) && hours > 0) {
+        const [fromHour, fromMin] = timeFrom.split(':').map(Number);
+        const totalMinutes = fromHour * 60 + fromMin + Math.round(hours * 60);
+        const toHour = Math.floor(totalMinutes / 60) % 24;
+        const toMin = totalMinutes % 60;
+        const timeToStr = String(toHour).padStart(2, '0') + ':' + String(toMin).padStart(2, '0');
+        const timeToInput = row.querySelector('.labor-time-to');
+        if (timeToInput) timeToInput.value = timeToStr;
+    }
+
+    calculateLaborSubtotal(index);
 }
 
 /**
@@ -559,6 +587,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('taskForm');
     if (form) {
         form.addEventListener('submit', function(e) {
+            // Sync all labor rows: recalculate hours from time fields before submit
+            // so that whatever the user last changed (hours OR time) is reflected correctly
+            document.querySelectorAll('.labor-row').forEach(row => {
+                const index = row.dataset.index;
+                calculateHoursFromTime(index);
+            });
             validateLaborBeforeSubmit();
         });
     }
