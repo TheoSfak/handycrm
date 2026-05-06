@@ -190,8 +190,8 @@ function addLaborRow(data = null) {
         });
     }
     
-    const defaultTimeFrom = (data?.time_from && data.time_from.substring(0,5) !== '12:00') ? data.time_from.substring(0, 5) : '08:00';
-    const defaultTimeTo   = (data?.time_to   && data.time_to.substring(0,5)   !== '00:00') ? data.time_to.substring(0, 5)   : '16:00';
+    const defaultTimeFrom = data?.time_from ? data.time_from.substring(0, 5) : '08:00';
+    const defaultTimeTo   = data?.time_to   ? data.time_to.substring(0, 5)   : '16:00';
     let techName = data?.technician_name || '';
     let techRoleId = data?.role_id || '';
     
@@ -410,15 +410,6 @@ function calculateLaborSubtotal(index) {
     const subtotal = hours * rate;
     
     row.querySelector('.labor-subtotal').value = subtotal.toFixed(2);
-
-    // Auto-fill time 08:00-16:00 whenever hours = 8
-    if (hours === 8) {
-        const timeFrom = row.querySelector('.labor-time-from');
-        const timeTo = row.querySelector('.labor-time-to');
-        if (timeFrom) timeFrom.value = '08:00';
-        if (timeTo)   timeTo.value   = '16:00';
-    }
-
     calculateGrandTotal();
 }
 
