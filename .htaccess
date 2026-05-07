@@ -60,6 +60,11 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^quotes/export-pdf$ index.php?route=/quotes/export-pdf [QSA,L]
 
+# Quote send email: must be BEFORE slug rule
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^quotes/send-email$ index.php?route=/quotes/send-email [QSA,L]
+
 # Quote create: /quotes/create -> keep as-is (must be BEFORE slug rule)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

@@ -503,6 +503,10 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         require_once 'controllers/QuoteExportController.php';
         $exportController = new QuoteExportController();
         $exportController->generatePDF();
+    } elseif ($currentRoute === '/quotes/send-email') {
+        require_once 'controllers/QuoteExportController.php';
+        $exportController = new QuoteExportController();
+        $exportController->sendByEmail();
     } elseif ($currentRoute === '/quotes/edit') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->update();

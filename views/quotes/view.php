@@ -195,6 +195,10 @@
                        class="btn btn-danger" target="_blank">
                         <i class="fas fa-file-pdf"></i> <?= __('quotes.export_pdf') ?>
                     </a>
+
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+                        <i class="fas fa-envelope"></i> Αποστολή με Email
+                    </button>
                     
                     <a href="<?= BASE_URL ?>/quotes/edit/<?= $quote['id'] ?>" class="btn btn-warning">
                         <i class="fas fa-edit"></i> <?= __('quotes.edit') ?>
@@ -228,6 +232,108 @@ window.onafterprint = function() {
         el.style.display = '';
     });
 };
+</script>
+
+<!-- Send by Email Modal -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sendEmailModalLabel">
+          <i class="fas fa-envelope me-2"></i>Αποστολή Προσφοράς με Email
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="sendEmailAlert" class="alert d-none mb-3"></div>
+        <form id="sendEmailForm">
+          <input type="hidden" name="id" value="<?= (int)$quote['id'] ?>">
+          <div class="mb-3">
+            <label for="sendToEmail" class="form-label fw-semibold">Email Παραλήπτη <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="sendToEmail" name="to_email"
+                   value="<?= htmlspecialchars($quote['customer_email'] ?? '') ?>"
+                   placeholder="email@example.com" required>
+            <div class="form-text">Προ-συμπληρώθηκε από τα στοιχεία πελάτη, εφόσον υπάρχει.</div>
+          </div>
+          <div class="mb-3">
+            <label for="sendCustomMessage" class="form-label fw-semibold">Επιπλέον μήνυμα <span class="text-muted fw-normal">(προαιρετικό)</span></label>
+            <textarea class="form-control" id="sendCustomMessage" name="custom_message" rows="4"
+                      placeholder="π.χ. Σας αποστέλλουμε την προσφορά μας μετά από την τηλεφωνική μας επικοινωνία..."></textarea>
+          </div>
+          <div class="alert alert-info py-2 px-3 mb-0" style="font-size:0.875rem;">
+            <i class="fas fa-paperclip me-1"></i>Το PDF της προσφοράς θα επισυναφθεί αυτόματα.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Άκυρο</button>
+        <button type="button" class="btn btn-success" id="sendEmailBtn" onclick="submitSendEmail()">
+          <span id="sendEmailSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+          <i class="fas fa-paper-plane me-1" id="sendEmailIcon"></i>Αποστολή
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitSendEmail() {
+    const form    = document.getElementById('sendEmailForm');
+    const alert   = document.getElementById('sendEmailAlert');
+    const btn     = document.getElementById('sendEmailBtn');
+    const spinner = document.getElementById('sendEmailSpinner');
+    const icon    = document.getElementById('sendEmailIcon');
+    const email   = document.getElementById('sendToEmail').value.trim();
+
+    if (!email) {
+        showEmailAlert('danger', 'Παρακαλώ εισάγετε διεύθυνση email.');
+        return;
+    }
+
+    // Loading state
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    icon.classList.add('d-none');
+    alert.classList.add('d-none');
+
+    const data = new FormData(form);
+
+    fetch('<?= BASE_URL ?>/quotes/send-email', {
+        method: 'POST',
+        body: data
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            showEmailAlert('success', '<i class="fas fa-check-circle me-1"></i>' + res.message);
+            // Close modal after 2s on success
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('sendEmailModal')).hide();
+                alert.classList.add('d-none');
+            }, 2500);
+        } else {
+            showEmailAlert('danger', '<i class="fas fa-exclamation-circle me-1"></i>' + res.error);
+        }
+    })
+    .catch(() => showEmailAlert('danger', 'Παρουσιάστηκε σφάλμα. Παρακαλώ δοκιμάστε ξανά.'))
+    .finally(() => {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+        icon.classList.remove('d-none');
+    });
+}
+
+function showEmailAlert(type, msg) {
+    const el = document.getElementById('sendEmailAlert');
+    el.className = 'alert alert-' + type + ' mb-3';
+    el.innerHTML = msg;
+    el.classList.remove('d-none');
+}
+
+// Reset modal state when it's closed
+document.getElementById('sendEmailModal').addEventListener('hidden.bs.modal', function() {
+    document.getElementById('sendEmailAlert').classList.add('d-none');
+});
 </script>
 
 <style>

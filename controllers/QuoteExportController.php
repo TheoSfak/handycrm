@@ -53,8 +53,9 @@ class QuoteExportController extends BaseController {
     
     /**
      * Generate PDF using TCPDF
+     * $outputMode: 'I' = inline browser, 'D' = download, 'F' = save to file (pass $outputFile), 'S' = return string
      */
-    private function generateQuotePDF($quote, $companyName, $companyAddress, $companyPhone, $companyEmail, $companyVat, $companyLogo) {
+    private function generateQuotePDF($quote, $companyName, $companyAddress, $companyPhone, $companyEmail, $companyVat, $companyLogo, $outputMode = 'I', $outputFile = '') {
         // Include TCPDF library
         require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
         
@@ -257,9 +258,189 @@ class QuoteExportController extends BaseController {
 
         // Output PDF
         $filename = 'Προσφορα_' . $quote['quote_number'] . '_' . date('Y-m-d') . '.pdf';
-        $pdf->Output($filename, 'I'); // 'I' = inline display, 'D' = download
+        if ($outputMode === 'F' && $outputFile) {
+            $pdf->Output($outputFile, 'F');
+        } else {
+            $pdf->Output($filename, $outputMode);
+        }
     }
     
+    /**
+     * Send quote PDF by email
+     */
+    public function sendByEmail() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Μη έγκυρη μέθοδος']);
+            exit;
+        }
+
+        $id            = (int)($_POST['id'] ?? 0);
+        $toEmail       = trim($_POST['to_email'] ?? '');
+        $customMessage = trim($_POST['custom_message'] ?? '');
+
+        if (!$id) {
+            echo json_encode(['success' => false, 'error' => 'Μη έγκυρη προσφορά']);
+            exit;
+        }
+        if (!$toEmail || !filter_var($toEmail, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['success' => false, 'error' => 'Παρακαλώ εισάγετε έγκυρη διεύθυνση email']);
+            exit;
+        }
+
+        $quoteModel = new Quote();
+        $quote = $quoteModel->getWithDetails($id);
+        if (!$quote) {
+            echo json_encode(['success' => false, 'error' => 'Η προσφορά δεν βρέθηκε']);
+            exit;
+        }
+
+        $companyName    = $this->getSetting('company_name', 'HandyCRM');
+        $companyAddress = $this->getSetting('company_address', '');
+        $companyPhone   = $this->getSetting('company_phone', '');
+        $companyEmail   = $this->getSetting('company_email', '');
+        $companyVat     = $this->getSetting('company_vat', '');
+        $companyLogo    = $this->getSetting('company_logo', '');
+
+        // Generate PDF to temp file
+        $safeNumber = preg_replace('/[^a-zA-Z0-9_-]/', '_', $quote['quote_number']);
+        $tmpFile = sys_get_temp_dir() . '/quote_' . $safeNumber . '_' . uniqid() . '.pdf';
+        $this->generateQuotePDF($quote, $companyName, $companyAddress, $companyPhone, $companyEmail, $companyVat, $companyLogo, 'F', $tmpFile);
+
+        if (!file_exists($tmpFile)) {
+            echo json_encode(['success' => false, 'error' => 'Αποτυχία δημιουργίας PDF']);
+            exit;
+        }
+
+        try {
+            require_once __DIR__ . '/../classes/EmailService.php';
+            $emailService = new EmailService();
+
+            if (!$emailService->isConfigured()) {
+                @unlink($tmpFile);
+                echo json_encode(['success' => false, 'error' => 'Το SMTP δεν έχει ρυθμιστεί. Παρακαλώ ελέγξτε τις ρυθμίσεις email.']);
+                exit;
+            }
+
+            $mail = $emailService->createMailer();
+            $mail->addAddress($toEmail);
+            $mail->isHTML(true);
+            $mail->Subject = 'Προσφορά #' . $quote['quote_number'] . ' — ' . $companyName;
+            $mail->Body    = $this->buildEmailBody($quote, $companyName, $companyPhone, $companyEmail, $customMessage);
+            $mail->addAttachment($tmpFile, 'Προσφορά_' . $quote['quote_number'] . '.pdf');
+            $mail->send();
+
+            @unlink($tmpFile);
+            echo json_encode(['success' => true, 'message' => 'Η προσφορά εστάλη με επιτυχία στο ' . $toEmail]);
+        } catch (\Exception $e) {
+            @unlink($tmpFile);
+            echo json_encode(['success' => false, 'error' => 'Σφάλμα αποστολής: ' . $e->getMessage()]);
+        }
+        exit;
+    }
+
+    /**
+     * Build HTML email body for quote
+     */
+    private function buildEmailBody($quote, $companyName, $companyPhone, $companyEmail, $customMessage = '') {
+        $customerName = trim(($quote['customer_first_name'] ?? '') . ' ' . ($quote['customer_last_name'] ?? ''));
+        if (($quote['customer_type'] ?? '') === 'company' && !empty($quote['customer_company_name'])) {
+            $customerName = $quote['customer_company_name'];
+        }
+        if (empty($customerName)) {
+            $customerName = 'Πελάτη';
+        }
+
+        $quoteTitle  = htmlspecialchars($quote['title'] ?? '');
+        $quoteNumber = htmlspecialchars($quote['quote_number']);
+        $validUntil  = date('d/m/Y', strtotime($quote['valid_until']));
+        $totalAmount = number_format($quote['total_amount'], 2) . ' €';
+        $companyH    = htmlspecialchars($companyName);
+
+        $customHtml = '';
+        if (!empty($customMessage)) {
+            $customHtml = '<p style="margin:18px 0;font-size:14px;color:#444;line-height:1.7;background:#f0f4f8;border-left:4px solid #3498db;padding:12px 16px;border-radius:0 6px 6px 0;">'
+                        . nl2br(htmlspecialchars($customMessage)) . '</p>';
+        }
+
+        $contactParts = [];
+        if (!empty($companyPhone)) $contactParts[] = '📞 ' . htmlspecialchars($companyPhone);
+        if (!empty($companyEmail)) $contactParts[] = '✉️ ' . htmlspecialchars($companyEmail);
+        $contactLine = !empty($contactParts)
+            ? '<p style="margin:4px 0;font-size:13px;color:#555;">' . implode(' &nbsp;|&nbsp; ', $contactParts) . '</p>'
+            : '';
+
+        return '<!DOCTYPE html>
+<html lang="el">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:30px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.10);">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:#2c3e50;padding:28px 36px;">
+            <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;">📄 Προσφορά #' . $quoteNumber . '</h1>
+            <p style="margin:6px 0 0;color:#bdc3cb;font-size:14px;">' . $companyH . '</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px 36px;">
+            <p style="margin:0 0 16px;font-size:15px;color:#333;">Αγαπητέ/ή <strong>' . htmlspecialchars($customerName) . '</strong>,</p>
+            <p style="margin:0 0 16px;font-size:15px;color:#333;line-height:1.6;">
+              Σας αποστέλλουμε τη συνημμένη προσφορά μας σχετικά με:<br>
+              <strong style="color:#2c3e50;font-size:16px;">' . $quoteTitle . '</strong>
+            </p>
+
+            ' . $customHtml . '
+
+            <!-- Quote summary -->
+            <table width="100%" cellpadding="12" cellspacing="0" style="background:#f8f9fa;border-radius:6px;border:1px solid #e9ecef;margin:20px 0;">
+              <tr>
+                <td style="font-size:13px;color:#666;">Αριθμός Προσφοράς</td>
+                <td style="font-size:13px;font-weight:700;color:#333;text-align:right;">#' . $quoteNumber . '</td>
+              </tr>
+              <tr>
+                <td style="font-size:13px;color:#666;border-top:1px solid #e9ecef;">Ισχύει Έως</td>
+                <td style="font-size:13px;font-weight:700;color:#e67e22;text-align:right;border-top:1px solid #e9ecef;">' . $validUntil . '</td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#2c3e50;font-weight:700;border-top:1px solid #e9ecef;">Συνολικό Ποσό</td>
+                <td style="font-size:16px;font-weight:700;color:#27ae60;text-align:right;border-top:1px solid #e9ecef;">' . $totalAmount . '</td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 6px;font-size:14px;color:#555;line-height:1.7;">
+              Το PDF της προσφοράς επισυνάπτεται στο παρόν email για την ευκολία σας.<br>
+              Για οποιαδήποτε διευκρίνιση ή πρόσθετη πληροφορία, είμαστε πάντα στη διάθεσή σας.
+            </p>
+
+            <p style="margin:24px 0 0;font-size:15px;color:#333;">
+              Με εκτίμηση,<br>
+              <strong>' . $companyH . '</strong>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f8f9fa;padding:18px 36px;border-top:1px solid #e9ecef;text-align:center;">
+            ' . $contactLine . '
+            <p style="margin:8px 0 0;font-size:11px;color:#aaa;">Αυτό το μήνυμα εστάλη αυτόματα από το σύστημα διαχείρισης ' . $companyH . '</p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>';
+    }
+
     /**
      * Get status label in Greek
      */
