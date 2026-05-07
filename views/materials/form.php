@@ -307,34 +307,22 @@ function openFormPriceSearch() {
     if (!matName) { alert('Εισάγετε πρώτα το όνομα του υλικού.'); return; }
 
     document.getElementById('fpModalTitle').textContent = matName;
-    document.getElementById('fpPrice1').value = '';
-    document.getElementById('fpPrice2').value = '';
-    document.getElementById('fpPrice3').value = '';
     const cur = parseFloat(document.getElementById('default_price').value);
-    document.getElementById('fpAvg').value = isNaN(cur) ? '' : cur.toFixed(2);
+    document.getElementById('fpPrice').value = isNaN(cur) ? '' : cur.toFixed(2);
     document.getElementById('fpAlert').classList.add('d-none');
     window._fpMatName = matName;
 
     bootstrap.Modal.getOrCreateInstance(document.getElementById('formPriceSearchModal')).show();
 }
 
-function openFormGoogleSearch(inputId) {
+function openFormGoogleSearch() {
     const query = encodeURIComponent(window._fpMatName + ' τιμή');
     window.open('https://www.google.com/search?q=' + query + '&tbm=shop', '_blank');
-    setTimeout(() => document.getElementById(inputId).focus(), 300);
-}
-
-function calcFormAverage() {
-    const vals = ['fpPrice1','fpPrice2','fpPrice3']
-        .map(id => parseFloat(document.getElementById(id).value))
-        .filter(v => !isNaN(v) && v > 0);
-    if (vals.length === 0) return;
-    const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
-    document.getElementById('fpAvg').value = avg.toFixed(2);
+    setTimeout(() => document.getElementById('fpPrice').focus(), 300);
 }
 
 function applyFormPrice() {
-    const price = parseFloat(document.getElementById('fpAvg').value);
+    const price = parseFloat(document.getElementById('fpPrice').value);
     const alertEl = document.getElementById('fpAlert');
     if (isNaN(price) || price < 0) {
         alertEl.className = 'alert alert-danger mb-2';
@@ -342,11 +330,7 @@ function applyFormPrice() {
         alertEl.classList.remove('d-none');
         return;
     }
-    const filled = ['fpPrice1','fpPrice2','fpPrice3']
-        .map(id => parseFloat(document.getElementById(id).value))
-        .filter(v => !isNaN(v) && v > 0);
     let note = 'Από αναζήτηση ιστού ' + new Date().toLocaleDateString('el-GR');
-    if (filled.length > 1) note += ' (μ.ο. ' + filled.length + ' τιμών)';
 
     document.getElementById('default_price').value = price.toFixed(2);
     document.getElementById('price_source').value  = 'web_search';
@@ -368,28 +352,16 @@ function applyFormPrice() {
         <p class="mb-3 fw-semibold text-primary" id="fpModalTitle"></p>
         <div id="fpAlert" class="d-none"></div>
         <p class="text-muted small mb-3">
-          Ανοίξτε Google Shopping για κάθε τιμή, καταγράψτε 1-3 τιμές και υπολογίστε τον μέσο όρο.
+          Ανοίξτε Google Shopping, βρείτε την τιμή και καταγράψτε τη παρακάτω.
         </p>
-        <?php foreach ([1,2,3] as $n): ?>
-        <div class="input-group mb-2">
-          <span class="input-group-text" style="width:70px;">Τιμή <?= $n ?></span>
-          <input type="number" class="form-control" id="fpPrice<?= $n ?>" step="0.01" min="0" placeholder="0.00">
+        <div class="input-group">
+          <span class="input-group-text">Τιμή</span>
+          <input type="number" class="form-control" id="fpPrice" step="0.01" min="0" placeholder="0.00">
           <span class="input-group-text">€</span>
-          <button class="btn btn-outline-secondary" type="button"
-                  onclick="openFormGoogleSearch('fpPrice<?= $n ?>')"
-                  data-bs-toggle="tooltip" title="Άνοιγμα Google Shopping">
-            <i class="fab fa-google"></i>
+          <button class="btn btn-outline-secondary" type="button" onclick="openFormGoogleSearch()">
+            <i class="fab fa-google me-1"></i> Google Shopping
           </button>
         </div>
-        <?php endforeach; ?>
-        <div class="input-group mt-3">
-          <button class="btn btn-outline-primary" type="button" onclick="calcFormAverage()">
-            <i class="fas fa-calculator me-1"></i>Μέσος Όρος
-          </button>
-          <input type="number" class="form-control fw-bold" id="fpAvg" step="0.01" min="0" placeholder="0.00">
-          <span class="input-group-text">€</span>
-        </div>
-        <small class="text-muted">Μπορείτε να τροποποιήσετε χειροκίνητα την τελική τιμή.</small>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Άκυρο</button>

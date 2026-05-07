@@ -258,7 +258,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 <button type="button"
                                         class="btn btn-outline-secondary btn-sm ms-1 p-0 px-1"
                                         style="font-size:0.7rem;line-height:1.4;"
-                                        onclick="openPriceSearch(<?= $material['id'] ?>, <?= json_encode($material['name']) ?>, <?= $material['default_price'] ?: 'null' ?>)"
+                                        onclick="openPriceSearch(<?= $material['id'] ?>, <?= htmlspecialchars(json_encode($material['name'])) ?>, <?= $material['default_price'] ?: 'null' ?>)"
                                         data-bs-toggle="tooltip" data-bs-placement="top" title="Αναζήτηση τιμής">
                                     <i class="fas fa-search"></i>
                                 </button>
@@ -784,33 +784,20 @@ function openPriceSearch(id, name, currentPrice) {
     _priceSearchName = name;
 
     document.getElementById('psModalTitle').textContent = name;
-    document.getElementById('psPrice1').value = '';
-    document.getElementById('psPrice2').value = '';
-    document.getElementById('psPrice3').value = '';
-    document.getElementById('psAvg').value    = currentPrice ? parseFloat(currentPrice).toFixed(2) : '';
+    document.getElementById('psPrice').value = currentPrice ? parseFloat(currentPrice).toFixed(2) : '';
     document.getElementById('psAlert').classList.add('d-none');
 
     bootstrap.Modal.getOrCreateInstance(document.getElementById('priceSearchModal')).show();
 }
 
-function openGoogleSearch(inputId) {
+function openGoogleSearch() {
     const query = encodeURIComponent(_priceSearchName + ' τιμή');
     window.open('https://www.google.com/search?q=' + query + '&tbm=shop', '_blank');
-    // Focus the input so user can type the price they found
-    setTimeout(() => document.getElementById(inputId).focus(), 300);
-}
-
-function calcAverage() {
-    const vals = ['psPrice1','psPrice2','psPrice3']
-        .map(id => parseFloat(document.getElementById(id).value))
-        .filter(v => !isNaN(v) && v > 0);
-    if (vals.length === 0) return;
-    const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
-    document.getElementById('psAvg').value = avg.toFixed(2);
+    setTimeout(() => document.getElementById('psPrice').focus(), 300);
 }
 
 function savePriceSearch() {
-    const price = parseFloat(document.getElementById('psAvg').value);
+    const price = parseFloat(document.getElementById('psPrice').value);
     const alertEl = document.getElementById('psAlert');
 
     if (isNaN(price) || price < 0) {
@@ -820,12 +807,7 @@ function savePriceSearch() {
         return;
     }
 
-    const p1 = parseFloat(document.getElementById('psPrice1').value) || null;
-    const p2 = parseFloat(document.getElementById('psPrice2').value) || null;
-    const p3 = parseFloat(document.getElementById('psPrice3').value) || null;
-    const filled = [p1,p2,p3].filter(v => v !== null);
     let note = 'Από αναζήτηση ιστού ' + new Date().toLocaleDateString('el-GR');
-    if (filled.length > 1) note += ' (μ.ο. ' + filled.length + ' τιμών)';
 
     const btn = document.getElementById('psSaveBtn');
     btn.disabled = true;
@@ -888,32 +870,17 @@ document.addEventListener('DOMContentLoaded', () => {
         <div id="psAlert" class="d-none"></div>
 
         <p class="text-muted small mb-3">
-          Ανοίξτε Google Shopping για κάθε τιμή, καταγράψτε 1-3 τιμές και υπολογίστε τον μέσο όρο.
+          Ανοίξτε Google Shopping, βρείτε την τιμή και καταγράψτε τη παρακάτω.
         </p>
 
-        <!-- Price rows -->
-        <?php foreach ([1,2,3] as $n): ?>
-        <div class="input-group mb-2">
-          <span class="input-group-text" style="width:70px;">Τιμή <?= $n ?></span>
-          <input type="number" class="form-control" id="psPrice<?= $n ?>" step="0.01" min="0" placeholder="0.00">
+        <div class="input-group">
+          <span class="input-group-text">Τιμή</span>
+          <input type="number" class="form-control" id="psPrice" step="0.01" min="0" placeholder="0.00">
           <span class="input-group-text">€</span>
-          <button class="btn btn-outline-secondary" type="button"
-                  onclick="openGoogleSearch('psPrice<?= $n ?>')"
-                  data-bs-toggle="tooltip" title="Άνοιγμα Google Shopping">
-            <i class="fab fa-google"></i>
+          <button class="btn btn-outline-secondary" type="button" onclick="openGoogleSearch()">
+            <i class="fab fa-google me-1"></i> Google Shopping
           </button>
         </div>
-        <?php endforeach; ?>
-
-        <!-- Average -->
-        <div class="input-group mt-3">
-          <button class="btn btn-outline-primary" type="button" onclick="calcAverage()">
-            <i class="fas fa-calculator me-1"></i>Μέσος Όρος
-          </button>
-          <input type="number" class="form-control fw-bold" id="psAvg" step="0.01" min="0" placeholder="0.00">
-          <span class="input-group-text">€</span>
-        </div>
-        <small class="text-muted">Μπορείτε να τροποποιήσετε χειροκίνητα την τελική τιμή.</small>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Άκυρο</button>
