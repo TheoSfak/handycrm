@@ -10,7 +10,14 @@ class UpdateChecker {
     private $updateCheckInterval = 86400; // 24 hours in seconds
     
     public function __construct() {
-        $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.6.0';
+        // Always read from VERSION file first — it's tracked by git and is always current.
+        // Fall back to APP_VERSION constant (from config.php) if the file doesn't exist.
+        $versionFile = defined('APP_ROOT') ? APP_ROOT . '/VERSION' : dirname(__DIR__) . '/VERSION';
+        if (file_exists($versionFile)) {
+            $this->currentVersion = trim(file_get_contents($versionFile));
+        } else {
+            $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
+        }
         
         // Clear cached update info if version changed (handles upgrades)
         if (isset($_SESSION['cached_version']) && $_SESSION['cached_version'] !== $this->currentVersion) {
