@@ -87,12 +87,17 @@ class QuoteExportController extends BaseController {
         if (!empty($companyLogo)) {
             $logoPath = __DIR__ . '/../' . $companyLogo;
             if (file_exists($logoPath)) {
-                $logoWidth = 70;
-                $pageWidth = $pdf->getPageWidth();
-                $logoX = ($pageWidth - $logoWidth) / 2;
-                $pdf->Image($logoPath, $logoX, 10, $logoWidth, 0, '', '', '', false, 300, '', false, false, 0);
-                // Move cursor to just below the image (TCPDF tracks image bottom Y)
-                $pdf->SetY($pdf->GetY() + 4);
+                $logoWidth  = 70;
+                $pageWidth  = $pdf->getPageWidth();
+                $logoX      = ($pageWidth - $logoWidth) / 2;
+                $logoStartY = 10;
+                $pdf->Image($logoPath, $logoX, $logoStartY, $logoWidth, 0, '', '', '', false, 300, '', false, false, 0);
+                // Calculate actual rendered height from image aspect ratio, then move cursor below it
+                $imgInfo = @getimagesize($logoPath);
+                $imgHeightMM = ($imgInfo && $imgInfo[0] > 0)
+                    ? ($imgInfo[1] / $imgInfo[0]) * $logoWidth
+                    : 20;
+                $pdf->SetY($logoStartY + $imgHeightMM + 6);
             }
         }
 
