@@ -137,7 +137,7 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a href="<?= BASE_URL ?>/quotes/<?= $quote['slug'] ?>" 
+                                <a href="<?= $quoteHref ?>" 
                                    class="btn btn-sm btn-info" title="<?= __('quotes.view') ?>">
                                     <i class="fas fa-eye"></i>
                                 </a>
