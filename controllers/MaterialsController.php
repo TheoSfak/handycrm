@@ -120,6 +120,8 @@ class MaterialsController extends BaseController {
             'description' => trim($_POST['description'] ?? ''),
             'unit' => trim($_POST['unit'] ?? ''),
             'default_price' => !empty($_POST['default_price']) ? floatval($_POST['default_price']) : null,
+            'price_source' => in_array($_POST['price_source'] ?? '', ['manual','web_search']) ? $_POST['price_source'] : 'manual',
+            'price_note' => trim($_POST['price_note'] ?? ''),
             'supplier' => trim($_POST['supplier'] ?? ''),
             'notes' => trim($_POST['notes'] ?? ''),
             'is_active' => isset($_POST['is_active']) ? 1 : 0
@@ -195,6 +197,8 @@ class MaterialsController extends BaseController {
             'description' => trim($_POST['description'] ?? ''),
             'unit' => trim($_POST['unit'] ?? ''),
             'default_price' => !empty($_POST['default_price']) ? floatval($_POST['default_price']) : null,
+            'price_source' => in_array($_POST['price_source'] ?? '', ['manual','web_search']) ? $_POST['price_source'] : 'manual',
+            'price_note' => trim($_POST['price_note'] ?? ''),
             'supplier' => trim($_POST['supplier'] ?? ''),
             'notes' => trim($_POST['notes'] ?? ''),
             'is_active' => isset($_POST['is_active']) ? 1 : 0
@@ -709,5 +713,44 @@ class MaterialsController extends BaseController {
         ];
         
         $this->view('materials/duplicates', $data);
+    }
+
+    /**
+     * POST /materials/save-search-price
+     * AJAX: save a price that was looked up via web search
+     */
+    public function saveSearchPrice() {
+        header('Content-Type: application/json; charset=utf-8');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Μη έγκυρη μέθοδος']);
+            exit;
+        }
+
+        $id    = (int)($_POST['id'] ?? 0);
+        $price = isset($_POST['price']) ? floatval($_POST['price']) : null;
+        $note  = trim($_POST['note'] ?? '');
+
+        if (!$id || $price === null || $price < 0) {
+            echo json_encode(['success' => false, 'error' => 'Μη έγκυρα δεδομένα']);
+            exit;
+        }
+
+        $material = $this->materialModel->getById($id);
+        if (!$material) {
+            echo json_encode(['success' => false, 'error' => 'Υλικό δεν βρέθηκε']);
+            exit;
+        }
+
+        try {
+            $database = new Database();
+            $db = $database->connect();
+            $stmt = $db->prepare("UPDATE materials_catalog SET default_price = ?, price_source = 'web_search', price_note = ? WHERE id = ?");
+            $stmt->execute([$price, $note ?: 'Από αναζήτηση ιστού ' . date('d/m/Y'), $id]);
+            echo json_encode(['success' => true, 'price' => $price, 'price_formatted' => number_format($price, 2)]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'error' => 'Σφάλμα βάσης: ' . $e->getMessage()]);
+        }
+        exit;
     }
 }

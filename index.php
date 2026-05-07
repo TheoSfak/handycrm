@@ -630,6 +630,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->checkDuplicates();
     } elseif ($currentRoute === '/materials/duplicates') {
         $controller->duplicates();
+    } elseif ($currentRoute === '/materials/save-search-price') {
+        $controller->saveSearchPrice();
     } elseif ($currentRoute === '/materials/add') {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $controller->store();

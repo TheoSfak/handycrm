@@ -134,15 +134,30 @@ if ($isEdit && empty($formData)) {
 
                             <!-- Price -->
                             <div class="col-md-4 mb-3">
-                                <label for="default_price" class="form-label">Προεπιλεγμένη Τιμή (€)</label>
-                                <input type="number" 
-                                       class="form-control" 
-                                       id="default_price" 
-                                       name="default_price" 
-                                       step="0.01" 
-                                       min="0"
-                                       value="<?= htmlspecialchars($formData['default_price'] ?? '') ?>"
-                                       placeholder="0.00">
+                                <label for="default_price" class="form-label">
+                                    Προεπιλεγμένη Τιμή (€)
+                                    <?php if (($formData['price_source'] ?? 'manual') === 'web_search'): ?>
+                                    <i class="fas fa-globe text-info ms-1"
+                                       data-bs-toggle="tooltip" title="Τιμή από αναζήτηση ιστού<?= !empty($formData['price_note']) ? ' · ' . htmlspecialchars($formData['price_note']) : '' ?>"></i>
+                                    <?php endif; ?>
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="default_price" 
+                                           name="default_price" 
+                                           step="0.01" 
+                                           min="0"
+                                           value="<?= htmlspecialchars($formData['default_price'] ?? '') ?>"
+                                           placeholder="0.00">
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            onclick="openFormPriceSearch()"
+                                            data-bs-toggle="tooltip" title="Αναζήτηση τιμής στο διαδίκτυο">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                                <input type="hidden" id="price_source" name="price_source" value="<?= htmlspecialchars($formData['price_source'] ?? 'manual') ?>">
+                                <input type="hidden" id="price_note"   name="price_note"   value="<?= htmlspecialchars($formData['price_note'] ?? '') ?>">
                             </div>
                         </div>
 
@@ -268,7 +283,6 @@ const nameInput = document.getElementById('name');
 const aliasesTextarea = document.getElementById('aliases');
 
 if (nameInput && aliasesTextarea) {
-    // Show preview hint when typing name
     nameInput.addEventListener('input', function() {
         if (!aliasesTextarea.value.trim()) {
             const name = this.value.trim();
@@ -280,6 +294,111 @@ if (nameInput && aliasesTextarea) {
         }
     });
 }
+
+// Init tooltips
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+});
+
+// ── Form Price Search ────────────────────────────────────────────
+function openFormPriceSearch() {
+    const nameEl = document.getElementById('name');
+    const matName = nameEl ? nameEl.value.trim() : '';
+    if (!matName) { alert('Εισάγετε πρώτα το όνομα του υλικού.'); return; }
+
+    document.getElementById('fpModalTitle').textContent = matName;
+    document.getElementById('fpPrice1').value = '';
+    document.getElementById('fpPrice2').value = '';
+    document.getElementById('fpPrice3').value = '';
+    const cur = parseFloat(document.getElementById('default_price').value);
+    document.getElementById('fpAvg').value = isNaN(cur) ? '' : cur.toFixed(2);
+    document.getElementById('fpAlert').classList.add('d-none');
+    window._fpMatName = matName;
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('formPriceSearchModal')).show();
+}
+
+function openFormGoogleSearch(inputId) {
+    const query = encodeURIComponent(window._fpMatName + ' τιμή');
+    window.open('https://www.google.com/search?q=' + query + '&tbm=shop', '_blank');
+    setTimeout(() => document.getElementById(inputId).focus(), 300);
+}
+
+function calcFormAverage() {
+    const vals = ['fpPrice1','fpPrice2','fpPrice3']
+        .map(id => parseFloat(document.getElementById(id).value))
+        .filter(v => !isNaN(v) && v > 0);
+    if (vals.length === 0) return;
+    const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+    document.getElementById('fpAvg').value = avg.toFixed(2);
+}
+
+function applyFormPrice() {
+    const price = parseFloat(document.getElementById('fpAvg').value);
+    const alertEl = document.getElementById('fpAlert');
+    if (isNaN(price) || price < 0) {
+        alertEl.className = 'alert alert-danger mb-2';
+        alertEl.textContent = 'Εισάγετε έγκυρη τιμή.';
+        alertEl.classList.remove('d-none');
+        return;
+    }
+    const filled = ['fpPrice1','fpPrice2','fpPrice3']
+        .map(id => parseFloat(document.getElementById(id).value))
+        .filter(v => !isNaN(v) && v > 0);
+    let note = 'Από αναζήτηση ιστού ' + new Date().toLocaleDateString('el-GR');
+    if (filled.length > 1) note += ' (μ.ο. ' + filled.length + ' τιμών)';
+
+    document.getElementById('default_price').value = price.toFixed(2);
+    document.getElementById('price_source').value  = 'web_search';
+    document.getElementById('price_note').value    = note;
+
+    bootstrap.Modal.getInstance(document.getElementById('formPriceSearchModal')).hide();
+}
 </script>
+
+<!-- Form Price Search Modal -->
+<div class="modal fade" id="formPriceSearchModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title"><i class="fas fa-search-dollar me-2"></i>Αναζήτηση Τιμής</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3 fw-semibold text-primary" id="fpModalTitle"></p>
+        <div id="fpAlert" class="d-none"></div>
+        <p class="text-muted small mb-3">
+          Ανοίξτε Google Shopping για κάθε τιμή, καταγράψτε 1-3 τιμές και υπολογίστε τον μέσο όρο.
+        </p>
+        <?php foreach ([1,2,3] as $n): ?>
+        <div class="input-group mb-2">
+          <span class="input-group-text" style="width:70px;">Τιμή <?= $n ?></span>
+          <input type="number" class="form-control" id="fpPrice<?= $n ?>" step="0.01" min="0" placeholder="0.00">
+          <span class="input-group-text">€</span>
+          <button class="btn btn-outline-secondary" type="button"
+                  onclick="openFormGoogleSearch('fpPrice<?= $n ?>')"
+                  data-bs-toggle="tooltip" title="Άνοιγμα Google Shopping">
+            <i class="fab fa-google"></i>
+          </button>
+        </div>
+        <?php endforeach; ?>
+        <div class="input-group mt-3">
+          <button class="btn btn-outline-primary" type="button" onclick="calcFormAverage()">
+            <i class="fas fa-calculator me-1"></i>Μέσος Όρος
+          </button>
+          <input type="number" class="form-control fw-bold" id="fpAvg" step="0.01" min="0" placeholder="0.00">
+          <span class="input-group-text">€</span>
+        </div>
+        <small class="text-muted">Μπορείτε να τροποποιήσετε χειροκίνητα την τελική τιμή.</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Άκυρο</button>
+        <button type="button" class="btn btn-primary" onclick="applyFormPrice()">
+          <i class="fas fa-check me-1"></i>Εφαρμογή Τιμής
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

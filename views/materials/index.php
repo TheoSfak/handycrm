@@ -241,10 +241,27 @@ require_once __DIR__ . '/../includes/header.php';
                             <td><?= htmlspecialchars($material['unit'] ?? '-') ?></td>
                             <td>
                                 <?php if ($material['default_price']): ?>
-                                <strong><?= number_format($material['default_price'], 2) ?>€</strong>
+                                <span id="price-display-<?= $material['id'] ?>">
+                                    <strong><?= number_format($material['default_price'], 2) ?>€</strong>
+                                    <?php if (($material['price_source'] ?? 'manual') === 'web_search'): ?>
+                                    <i class="fas fa-globe text-info ms-1" style="font-size:0.75rem;"
+                                       data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Τιμή από αναζήτηση ιστού<?= !empty($material['price_note']) ? ' · ' . htmlspecialchars($material['price_note']) : '' ?>"></i>
+                                    <?php else: ?>
+                                    <i class="fas fa-pencil-alt text-secondary ms-1" style="font-size:0.7rem;opacity:0.5;"
+                                       data-bs-toggle="tooltip" data-bs-placement="top" title="Χειροκίνητη καταχώρηση"></i>
+                                    <?php endif; ?>
+                                </span>
                                 <?php else: ?>
-                                <span class="text-muted">-</span>
+                                <span id="price-display-<?= $material['id'] ?>" class="text-muted">—</span>
                                 <?php endif; ?>
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm ms-1 p-0 px-1"
+                                        style="font-size:0.7rem;line-height:1.4;"
+                                        onclick="openPriceSearch(<?= $material['id'] ?>, <?= json_encode($material['name']) ?>, <?= $material['default_price'] ?: 'null' ?>)"
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Αναζήτηση τιμής">
+                                    <i class="fas fa-search"></i>
+                                </button>
                             </td>
                             <td>
                                 <?php if (!empty($material['supplier'])): ?>
@@ -757,6 +774,155 @@ function checkDuplicates() {
         alert('Σφάλμα κατά τον έλεγχο διπλότυπων');
     });
 }
+
+// ── Price Search ──────────────────────────────────────────────────────────────
+let _priceSearchId   = null;
+let _priceSearchName = null;
+
+function openPriceSearch(id, name, currentPrice) {
+    _priceSearchId   = id;
+    _priceSearchName = name;
+
+    document.getElementById('psModalTitle').textContent = name;
+    document.getElementById('psPrice1').value = '';
+    document.getElementById('psPrice2').value = '';
+    document.getElementById('psPrice3').value = '';
+    document.getElementById('psAvg').value    = currentPrice ? parseFloat(currentPrice).toFixed(2) : '';
+    document.getElementById('psAlert').classList.add('d-none');
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('priceSearchModal')).show();
+}
+
+function openGoogleSearch(inputId) {
+    const query = encodeURIComponent(_priceSearchName + ' τιμή');
+    window.open('https://www.google.com/search?q=' + query + '&tbm=shop', '_blank');
+    // Focus the input so user can type the price they found
+    setTimeout(() => document.getElementById(inputId).focus(), 300);
+}
+
+function calcAverage() {
+    const vals = ['psPrice1','psPrice2','psPrice3']
+        .map(id => parseFloat(document.getElementById(id).value))
+        .filter(v => !isNaN(v) && v > 0);
+    if (vals.length === 0) return;
+    const avg = vals.reduce((a,b) => a+b, 0) / vals.length;
+    document.getElementById('psAvg').value = avg.toFixed(2);
+}
+
+function savePriceSearch() {
+    const price = parseFloat(document.getElementById('psAvg').value);
+    const alertEl = document.getElementById('psAlert');
+
+    if (isNaN(price) || price < 0) {
+        alertEl.className = 'alert alert-danger mb-2';
+        alertEl.textContent = 'Εισάγετε έγκυρη τιμή.';
+        alertEl.classList.remove('d-none');
+        return;
+    }
+
+    const p1 = parseFloat(document.getElementById('psPrice1').value) || null;
+    const p2 = parseFloat(document.getElementById('psPrice2').value) || null;
+    const p3 = parseFloat(document.getElementById('psPrice3').value) || null;
+    const filled = [p1,p2,p3].filter(v => v !== null);
+    let note = 'Από αναζήτηση ιστού ' + new Date().toLocaleDateString('el-GR');
+    if (filled.length > 1) note += ' (μ.ο. ' + filled.length + ' τιμών)';
+
+    const btn = document.getElementById('psSaveBtn');
+    btn.disabled = true;
+
+    const data = new FormData();
+    data.append('id', _priceSearchId);
+    data.append('price', price);
+    data.append('note', note);
+
+    fetch('<?= BASE_URL ?>/materials/save-search-price', { method: 'POST', body: data })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) {
+            // Update the cell inline
+            const cell = document.getElementById('price-display-' + _priceSearchId);
+            if (cell) {
+                cell.innerHTML = '<strong>' + res.price_formatted + '€</strong> '
+                    + '<i class="fas fa-globe text-info ms-1" style="font-size:0.75rem;" '
+                    + 'data-bs-toggle="tooltip" data-bs-placement="top" '
+                    + 'title="Τιμή από αναζήτηση ιστού · ' + note + '"></i>';
+                // Re-init tooltip on new element
+                bootstrap.Tooltip.getOrCreateInstance(cell.querySelector('[data-bs-toggle="tooltip"]'));
+            }
+            alertEl.className = 'alert alert-success mb-2';
+            alertEl.textContent = 'Αποθηκεύτηκε: ' + res.price_formatted + '€';
+            alertEl.classList.remove('d-none');
+            setTimeout(() => bootstrap.Modal.getInstance(document.getElementById('priceSearchModal')).hide(), 1200);
+        } else {
+            alertEl.className = 'alert alert-danger mb-2';
+            alertEl.textContent = res.error || 'Σφάλμα αποθήκευσης';
+            alertEl.classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        alertEl.className = 'alert alert-danger mb-2';
+        alertEl.textContent = 'Σφάλμα δικτύου';
+        alertEl.classList.remove('d-none');
+    })
+    .finally(() => btn.disabled = false);
+}
+
+// Init tooltips on page load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+});
 </script>
+
+<!-- Price Search Modal -->
+<div class="modal fade" id="priceSearchModal" tabindex="-1" aria-labelledby="priceSearchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="priceSearchModalLabel">
+          <i class="fas fa-search-dollar me-2"></i>Αναζήτηση Τιμής
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-3 fw-semibold text-primary" id="psModalTitle"></p>
+        <div id="psAlert" class="d-none"></div>
+
+        <p class="text-muted small mb-3">
+          Ανοίξτε Google Shopping για κάθε τιμή, καταγράψτε 1-3 τιμές και υπολογίστε τον μέσο όρο.
+        </p>
+
+        <!-- Price rows -->
+        <?php foreach ([1,2,3] as $n): ?>
+        <div class="input-group mb-2">
+          <span class="input-group-text" style="width:70px;">Τιμή <?= $n ?></span>
+          <input type="number" class="form-control" id="psPrice<?= $n ?>" step="0.01" min="0" placeholder="0.00">
+          <span class="input-group-text">€</span>
+          <button class="btn btn-outline-secondary" type="button"
+                  onclick="openGoogleSearch('psPrice<?= $n ?>')"
+                  data-bs-toggle="tooltip" title="Άνοιγμα Google Shopping">
+            <i class="fab fa-google"></i>
+          </button>
+        </div>
+        <?php endforeach; ?>
+
+        <!-- Average -->
+        <div class="input-group mt-3">
+          <button class="btn btn-outline-primary" type="button" onclick="calcAverage()">
+            <i class="fas fa-calculator me-1"></i>Μέσος Όρος
+          </button>
+          <input type="number" class="form-control fw-bold" id="psAvg" step="0.01" min="0" placeholder="0.00">
+          <span class="input-group-text">€</span>
+        </div>
+        <small class="text-muted">Μπορείτε να τροποποιήσετε χειροκίνητα την τελική τιμή.</small>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Άκυρο</button>
+        <button type="button" class="btn btn-primary" id="psSaveBtn" onclick="savePriceSearch()">
+          <i class="fas fa-save me-1"></i>Αποθήκευση Τιμής
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
