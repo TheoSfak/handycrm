@@ -459,7 +459,7 @@
 
         .table-responsive {
             border-radius: var(--radius-sm);
-            overflow: hidden;
+            overflow-x: auto;
         }
 
         /* ─── Badges ──────────────────────────────────────── */
