@@ -171,6 +171,9 @@ class QuoteController extends BaseController {
         $quoteId = $quoteModel->create($quoteData);
         
         if ($quoteId) {
+            // Generate slug from quote_number
+            $quoteModel->generateSlug($quoteId, $quoteData['quote_number']);
+
             // Save quote items if provided
             if (!empty($_POST['items'])) {
                 $database = new Database();

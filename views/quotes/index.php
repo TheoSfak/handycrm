@@ -109,7 +109,12 @@
                             <strong><?= htmlspecialchars($quote['quote_number']) ?></strong>
                         </td>
                         <td>
-                            <a href="<?= BASE_URL ?>/quotes/<?= $quote['slug'] ?>" 
+                            <?php
+                            $quoteHref = !empty($quote['slug'])
+                                ? BASE_URL . '/quotes/' . $quote['slug']
+                                : '?route=/quotes/details&id=' . $quote['id'];
+                            ?>
+                            <a href="<?= $quoteHref ?>" 
                                class="text-decoration-none fw-bold">
                                 <?= htmlspecialchars($quote['title']) ?>
                             </a>

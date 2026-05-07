@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.29] - 2026-05-07
+
+### 🐛 Bug Fixes
+- **Προσφορές (Quotes)**: Προσθήκη migration `add_slug_to_quotes.sql` που εξασφαλίζει υπάρχει η στήλη `slug` και συμπληρώνει τις κενές τιμές από το `quote_number` για υπάρχοντες εγγραφές
+- **Quotes - Δημιουργία**: Ο `store()` πλέον καλεί `generateSlug()` αμέσως μετά την δημιουργία της προσφοράς
+- **Quotes - Λίστα**: Ασφαλής fallback URL με `?route=/quotes/details&id=X` για προσφορές χωρίς slug (NULL)
+
+---
+
 ## [1.7.28] - 2026-05-07
 
 ### 🎨 UI Redesign
