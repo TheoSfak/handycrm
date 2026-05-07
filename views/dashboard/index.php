@@ -5,73 +5,48 @@ $updateChecker = new UpdateChecker();
 echo $updateChecker->getUpdateNotification();
 ?>
 
-<div class="row">
-    <!-- Statistics Cards -->
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-primary text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="card-title mb-0"><?= __('dashboard.customers') ?></h6>
-                        <h3 class="mb-0"><?= $stats['total_customers'] ?? 0 ?></h3>
-                        <small>+<?= $stats['new_customers_month'] ?? 0 ?> <?= __('dashboard.new_this_month') ?></small>
-                    </div>
-                    <div class="text-end">
-                        <i class="fas fa-users fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
+<div class="row g-3 mb-4">
+    <!-- Customers stat card -->
+    <div class="col-lg-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--accent);"></div>
+            <div class="stat-label"><?= __('dashboard.customers') ?></div>
+            <div class="stat-value" style="color:var(--accent);"><?= $stats['total_customers'] ?? 0 ?></div>
+            <div class="stat-sub">+<?= $stats['new_customers_month'] ?? 0 ?> <?= __('dashboard.new_this_month') ?></div>
+            <i class="fas fa-users stat-icon" style="color:var(--accent);"></i>
         </div>
     </div>
-    
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-success text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="card-title mb-0"><?= __('dashboard.active_projects') ?></h6>
-                        <h3 class="mb-0"><?= $stats['active_projects'] ?? 0 ?></h3>
-                        <small><?= __('dashboard.in_progress') ?></small>
-                    </div>
-                    <div class="text-end">
-                        <i class="fas fa-project-diagram fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
+
+    <!-- Active Projects stat card -->
+    <div class="col-lg-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--success);"></div>
+            <div class="stat-label"><?= __('dashboard.active_projects') ?></div>
+            <div class="stat-value" style="color:var(--success);"><?= $stats['active_projects'] ?? 0 ?></div>
+            <div class="stat-sub"><?= __('dashboard.in_progress') ?></div>
+            <i class="fas fa-layer-group stat-icon" style="color:var(--success);"></i>
         </div>
     </div>
-    
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-warning text-dark">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="card-title mb-0"><?= __('dashboard.appointments_today') ?></h6>
-                        <h3 class="mb-0"><?= $stats['appointments_today'] ?? 0 ?></h3>
-                        <small><?= __('dashboard.scheduled') ?></small>
-                    </div>
-                    <div class="text-end">
-                        <i class="fas fa-calendar-alt fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
+
+    <!-- Appointments Today stat card -->
+    <div class="col-lg-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--warning);"></div>
+            <div class="stat-label"><?= __('dashboard.appointments_today') ?></div>
+            <div class="stat-value" style="color:var(--warning);"><?= $stats['appointments_today'] ?? 0 ?></div>
+            <div class="stat-sub"><?= __('dashboard.scheduled') ?></div>
+            <i class="fas fa-calendar-alt stat-icon" style="color:var(--warning);"></i>
         </div>
     </div>
-    
-    <div class="col-lg-3 col-md-6 mb-4">
-        <div class="card border-0 bg-info text-white">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-grow-1">
-                        <h6 class="card-title mb-0"><?= __('dashboard.revenue_month') ?></h6>
-                        <h3 class="mb-0"><?= formatCurrencyWithVAT($stats['revenue_month'] ?? 0) ?></h3>
-                        <small><?= ($stats['completed_projects_count'] ?? 0) ?> <?= __('dashboard.completed_projects') ?></small>
-                    </div>
-                    <div class="text-end">
-                        <i class="fas fa-euro-sign fa-2x opacity-75"></i>
-                    </div>
-                </div>
-            </div>
+
+    <!-- Revenue stat card -->
+    <div class="col-lg-3 col-sm-6">
+        <div class="stat-card">
+            <div class="stat-card-accent" style="background:var(--info);"></div>
+            <div class="stat-label"><?= __('dashboard.revenue_month') ?></div>
+            <div class="stat-value" style="color:var(--info);font-size:1.5rem;"><?= formatCurrencyWithVAT($stats['revenue_month'] ?? 0) ?></div>
+            <div class="stat-sub"><?= ($stats['completed_projects_count'] ?? 0) ?> <?= __('dashboard.completed_projects') ?></div>
+            <i class="fas fa-coins stat-icon" style="color:var(--info);"></i>
         </div>
     </div>
 </div>

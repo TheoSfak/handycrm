@@ -8,17 +8,17 @@ define('FOOTER_RENDERED', true);
         </div> <!-- End content-wrapper -->
         
         <!-- Application Footer -->
-        <footer class="app-footer mt-auto py-3 border-top">
-            <div class="container-fluid">
+        <footer class="app-footer py-3">
+            <div class="container-fluid px-4">
                 <div class="row align-items-center">
                     <div class="col-md-4 text-center text-md-start mb-2 mb-md-0">
                         <span class="text-muted">
-                            <?php 
+                            <?php
                             require_once __DIR__ . '/../../helpers/app_display_name.php';
                             $appName = getAppDisplayName();
                             ?>
-                            <i class="fas fa-briefcase"></i> <strong><?= $appName ?></strong> 
-                            <span class="badge bg-primary ms-1">v<?php 
+                            <i class="fas fa-bolt"></i> <strong><?= $appName ?></strong>
+                            <span class="badge" style="background:var(--accent-glow,rgba(14,165,233,0.15));color:var(--accent,#0ea5e9);font-size:0.68rem;">v<?php
                                 if (file_exists(__DIR__ . '/../../classes/UpdateChecker.php')) {
                                     require_once __DIR__ . '/../../classes/UpdateChecker.php';
                                     $versionChecker = new UpdateChecker();
@@ -26,7 +26,7 @@ define('FOOTER_RENDERED', true);
                                 } elseif (defined('APP_VERSION')) {
                                     echo APP_VERSION;
                                 } else {
-                                    echo '1.6.0';
+                                    echo '1.7.0';
                                 }
                             ?></span>
                         </span>
@@ -37,12 +37,9 @@ define('FOOTER_RENDERED', true);
                         </span>
                     </div>
                     <div class="col-md-4 text-center text-md-end">
-                        <span class="text-muted">
-                            <i class="fas fa-envelope"></i>
-                            <a href="mailto:theodore.sfakianakis@gmail.com" class="text-decoration-none">
-                                theodore.sfakianakis@gmail.com
-                            </a>
-                        </span>
+                        <a href="mailto:theodore.sfakianakis@gmail.com" class="text-muted text-decoration-none" style="font-size:0.8rem;">
+                            <i class="fas fa-envelope me-1"></i>theodore.sfakianakis@gmail.com
+                        </a>
                     </div>
                 </div>
             </div>

@@ -1,5 +1,22 @@
 # HandyCRM - Change Log
 
+## [1.7.28] - 2026-05-07
+
+### 🎨 UI Redesign
+- **Γενικό Redesign**: Πλήρης οπτική ανανέωση του HandyCRM με νέα χρωματική παλέτα, τυπογραφία και layout
+- **CSS Variables**: Νέο design system με CSS variables (`--sidebar-bg`, `--accent`, `--success`, `--danger`, `--body-bg`, κ.ά.)
+- **Google Fonts**: Αντικατάσταση Segoe UI με Inter για πιο καθαρή εμφάνιση
+- **Sidebar**: Σκούρο slate background (`#0f172a`), pill-shaped active states, ομαδοποίηση συνδέσμων (Κύριο / Εργασίες / Διαχείριση / Σύστημα), slim scrollbar
+- **Logo**: Νέο gradient icon badge αντί για fa-tools
+- **Top Navbar**: 3px accent stripe στην κορυφή, user initials avatar κύκλος, καλύτερο notification bell
+- **Login**: Split-screen layout — αριστερά branded panel, δεξιά καθαρή φόρμα
+- **Dashboard Cards**: Left-border accent cards με ghost icon background, hover lift effect
+- **Buttons & Badges**: Νέο χρωματικό σχήμα συνεπές με το design system
+- **Tables**: Uppercase header labels, hover-only highlighting
+- **Footer**: Νέο minimal styling
+
+---
+
 ## [1.7.27] - 2026-05-07
 
 ### 🐛 Bug Fixes
