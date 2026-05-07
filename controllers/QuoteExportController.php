@@ -81,21 +81,32 @@ class QuoteExportController extends BaseController {
         // Add a page
         $pdf->AddPage();
         
-        // Logo (center top)
+        // Logo (center top) — large
         $logoPath = '';
         if (!empty($companyLogo)) {
             $logoPath = __DIR__ . '/../' . $companyLogo;
             if (file_exists($logoPath)) {
-                // Calculate center position
-                $logoWidth = 40;
+                $logoWidth = 80;
                 $pageWidth = $pdf->getPageWidth();
                 $logoX = ($pageWidth - $logoWidth) / 2;
                 $pdf->Image($logoPath, $logoX, 15, $logoWidth, 0, '', '', '', false, 300, '', false, false, 0);
-                $pdf->Ln(25);
+                $pdf->Ln(45);
             }
         }
-        
-        // Header with customer and company info
+
+        // Quote title and details (now BELOW logo, ABOVE customer/company info)
+        $html = '<h1 style="color: #e74c3c; text-align: center; margin: 10px 0 8px 0;">ΠΡΟΣΦΟΡΑ #' . htmlspecialchars($quote['quote_number']) . '</h1>';
+        $html .= '<table cellpadding="3" style="width: 100%; margin-bottom: 10px;">
+            <tr>
+                <td style="width: 33%;"><strong>Ημερομηνία:</strong> ' . date('d/m/Y', strtotime($quote['created_at'])) . '</td>
+                <td style="width: 33%;"><strong>Ισχύει μέχρι:</strong> ' . date('d/m/Y', strtotime($quote['valid_until'])) . '</td>
+                <td style="width: 34%;"><strong>Κατάσταση:</strong> ' . $this->getStatusLabel($quote['status']) . '</td>
+            </tr>
+        </table>';
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $pdf->Ln(5);
+
+        // Header with customer and company info (now below the quote title box)
         $html = '<table cellpadding="5" style="width: 100%;">
             <tr>
                 <td style="width: 50%; vertical-align: top;">
@@ -140,20 +151,6 @@ class QuoteExportController extends BaseController {
         }
         
         $html .= '</td>
-            </tr>
-        </table>';
-        
-        $pdf->writeHTML($html, true, false, true, false, '');
-        $pdf->Ln(5);
-        
-        // Quote title and details
-        $html = '<h1 style="color: #e74c3c; text-align: center; margin: 20px 0;">ΠΡΟΣΦΟΡΑ #' . htmlspecialchars($quote['quote_number']) . '</h1>';
-        
-        $html .= '<table cellpadding="3" style="width: 100%; margin-bottom: 10px;">
-            <tr>
-                <td style="width: 33%;"><strong>Ημερομηνία:</strong> ' . date('d/m/Y', strtotime($quote['created_at'])) . '</td>
-                <td style="width: 33%;"><strong>Ισχύει μέχρι:</strong> ' . date('d/m/Y', strtotime($quote['valid_until'])) . '</td>
-                <td style="width: 34%;"><strong>Κατάσταση:</strong> ' . $this->getStatusLabel($quote['status']) . '</td>
             </tr>
         </table>';
         
