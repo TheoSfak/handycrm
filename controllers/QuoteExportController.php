@@ -43,7 +43,8 @@ class QuoteExportController extends BaseController {
      * Get setting from database
      */
     private function getSetting($key, $default = '') {
-        $db = Database::getInstance()->getConnection();
+        $database = new Database();
+        $db = $database->connect();
         $stmt = $db->prepare("SELECT value FROM settings WHERE `key` = ?");
         $stmt->execute([$key]);
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
