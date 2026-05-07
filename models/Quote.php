@@ -26,7 +26,7 @@ class Quote extends BaseModel {
                            creator.first_name as creator_first_name,
                            creator.last_name as creator_last_name
                     FROM {$this->table} q 
-                    JOIN customers c ON q.customer_id = c.id 
+                    LEFT JOIN customers c ON q.customer_id = c.id 
                     LEFT JOIN users creator ON q.created_by = creator.id 
                     WHERE q.id = ?";
             
@@ -84,7 +84,7 @@ class Quote extends BaseModel {
             // Get total count
             $countSql = "SELECT COUNT(*) as total 
                          FROM {$this->table} q 
-                         JOIN customers c ON q.customer_id = c.id 
+                         LEFT JOIN customers c ON q.customer_id = c.id 
                          WHERE {$whereClause}";
             $stmt = $db->prepare($countSql);
             $stmt->execute($params);
@@ -99,8 +99,8 @@ class Quote extends BaseModel {
                                creator.first_name as creator_first_name,
                                creator.last_name as creator_last_name
                         FROM {$this->table} q 
-                        JOIN customers c ON q.customer_id = c.id 
-                        JOIN users creator ON q.created_by = creator.id 
+                        LEFT JOIN customers c ON q.customer_id = c.id 
+                        LEFT JOIN users creator ON q.created_by = creator.id 
                         WHERE {$whereClause}
                         ORDER BY q.created_at DESC 
                         LIMIT ? OFFSET ?";
