@@ -55,6 +55,16 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^invoices/edit/([0-9]+)$ index.php?route=/invoices/edit&id=$1 [QSA,L]
 
+# Quote export PDF: /quotes/export-pdf?id=123 -> keep as-is (must be BEFORE slug rule)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^quotes/export-pdf$ index.php?route=/quotes/export-pdf [QSA,L]
+
+# Quote create: /quotes/create -> keep as-is (must be BEFORE slug rule)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^quotes/create$ index.php?route=/quotes/create [QSA,L]
+
 # Quote details by slug: /quotes/pro-2025-0001 -> /quotes/details?slug=pro-2025-0001
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
