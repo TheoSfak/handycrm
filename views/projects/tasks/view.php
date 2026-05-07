@@ -66,8 +66,11 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
             <button class="btn btn-secondary" onclick="copyTask(<?= $task['id'] ?>)">
                 <i class="fas fa-copy me-2"></i>Αντιγραφή
             </button>
-            <button class="btn btn-info" onclick="openMoveModal(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes($task['description'])) ?>')">
+            <button class="btn btn-info" onclick="openMoveModal(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes(str_replace(["\r\n", "\r", "\n"], ' ', $task['description']))) ?>')">
                 <i class="fas fa-exchange-alt me-2"></i>Μεταφορά
+            </button>
+            <button class="btn btn-danger" onclick="deleteTask(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes(str_replace(["\r\n", "\r", "\n"], ' ', $task['description']))) ?>')">
+                <i class="fas fa-trash me-2"></i>Διαγραφή
             </button>
         </div>
     </div>
@@ -364,6 +367,11 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
     <input type="hidden" name="target_project_id" id="moveTargetProjectId">
 </form>
 
+<!-- Delete Task Form (Hidden) -->
+<form id="deleteTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/delete" style="display:none;">
+    <input type="hidden" name="task_id" id="deleteTaskId">
+</form>
+
 <!-- Move Task Modal -->
 <div class="modal fade" id="moveTaskModal" tabindex="-1" aria-labelledby="moveTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -440,6 +448,13 @@ function confirmMove() {
     }
     document.getElementById('moveTargetProjectId').value = targetId;
     document.getElementById('moveTaskForm').submit();
+}
+
+function deleteTask(taskId, description) {
+    if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε την εργασία:\n\n"' + description + '"\n\nΑυτή η ενέργεια δεν μπορεί να αναιρεθεί!')) {
+        document.getElementById('deleteTaskId').value = taskId;
+        document.getElementById('deleteTaskForm').submit();
+    }
 }
 </script>
 

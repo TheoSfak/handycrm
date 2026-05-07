@@ -260,13 +260,13 @@ if (!isset($isTabView)) {
                                             <button type="button" 
                                                     class="btn btn-outline-info" 
                                                     title="Μεταφορά σε άλλο Έργο"
-                                                    onclick="openMoveModal(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes($task['description'])) ?>')">
+                                                    onclick="openMoveModal(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes(str_replace(["\r\n", "\r", "\n"], ' ', $task['description']))) ?>')">
                                                 <i class="fas fa-exchange-alt"></i>
                                             </button>
                                             <button type="button" 
                                                     class="btn btn-outline-danger" 
                                                     title="Διαγραφή"
-                                                    onclick="deleteTask(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes($task['description'])) ?>')">
+                                                    onclick="deleteTask(<?= $task['id'] ?>, '<?= htmlspecialchars(addslashes(str_replace(["\r\n", "\r", "\n"], ' ', $task['description']))) ?>')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
