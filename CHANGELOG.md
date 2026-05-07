@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.7.30] - 2026-05-07
+
+### 🐛 Bug Fixes
+- **Προσφορές - Προβολή / PDF Export**: `getWithDetails()` χρησιμοποιούσε INNER JOIN στον πίνακα `users` — αν το `created_by` ήταν NULL ή ο χρήστης διαγράφηκε, η query επέστρεφε κενό αποτέλεσμα με αποτέλεσμα "δεν βρέθηκε προσφορά". Αλλαγή σε LEFT JOIN.
+- **Προσφορές - `getBySlug()`**: Διόρθωση aliases (`created_by_first_name` → `creator_first_name`) ώστε να ταιριάζουν με τα αναμενόμενα κλειδιά του `view.php`
+- **Προσφορές - view.php**: Null-safe fallback για τα πεδία δημιουργού
+
+---
+
 ## [1.7.29] - 2026-05-07
 
 ### 🐛 Bug Fixes

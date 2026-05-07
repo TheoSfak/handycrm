@@ -27,7 +27,7 @@ class Quote extends BaseModel {
                            creator.last_name as creator_last_name
                     FROM {$this->table} q 
                     JOIN customers c ON q.customer_id = c.id 
-                    JOIN users creator ON q.created_by = creator.id 
+                    LEFT JOIN users creator ON q.created_by = creator.id 
                     WHERE q.id = ?";
             
             $stmt = $db->prepare($sql);
@@ -302,8 +302,8 @@ class Quote extends BaseModel {
                        c.email as customer_email,
                        c.phone as customer_phone,
                        c.address as customer_address,
-                       u.first_name as created_by_first_name,
-                       u.last_name as created_by_last_name
+                       u.first_name as creator_first_name,
+                       u.last_name as creator_last_name
                 FROM {$this->table} q
                 LEFT JOIN customers c ON q.customer_id = c.id
                 LEFT JOIN users u ON q.created_by = u.id

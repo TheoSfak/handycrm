@@ -55,7 +55,7 @@
                     </div>
                     <div class="col-md-3">
                         <h6 class="text-muted mb-2"><?= __('quotes.created_by') ?></h6>
-                        <p class="mb-0"><?= htmlspecialchars($quote['creator_first_name'] . ' ' . $quote['creator_last_name']) ?></p>
+                        <p class="mb-0"><?= htmlspecialchars(trim(($quote['creator_first_name'] ?? '') . ' ' . ($quote['creator_last_name'] ?? '')) ?: '—') ?></p>
                     </div>
                 </div>
             </div>
