@@ -73,8 +73,8 @@ class QuoteExportController extends BaseController {
         $pdf->setPrintFooter(false);
         
         // Set margins
-        $pdf->SetMargins(15, 15, 15);
-        $pdf->SetAutoPageBreak(TRUE, 15);
+        $pdf->SetMargins(12, 10, 12);
+        $pdf->SetAutoPageBreak(TRUE, 12);
         
         // Set font
         $pdf->SetFont('dejavusans', '', 10);
@@ -87,17 +87,18 @@ class QuoteExportController extends BaseController {
         if (!empty($companyLogo)) {
             $logoPath = __DIR__ . '/../' . $companyLogo;
             if (file_exists($logoPath)) {
-                $logoWidth = 80;
+                $logoWidth = 70;
                 $pageWidth = $pdf->getPageWidth();
                 $logoX = ($pageWidth - $logoWidth) / 2;
-                $pdf->Image($logoPath, $logoX, 15, $logoWidth, 0, '', '', '', false, 300, '', false, false, 0);
-                $pdf->Ln(45);
+                $pdf->Image($logoPath, $logoX, 10, $logoWidth, 0, '', '', '', false, 300, '', false, false, 0);
+                // Move cursor to just below the image (TCPDF tracks image bottom Y)
+                $pdf->SetY($pdf->GetY() + 4);
             }
         }
 
         // Quote title and details (now BELOW logo, ABOVE customer/company info)
-        $html = '<h1 style="color: #e74c3c; text-align: center; margin: 10px 0 8px 0;">ΠΡΟΣΦΟΡΑ #' . htmlspecialchars($quote['quote_number']) . '</h1>';
-        $html .= '<table cellpadding="3" style="width: 100%; margin-bottom: 10px;">
+        $html = '<h1 style="color: #e74c3c; text-align: center; margin: 2px 0 2px 0;">ΠΡΟΣΦΟΡΑ #' . htmlspecialchars($quote['quote_number']) . '</h1>';
+        $html .= '<table cellpadding="2" style="width: 100%; margin-bottom: 2px;">
             <tr>
                 <td style="width: 33%;"><strong>Ημερομηνία:</strong> ' . date('d/m/Y', strtotime($quote['created_at'])) . '</td>
                 <td style="width: 33%;"><strong>Ισχύει μέχρι:</strong> ' . date('d/m/Y', strtotime($quote['valid_until'])) . '</td>
@@ -105,13 +106,13 @@ class QuoteExportController extends BaseController {
             </tr>
         </table>';
         $pdf->writeHTML($html, true, false, true, false, '');
-        $pdf->Ln(5);
+        $pdf->Ln(2);
 
         // Header with customer and company info (now below the quote title box)
         $html = '<table cellpadding="5" style="width: 100%;">
             <tr>
                 <td style="width: 50%; vertical-align: top;">
-                    <h3 style="color: #2c3e50; margin-bottom: 10px;">ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ</h3>';
+                    <h3 style="color: #2c3e50; margin-bottom: 3px;">ΣΤΟΙΧΕΙΑ ΠΕΛΑΤΗ</h3>';
         
         // Customer name
         $customerName = $quote['customer_type'] === 'company' && !empty($quote['customer_company_name']) 
@@ -135,7 +136,7 @@ class QuoteExportController extends BaseController {
         
         $html .= '</td>
                 <td style="width: 50%; vertical-align: top; text-align: right;">
-                    <h3 style="color: #2c3e50; margin-bottom: 10px;">ΣΤΟΙΧΕΙΑ ΕΤΑΙΡΙΑΣ</h3>
+                    <h3 style="color: #2c3e50; margin-bottom: 3px;">ΣΤΟΙΧΕΙΑ ΕΤΑΙΡΙΑΣ</h3>
                     <p style="margin: 0; font-size: 11px;"><strong>' . htmlspecialchars($companyName) . '</strong></p>';
         
         if (!empty($companyAddress)) {
@@ -156,11 +157,11 @@ class QuoteExportController extends BaseController {
         </table>';
         
         $pdf->writeHTML($html, true, false, true, false, '');
-        $pdf->Ln(5);
+        $pdf->Ln(2);
         
         // Quote title and description
         if (!empty($quote['title'])) {
-            $html = '<h3 style="color: #2c3e50; margin-bottom: 5px;">' . htmlspecialchars($quote['title']) . '</h3>';
+            $html = '<h3 style="color: #2c3e50; margin-bottom: 2px; margin-top: 2px;">' . htmlspecialchars($quote['title']) . '</h3>';
             $pdf->writeHTML($html, true, false, true, false, '');
         }
         
@@ -235,7 +236,7 @@ class QuoteExportController extends BaseController {
 
         // Footer — company info bar at the bottom of the last page
         $pageHeight  = $pdf->getPageHeight();
-        $marginBottom = 15;
+        $marginBottom = 12;
         $footerH     = 14;
         $footerY     = $pageHeight - $marginBottom - $footerH;
 
