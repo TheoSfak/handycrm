@@ -23,9 +23,11 @@
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             min-height: 100vh;
+            height: 100vh;
             display: flex;
             background: #f1f5f9;
             -webkit-font-smoothing: antialiased;
+            overflow: hidden;
         }
 
         /* ── Left branding panel ──────────────────────── */
@@ -140,6 +142,7 @@
             justify-content: center;
             padding: 48px 40px;
             background: #ffffff;
+            overflow-y: auto;
         }
 
         .login-form-inner {
@@ -301,7 +304,7 @@
 
         /* ── Mobile ───────────────────────────────────── */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
+            body { flex-direction: column; height: auto; min-height: 100vh; overflow: auto; }
             .login-brand {
                 width: 100%;
                 padding: 36px 24px 32px;
@@ -311,7 +314,7 @@
             .brand-features { display: none; }
             .brand-icon { margin-bottom: 16px; width: 56px; height: 56px; font-size: 1.4rem; }
             .brand-title { font-size: 1.35rem; margin-bottom: 6px; }
-            .login-form-panel { padding: 36px 20px; }
+            .login-form-panel { flex: 1; padding: 36px 20px; min-height: 0; }
         }
     </style>
 </head>
