@@ -73,7 +73,10 @@ class VersionManager {
             }
             
             if (!empty($migrationResult['errors'])) {
-                error_log('VersionManager - Migration warnings: ' . implode(', ', $migrationResult['errors']));
+                $errorStrings = array_map(function($e) {
+                    return is_array($e) ? ($e['file'] . ': ' . $e['error']) : (string)$e;
+                }, $migrationResult['errors']);
+                error_log('VersionManager - Migration warnings: ' . implode(', ', $errorStrings));
             }
             
             // Step 6: Update version in config.php
