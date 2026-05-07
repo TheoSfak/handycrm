@@ -212,8 +212,10 @@ class VersionManager {
                 'models/',
                 'views/',
                 'public/',
+                'migrations/',
                 'index.php',
-                '.htaccess'
+                '.htaccess',
+                'VERSION'
             ];
             
             // Files and directories to NEVER overwrite

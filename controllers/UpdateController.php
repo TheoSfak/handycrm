@@ -16,6 +16,11 @@ class UpdateController extends BaseController {
      * Get current application version
      */
     public function getCurrentVersion() {
+        // APP_VERSION in config.php is updated by VersionManager on every in-app update.
+        // Fall back to VERSION file for git-based deployments.
+        if (defined('APP_VERSION')) {
+            return APP_VERSION;
+        }
         $versionFile = __DIR__ . '/../VERSION';
         if (file_exists($versionFile)) {
             return trim(file_get_contents($versionFile));
