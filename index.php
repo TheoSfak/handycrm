@@ -810,6 +810,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->status();
     } elseif ($currentRoute === '/update/process') {
         $controller->process();
+    } elseif ($currentRoute === '/update/install-github') {
+        $controller->installGithubRelease();
     } else {
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - Update page not found</h1>";

@@ -243,14 +243,51 @@ class UpdateController extends BaseController {
      * Show update page
      */
     public function index() {
+        // Force a fresh GitHub check every time the update page is visited
+        unset($_SESSION['last_update_check']);
+        unset($_SESSION['update_available']);
+        unset($_SESSION['update_info']);
+        unset($_SESSION['last_notification_update_check']);
+        unset($_SESSION['cached_update_notification']);
+
+        require_once __DIR__ . '/../classes/UpdateChecker.php';
+        $checker = new UpdateChecker();
+        $githubUpdateAvailable = $checker->checkForUpdates();
+        $githubUpdateInfo = $checker->getUpdateInfo();
+
         $updateInfo = $this->checkForUpdates();
+        $updateInfo['github_update_available'] = $githubUpdateAvailable;
+        $updateInfo['github_update_info']      = $githubUpdateInfo;
+        $updateInfo['current_version']         = $checker->getCurrentVersion();
+
         $data = [
-            'title' => __('update.title') . ' - ' . APP_NAME,
+            'title'      => __('update.title') . ' - ' . APP_NAME,
             'updateInfo' => $updateInfo
         ];
         $this->view('update/index', $data);
     }
     
+    /**
+     * Install a GitHub release (AJAX)
+     */
+    public function installGithubRelease() {
+        header('Content-Type: application/json');
+
+        $version     = trim($_POST['version'] ?? '');
+        $downloadUrl = trim($_POST['download_url'] ?? '');
+
+        if (empty($version) || empty($downloadUrl)) {
+            echo json_encode(['success' => false, 'message' => 'Λείπουν παράμετροι.']);
+            return;
+        }
+
+        require_once __DIR__ . '/../classes/VersionManager.php';
+        $versionManager = new VersionManager();
+        $result = $versionManager->installVersion($downloadUrl, $version);
+
+        echo json_encode($result);
+    }
+
     /**
      * Process update request (AJAX)
      */

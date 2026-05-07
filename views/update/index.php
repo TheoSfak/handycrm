@@ -43,6 +43,40 @@ $translations = require __DIR__ . '/../../languages/' . $lang . '.json';
                         </div>
                     </div>
 
+                    <!-- GitHub Update Status -->
+                    <?php if (!empty($updateInfo['github_update_available']) && !empty($updateInfo['github_update_info'])): ?>
+                        <?php $gh = $updateInfo['github_update_info']; ?>
+                        <div class="alert alert-warning d-flex align-items-start gap-3" role="alert">
+                            <i class="fas fa-arrow-circle-up fa-2x mt-1 flex-shrink-0"></i>
+                            <div>
+                                <h5 class="mb-1">
+                                    <?= $lang == 'el' ? 'Νέα έκδοση διαθέσιμη:' : 'New version available:' ?>
+                                    <strong>v<?= htmlspecialchars($gh['version']) ?></strong>
+                                </h5>
+                                <?php if (!empty($gh['release_notes'])): ?>
+                                    <p class="mb-2 small"><?= nl2br(htmlspecialchars($gh['release_notes'])) ?></p>
+                                <?php endif; ?>
+                                <?php if (!empty($gh['release_url'])): ?>
+                                    <a href="<?= htmlspecialchars($gh['release_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-warning me-2">
+                                        <i class="fab fa-github me-1"></i><?= $lang == 'el' ? 'Δείτε στο GitHub' : 'View on GitHub' ?>
+                                    </a>
+                                <?php endif; ?>
+                                <?php if (!empty($gh['download_url'])): ?>
+                                    <button type="button" class="btn btn-sm btn-success" id="btnGithubUpdate"
+                                            data-version="<?= htmlspecialchars($gh['version']) ?>"
+                                            data-url="<?= htmlspecialchars($gh['download_url']) ?>">
+                                        <i class="fas fa-download me-1"></i><?= $lang == 'el' ? 'Εγκατάσταση ενημέρωσης' : 'Install update' ?>
+                                    </button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php elseif (isset($updateInfo['github_update_available']) && $updateInfo['github_update_available'] === false): ?>
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <?= $lang == 'el' ? 'Τρέχετε την τελευταία έκδοση από το GitHub.' : 'You are running the latest version from GitHub.' ?>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Update Status -->
                     <?php if ($updateInfo['update_available']): ?>
                         <div class="alert alert-warning" role="alert">
@@ -198,6 +232,7 @@ $translations = require __DIR__ . '/../../languages/' . $lang . '.json';
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const btnApplyUpdates = document.getElementById('btnApplyUpdates');
+    const btnGithubUpdate = document.getElementById('btnGithubUpdate');
     const progressModal = new bootstrap.Modal(document.getElementById('updateProgressModal'));
     const progressText = document.getElementById('updateProgressText');
     const progressBar = document.getElementById('mainProgressBar');
@@ -209,60 +244,76 @@ document.addEventListener('DOMContentLoaded', function() {
                 : "Are you sure you want to apply all updates? It is recommended to have a database backup." ?>')) {
                 return;
             }
-            
-            // Disable button
             btnApplyUpdates.disabled = true;
-            
-            // Show modal
             progressModal.show();
             progressText.textContent = '<?= $lang == 'el' ? 'Εφαρμογή ενημερώσεων...' : 'Applying updates...' ?>';
             progressBar.style.width = '10%';
-            
             try {
-                const response = await fetch('/update/process', {
+                const response = await fetch('?route=/update/process', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Content-Type': 'application/json' }
                 });
-                
                 progressBar.style.width = '50%';
-                
                 const result = await response.json();
-                
                 progressBar.style.width = '100%';
                 progressBar.classList.remove('progress-bar-animated');
-                
                 if (result.success) {
-                    progressBar.classList.remove('bg-primary');
                     progressBar.classList.add('bg-success');
                     progressText.textContent = result.message;
-                    
-                    // Show success and reload
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
+                    setTimeout(() => window.location.reload(), 2000);
                 } else {
-                    progressBar.classList.remove('bg-primary');
                     progressBar.classList.add('bg-danger');
                     progressText.textContent = result.message;
-                    
-                    setTimeout(() => {
-                        progressModal.hide();
-                        btnApplyUpdates.disabled = false;
-                    }, 3000);
+                    setTimeout(() => { progressModal.hide(); btnApplyUpdates.disabled = false; }, 3000);
                 }
-                
             } catch (error) {
                 progressBar.style.width = '100%';
-                progressBar.classList.remove('bg-primary', 'progress-bar-animated');
+                progressBar.classList.remove('progress-bar-animated');
                 progressBar.classList.add('bg-danger');
                 progressText.textContent = '<?= $lang == 'el' ? 'Σφάλμα:' : 'Error:' ?> ' + error.message;
-                
-                setTimeout(() => {
-                    progressModal.hide();
-                    btnApplyUpdates.disabled = false;
-                }, 3000);
+                setTimeout(() => { progressModal.hide(); btnApplyUpdates.disabled = false; }, 3000);
+            }
+        });
+    }
+
+    if (btnGithubUpdate) {
+        btnGithubUpdate.addEventListener('click', async function() {
+            const version    = this.dataset.version;
+            const downloadUrl = this.dataset.url;
+            if (!confirm('<?= $lang == 'el' ? 'Εγκατάσταση έκδοσης v' : 'Install version v' ?>' + version + '<?= $lang == 'el' ? '; Θα δημιουργηθεί αυτόματα αντίγραφο ασφαλείας.' : '? A backup will be created automatically.' ?>')) {
+                return;
+            }
+            btnGithubUpdate.disabled = true;
+            progressModal.show();
+            progressText.textContent = '<?= $lang == 'el' ? 'Λήψη και εγκατάσταση...' : 'Downloading and installing...' ?>';
+            progressBar.style.width = '10%';
+            try {
+                const formData = new FormData();
+                formData.append('version', version);
+                formData.append('download_url', downloadUrl);
+                const response = await fetch('?route=/update/install-github', {
+                    method: 'POST',
+                    body: formData
+                });
+                progressBar.style.width = '80%';
+                const result = await response.json();
+                progressBar.style.width = '100%';
+                progressBar.classList.remove('progress-bar-animated');
+                if (result.success) {
+                    progressBar.classList.add('bg-success');
+                    progressText.textContent = result.message;
+                    setTimeout(() => window.location.reload(), 3000);
+                } else {
+                    progressBar.classList.add('bg-danger');
+                    progressText.textContent = result.message;
+                    setTimeout(() => { progressModal.hide(); btnGithubUpdate.disabled = false; }, 4000);
+                }
+            } catch (error) {
+                progressBar.style.width = '100%';
+                progressBar.classList.remove('progress-bar-animated');
+                progressBar.classList.add('bg-danger');
+                progressText.textContent = '<?= $lang == 'el' ? 'Σφάλμα:' : 'Error:' ?> ' + error.message;
+                setTimeout(() => { progressModal.hide(); btnGithubUpdate.disabled = false; }, 3000);
             }
         });
     }
