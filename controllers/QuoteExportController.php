@@ -231,7 +231,30 @@ class QuoteExportController extends BaseController {
                 <p style="font-size: 9px;">' . nl2br(htmlspecialchars($quote['notes'])) . '</p>';
             $pdf->writeHTML($html, true, false, true, false, '');
         }
-        
+
+        // Footer — company info bar at the bottom of the last page
+        $pageHeight  = $pdf->getPageHeight();
+        $marginBottom = 15;
+        $footerH     = 14;
+        $footerY     = $pageHeight - $marginBottom - $footerH;
+
+        $pdf->SetY($footerY);
+        $pdf->SetDrawColor(200, 200, 200);
+        $pdf->Line(15, $footerY, $pdf->getPageWidth() - 15, $footerY);
+
+        $footerParts = [];
+        if (!empty($companyName))    $footerParts[] = $companyName;
+        if (!empty($companyAddress)) $footerParts[] = $companyAddress;
+        if (!empty($companyPhone))   $footerParts[] = 'Τηλ: ' . $companyPhone;
+        if (!empty($companyEmail))   $footerParts[] = $companyEmail;
+        if (!empty($companyVat))     $footerParts[] = 'ΑΦΜ: ' . $companyVat;
+        $footerText = implode('  |  ', $footerParts);
+
+        $pdf->SetFont('dejavusans', '', 8);
+        $pdf->SetTextColor(100, 100, 100);
+        $pdf->SetXY(15, $footerY + 3);
+        $pdf->Cell($pdf->getPageWidth() - 30, 8, $footerText, 0, 0, 'C');
+
         // Output PDF
         $filename = 'Προσφορα_' . $quote['quote_number'] . '_' . date('Y-m-d') . '.pdf';
         $pdf->Output($filename, 'I'); // 'I' = inline display, 'D' = download
