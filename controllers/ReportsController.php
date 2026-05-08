@@ -39,24 +39,47 @@ class ReportsController extends BaseController {
     }
     
     /**
-     * Get revenue analytics (from invoiced projects)
+     * Get revenue analytics (invoiced projects + transformer maintenances)
      */
     private function getRevenueData($startDate, $endDate) {
         $sql = "SELECT 
-                    DATE_FORMAT(invoiced_at, '%Y-%m') as month,
-                    COUNT(*) as total_invoices,
-                    SUM(total_cost) as total_revenue,
-                    SUM(material_cost + labor_cost) as subtotal,
-                    SUM(total_cost - (material_cost + labor_cost)) as vat_amount,
-                    AVG(total_cost) as avg_revenue
-                FROM projects 
-                WHERE status = 'invoiced'
-                AND invoiced_at IS NOT NULL
-                AND invoiced_at BETWEEN ? AND ?
-                GROUP BY DATE_FORMAT(invoiced_at, '%Y-%m')
+                    month,
+                    SUM(total_invoices) as total_invoices,
+                    SUM(total_revenue) as total_revenue,
+                    SUM(subtotal) as subtotal,
+                    SUM(vat_amount) as vat_amount,
+                    CASE WHEN SUM(total_invoices) > 0 THEN SUM(total_revenue) / SUM(total_invoices) ELSE 0 END as avg_revenue
+                FROM (
+                    SELECT 
+                        DATE_FORMAT(invoiced_at, '%Y-%m') as month,
+                        COUNT(*) as total_invoices,
+                        SUM(total_cost) as total_revenue,
+                        SUM(material_cost + labor_cost) as subtotal,
+                        SUM(total_cost - (material_cost + labor_cost)) as vat_amount
+                    FROM projects 
+                    WHERE status = 'invoiced'
+                    AND invoiced_at IS NOT NULL
+                    AND invoiced_at BETWEEN ? AND ?
+                    GROUP BY DATE_FORMAT(invoiced_at, '%Y-%m')
+
+                    UNION ALL
+
+                    SELECT 
+                        DATE_FORMAT(maintenance_date, '%Y-%m') as month,
+                        COUNT(*) as total_invoices,
+                        COALESCE(SUM(total_amount), 0) as total_revenue,
+                        COALESCE(SUM(total_amount), 0) as subtotal,
+                        0 as vat_amount
+                    FROM transformer_maintenances
+                    WHERE is_invoiced = 1
+                    AND deleted_at IS NULL
+                    AND maintenance_date BETWEEN ? AND ?
+                    GROUP BY DATE_FORMAT(maintenance_date, '%Y-%m')
+                ) combined
+                GROUP BY month
                 ORDER BY month ASC";
-        
-        return $this->db->fetchAll($sql, [$startDate, $endDate]);
+
+        return $this->db->fetchAll($sql, [$startDate, $endDate, $startDate, $endDate]);
     }
     
     /**
@@ -201,13 +224,22 @@ class ReportsController extends BaseController {
     private function getSummaryStats($startDate, $endDate) {
         $stats = [];
         
-        // Total revenue (from invoiced projects)
+        // Total revenue (invoiced projects + transformer maintenances)
         $revenue = "SELECT COALESCE(SUM(total_cost), 0) as total 
                     FROM projects 
                     WHERE status = 'invoiced'
                     AND invoiced_at IS NOT NULL
                     AND invoiced_at BETWEEN ? AND ?";
-        $stats['total_revenue'] = $this->db->fetchOne($revenue, [$startDate, $endDate])['total'];
+        $projectRevenue = $this->db->fetchOne($revenue, [$startDate, $endDate])['total'];
+
+        $maintenanceRevenue = "SELECT COALESCE(SUM(total_amount), 0) as total
+                               FROM transformer_maintenances
+                               WHERE is_invoiced = 1
+                               AND deleted_at IS NULL
+                               AND maintenance_date BETWEEN ? AND ?";
+        $maintenanceTotal = $this->db->fetchOne($maintenanceRevenue, [$startDate, $endDate])['total'];
+
+        $stats['total_revenue'] = $projectRevenue + $maintenanceTotal;
         
         // Total projects
         $projects = "SELECT COUNT(*) as total 
