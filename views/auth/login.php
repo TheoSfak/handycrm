@@ -23,16 +23,15 @@
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             min-height: 100vh;
-            height: 100vh;
             display: flex;
             background: #f1f5f9;
             -webkit-font-smoothing: antialiased;
-            overflow: hidden;
         }
 
         /* ── Left branding panel ──────────────────────── */
         .login-brand {
             width: 46%;
+            min-height: 100vh;
             background: #0f172a;
             display: flex;
             flex-direction: column;
@@ -142,7 +141,7 @@
             justify-content: center;
             padding: 48px 40px;
             background: #ffffff;
-            overflow-y: auto;
+            min-height: 100vh;
         }
 
         .login-form-inner {

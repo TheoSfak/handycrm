@@ -9,6 +9,34 @@ class UpdateChecker {
     public $githubRepo = 'TheoSfak/handycrm'; // GitHub repository
     private $updateCheckInterval = 86400; // 24 hours in seconds
     
+    /**
+     * Fetch a URL using cURL or file_get_contents as fallback
+     */
+    private function fetchUrl($url, $headers = []) {
+        if (function_exists('curl_init')) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            return ($response !== false && $httpCode === 200) ? $response : false;
+        }
+
+        $headerString = implode("\r\n", $headers);
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => $headerString,
+                'timeout' => 10
+            ]
+        ]);
+        return @file_get_contents($url, false, $context);
+    }
+
     public function __construct() {
         // APP_VERSION in config.php is updated by VersionManager on every in-app update.
         // It is the authoritative version source for production installs.
