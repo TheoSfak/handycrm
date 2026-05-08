@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.7.53] - 2026-05-08
+
+### 🐛 Bug Fixes
+- **Login Page**: Διόρθωση side-by-side layout σε desktop — explicit `flex-direction: row`, `align-items: stretch`, `flex-shrink: 0` στο brand panel και mobile breakpoint από 768px → 600px
+
+---
+
 ## [1.7.52] - 2026-05-08
 
 ### 🐛 Bug Fixes

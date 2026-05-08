@@ -24,9 +24,10 @@
         body {
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             margin: 0;
-            height: 100vh;
-            overflow-y: auto;
+            min-height: 100vh;
             display: flex;
+            flex-direction: row;
+            align-items: stretch;
             background: #f1f5f9;
             -webkit-font-smoothing: antialiased;
         }
@@ -34,6 +35,7 @@
         /* ── Left branding panel ──────────────────────── */
         .login-brand {
             width: 46%;
+            flex-shrink: 0;
             background: #0f172a;
             display: flex;
             flex-direction: column;
@@ -136,7 +138,7 @@
 
         /* ── Right form panel ─────────────────────────── */
         .login-form-panel {
-            flex: 1;
+            flex: 1 1 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -304,18 +306,18 @@
         .alert-info    { background: #e0f2fe; color: #0369a1; }
 
         /* ── Mobile ───────────────────────────────────── */
-        @media (max-width: 768px) {
-            body { flex-direction: column; height: auto; min-height: 100vh; overflow: auto; }
+        @media (max-width: 600px) {
+            body { flex-direction: column; min-height: 100vh; }
             .login-brand {
                 width: 100%;
+                flex-shrink: 1;
                 padding: 36px 24px 32px;
-                min-height: auto;
             }
             .login-brand::before, .login-brand::after { display: none; }
             .brand-features { display: none; }
             .brand-icon { margin-bottom: 16px; width: 56px; height: 56px; font-size: 1.4rem; }
             .brand-title { font-size: 1.35rem; margin-bottom: 6px; }
-            .login-form-panel { flex: 1; padding: 36px 20px; min-height: 0; }
+            .login-form-panel { flex: 1; padding: 36px 20px; }
         }
     </style>
 </head>
