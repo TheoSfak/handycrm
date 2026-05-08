@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.7.52] - 2026-05-08
+
+### 🐛 Bug Fixes
+- **Login Page**: Διόρθωση flex layout σελίδας σύνδεσης σε desktop — `html { height: 100% }` + `body { height: 100vh; overflow-y: auto }` ώστε τα panels να εκτείνονται σωστά
+
+---
+
 ## [1.7.51] - 2026-05-08
 
 ### 🐛 Bug Fixes
