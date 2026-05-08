@@ -45,13 +45,7 @@ function addMaterialRow(data = null) {
             </div>
             <div class="col-md-3">
                 <label class="form-label small">Μονάδα Μέτρησης</label>
-                <input type="text" 
-                       class="form-control" 
-                       name="materials[${materialCounter}][unit]" 
-                       value="${data?.unit || ''}"
-                       placeholder="τεμ, μέτρα, κιλά"
-                       list="unit_types"
-                       required>
+                ${window.buildUnitSelectHTML(`materials[${materialCounter}][unit]`, data?.unit || '')}
             </div>
             <div class="col-md-3">
                 <label class="form-label small">Τιμή Μονάδας (€)</label>

@@ -38,9 +38,14 @@ class UpdateChecker {
     }
 
     public function __construct() {
-        // APP_VERSION in config.php is updated by VersionManager on every in-app update.
-        // It is the authoritative version source for production installs.
-        $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
+        // Read from the VERSION file as the single source of truth.
+        // Falls back to APP_VERSION constant, then '1.0.0'.
+        $versionFile = dirname(__DIR__) . '/VERSION';
+        if (file_exists($versionFile)) {
+            $this->currentVersion = trim(file_get_contents($versionFile));
+        } else {
+            $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
+        }
         
         // Clear cached update info if version changed (handles upgrades)
         if (isset($_SESSION['cached_version']) && $_SESSION['cached_version'] !== $this->currentVersion) {

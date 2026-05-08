@@ -378,3 +378,51 @@
     }
     
 })();
+
+/**
+ * Build a canonical unit <select> HTML string.
+ * Used by project-tasks.js and daily-tasks templates.
+ * @param {string} name   - The name attribute for the select
+ * @param {string} selected - Currently selected value
+ * @returns {string} - Full <select> HTML
+ */
+window.buildUnitSelectHTML = function(name, selected) {
+    const units = [
+        ['\u03c4\u03b5\u03bc', '\u03a4\u03b5\u03bc\u03ac\u03c7\u03b9\u03b1 (\u03c4\u03b5\u03bc)'],
+        ['\u03bc', '\u039c\u03ad\u03c4\u03c1\u03b1 (\u03bc)'],
+        ['\u03bc\u00b2', '\u03a4.\u039c. (\u03bc\u00b2)'],
+        ['\u03bc\u00b3', '\u039a.\u039c. (\u03bc\u00b3)'],
+        ['\u03ba\u03b9\u03bb\u03ac', '\u039a\u03b9\u03bb\u03ac'],
+        ['\u03b3\u03c1', '\u0393\u03c1\u03b1\u03bc\u03bc\u03ac\u03c1\u03b9\u03b1 (\u03b3\u03c1)'],
+        ['\u03c4\u03cc\u03bd\u03bf\u03b9', '\u03a4\u03cc\u03bd\u03bf\u03b9'],
+        ['\u03bb\u03af\u03c4\u03c1\u03b1', '\u039b\u03af\u03c4\u03c1\u03b1'],
+        ['ml', 'ml'],
+        ['\u03c3\u03b5\u03c4', '\u03a3\u03b5\u03c4'],
+        ['\u03ba\u03bf\u03c5\u03c4\u03af', '\u039a\u03bf\u03c5\u03c4\u03af'],
+        ['\u03c3\u03b1\u03ba\u03af', '\u03a3\u03b1\u03ba\u03af'],
+        ['\u03c0\u03b1\u03bb\u03ad\u03c4\u03b1', '\u03a0\u03b1\u03bb\u03ad\u03c4\u03b1'],
+        ['\u03c1\u03bf\u03bb\u03cc', '\u03a1\u03bf\u03bb\u03cc'],
+        ['\u03c6\u03cd\u03bb\u03bb\u03bf', '\u03a6\u03cd\u03bb\u03bb\u03bf'],
+        ['\u03ba\u03b9\u03b2\u03ce\u03c4\u03b9\u03bf', '\u039a\u03b9\u03b2\u03ce\u03c4\u03b9\u03bf'],
+        ['\u03ce\u03c1\u03b5\u03c2', '\u038e\u03c1\u03b5\u03c2'],
+        ['\u03b7\u03bc\u03ad\u03c1\u03b5\u03c2', '\u0397\u03bc\u03ad\u03c1\u03b5\u03c2'],
+    ];
+    // Normalize selected value using common aliases
+    const aliases = {
+        '\u03c4\u03b5\u03bc\u03ac\u03c7\u03b9\u03b1': '\u03c4\u03b5\u03bc', '\u03c4\u03b5\u03bc.': '\u03c4\u03b5\u03bc', 'pieces': '\u03c4\u03b5\u03bc',
+        '\u03bc\u03ad\u03c4\u03c1\u03b1': '\u03bc', 'meters': '\u03bc', '\u03bc\u03ad\u03c4\u03c1\u03bf': '\u03bc',
+        'kg': '\u03ba\u03b9\u03bb\u03ac', '\u03ba\u03b9\u03bb\u03cc': '\u03ba\u03b9\u03bb\u03ac',
+        '\u03bb': '\u03bb\u03af\u03c4\u03c1\u03b1', 'liters': '\u03bb\u03af\u03c4\u03c1\u03b1',
+        '\u03ba\u03bf\u03c5\u03c4\u03b9\u03ac': '\u03ba\u03bf\u03c5\u03c4\u03af', 'boxes': '\u03ba\u03bf\u03c5\u03c4\u03af',
+        '\u03c4.\u03bc.': '\u03bc\u00b2', '\u03c4\u03bc': '\u03bc\u00b2',
+        '\u03ba.\u03bc.': '\u03bc\u00b3', '\u03ba\u03bc': '\u03bc\u00b3',
+    };
+    const canonical = aliases[selected] || selected || '';
+    const options = units.map(([v, l]) =>
+        `<option value="${v}"${v === canonical ? ' selected' : ''}>${l}</option>`
+    ).join('');
+    return `<select class="form-select" name="${name}" required>`
+        + `<option value="">-- \u039c\u03bf\u03bd\u03ac\u03b4\u03b1 --</option>`
+        + options
+        + `</select>`;
+};

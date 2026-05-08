@@ -419,13 +419,7 @@ function addDailyTaskMaterialRow(data = null) {
             </div>
             <div class="col-md-3">
                 <label class="form-label small">Μονάδα Μέτρησης</label>
-                <input type="text" 
-                       class="form-control" 
-                       name="materials[${dailyTaskMaterialCounter}][unit]" 
-                       value="${data?.unit || ''}"
-                       placeholder="τεμ, μέτρα, κιλά"
-                       list="unit_types"
-                       required>
+                ${window.buildUnitSelectHTML(`materials[${dailyTaskMaterialCounter}][unit]`, data?.unit || '')}
             </div>
             <div class="col-md-3">
                 <label class="form-label small">Τιμή Μονάδας (€)</label>
