@@ -19,151 +19,65 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; }
 
-        html { height: 100%; }
-
         body {
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             min-height: 100vh;
             display: flex;
-            flex-direction: row;
-            align-items: stretch;
+            align-items: center;
+            justify-content: center;
             background: #f1f5f9;
             -webkit-font-smoothing: antialiased;
+            padding: 24px 16px;
         }
 
-        /* ── Left branding panel ──────────────────────── */
-        .login-brand {
-            width: 46%;
-            flex-shrink: 0;
-            background: #0f172a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 48px 56px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Subtle decorative circles */
-        .login-brand::before {
-            content: '';
-            position: absolute;
-            width: 420px; height: 420px;
-            border-radius: 50%;
-            border: 1px solid rgba(14,165,233,0.08);
-            top: -80px; left: -80px;
-        }
-
-        .login-brand::after {
-            content: '';
-            position: absolute;
-            width: 280px; height: 280px;
-            border-radius: 50%;
-            border: 1px solid rgba(99,102,241,0.1);
-            bottom: -40px; right: -60px;
-        }
-
-        .brand-icon {
-            width: 72px; height: 72px;
-            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: white;
-            box-shadow: 0 12px 30px rgba(14,165,233,0.35);
-            margin-bottom: 28px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-title {
-            color: #f8fafc;
-            font-size: 1.75rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin: 0 0 10px;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-subtitle {
-            color: rgba(255,255,255,0.45);
-            font-size: 0.9rem;
-            text-align: center;
-            line-height: 1.6;
-            margin: 0 0 48px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-features {
-            width: 100%;
-            max-width: 280px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .brand-feature {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            color: rgba(255,255,255,0.55);
-            font-size: 0.85rem;
-        }
-
-        .brand-feature-icon {
-            width: 32px; height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            flex-shrink: 0;
-        }
-
-        .brand-copyright {
-            position: absolute;
-            bottom: 24px;
-            color: rgba(255,255,255,0.2);
-            font-size: 0.72rem;
-            z-index: 1;
-            text-align: center;
-        }
-
-        /* ── Right form panel ─────────────────────────── */
-        .login-form-panel {
-            flex: 1 1 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 48px 40px;
+        .login-card {
             background: #ffffff;
-            overflow-y: auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            padding: 48px 44px;
+            width: 100%;
+            max-width: 440px;
         }
 
-        .login-form-inner {
-            width: 100%;
-            max-width: 400px;
+        .login-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo-icon {
+            width: 60px; height: 60px;
+            background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(14,165,233,0.3);
+            margin-bottom: 14px;
+        }
+
+        .login-logo-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.01em;
         }
 
         .form-heading {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .form-subheading {
             color: #64748b;
             font-size: 0.88rem;
-            margin-bottom: 36px;
+            margin-bottom: 28px;
         }
 
         .form-label {
@@ -284,7 +198,7 @@
             padding: 4px 12px;
             font-size: 0.75rem;
             color: #64748b;
-            margin-top: 32px;
+            margin-top: 28px;
         }
 
         .version-badge .dot {
@@ -304,68 +218,20 @@
         .alert-success { background: #dcfce7; color: #166534; }
         .alert-warning { background: #fef9c3; color: #92400e; }
         .alert-info    { background: #e0f2fe; color: #0369a1; }
-
-        /* ── Mobile ───────────────────────────────────── */
-        @media (max-width: 600px) {
-            body { flex-direction: column; min-height: 100vh; }
-            .login-brand {
-                width: 100%;
-                flex-shrink: 1;
-                padding: 36px 24px 32px;
-            }
-            .login-brand::before, .login-brand::after { display: none; }
-            .brand-features { display: none; }
-            .brand-icon { margin-bottom: 16px; width: 56px; height: 56px; font-size: 1.4rem; }
-            .brand-title { font-size: 1.35rem; margin-bottom: 6px; }
-            .login-form-panel { flex: 1; padding: 36px 20px; }
-        }
     </style>
 </head>
 <body>
 
-    <!-- Left branding panel -->
-    <div class="login-brand">
-        <div class="brand-icon"><i class="fas fa-bolt"></i></div>
-        <h1 class="brand-title"><?= htmlspecialchars($appName) ?></h1>
-        <p class="brand-subtitle">Σύστημα Διαχείρισης Πελατών,<br>Έργων &amp; Πληρωμών</p>
+    <div class="login-card">
 
-        <div class="brand-features">
-            <div class="brand-feature">
-                <div class="brand-feature-icon" style="background:rgba(14,165,233,0.15);color:#0ea5e9;">
-                    <i class="fas fa-users"></i>
-                </div>
-                <span>Διαχείριση Πελατών &amp; Έργων</span>
-            </div>
-            <div class="brand-feature">
-                <div class="brand-feature-icon" style="background:rgba(16,185,129,0.15);color:#10b981;">
-                    <i class="fas fa-coins"></i>
-                </div>
-                <span>Παρακολούθηση Πληρωμών</span>
-            </div>
-            <div class="brand-feature">
-                <div class="brand-feature-icon" style="background:rgba(99,102,241,0.15);color:#6366f1;">
-                    <i class="fas fa-chart-bar"></i>
-                </div>
-                <span>Αναφορές &amp; Στατιστικά</span>
-            </div>
-            <div class="brand-feature">
-                <div class="brand-feature-icon" style="background:rgba(244,63,94,0.12);color:#f43f5e;">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <span>Ραντεβού &amp; Ημερολόγιο</span>
-            </div>
+        <!-- Logo -->
+        <div class="login-logo">
+            <div class="login-logo-icon"><i class="fas fa-bolt"></i></div>
+            <span class="login-logo-name"><?= htmlspecialchars($appName) ?></span>
         </div>
 
-        <div class="brand-copyright">
-            © <?= date('Y') ?> ECOWATT Ενεργειακές Λύσεις
-        </div>
-    </div>
-
-    <!-- Right form panel -->
-    <div class="login-form-panel">
-        <div class="login-form-inner">
-            <h2 class="form-heading">Καλωσήρθατε</h2>
-            <p class="form-subheading">Συνδεθείτε στον λογαριασμό σας για να συνεχίσετε</p>
+        <h2 class="form-heading">Καλωσήρθατε</h2>
+        <p class="form-subheading">Συνδεθείτε στον λογαριασμό σας για να συνεχίσετε</p>
 
             <!-- Flash Messages -->
             <?php if (isset($flash)): ?>
@@ -430,7 +296,6 @@
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

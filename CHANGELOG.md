@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.7.54] - 2026-05-08
+
+### 🐛 Bug Fixes
+- **Login Page**: Αφαίρεση dark branding panel — απλή centered card layout σε όλες τις αναλύσεις
+
+---
+
 ## [1.7.53] - 2026-05-08
 
 ### 🐛 Bug Fixes
