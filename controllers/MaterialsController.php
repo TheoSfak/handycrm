@@ -6,6 +6,7 @@
 
 require_once 'classes/BaseController.php';
 require_once __DIR__ . '/../classes/AuthMiddleware.php';
+require_once 'classes/MaterialUnits.php';
 require_once 'models/MaterialCatalog.php';
 require_once 'models/MaterialCategory.php';
 
@@ -82,6 +83,7 @@ class MaterialsController extends BaseController {
         
         $this->view('materials/form', [
             'categories' => $categories,
+            'materialUnits' => MaterialUnits::all(),
             'material' => null,
             'pageTitle' => 'Προσθήκη Υλικού'
         ]);
@@ -118,12 +120,13 @@ class MaterialsController extends BaseController {
             'category_id' => !empty($_POST['category_id']) ? $_POST['category_id'] : null,
             'name' => trim($_POST['name']),
             'description' => trim($_POST['description'] ?? ''),
-            'unit' => trim($_POST['unit'] ?? ''),
+            'unit' => MaterialUnits::normalize($_POST['unit'] ?? ''),
             'default_price' => !empty($_POST['default_price']) ? floatval($_POST['default_price']) : null,
             'price_source' => in_array($_POST['price_source'] ?? '', ['manual','web_search']) ? $_POST['price_source'] : 'manual',
             'price_note' => trim($_POST['price_note'] ?? ''),
             'supplier' => trim($_POST['supplier'] ?? ''),
             'notes' => trim($_POST['notes'] ?? ''),
+            'aliases' => trim($_POST['aliases'] ?? ''),
             'is_active' => isset($_POST['is_active']) ? 1 : 0
         ];
         
@@ -160,6 +163,7 @@ class MaterialsController extends BaseController {
         $this->view('materials/form', [
             'material' => $material,
             'categories' => $categories,
+            'materialUnits' => MaterialUnits::all(),
             'pageTitle' => 'Επεξεργασία Υλικού'
         ]);
     }
@@ -195,12 +199,13 @@ class MaterialsController extends BaseController {
             'category_id' => !empty($_POST['category_id']) ? $_POST['category_id'] : null,
             'name' => trim($_POST['name']),
             'description' => trim($_POST['description'] ?? ''),
-            'unit' => trim($_POST['unit'] ?? ''),
+            'unit' => MaterialUnits::normalize($_POST['unit'] ?? ''),
             'default_price' => !empty($_POST['default_price']) ? floatval($_POST['default_price']) : null,
             'price_source' => in_array($_POST['price_source'] ?? '', ['manual','web_search']) ? $_POST['price_source'] : 'manual',
             'price_note' => trim($_POST['price_note'] ?? ''),
             'supplier' => trim($_POST['supplier'] ?? ''),
             'notes' => trim($_POST['notes'] ?? ''),
+            'aliases' => trim($_POST['aliases'] ?? ''),
             'is_active' => isset($_POST['is_active']) ? 1 : 0
         ];
         
@@ -260,7 +265,7 @@ class MaterialsController extends BaseController {
             return [
                 'id' => $material['id'],
                 'name' => $material['name'],
-                'unit' => $material['unit'] ?? '',
+                'unit' => MaterialUnits::normalize($material['unit'] ?? ''),
                 'price' => $material['default_price'] ?? 0,
                 'category' => $material['category_name'] ?? ''
             ];
@@ -455,7 +460,7 @@ class MaterialsController extends BaseController {
                 $material['name'],
                 $material['description'] ?? '',
                 $material['category_name'] ?? '',
-                $material['unit'] ?? '',
+                MaterialUnits::normalize($material['unit'] ?? ''),
                 $material['default_price'] ?? '',
                 $material['current_stock'] ?? '',
                 $material['min_stock'] ?? '',
@@ -538,7 +543,7 @@ class MaterialsController extends BaseController {
                     'name' => $mappedData['name'],
                     'description' => $mappedData['description'] ?? null,
                     'category_id' => $categoryId,
-                    'unit' => $mappedData['unit'] ?? null,
+                    'unit' => MaterialUnits::normalize($mappedData['unit'] ?? ''),
                     'default_price' => !empty($mappedData['default_price']) ? floatval($mappedData['default_price']) : null,
                     'supplier' => $mappedData['supplier'] ?? null,
                     'supplier_code' => $mappedData['supplier_code'] ?? null,

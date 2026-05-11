@@ -5,6 +5,7 @@
  */
 
 require_once 'classes/BaseModel.php';
+require_once 'classes/MaterialUnits.php';
 
 class MaterialCatalog extends BaseModel {
     protected $table = 'materials_catalog';
@@ -152,7 +153,7 @@ class MaterialCatalog extends BaseModel {
             $data['category_id'] ?? null,
             $data['name'],
             $data['description'] ?? null,
-            $data['unit'] ?? null,
+            MaterialUnits::normalize($data['unit'] ?? ''),
             $data['default_price'] ?? null,
             $data['supplier'] ?? null,
             $data['notes'] ?? null,
@@ -183,7 +184,7 @@ class MaterialCatalog extends BaseModel {
             $data['category_id'] ?? null,
             $data['name'],
             $data['description'] ?? null,
-            $data['unit'] ?? null,
+            MaterialUnits::normalize($data['unit'] ?? ''),
             $data['default_price'] ?? null,
             $data['supplier'] ?? null,
             $data['notes'] ?? null,

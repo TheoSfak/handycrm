@@ -326,30 +326,21 @@ require_once __DIR__ . '/../includes/header.php';
 </form>
 
 <script>
-// Search translations
-document.getElementById('searchTranslations').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
+function applyTranslationFilters() {
+    const searchTerm = document.getElementById('searchTranslations').value.toLowerCase();
+    const showEmpty = document.getElementById('showEmptyOnly').checked;
     const rows = document.querySelectorAll('.translation-row');
     
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
-        row.style.display = text.includes(searchTerm) ? '' : 'none';
+        const matchesSearch = text.includes(searchTerm);
+        const matchesEmpty = !showEmpty || row.dataset.empty === '1';
+        row.style.display = matchesSearch && matchesEmpty ? '' : 'none';
     });
-});
+}
 
-// Show empty only filter
-document.getElementById('showEmptyOnly').addEventListener('change', function(e) {
-    const showEmpty = e.target.checked;
-    const rows = document.querySelectorAll('.translation-row');
-    
-    rows.forEach(row => {
-        if (showEmpty) {
-            row.style.display = row.dataset.empty === '1' ? '' : 'none';
-        } else {
-            row.style.display = '';
-        }
-    });
-});
+document.getElementById('searchTranslations').addEventListener('input', applyTranslationFilters);
+document.getElementById('showEmptyOnly').addEventListener('change', applyTranslationFilters);
 
 // Delete language confirmation
 function deleteLanguage(code) {
@@ -365,6 +356,11 @@ document.querySelectorAll('.translation-input').forEach(input => {
     input.addEventListener('input', function() {
         clearTimeout(saveTimeout);
         this.classList.add('border-warning');
+        const row = this.closest('.translation-row');
+        if (row) {
+            row.dataset.empty = this.value.trim() === '' ? '1' : '0';
+            applyTranslationFilters();
+        }
         
         saveTimeout = setTimeout(() => {
             // Visual feedback only - actual save happens on submit

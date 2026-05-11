@@ -88,6 +88,8 @@ if (isset($_POST['clear_cache'])) {
     unset($_SESSION['last_update_check']);
     unset($_SESSION['update_available']);
     unset($_SESSION['update_info']);
+    unset($_SESSION['last_notification_update_check']);
+    unset($_SESSION['cached_update_notification']);
     
     // Clear PHP opcode cache if available
     if (function_exists('opcache_reset')) {

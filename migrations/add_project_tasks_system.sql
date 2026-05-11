@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `task_materials` (
   `description` VARCHAR(255) NOT NULL,
   `unit_price` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `quantity` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  `unit_type` ENUM('meters', 'pieces', 'kg', 'liters', 'boxes', 'other') NOT NULL DEFAULT 'pieces',
+  `unit_type` VARCHAR(50) NOT NULL DEFAULT 'τεμ',
   `subtotal` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
   `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

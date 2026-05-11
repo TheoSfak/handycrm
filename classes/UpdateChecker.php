@@ -38,24 +38,72 @@ class UpdateChecker {
     }
 
     public function __construct() {
-        // Read from the VERSION file as the single source of truth.
-        // Falls back to APP_VERSION constant, then '1.0.0'.
-        $versionFile = dirname(__DIR__) . '/VERSION';
-        if (file_exists($versionFile)) {
-            $this->currentVersion = trim(file_get_contents($versionFile));
-        } else {
-            $this->currentVersion = defined('APP_VERSION') ? APP_VERSION : '1.0.0';
-        }
+        $this->currentVersion = $this->getInstalledVersion();
         
         // Clear cached update info if version changed (handles upgrades)
         if (isset($_SESSION['cached_version']) && $_SESSION['cached_version'] !== $this->currentVersion) {
-            unset($_SESSION['last_update_check']);
-            unset($_SESSION['update_available']);
-            unset($_SESSION['update_info']);
-            unset($_SESSION['last_notification_update_check']);
-            unset($_SESSION['cached_update_notification']);
+            $this->clearUpdateCache();
         }
         $_SESSION['cached_version'] = $this->currentVersion;
+    }
+
+    /**
+     * Get the version currently installed and running.
+     */
+    private function getInstalledVersion() {
+        // In-app updates keep config/config.php protected and update APP_VERSION
+        // after installation, so this matches the version shown on login/footer.
+        if (defined('APP_VERSION') && APP_VERSION !== '') {
+            return APP_VERSION;
+        }
+
+        $configFile = dirname(__DIR__) . '/config/config.php';
+        if (file_exists($configFile)) {
+            $configContent = file_get_contents($configFile);
+            if ($configContent !== false && preg_match("/define\s*\(\s*['\"]APP_VERSION['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/", $configContent, $matches)) {
+                return trim($matches[1]);
+            }
+        }
+
+        $versionFile = dirname(__DIR__) . '/VERSION';
+        if (file_exists($versionFile)) {
+            $version = trim(file_get_contents($versionFile));
+            if ($version !== '') {
+                return $version;
+            }
+        }
+
+        return '1.0.0';
+    }
+
+    /**
+     * Normalize release tags and version values before comparing.
+     */
+    private function normalizeVersion($version) {
+        return ltrim(trim((string) $version), "vV \t\n\r\0\x0B");
+    }
+
+    /**
+     * Clear all update-related session cache.
+     */
+    private function clearUpdateCache() {
+        unset($_SESSION['last_update_check']);
+        unset($_SESSION['update_available']);
+        unset($_SESSION['update_info']);
+        unset($_SESSION['last_notification_update_check']);
+        unset($_SESSION['cached_update_notification']);
+    }
+
+    /**
+     * Compare a latest version with the installed version.
+     */
+    private function isNewerThanInstalled($latestVersion) {
+        $latestVersion = $this->normalizeVersion($latestVersion);
+        if ($latestVersion === '') {
+            return false;
+        }
+
+        return version_compare($latestVersion, $this->currentVersion, '>');
     }
     
     /**
@@ -65,7 +113,11 @@ class UpdateChecker {
         // Check if we should check for updates (throttle to once per day)
         $lastCheck = $_SESSION['last_update_check'] ?? 0;
         if (time() - $lastCheck < $this->updateCheckInterval) {
-            return $_SESSION['update_available'] ?? false;
+            $cachedInfo = $_SESSION['update_info'] ?? null;
+            $cachedLatestVersion = is_array($cachedInfo) ? ($cachedInfo['version'] ?? null) : null;
+            $isUpdateAvailable = $this->isNewerThanInstalled($cachedLatestVersion);
+            $_SESSION['update_available'] = $isUpdateAvailable;
+            return $isUpdateAvailable;
         }
         
         try {
@@ -99,17 +151,19 @@ class UpdateChecker {
             $data = json_decode($response, true);
             
             if (isset($data['tag_name'])) {
-                $latestVersion = ltrim($data['tag_name'], 'v');
+                $latestVersion = $this->normalizeVersion($data['tag_name']);
                 $updateInfo = [
                     'version' => $latestVersion,
+                    'latest_version' => $latestVersion,
+                    'installed_version' => $this->currentVersion,
                     'release_notes' => $data['body'] ?? '',
                     'download_url' => $data['zipball_url'] ?? '',
                     'published_at' => $data['published_at'] ?? '',
                     'release_url' => $data['html_url'] ?? ''
                 ];
                 
-                // Compare versions
-                $isUpdateAvailable = version_compare($latestVersion, $this->currentVersion, '>');
+                // Compare the installed version with the latest available version.
+                $isUpdateAvailable = $this->isNewerThanInstalled($latestVersion);
                 
                 // Cache results
                 $_SESSION['last_update_check'] = time();

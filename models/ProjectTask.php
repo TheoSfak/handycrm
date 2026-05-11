@@ -10,6 +10,7 @@
  */
 
 require_once 'classes/BaseModel.php';
+require_once 'classes/MaterialUnits.php';
 
 class ProjectTask extends BaseModel {
     protected $table = 'project_tasks';
@@ -214,8 +215,8 @@ class ProjectTask extends BaseModel {
     private function addMaterial($data) {
         // Support both new fields (name, unit) and old fields (description, unit_type)
         $materialName = $data['name'] ?? $data['description'] ?? '';
-        $unit = $data['unit'] ?? '';
-        $unitType = $data['unit_type'] ?? 'other';
+        $unit = MaterialUnits::normalize($data['unit'] ?? $data['unit_type'] ?? '');
+        $unitType = $unit;
         
         $sql = "INSERT INTO task_materials 
                 (task_id, catalog_material_id, name, description, unit, unit_price, quantity, unit_type, subtotal) 

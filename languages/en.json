@@ -452,6 +452,7 @@
         "project_status": "Project Status",
         "revenue_by_category": "Revenue by Category",
         "new_customers": "New Customers",
+        "conversion_rate": "Conversion Rate",
         "top_customers": "Top 10 Customers (by Revenue)",
         "no_customer_data": "No customer data for the selected period",
         "customer": "Customer",

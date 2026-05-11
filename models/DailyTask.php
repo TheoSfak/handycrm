@@ -8,6 +8,14 @@ require_once 'classes/BaseModel.php';
 
 class DailyTask extends BaseModel {
     protected $table = 'daily_tasks';
+
+    private function applyTechnicianHours(array $task) {
+        if (array_key_exists('technician_hours_total', $task) && $task['technician_hours_total'] !== null) {
+            $task['hours_worked'] = (float)$task['technician_hours_total'];
+        }
+
+        return $task;
+    }
     
     /**
      * Get all daily tasks with pagination and filters
@@ -17,10 +25,16 @@ class DailyTask extends BaseModel {
         
         $sql = "SELECT dt.*, 
                 CONCAT(u.first_name, ' ', u.last_name) as technician_name,
-                CONCAT(creator.first_name, ' ', creator.last_name) as created_by_name
+                CONCAT(creator.first_name, ' ', creator.last_name) as created_by_name,
+                technician_hours.total_hours as technician_hours_total
                 FROM {$this->table} dt
                 LEFT JOIN users u ON dt.technician_id = u.id
                 LEFT JOIN users creator ON dt.created_by = creator.id
+                LEFT JOIN (
+                    SELECT daily_task_id, SUM(hours_worked) as total_hours
+                    FROM daily_task_technicians
+                    GROUP BY daily_task_id
+                ) technician_hours ON technician_hours.daily_task_id = dt.id
                 WHERE dt.deleted_at IS NULL";
         
         $params = [];
@@ -75,7 +89,8 @@ class DailyTask extends BaseModel {
         $params[] = $perPage;
         $params[] = $offset;
         
-        return $this->db->fetchAll($sql, $params);
+        $tasks = $this->db->fetchAll($sql, $params);
+        return array_map([$this, 'applyTechnicianHours'], $tasks);
     }
     
     /**
@@ -260,6 +275,14 @@ class DailyTask extends BaseModel {
         
         return $this->db->execute($sql, $params);
     }
+
+    /**
+     * Persist the summarized work hours on the daily task row.
+     */
+    public function updateHoursWorked($id, $hours) {
+        $sql = "UPDATE {$this->table} SET hours_worked = ? WHERE id = ?";
+        return $this->db->execute($sql, [(float)$hours, (int)$id]);
+    }
     
     /**
      * Get task by ID
@@ -267,7 +290,12 @@ class DailyTask extends BaseModel {
     public function find($id) {
         $sql = "SELECT dt.*, 
                 CONCAT(u.first_name, ' ', u.last_name) as technician_name,
-                CONCAT(creator.first_name, ' ', creator.last_name) as created_by_name
+                CONCAT(creator.first_name, ' ', creator.last_name) as created_by_name,
+                (
+                    SELECT SUM(dtt.hours_worked)
+                    FROM daily_task_technicians dtt
+                    WHERE dtt.daily_task_id = dt.id
+                ) as technician_hours_total
                 FROM {$this->table} dt
                 LEFT JOIN users u ON dt.technician_id = u.id
                 LEFT JOIN users creator ON dt.created_by = creator.id
@@ -276,6 +304,8 @@ class DailyTask extends BaseModel {
         $task = $this->db->fetchOne($sql, [$id]);
         
         if ($task) {
+            $task = $this->applyTechnicianHours($task);
+
             // Decode JSON fields
             $task['additional_technicians'] = $task['additional_technicians'] ? json_decode($task['additional_technicians'], true) : [];
             $task['photos'] = $task['photos'] ? json_decode($task['photos'], true) : [];

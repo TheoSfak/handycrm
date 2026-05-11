@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS `materials_catalog` (
     `category_id` INT(11) DEFAULT NULL,
     `name` VARCHAR(200) NOT NULL,
     `description` TEXT,
-    `unit` VARCHAR(50) DEFAULT NULL COMMENT 'τεμάχια, μέτρα, κιλά, λίτρα, κ.τ.λ.',
+    `unit` VARCHAR(50) DEFAULT 'τεμ' COMMENT 'Canonical unit from MaterialUnits',
     `default_price` DECIMAL(10,2) DEFAULT NULL,
     `supplier` VARCHAR(200) DEFAULT NULL,
     `notes` TEXT,

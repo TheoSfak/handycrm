@@ -42,6 +42,8 @@ class ReportsController extends BaseController {
      * Get revenue analytics (invoiced projects + transformer maintenances)
      */
     private function getRevenueData($startDate, $endDate) {
+        $maintenanceRevenueDate = "COALESCE(invoiced_at, updated_at)";
+
         $sql = "SELECT 
                     month,
                     SUM(total_invoices) as total_invoices,
@@ -59,13 +61,13 @@ class ReportsController extends BaseController {
                     FROM projects 
                     WHERE status = 'invoiced'
                     AND invoiced_at IS NOT NULL
-                    AND invoiced_at BETWEEN ? AND ?
+                    AND DATE(invoiced_at) BETWEEN ? AND ?
                     GROUP BY DATE_FORMAT(invoiced_at, '%Y-%m')
 
                     UNION ALL
 
                     SELECT 
-                        DATE_FORMAT(maintenance_date, '%Y-%m') as month,
+                        DATE_FORMAT({$maintenanceRevenueDate}, '%Y-%m') as month,
                         COUNT(*) as total_invoices,
                         COALESCE(SUM(total_amount), 0) as total_revenue,
                         COALESCE(SUM(total_amount), 0) as subtotal,
@@ -73,8 +75,9 @@ class ReportsController extends BaseController {
                     FROM transformer_maintenances
                     WHERE is_invoiced = 1
                     AND deleted_at IS NULL
-                    AND maintenance_date BETWEEN ? AND ?
-                    GROUP BY DATE_FORMAT(maintenance_date, '%Y-%m')
+                    AND {$maintenanceRevenueDate} IS NOT NULL
+                    AND DATE({$maintenanceRevenueDate}) BETWEEN ? AND ?
+                    GROUP BY DATE_FORMAT({$maintenanceRevenueDate}, '%Y-%m')
                 ) combined
                 GROUP BY month
                 ORDER BY month ASC";
@@ -100,7 +103,7 @@ class ReportsController extends BaseController {
                         LEFT JOIN projects p ON c.id = p.customer_id 
                             AND p.status = 'invoiced'
                             AND p.invoiced_at IS NOT NULL
-                            AND p.invoiced_at BETWEEN ? AND ?
+                            AND DATE(p.invoiced_at) BETWEEN ? AND ?
                         WHERE c.is_active = 1
                         GROUP BY c.id
                         ORDER BY total_revenue DESC
@@ -159,7 +162,7 @@ class ReportsController extends BaseController {
                             FROM projects p
                             WHERE p.status = 'invoiced'
                             AND p.invoiced_at IS NOT NULL
-                            AND p.invoiced_at BETWEEN ? AND ?
+                            AND DATE(p.invoiced_at) BETWEEN ? AND ?
                             GROUP BY p.category
                             ORDER BY total_revenue DESC";
         
@@ -223,20 +226,22 @@ class ReportsController extends BaseController {
      */
     private function getSummaryStats($startDate, $endDate) {
         $stats = [];
+        $maintenanceRevenueDate = "COALESCE(invoiced_at, updated_at)";
         
         // Total revenue (invoiced projects + transformer maintenances)
         $revenue = "SELECT COALESCE(SUM(total_cost), 0) as total 
                     FROM projects 
                     WHERE status = 'invoiced'
                     AND invoiced_at IS NOT NULL
-                    AND invoiced_at BETWEEN ? AND ?";
+                    AND DATE(invoiced_at) BETWEEN ? AND ?";
         $projectRevenue = $this->db->fetchOne($revenue, [$startDate, $endDate])['total'];
 
         $maintenanceRevenue = "SELECT COALESCE(SUM(total_amount), 0) as total
                                FROM transformer_maintenances
                                WHERE is_invoiced = 1
                                AND deleted_at IS NULL
-                               AND maintenance_date BETWEEN ? AND ?";
+                               AND {$maintenanceRevenueDate} IS NOT NULL
+                               AND DATE({$maintenanceRevenueDate}) BETWEEN ? AND ?";
         $maintenanceTotal = $this->db->fetchOne($maintenanceRevenue, [$startDate, $endDate])['total'];
 
         $stats['total_revenue'] = $projectRevenue + $maintenanceTotal;

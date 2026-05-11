@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS `materials_catalog` (
     `category_id` int(11) DEFAULT NULL,
     `name` varchar(255) NOT NULL,
     `description` text,
-    `unit` varchar(50) DEFAULT 'τεμ.',
+    `unit` varchar(50) DEFAULT 'τεμ',
     `default_price` decimal(10,2) DEFAULT '0.00',
     `supplier` varchar(255) DEFAULT NULL,
     `notes` text,

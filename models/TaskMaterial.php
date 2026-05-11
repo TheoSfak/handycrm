@@ -9,6 +9,7 @@
  */
 
 require_once 'classes/BaseModel.php';
+require_once 'classes/MaterialUnits.php';
 
 class TaskMaterial extends BaseModel {
     protected $table = 'task_materials';
@@ -36,6 +37,7 @@ class TaskMaterial extends BaseModel {
         
         // Support both 'name' (new) and 'description' (legacy) field names
         $materialName = $data['name'] ?? $data['description'] ?? '';
+        $unit = MaterialUnits::normalize($data['unit'] ?? $data['unit_type'] ?? '');
         
         $sql = "INSERT INTO {$this->table} 
                 (task_id, name, description, unit, unit_price, quantity, unit_type, subtotal, catalog_material_id) 
@@ -45,10 +47,10 @@ class TaskMaterial extends BaseModel {
             $data['task_id'],
             $materialName,
             $materialName, // Keep description for backward compatibility
-            $data['unit'] ?? '',
+            $unit,
             $data['unit_price'],
             $data['quantity'],
-            $data['unit_type'] ?? 'other',
+            $unit,
             $subtotal,
             !empty($data['catalog_material_id']) ? $data['catalog_material_id'] : null
         ]);
@@ -68,6 +70,7 @@ class TaskMaterial extends BaseModel {
         
         // Support both 'name' (new) and 'description' (legacy) field names
         $materialName = $data['name'] ?? $data['description'] ?? '';
+        $unit = MaterialUnits::normalize($data['unit'] ?? $data['unit_type'] ?? '');
         
         $sql = "UPDATE {$this->table} 
                 SET name = ?, description = ?, unit = ?, unit_price = ?, quantity = ?, unit_type = ?, subtotal = ?, catalog_material_id = ?
@@ -76,10 +79,10 @@ class TaskMaterial extends BaseModel {
         $stmt = $this->db->execute($sql, [
             $materialName,
             $materialName, // Keep description for backward compatibility
-            $data['unit'] ?? '',
+            $unit,
             $data['unit_price'],
             $data['quantity'],
-            $data['unit_type'] ?? 'other',
+            $unit,
             $subtotal,
             !empty($data['catalog_material_id']) ? $data['catalog_material_id'] : null,
             $id

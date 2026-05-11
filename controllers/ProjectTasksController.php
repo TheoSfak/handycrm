@@ -14,6 +14,7 @@ require_once 'models/ProjectTask.php';
 require_once 'models/TaskMaterial.php';
 require_once 'models/TaskLabor.php';
 require_once 'models/User.php';
+require_once 'classes/MaterialUnits.php';
 
 class ProjectTasksController extends BaseController {
     private $taskModel;
@@ -183,11 +184,12 @@ class ProjectTasksController extends BaseController {
                 $materialName = trim($material['name'] ?? $material['description'] ?? '');
                 
                 if (!empty($materialName)) {
+                    $unit = MaterialUnits::normalize($material['unit'] ?? $material['unit_type'] ?? '');
                     $materials[] = [
                         'name' => $materialName,
                         'catalog_material_id' => !empty($material['catalog_material_id']) ? intval($material['catalog_material_id']) : null,
-                        'unit' => trim($material['unit'] ?? ''),
-                        'unit_type' => trim($material['unit'] ?? $material['unit_type'] ?? 'other'),
+                        'unit' => $unit,
+                        'unit_type' => $unit,
                         'unit_price' => floatval($material['unit_price'] ?? 0),
                         'quantity' => floatval($material['quantity'] ?? 0)
                     ];
@@ -809,15 +811,7 @@ class ProjectTasksController extends BaseController {
      * Get unit label in Greek
      */
     private function getUnitLabel($unit) {
-        $units = [
-            'meters' => 'μέτρα',
-            'pieces' => 'τεμάχια',
-            'kg' => 'κιλά',
-            'liters' => 'λίτρα',
-            'boxes' => 'κουτιά',
-            'other' => 'άλλο'
-        ];
-        return $units[$unit] ?? $unit;
+        return MaterialUnits::label($unit);
     }
     
     /**

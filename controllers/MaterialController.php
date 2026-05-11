@@ -5,6 +5,10 @@
  */
 
 class MaterialController extends BaseController {
+    private function normalizeUnit($unit) {
+        require_once __DIR__ . '/../classes/MaterialUnits.php';
+        return MaterialUnits::normalize($unit);
+    }
     
     /**
      * Show materials list
@@ -91,7 +95,7 @@ class MaterialController extends BaseController {
             'name' => trim($_POST['name']),
             'description' => trim($_POST['description'] ?? ''),
             'category' => $_POST['category'],
-            'unit' => trim($_POST['unit'] ?? 'τεμ'),
+            'unit' => $this->normalizeUnit($_POST['unit'] ?? 'τεμ'),
             'unit_price' => (float)($_POST['unit_price'] ?? 0),
             'current_stock' => (float)($_POST['current_stock'] ?? 0),
             'min_stock' => (float)($_POST['min_stock'] ?? 0),
@@ -186,7 +190,7 @@ class MaterialController extends BaseController {
             'name' => trim($_POST['name']),
             'description' => trim($_POST['description'] ?? ''),
             'category' => $_POST['category'],
-            'unit' => trim($_POST['unit'] ?? 'τεμ'),
+            'unit' => $this->normalizeUnit($_POST['unit'] ?? 'τεμ'),
             'unit_price' => (float)($_POST['unit_price'] ?? 0),
             'current_stock' => (float)($_POST['current_stock'] ?? 0),
             'min_stock' => (float)($_POST['min_stock'] ?? 0),
@@ -344,7 +348,7 @@ class MaterialController extends BaseController {
                 $name = trim($materialData['Όνομα'] ?? $materialData['name'] ?? '');
                 $description = trim($materialData['Περιγραφή'] ?? $materialData['description'] ?? '');
                 $categoryName = trim($materialData['Κατηγορία'] ?? $materialData['category'] ?? '');
-                $unit = trim($materialData['Μονάδα'] ?? $materialData['unit'] ?? 'τεμ');
+                $unit = $this->normalizeUnit($materialData['Μονάδα'] ?? $materialData['unit'] ?? 'τεμ');
                 $price = (float)($materialData['Τιμή'] ?? $materialData['price'] ?? 0);
                 $stock = (float)($materialData['Απόθεμα'] ?? $materialData['stock'] ?? 0);
                 $minStock = (float)($materialData['Ελάχιστο Απόθεμα'] ?? $materialData['min_stock'] ?? 0);

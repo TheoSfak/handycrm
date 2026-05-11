@@ -120,7 +120,7 @@ if ($result->num_rows == 0) {
       `task_id` int(11) NOT NULL,
       `material_name` varchar(255) NOT NULL,
       `quantity` decimal(10,2) NOT NULL,
-      `unit_type` enum('pieces','meters','kilos','liters','hours','other') NOT NULL DEFAULT 'pieces',
+      `unit_type` varchar(50) NOT NULL DEFAULT 'τεμ',
       `unit_price` decimal(10,2) NOT NULL,
       `total_price` decimal(10,2) NOT NULL,
       `notes` text,

@@ -175,8 +175,16 @@ define('FOOTER_RENDERED', true);
                 dataType: 'json',
                 success: function(data) {
                     if (data.success && data.update_available) {
+                        const installedVersion = data.installed_version || data.current_version;
+                        const latestVersion = data.latest_version || (data.update_info && (data.update_info.latest_version || data.update_info.version));
+
+                        if (!isVersionNewer(latestVersion, installedVersion)) {
+                            $('.update-notification').closest('li').remove();
+                            return;
+                        }
+
                         // Add update notification to the bell
-                        addUpdateNotification(data.update_info);
+                        addUpdateNotification(data.update_info, installedVersion, latestVersion);
                     }
                 },
                 error: function() {
@@ -184,11 +192,36 @@ define('FOOTER_RENDERED', true);
                 }
             });
         }
+
+        function isVersionNewer(latestVersion, installedVersion) {
+            const latestParts = String(latestVersion || '').replace(/^[vV]/, '').split('.').map(Number);
+            const installedParts = String(installedVersion || '').replace(/^[vV]/, '').split('.').map(Number);
+            const length = Math.max(latestParts.length, installedParts.length);
+
+            for (let i = 0; i < length; i++) {
+                const latestPart = Number.isFinite(latestParts[i]) ? latestParts[i] : 0;
+                const installedPart = Number.isFinite(installedParts[i]) ? installedParts[i] : 0;
+
+                if (latestPart > installedPart) {
+                    return true;
+                }
+                if (latestPart < installedPart) {
+                    return false;
+                }
+            }
+
+            return false;
+        }
         
         // Add update notification to notification list
-        function addUpdateNotification(updateInfo) {
+        function addUpdateNotification(updateInfo, installedVersion, latestVersion) {
             const notificationsList = $('#notifications-list');
             const notificationCount = $('#notification-count');
+            const updateVersion = latestVersion || (updateInfo && (updateInfo.latest_version || updateInfo.version));
+
+            if (!isVersionNewer(updateVersion, installedVersion)) {
+                return;
+            }
             
             // Check if update notification already exists
             if ($('.update-notification').length > 0) {
@@ -210,7 +243,7 @@ define('FOOTER_RENDERED', true);
                             </div>
                             <div class="flex-grow-1">
                                 <h6 class="mb-1"><i class="fas fa-star"></i> Νέα Έκδοση Διαθέσιμη!</h6>
-                                <p class="mb-1 small">v${updateInfo.version} - Κάντε κλικ για ενημέρωση</p>
+                                <p class="mb-1 small">v${updateVersion} - Κάντε κλικ για ενημέρωση</p>
                                 <small>${new Date(updateInfo.published_at).toLocaleDateString('el-GR')}</small>
                             </div>
                         </div>

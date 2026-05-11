@@ -97,6 +97,18 @@ class DailyTaskController extends BaseController {
         
         $this->taskModel = new DailyTask();
     }
+
+    private function syncTaskHoursFromTechnicians($taskId, DailyTaskTechnician $technicianModel) {
+        $stats = $technicianModel->getStatistics($taskId);
+        $technicianCount = (int)($stats['technician_count'] ?? 0);
+        $totalHours = (float)($stats['total_hours'] ?? 0);
+
+        if ($technicianCount > 0) {
+            $this->taskModel->updateHoursWorked($taskId, $totalHours);
+        }
+
+        return $totalHours;
+    }
     
     /**
      * List all daily tasks
@@ -230,6 +242,8 @@ class DailyTaskController extends BaseController {
                     }
                 }
             }
+
+            $this->syncTaskHoursFromTechnicians($taskId, $technicianModel);
             
             // Save materials from catalog
             if (!empty($_POST['materials']) && is_array($_POST['materials'])) {
@@ -407,6 +421,8 @@ class DailyTaskController extends BaseController {
                     }
                 }
             }
+
+            $this->syncTaskHoursFromTechnicians($id, $technicianModel);
             
             // Update materials - delete old and insert new
             $materialModel = new DailyTaskMaterial();

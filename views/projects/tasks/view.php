@@ -5,6 +5,7 @@
 
 $pageTitle = $title ?? 'Προβολή Εργασίας';
 require_once __DIR__ . '/../../includes/header.php';
+require_once __DIR__ . '/../../../classes/MaterialUnits.php';
 
 $totalCost = $task['materials_total'] + $task['labor_total'];
 ?>
@@ -107,15 +108,7 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                                             <td class="text-center">
                                                 <span class="badge bg-light text-dark">
                                                     <?php
-                                                    $units = [
-                                                        'meters' => 'μέτρα',
-                                                        'pieces' => 'τεμάχια',
-                                                        'kg' => 'κιλά',
-                                                        'liters' => 'λίτρα',
-                                                        'boxes' => 'κουτιά',
-                                                        'other' => 'άλλο'
-                                                    ];
-                                                    echo $units[$material['unit_type']] ?? $material['unit_type'];
+                                                    echo htmlspecialchars(MaterialUnits::label($material['unit_type']));
                                                     ?>
                                                 </span>
                                             </td>
@@ -459,4 +452,3 @@ function deleteTask(taskId, description) {
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
-

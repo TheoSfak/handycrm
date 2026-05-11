@@ -85,7 +85,7 @@
                         </div>
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <div class="text-muted small fw-bold">CONVERSION RATE</div>
+                        <div class="text-muted small fw-bold"><?= strtoupper(__('reports.conversion_rate')) ?></div>
                         <div class="h4 mb-0"><?= number_format($summary['quote_conversion_rate'], 1) ?>%</div>
                     </div>
                 </div>

@@ -9,6 +9,7 @@
  */
 
 require_once 'classes/BaseModel.php';
+require_once 'classes/MaterialUnits.php';
 
 class DailyTaskMaterial extends BaseModel {
     protected $table = 'daily_task_materials';
@@ -47,6 +48,7 @@ class DailyTaskMaterial extends BaseModel {
         
         // Support both 'name' and 'description' field names
         $materialName = $data['name'] ?? $data['description'] ?? '';
+        $unit = MaterialUnits::normalize($data['unit'] ?? '');
         
         $sql = "INSERT INTO {$this->table} 
                 (daily_task_id, name, description, unit, unit_price, quantity, subtotal, catalog_material_id) 
@@ -56,7 +58,7 @@ class DailyTaskMaterial extends BaseModel {
             $data['daily_task_id'],
             $materialName,
             $materialName, // Keep description for backward compatibility
-            $data['unit'] ?? '',
+            $unit,
             $data['unit_price'],
             $data['quantity'],
             $subtotal,
@@ -82,6 +84,7 @@ class DailyTaskMaterial extends BaseModel {
     public function update($id, $data) {
         $subtotal = $this->calculateSubtotal($data['unit_price'], $data['quantity']);
         $materialName = $data['name'] ?? $data['description'] ?? '';
+        $unit = MaterialUnits::normalize($data['unit'] ?? '');
         
         $sql = "UPDATE {$this->table} 
                 SET name = ?, 
@@ -96,7 +99,7 @@ class DailyTaskMaterial extends BaseModel {
         $params = [
             $materialName,
             $materialName,
-            $data['unit'] ?? '',
+            $unit,
             $data['unit_price'],
             $data['quantity'],
             $subtotal,
