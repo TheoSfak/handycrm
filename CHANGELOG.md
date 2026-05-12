@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.60] - 2026-05-12
+### Fixed
+- **Προσφορά Συντήρησης**: Διόρθωση SQL query στο model — `users.full_name` → `CONCAT(first_name, ' ', last_name)`
+
 ## [1.7.59] - 2026-05-12
 ### Added
 - **Προσφορά Συντήρησης**: Νέο module για διαχείριση προσφορών συντήρησης υποσταθμών (admin only)
