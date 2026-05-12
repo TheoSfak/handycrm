@@ -216,20 +216,16 @@ class MaintenanceOfferController extends BaseController {
 
         $pdf = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator('HandyCRM');
-        $pdf->SetAuthor('ECOWATT Ενεργειακές Λύσεις');
-        $pdf->SetTitle('Προσφορά Συντήρησης ' . $offer['offer_number']);
+        $pdf->SetAuthor('ECOWATT - Κώστας Γ. Σφακιανάκης & ΣΙΑ Ο.Ε.');
+        $pdf->SetTitle('Οικονομική Προσφορά ' . $offer['offer_number']);
+        $pdf->SetPrintHeader(false);
         $pdf->SetFont('dejavusans', '', 10, '', true);
-        $pdf->setHeaderData('', 0, 'ECOWATT Ενεργειακές Λύσεις', 'Προσφορά Συντήρησης Υποσταθμού', [0, 102, 204], [0, 64, 128]);
-        $pdf->setHeaderFont(['dejavusans', '', 10]);
-        $pdf->setFooterFont(['dejavusans', '', 8]);
-        $pdf->SetMargins(15, 27, 15);
-        $pdf->SetHeaderMargin(5);
-        $pdf->SetFooterMargin(20);
-        $pdf->SetAutoPageBreak(true, 25);
+        $pdf->SetMargins(20, 15, 20);
+        $pdf->SetFooterMargin(15);
+        $pdf->SetAutoPageBreak(true, 20);
         $pdf->AddPage();
 
-        $html = $this->generateOfferHTML($offer);
-        $pdf->writeHTMLCell(0, 0, null, null, $html, 0, 1, 0, true, '', true);
+        $pdf->writeHTML($this->generateOfferHTML($offer), true, false, true, false, '');
 
         $filename = 'Προσφορά_Συντήρησης_' . preg_replace('/[^a-zA-Z0-9_-]/u', '_', $offer['company_name']) . '_' . $offer['offer_number'] . '.pdf';
         $pdf->Output($filename, 'D');
@@ -237,103 +233,177 @@ class MaintenanceOfferController extends BaseController {
     }
 
     /**
-     * Generate HTML content for the offer PDF
+     * Generate HTML content for the offer PDF — matches the Word template layout
      */
     private function generateOfferHTML(array $offer): string {
         $company    = htmlspecialchars($offer['company_name']);
-        $address    = htmlspecialchars($offer['address'] ?? '-');
-        $phone      = htmlspecialchars($offer['phone'] ?? '-');
         $offerNum   = htmlspecialchars($offer['offer_number']);
         $today      = date('d/m/Y');
         $expiry     = $offer['offer_expiry_date'] ? date('d/m/Y', strtotime($offer['offer_expiry_date'])) : '-';
         $transCount = (int)$offer['transformers_count'];
-        $price      = number_format((float)$offer['price'], 2, ',', '.') . ' €';
+        $priceNum   = number_format((float)$offer['price'], 2, ',', '.') . ' €';
         $notes      = nl2br(htmlspecialchars($offer['notes'] ?? ''));
+
+        // Load template images as base64 data URIs
+        $imgDir  = __DIR__ . '/../uploads/template_images/';
+        $logoSrc = file_exists($imgDir . 'image1.jpeg')
+            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image1.jpeg'))
+            : '';
+        $isoSrc  = file_exists($imgDir . 'image3.png')
+            ? 'data:image/png;base64,'  . base64_encode(file_get_contents($imgDir . 'image3.png'))
+            : '';
+        $transSrc = file_exists($imgDir . 'image2.jpeg')
+            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image2.jpeg'))
+            : '';
+        $signSrc  = file_exists($imgDir . 'image6.jpeg')
+            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image6.jpeg'))
+            : '';
+
+        $logoImg  = $logoSrc  ? '<img src="' . $logoSrc  . '" width="170" />' : '<b>ECOWATT energy</b>';
+        $isoImg   = $isoSrc   ? '<img src="' . $isoSrc   . '" width="70" />'  : '';
+        $transImg = $transSrc ? '<img src="' . $transSrc . '" width="130" />' : '';
+        $signImg  = $signSrc  ? '<img src="' . $signSrc  . '" width="90" />'  : '';
+
+        $notesSection = !empty($offer['notes'])
+            ? '<p style="font-size:9pt; color:#444; margin-top:4px;"><b>Παρατηρήσεις:</b> ' . $notes . '</p>'
+            : '';
 
         return '
 <style>
-    body { font-family: dejavusans; font-size: 10px; color: #333; }
-    h2 { color: #0066cc; font-size: 14px; text-align: center; margin-bottom: 4px; }
-    .subtitle { text-align: center; font-size: 9px; color: #666; margin-bottom: 14px; }
-    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-    .info-table td { padding: 5px 8px; font-size: 9px; }
-    .info-table .label { font-weight: bold; color: #0066cc; width: 35%; background: #f0f6ff; }
-    .section-title { background: #0066cc; color: #fff; padding: 5px 8px; font-size: 10px; font-weight: bold; margin-top: 12px; margin-bottom: 0; }
-    .offer-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-    .offer-table th { background: #e6f0ff; color: #0066cc; padding: 6px 8px; font-size: 9px; border: 1px solid #b3ccee; text-align: left; }
-    .offer-table td { padding: 7px 8px; font-size: 10px; border: 1px solid #ddd; }
-    .price-row td { font-weight: bold; font-size: 12px; background: #f0f6ff; color: #0a3d6b; }
-    .notes-box { border: 1px solid #ddd; padding: 8px; background: #fafafa; font-size: 9px; margin-top: 4px; min-height: 20px; }
-    .sign-area { margin-top: 30px; }
-    .sign-table { width: 100%; }
-    .sign-table td { width: 50%; padding: 0 10px; font-size: 9px; }
-    .sign-line { border-top: 1px solid #333; margin-top: 25px; padding-top: 4px; }
+    body { font-family: dejavusans; font-size: 9.5pt; color: #1a1a1a; }
+    h1   { font-size: 15pt; text-align: center; color: #1a3c6e; letter-spacing: 1px; margin: 5px 0; }
+    .sec  { background-color: #1a3c6e; color: #ffffff; font-size: 10pt; font-weight: bold; padding: 4px 8px; }
+    .sub  { background-color: #dce6f5; color: #1a3c6e; font-size: 9.5pt; font-weight: bold; padding: 3px 6px; margin: 6px 0 2px 0; }
+    table { font-size: 9.5pt; }
+    .ct th { background-color: #1a3c6e; color: #ffffff; padding: 5px 8px; text-align: center; border: 1px solid #1a3c6e; }
+    .ct td { border: 1px solid #aaaaaa; padding: 5px 8px; }
+    .ctot  { background-color: #dce6f5; font-weight: bold; font-size: 10.5pt; }
 </style>
 
-<h2>ΠΡΟΣΦΟΡΑ ΣΥΝΤΗΡΗΣΗΣ ΥΠΟΣΤΑΘΜΟΥ</h2>
-<p class="subtitle">Αρ. Προσφοράς: <strong>' . $offerNum . '</strong> &nbsp;|&nbsp; Ημερομηνία: <strong>' . $today . '</strong> &nbsp;|&nbsp; Ισχύς έως: <strong>' . $expiry . '</strong></p>
+<!-- HEADER: logo left, ISO badge right -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
+  <tr>
+    <td width="62%" valign="middle">' . $logoImg . '</td>
+    <td width="38%" align="right" valign="middle">' . $isoImg . '</td>
+  </tr>
+</table>
+<hr style="border:2px solid #1a3c6e; margin:0 0 8px 0;" />
 
-<p class="section-title">ΣΤΟΙΧΕΙΑ ΠΑΡΑΛΗΠΤΗ</p>
-<table class="info-table" cellspacing="0">
-    <tr>
-        <td class="label">Επωνυμία:</td>
-        <td>' . $company . '</td>
-    </tr>
-    <tr>
-        <td class="label">Διεύθυνση:</td>
-        <td>' . $address . '</td>
-    </tr>
-    <tr>
-        <td class="label">Τηλέφωνο:</td>
-        <td>' . $phone . '</td>
-    </tr>
+<!-- TITLE -->
+<h1>ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</h1>
+<p style="text-align:center; font-size:10pt; margin:2px 0 6px 0;">Συντήρηση υποσταθμού μέσης τάσης &nbsp;—&nbsp; <b>' . $company . '</b></p>
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
+  <tr>
+    <td style="font-size:8pt; color:#666;">ISO 9001 : 2008 &nbsp;&nbsp; OHSAS 18001 : 2007</td>
+    <td align="right" style="font-size:9pt;"><b>Ημερομηνία:</b> ' . $today . ' &nbsp;&nbsp; <b>Αρ. Προσφοράς:</b> ' . $offerNum . '</td>
+  </tr>
 </table>
 
-<p class="section-title">ΑΝΤΙΚΕΙΜΕΝΟ ΠΡΟΣΦΟΡΑΣ</p>
-<table class="offer-table" cellspacing="0">
-    <tr>
-        <th>Περιγραφή Εργασιών</th>
-        <th style="width:20%; text-align:center;">Αρ. Μ/Σ</th>
-        <th style="width:20%; text-align:right;">Τιμή (χωρίς ΦΠΑ)</th>
-    </tr>
-    <tr>
-        <td>Ετήσια Συντήρηση Μετασχηματιστή(ών) Υποσταθμού<br>
-            <span style="font-size:8px; color:#555;">Περιλαμβάνει: Έλεγχος μονώσεων, αντιστάσεων, γείωσης, πληρότητα ελαίου, καθαρισμός, σύνταξη αναφοράς</span>
-        </td>
-        <td style="text-align:center;">' . $transCount . '</td>
-        <td style="text-align:right;">' . $price . '</td>
-    </tr>
-    <tr class="price-row">
-        <td colspan="2" style="text-align:right; padding-right:10px;">Σύνολο (χωρίς ΦΠΑ):</td>
-        <td style="text-align:right;">' . $price . '</td>
-    </tr>
+<!-- INTRO LETTER + TRANSFORMER PHOTO -->
+<table width="100%" cellpadding="0" cellspacing="6" style="margin-bottom:10px;">
+  <tr>
+    <td width="63%" valign="top" style="font-size:9pt; line-height:1.55;">
+      <p>Αγαπητοί κύριοι,</p>
+      <p>Θα θέλαμε να σας ευχαριστήσουμε για το ενδιαφέρον σας σχετικά με τις παρεχόμενες υπηρεσίες της εταιρείας μας και να σας διαβεβαιώσουμε ότι θα είμαστε πάντα διαθέσιμοι για να σας προσφέρουμε υψηλής ποιότητας λύσεις.</p>
+      <p>Σε συνέχεια των επαφών που είχαμε, σας αποστέλλουμε την οικονομική προσφορά για <b>Συντήρηση υποσταθμού μέσης τάσης ' . $company . '</b>.</p>
+      <p>Η περιγραφή προέκυψε βάσει της πολυετούς εμπειρίας και τεχνογνωσίας της εταιρίας μας στους υποσταθμούς Μ.Τ..</p>
+    </td>
+    <td width="37%" valign="top" align="center">' . $transImg . '</td>
+  </tr>
 </table>
 
-' . (!empty($offer['notes']) ? '
-<p class="section-title">ΠΑΡΑΤΗΡΗΣΕΙΣ / ΕΙΔΙΚΟΙ ΟΡΟΙ</p>
-<div class="notes-box">' . $notes . '</div>
-' : '') . '
-
-<p class="section-title">ΟΡΟΙ ΠΡΟΣΦΟΡΑΣ</p>
-<div class="notes-box" style="font-size:8px;">
-• Οι παραπάνω τιμές είναι σε Ευρώ και δεν συμπεριλαμβάνουν ΦΠΑ.<br>
-• Η παρούσα προσφορά ισχύει έως ' . $expiry . '.<br>
-• Η τιμολόγηση πραγματοποιείται μετά την ολοκλήρωση των εργασιών.<br>
-• Ο χρόνος ανταπόκρισης σε έκτακτα περιστατικά: εντός 24 ωρών.
-</div>
-
-<div class="sign-area">
-<table class="sign-table" cellspacing="0">
-    <tr>
-        <td>
-            <div class="sign-line">Για την ECOWATT Ενεργειακές Λύσεις<br><br></div>
-        </td>
-        <td>
-            <div class="sign-line">Για την ' . $company . '<br><br></div>
-        </td>
-    </tr>
+<!-- ΠΕΛΑΤΟΛΟΓΙΟ -->
+<p class="sub">ΠΕΛΑΤΟΛΟΓΙΟ</p>
+<p style="font-size:9pt; margin:3px 0 2px 0;">Η <b>ΚΩΣΤΑΣ Γ. ΣΦΑΚΙΑΝΑΚΗΣ ΚΑΙ ΣΙΑ ΟΕ</b> σας παρουσιάζει ένα μέρος από το πελατολόγιο της:</p>
+<table width="100%" cellpadding="0" cellspacing="0" style="font-size:8.5pt; margin-bottom:8px;">
+  <tr>
+    <td width="50%">1. ΤΕΑΒ ΑΕ &nbsp; 2. ΧΑΛΚΙΑΔΑΚΗΣ &nbsp; 3. DAIOS HOTELS &nbsp; 4. LYTOS<br/>5. IKAROS RESORT HOTEL &nbsp; 6. ΔΕΥΑ ΗΡΑΚΛΕΙΟΥ &nbsp; 7. ENEL &nbsp; 8. ENERCON</td>
+    <td width="50%">9. KOSTA MARE &nbsp; 10. ΔΕΗ &nbsp; 11. ΔΕΥΑ ΧΕΡΣΟΝΗΣΟΥ &nbsp; 12. ΟΤΕ<br/>13. BLUE BAY &nbsp; 14. CRETA MARIS &nbsp; 15. GALAXY &nbsp; 16. CANDIA MARIS</td>
+  </tr>
 </table>
-</div>
+<p style="font-size:8.5pt; color:#444; margin-bottom:10px;">Θα θέλαμε να σας κάνουμε γνωστό ότι είμαστε στη διάθεσή σας για οποιαδήποτε ερώτηση – διευκρίνιση.</p>
+
+<!-- ΕΡΓΑΣΙΕΣ ΣΥΝΤΗΡΗΣΗΣ -->
+<p class="sec">ΕΡΓΑΣΙΕΣ ΣΥΝΤΗΡΗΣΗΣ</p>
+
+<p class="sub">1. ΓΕΝΙΚΗ ΣΥΝΤΗΡΗΣΗ</p>
+<ul style="font-size:9pt; margin:2px 0 5px 0;">
+  <li>Καθαριότητα στους χώρους Μ/Σ, κυψέλης Μ.Τ.</li>
+  <li>Έλεγχος ύπαρξης πυροσβεστήρων στο χώρο του Υ/Σ</li>
+  <li>Έλεγχος αερισμού Υ/Σ</li>
+  <li>Έλεγχος φωτισμού στον χώρο του Υ/Σ</li>
+  <li>Έλεγχος ύπαρξης πινακίδων κινδύνου</li>
+</ul>
+
+<p class="sub">2. ΣΥΝΤΗΡΗΣΗ ΣΤΗ ΜΕΣΗ ΤΑΣΗ – ΚΥΨΕΛΗ</p>
+<ul style="font-size:9pt; margin:2px 0 5px 0;">
+  <li>Έλεγχος ακροκιβωτίων εσωτερικού χώρου</li>
+  <li>Έλεγχος μονωτήρων κυψέλης, καθαρισμός</li>
+  <li>Καθαρισμός εξαρτημάτων, επαφών, συσφίξεις ακροδεκτών</li>
+  <li>Έλεγχος λειτουργίας αφύγρανσης κυψέλης</li>
+  <li>Μέτρηση μονώσεων καλωδίων Μ.Τ.</li>
+</ul>
+
+<p class="sub">3. ΣΥΝΤΗΡΗΣΗ ΣΤΟ ΜΕΤΑΣΧΗΜΑΤΙΣΤΗ</p>
+<ul style="font-size:9pt; margin:2px 0 5px 0;">
+  <li>Έλεγχος θερμοκρασίας Μ/Σ</li>
+  <li>Έλεγχος μονωτήρων Μ.Τ. - Χ.Τ., καθαρισμός</li>
+  <li>Έλεγχος ακροκιβωτίων</li>
+  <li>Έλεγχος καλής κατάστασης κελύφους Μ/Σ</li>
+  <li>Καθαρισμός εξαρτημάτων, συσφίξεις ακροδεκτών</li>
+  <li>Μέτρηση τυλιγμάτων Μ/Σ</li>
+  <li>Μέτρηση μονώσεων Μ/Σ</li>
+  <li>Μέτρηση διηλεκτρικής αντοχής ελαίου</li>
+</ul>
+
+<p class="sub">4. ΓΕΙΩΣΕΙΣ - ΠΡΟΣΤΑΣΙΑ</p>
+<ul style="font-size:9pt; margin:2px 0 10px 0;">
+  <li>Μέτρηση γείωσης (εφόσον είναι εφικτή η μέτρηση)</li>
+  <li>Έλεγχος λειτουργίας αυτοματισμού προστασίας</li>
+</ul>
+
+<!-- ΚΟΣΤΟΛΟΓΗΣΗ -->
+<p class="sec">ΚΟΣΤΟΛΟΓΗΣΗ</p>
+<table class="ct" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px; border-collapse:collapse;">
+  <tr>
+    <th width="8%">Α/Α</th>
+    <th width="57%">ΠΕΡΙΓΡΑΦΗ ΕΞΟΠΛΙΣΜΟΥ - ΕΡΓΑΣΙΕΣ</th>
+    <th width="15%">ΤΕΜ / ΜΕΤΡΑ</th>
+    <th width="20%">ΤΙΜΗ</th>
+  </tr>
+  <tr>
+    <td align="center">1</td>
+    <td>Συντήρηση υποσταθμού μέσης τάσης<br/><span style="font-size:8.5pt;">Μετασχηματιστής</span></td>
+    <td align="center">' . $transCount . '</td>
+    <td align="center" style="font-size:11pt; font-weight:bold;">' . $priceNum . '</td>
+  </tr>
+  <tr>
+    <td colspan="3" align="right" class="ctot" style="padding:5px 10px;">Σύνολο (χωρίς Φ.Π.Α.):</td>
+    <td align="center" class="ctot">' . $priceNum . '</td>
+  </tr>
+</table>
+
+' . $notesSection . '
+
+<!-- ΟΙΚΟΝΟΜΙΚΟΙ ΟΡΟΙ -->
+<p style="font-size:9pt; margin-top:10px;"><b>Οικονομικοί Όροι</b><br/>Στις παραπάνω τιμές δεν περιλαμβάνεται ο Φ.Π.Α. 24%</p>
+<p style="font-size:9pt;">Ελπίζουμε η προσφορά μας να ανταποκρίνεται στις απαιτήσεις σας. Για οποιαδήποτε περαιτέρω διευκρίνηση ή πληροφορία, παρακαλώ μη διστάσετε να επικοινωνήσετε μαζί μας.</p>
+
+<!-- ΥΠΟΓΡΑΦΗ -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
+  <tr>
+    <td width="50%" valign="top" style="font-size:9pt;">
+      Με εκτίμηση,<br/><br/>
+      ' . $signImg . '<br/>
+      <b>Σφακιανάκης Κωνσταντίνος</b><br/>
+      Ηλεκτρολόγος Μηχανικός ΤΕ
+    </td>
+    <td width="50%" valign="bottom" style="font-size:9pt;">
+      <p style="margin-bottom:40px;">Ισχύς προσφοράς έως: <b>' . $expiry . '</b></p>
+      <p style="border-top:1px solid #555; padding-top:5px;">Σφραγίδα &amp; Υπογραφή <b>' . $company . '</b></p>
+    </td>
+  </tr>
+</table>
 ';
     }
 
@@ -420,18 +490,15 @@ class MaintenanceOfferController extends BaseController {
 
                 $pdf = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
                 $pdf->SetCreator('HandyCRM');
-                $pdf->SetAuthor('ECOWATT Ενεργειακές Λύσεις');
-                $pdf->SetTitle('Προσφορά Συντήρησης ' . $offer['offer_number']);
+                $pdf->SetAuthor('ECOWATT - Κώστας Γ. Σφακιανάκης & ΣΙΑ Ο.Ε.');
+                $pdf->SetTitle('Οικονομική Προσφορά ' . $offer['offer_number']);
+                $pdf->SetPrintHeader(false);
                 $pdf->SetFont('dejavusans', '', 10, '', true);
-                $pdf->setHeaderData('', 0, 'ECOWATT Ενεργειακές Λύσεις', 'Προσφορά Συντήρησης Υποσταθμού', [0, 102, 204], [0, 64, 128]);
-                $pdf->setHeaderFont(['dejavusans', '', 10]);
-                $pdf->setFooterFont(['dejavusans', '', 8]);
-                $pdf->SetMargins(15, 27, 15);
-                $pdf->SetHeaderMargin(5);
-                $pdf->SetFooterMargin(20);
-                $pdf->SetAutoPageBreak(true, 25);
+                $pdf->SetMargins(20, 15, 20);
+                $pdf->SetFooterMargin(15);
+                $pdf->SetAutoPageBreak(true, 20);
                 $pdf->AddPage();
-                $pdf->writeHTMLCell(0, 0, null, null, $this->generateOfferHTML($offer), 0, 1, 0, true, '', true);
+                $pdf->writeHTML($this->generateOfferHTML($offer), true, false, true, false, '');
                 $pdf->Output($attachmentPath, 'F');
 
                 $mail = $emailService->createMailer();
