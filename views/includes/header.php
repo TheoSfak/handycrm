@@ -721,8 +721,16 @@
 
             <?php if ($isAdmin || can('transformer_maintenance.view')): ?>
             <li class="nav-item">
-                <a class="nav-link <?= strpos($currentRoute, '/maintenances') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/maintenances">
+                <a class="nav-link <?= strpos($currentRoute, '/maintenances') !== false && strpos($currentRoute, '/maintenance-offers') === false ? 'active' : '' ?>" href="<?= BASE_URL ?>/maintenances">
                     <i class="fas fa-bolt"></i> Συντηρήσεις Υ/Σ
+                </a>
+            </li>
+            <?php endif; ?>
+
+            <?php if ($isAdmin): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/maintenance-offers') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/maintenance-offers">
+                    <i class="fas fa-file-contract"></i> Προσφορά Συντήρησης
                 </a>
             </li>
             <?php endif; ?>
@@ -858,6 +866,7 @@
                     $uri = $_SERVER['REQUEST_URI'];
                     if (strpos($uri, '/customers') !== false)       echo __('menu.customers');
                     elseif (strpos($uri, '/payments') !== false)    echo __('menu.payments');
+                    elseif (strpos($uri, '/maintenance-offers') !== false) echo 'Προσφορές Συντήρησης';
                     elseif (strpos($uri, '/maintenances') !== false) echo 'Συντηρήσεις Υ/Σ';
                     elseif (strpos($uri, '/daily-tasks') !== false) echo 'Εργασίες Ημέρας';
                     elseif (strpos($uri, '/appointments/calendar') !== false) echo __('menu.calendar');

@@ -404,6 +404,38 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         echo "<h1>404 - Maintenance page not found</h1>";
     }
     
+} elseif (strpos($currentRoute, '/maintenance-offers') === 0) {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+
+    require_once 'controllers/MaintenanceOfferController.php';
+    $controller = new MaintenanceOfferController();
+
+    if ($currentRoute === '/maintenance-offers' || $currentRoute === '/maintenance-offers/') {
+        $controller->index();
+    } elseif ($currentRoute === '/maintenance-offers/create') {
+        $controller->create();
+    } elseif ($currentRoute === '/maintenance-offers/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/\/maintenance-offers\/toggle-accepted\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->toggleAccepted((int)$matches[1]);
+    } elseif (preg_match('/\/maintenance-offers\/save-scheduled-date\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->saveScheduledDate((int)$matches[1]);
+    } elseif (preg_match('/\/maintenance-offers\/export-pdf\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportPDF((int)$matches[1]);
+    } elseif (preg_match('/\/maintenance-offers\/export-word\/(\d+)/', $currentRoute, $matches)) {
+        $controller->exportWord((int)$matches[1]);
+    } elseif (preg_match('/\/maintenance-offers\/send-email\/(\d+)/', $currentRoute, $matches)) {
+        $controller->sendEmail((int)$matches[1]);
+    } elseif (preg_match('/\/maintenance-offers\/delete\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete((int)$matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Maintenance offer page not found</h1>";
+    }
+
 } elseif (strpos($currentRoute, '/daily-tasks') === 0) {
     // Check if user is logged in
     if (!isset($_SESSION['user_id'])) {
