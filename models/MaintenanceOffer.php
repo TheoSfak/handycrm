@@ -53,7 +53,7 @@ class MaintenanceOffer extends BaseModel {
         $whereStr = implode(' AND ', $where);
         $offset = ($page - 1) * $perPage;
 
-        $sql = "SELECT o.*, u.full_name AS created_by_name
+        $sql = "SELECT o.*, CONCAT(u.first_name, ' ', u.last_name) AS created_by_name
                 FROM maintenance_offers o
                 LEFT JOIN users u ON u.id = o.created_by
                 WHERE $whereStr
