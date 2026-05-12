@@ -245,7 +245,27 @@ class MaintenanceOfferController extends BaseController {
         $notes      = nl2br(htmlspecialchars($offer['notes'] ?? ''));
 
         // Load template images as base64 data URIs
-        $imgDir  = __DIR__ . '/../uploads/template_images/';
+        $imgDir = __DIR__ . '/../uploads/template_images/';
+        // Auto-extract images from .docx template if not already present
+        if (!is_dir($imgDir) || !file_exists($imgDir . 'image1.jpeg')) {
+            $templateDocx = __DIR__ . '/../templates/maintenance_offer_template.docx';
+            if (file_exists($templateDocx)) {
+                if (!is_dir($imgDir)) {
+                    mkdir($imgDir, 0755, true);
+                }
+                $zip = new \ZipArchive();
+                if ($zip->open($templateDocx) === true) {
+                    for ($i = 0; $i < $zip->numFiles; $i++) {
+                        $name = $zip->getNameIndex($i);
+                        if (strpos($name, 'word/media/') === 0) {
+                            file_put_contents($imgDir . basename($name), $zip->getFromName($name));
+                        }
+                    }
+                    $zip->close();
+                }
+            }
+        }
+
         $logoSrc = file_exists($imgDir . 'image1.jpeg')
             ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image1.jpeg'))
             : '';
