@@ -140,7 +140,7 @@
                                         }
                                     ?>
                                     <td class="text-center" id="sched-cell-<?= $offer['id'] ?>">
-                                        <div class="input-group input-group-sm" style="width:175px;flex-wrap:nowrap;">
+                                        <div class="input-group input-group-sm" style="width:210px;flex-wrap:nowrap;">
                                             <input type="text"
                                                    class="form-control form-control-sm sched-date"
                                                    id="sched-input-<?= $offer['id'] ?>"
@@ -149,6 +149,12 @@
                                                    placeholder="ΗΗ/ΜΜ/ΕΕΕΕ"
                                                    maxlength="10"
                                                    title="Ημερομηνία Προγραμματισμού">
+                                            <button class="btn btn-outline-secondary"
+                                                    type="button"
+                                                    onclick="showDatePicker(document.getElementById('sched-input-<?= $offer['id'] ?>'))"
+                                                    title="Επιλογή ημερομηνίας">
+                                                <i class="fas fa-calendar-alt"></i>
+                                            </button>
                                             <button class="btn btn-outline-secondary sched-save-btn"
                                                     type="button"
                                                     data-id="<?= $offer['id'] ?>"
