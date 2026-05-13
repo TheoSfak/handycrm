@@ -308,24 +308,32 @@ document.querySelectorAll('.accept-radio').forEach(radio => {
 });
 
 // ── Scheduled date ──────────────────────────────────────────────────────────
-let schedTimer = null;
-document.querySelectorAll('.sched-date').forEach(input => {
-    input.addEventListener('change', function () {
-        const id   = this.dataset.id;
-        const date = this.value;
-        clearTimeout(schedTimer);
-        schedTimer = setTimeout(() => {
-            fetch(BASE_URL_JS + '/maintenance-offers/save-scheduled-date/' + id, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({scheduled_date: date})
-            })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.success) alert('Σφάλμα αποθήκευσης: ' + (data.message ?? ''));
-            });
-        }, 600);
+function saveSchedDate(input) {
+    const id   = input.dataset.id;
+    const date = input.value;
+    input.style.borderColor = '#aaa';
+    fetch(BASE_URL_JS + '/maintenance-offers/save-scheduled-date/' + id, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({scheduled_date: date})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            input.style.borderColor = '#198754';
+            setTimeout(() => { input.style.borderColor = ''; }, 1500);
+        } else {
+            input.style.borderColor = '#dc3545';
+            alert('Σφάλμα αποθήκευσης: ' + (data.message ?? 'Άγνωστο σφάλμα'));
+        }
+    })
+    .catch(() => {
+        input.style.borderColor = '#dc3545';
+        alert('Σφάλμα σύνδεσης κατά την αποθήκευση ημερομηνίας.');
     });
+}
+document.querySelectorAll('.sched-date').forEach(input => {
+    input.addEventListener('change', function () { saveSchedDate(this); });
 });
 
 // ── Delete confirm ──────────────────────────────────────────────────────────

@@ -177,7 +177,13 @@ class MaintenanceOfferController extends BaseController {
             exit;
         }
 
-        $this->offerModel->update($id, ['scheduled_date' => $date ?: null]);
+        try {
+            $this->offerModel->update($id, ['scheduled_date' => $date ?: null]);
+        } catch (\Exception $e) {
+            error_log('saveScheduledDate error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Σφάλμα βάσης δεδομένων: ' . $e->getMessage()]);
+            exit;
+        }
 
         echo json_encode([
             'success'        => true,
