@@ -935,6 +935,12 @@
             if (isset($_SESSION['flash'])) {
                 $flash = $_SESSION['flash'];
                 unset($_SESSION['flash']);
+            } elseif (isset($_SESSION['success'])) {
+                $flash = ['type' => 'success', 'message' => $_SESSION['success']];
+                unset($_SESSION['success']);
+            } elseif (isset($_SESSION['error'])) {
+                $flash = ['type' => 'error', 'message' => $_SESSION['error']];
+                unset($_SESSION['error']);
             }
             ?>
             

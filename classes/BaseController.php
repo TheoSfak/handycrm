@@ -310,16 +310,7 @@ class BaseController {
     protected function getFlash() {
         if (isset($_SESSION['flash'])) {
             $flash = $_SESSION['flash'];
-            
-            // If flash has been displayed once, clear it
-            if (isset($_SESSION['flash_count'])) {
-                unset($_SESSION['flash']);
-                unset($_SESSION['flash_count']);
-            } else {
-                // Mark that flash has been read once
-                $_SESSION['flash_count'] = 1;
-            }
-            
+            unset($_SESSION['flash']);
             return $flash;
         }
         return null;
