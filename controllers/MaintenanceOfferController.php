@@ -37,11 +37,16 @@ class MaintenanceOfferController extends BaseController {
     private const ITEMS_PER_PAGE = 20;
 
     private static function buildPdfFooterText(): string {
-        $name    = Settings::get('company_name',    'ECOWATT Ενεργειακές Λύσεις');
-        $website = Settings::get('company_website', 'ecowatt-energy.gr');
-        $email   = Settings::get('company_email',   'info@ecowatt-energy.gr');
-        $phone   = Settings::get('company_phone',   '');
-        $parts   = array_filter([$name, $website, $email, $phone]);
+        try {
+            $name    = Settings::get('company_name',    'ECOWATT Ενεργειακές Λύσεις');
+            $website = Settings::get('company_website', 'ecowatt-energy.gr');
+            $email   = Settings::get('company_email',   'info@ecowatt-energy.gr');
+            $phone   = Settings::get('company_phone',   '');
+        } catch (\Exception $e) {
+            $name = 'ECOWATT Ενεργειακές Λύσεις'; $website = 'ecowatt-energy.gr';
+            $email = 'info@ecowatt-energy.gr'; $phone = '';
+        }
+        $parts = array_filter([$name, $website, $email, $phone]);
         return implode(' | ', $parts);
     }
 

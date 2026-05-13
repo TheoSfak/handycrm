@@ -1138,10 +1138,18 @@ class TransformerMaintenanceController extends BaseController {
                 // Create PDF with TCPDF
                 require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
 
-                CustomMaintenancePDF::$footerText = Settings::get('company_name', 'ECOWATT Ενεργειακές Λύσεις')
-                    . ' | ' . Settings::get('company_website', 'ecowatt-energy.gr')
-                    . ' | ' . Settings::get('company_email', 'info@ecowatt-energy.gr')
-                    . (Settings::get('company_phone') ? ' | Τηλ: ' . Settings::get('company_phone') : '');
+                CustomMaintenancePDF::$footerText = (function() {
+                    try {
+                        $n = Settings::get('company_name',    'ECOWATT Ενεργειακές Λύσεις');
+                        $w = Settings::get('company_website', 'ecowatt-energy.gr');
+                        $e = Settings::get('company_email',   'info@ecowatt-energy.gr');
+                        $p = Settings::get('company_phone',   '');
+                    } catch (\Exception $ex) {
+                        $n = 'ECOWATT Ενεργειακές Λύσεις'; $w = 'ecowatt-energy.gr';
+                        $e = 'info@ecowatt-energy.gr'; $p = '';
+                    }
+                    return implode(' | ', array_filter([$n, $w, $e, $p ? 'Τηλ: '.$p : '']));
+                })();
 
                 $pdf = new CustomMaintenancePDF('P', 'mm', 'A4', true, 'UTF-8', false);
                 
