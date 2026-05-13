@@ -131,14 +131,22 @@
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- Προγραμματίστηκε: inline date input -->
+                                    <!-- Προγραμματίστηκε: inline date input + save button -->
                                     <td class="text-center" id="sched-cell-<?= $offer['id'] ?>">
-                                        <input type="date"
-                                               class="form-control form-control-sm sched-date"
-                                               data-id="<?= $offer['id'] ?>"
-                                               value="<?= htmlspecialchars($offer['scheduled_date'] ?? '') ?>"
-                                               style="min-width: 130px;"
-                                               title="Ημερομηνία Προγραμματισμού">
+                                        <div class="input-group input-group-sm" style="min-width:155px;">
+                                            <input type="date"
+                                                   class="form-control form-control-sm sched-date"
+                                                   id="sched-input-<?= $offer['id'] ?>"
+                                                   data-id="<?= $offer['id'] ?>"
+                                                   value="<?= htmlspecialchars($offer['scheduled_date'] ?? '') ?>"
+                                                   title="Ημερομηνία Προγραμματισμού">
+                                            <button class="btn btn-outline-secondary sched-save-btn"
+                                                    type="button"
+                                                    data-id="<?= $offer['id'] ?>"
+                                                    title="Αποθήκευση ημερομηνίας">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </div>
                                     </td>
 
                                     <!-- Actions -->
@@ -308,10 +316,14 @@ document.querySelectorAll('.accept-radio').forEach(radio => {
 });
 
 // ── Scheduled date ──────────────────────────────────────────────────────────
-function saveSchedDate(input) {
-    const id   = input.dataset.id;
-    const date = input.value;
-    input.style.borderColor = '#aaa';
+function saveSchedDate(id) {
+    const input = document.getElementById('sched-input-' + id);
+    const btn   = document.querySelector('.sched-save-btn[data-id="' + id + '"]');
+    const date  = input.value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
     fetch(BASE_URL_JS + '/maintenance-offers/save-scheduled-date/' + id, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -319,21 +331,27 @@ function saveSchedDate(input) {
     })
     .then(r => r.json())
     .then(data => {
+        btn.disabled = false;
         if (data.success) {
-            input.style.borderColor = '#198754';
-            setTimeout(() => { input.style.borderColor = ''; }, 1500);
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.classList.replace('btn-outline-secondary', 'btn-success');
+            setTimeout(() => {
+                btn.innerHTML = '<i class="fas fa-save"></i>';
+                btn.classList.replace('btn-success', 'btn-outline-secondary');
+            }, 2000);
         } else {
-            input.style.borderColor = '#dc3545';
+            btn.innerHTML = '<i class="fas fa-save"></i>';
             alert('Σφάλμα αποθήκευσης: ' + (data.message ?? 'Άγνωστο σφάλμα'));
         }
     })
     .catch(() => {
-        input.style.borderColor = '#dc3545';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i>';
         alert('Σφάλμα σύνδεσης κατά την αποθήκευση ημερομηνίας.');
     });
 }
-document.querySelectorAll('.sched-date').forEach(input => {
-    input.addEventListener('change', function () { saveSchedDate(this); });
+document.querySelectorAll('.sched-save-btn').forEach(btn => {
+    btn.addEventListener('click', function () { saveSchedDate(this.dataset.id); });
 });
 
 // ── Delete confirm ──────────────────────────────────────────────────────────
