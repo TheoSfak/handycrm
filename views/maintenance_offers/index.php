@@ -133,17 +133,18 @@
 
                                     <!-- Προγραμματίστηκε: inline date input + save button -->
                                     <td class="text-center" id="sched-cell-<?= $offer['id'] ?>">
-                                        <div class="d-flex align-items-center gap-1 justify-content-center">
+                                        <div style="display:flex;flex-wrap:nowrap;align-items:center;gap:4px;justify-content:center;">
                                             <input type="date"
                                                    class="form-control form-control-sm sched-date"
                                                    id="sched-input-<?= $offer['id'] ?>"
                                                    data-id="<?= $offer['id'] ?>"
                                                    value="<?= htmlspecialchars($offer['scheduled_date'] ?? '') ?>"
-                                                   style="width:145px;"
+                                                   style="width:135px;min-width:135px;flex-shrink:0;"
                                                    title="Ημερομηνία Προγραμματισμού">
                                             <button class="btn btn-sm btn-outline-secondary sched-save-btn"
                                                     type="button"
                                                     data-id="<?= $offer['id'] ?>"
+                                                    style="flex-shrink:0;white-space:nowrap;"
                                                     title="Αποθήκευση ημερομηνίας">
                                                 <i class="fas fa-save"></i>
                                             </button>
