@@ -132,21 +132,30 @@
                                     </td>
 
                                     <!-- Προγραμματίστηκε: inline date input + save button -->
-                                    <td class="text-center text-nowrap" id="sched-cell-<?= $offer['id'] ?>">
-                                        <input type="date"
-                                               class="sched-date"
-                                               id="sched-input-<?= $offer['id'] ?>"
-                                               data-id="<?= $offer['id'] ?>"
-                                               value="<?= htmlspecialchars($offer['scheduled_date'] ?? '') ?>"
-                                               style="width:130px;padding:3px 5px;font-size:0.8rem;border:1px solid #ced4da;border-radius:4px;vertical-align:middle;"
-                                               title="Ημερομηνία Προγραμματισμού">
-                                        <button class="btn btn-sm btn-outline-secondary sched-save-btn"
-                                                type="button"
-                                                data-id="<?= $offer['id'] ?>"
-                                                style="vertical-align:middle;"
-                                                title="Αποθήκευση ημερομηνίας">
-                                            <i class="fas fa-save"></i>
-                                        </button>
+                                    <?php
+                                        $schedDisplay = '';
+                                        if (!empty($offer['scheduled_date'])) {
+                                            $d = DateTime::createFromFormat('Y-m-d', $offer['scheduled_date']);
+                                            $schedDisplay = $d ? $d->format('d/m/Y') : htmlspecialchars($offer['scheduled_date']);
+                                        }
+                                    ?>
+                                    <td class="text-center" id="sched-cell-<?= $offer['id'] ?>">
+                                        <div class="input-group input-group-sm" style="width:175px;flex-wrap:nowrap;">
+                                            <input type="text"
+                                                   class="form-control form-control-sm sched-date"
+                                                   id="sched-input-<?= $offer['id'] ?>"
+                                                   data-id="<?= $offer['id'] ?>"
+                                                   value="<?= htmlspecialchars($schedDisplay) ?>"
+                                                   placeholder="ΗΗ/ΜΜ/ΕΕΕΕ"
+                                                   maxlength="10"
+                                                   title="Ημερομηνία Προγραμματισμού">
+                                            <button class="btn btn-outline-secondary sched-save-btn"
+                                                    type="button"
+                                                    data-id="<?= $offer['id'] ?>"
+                                                    title="Αποθήκευση ημερομηνίας">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </div>
                                     </td>
 
                                     <!-- Actions -->
