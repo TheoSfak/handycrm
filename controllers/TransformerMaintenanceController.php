@@ -23,6 +23,7 @@ if (!class_exists('TCPDF')) {
  * Custom TCPDF class with company footer
  */
 class CustomMaintenancePDF extends TCPDF {
+    public static $footerText = '';
     public function Footer() {
         // Position at 15 mm from bottom
         $this->SetY(-15);
@@ -30,7 +31,7 @@ class CustomMaintenancePDF extends TCPDF {
         $this->SetFont('dejavusans', '', 8);
         
         // Company info
-        $footerText = 'ECOWATT Ενεργειακές Λύσεις | ecowatt.gr | info@ecowatt.gr | Τηλ: +30 210 1234567';
+        $footerText = self::$footerText;
         
         // Background color for footer
         $this->SetFillColor(240, 240, 240);
@@ -1136,7 +1137,12 @@ class TransformerMaintenanceController extends BaseController {
                 
                 // Create PDF with TCPDF
                 require_once __DIR__ . '/../lib/tcpdf/tcpdf.php';
-                
+
+                CustomMaintenancePDF::$footerText = Settings::get('company_name', 'ECOWATT Ενεργειακές Λύσεις')
+                    . ' | ' . Settings::get('company_website', 'ecowatt-energy.gr')
+                    . ' | ' . Settings::get('company_email', 'info@ecowatt-energy.gr')
+                    . (Settings::get('company_phone') ? ' | Τηλ: ' . Settings::get('company_phone') : '');
+
                 $pdf = new CustomMaintenancePDF('P', 'mm', 'A4', true, 'UTF-8', false);
                 
                 // Set Greek language and font

@@ -12,6 +12,7 @@ if (!class_exists('TCPDF')) {
  */
 if (!class_exists('CustomOfferPDF')) {
     class CustomOfferPDF extends TCPDF {
+        public static $footerText = '';
         public function Footer() {
             $this->SetY(-15);
             $this->SetFont('dejavusans', '', 8);
@@ -22,7 +23,7 @@ if (!class_exists('CustomOfferPDF')) {
             $this->Line(10, $this->GetY(), $this->getPageWidth() - 10, $this->GetY());
             $this->SetY(-12);
             $this->SetTextColor(60, 60, 60);
-            $this->Cell(0, 5, 'ECOWATT Ενεργειακές Λύσεις | ecowatt.gr | info@ecowatt.gr', 0, 1, 'C');
+            $this->Cell(0, 5, self::$footerText, 0, 1, 'C');
             $this->SetY(-8);
             $this->SetFont('dejavusans', 'I', 7);
             $this->Cell(0, 3, 'Σελίδα ' . $this->getAliasNumPage() . ' από ' . $this->getAliasNbPages(), 0, 0, 'C');
@@ -34,6 +35,15 @@ class MaintenanceOfferController extends BaseController {
 
     private MaintenanceOffer $offerModel;
     private const ITEMS_PER_PAGE = 20;
+
+    private static function buildPdfFooterText(): string {
+        $name    = Settings::get('company_name',    'ECOWATT Ενεργειακές Λύσεις');
+        $website = Settings::get('company_website', 'ecowatt-energy.gr');
+        $email   = Settings::get('company_email',   'info@ecowatt-energy.gr');
+        $phone   = Settings::get('company_phone',   '');
+        $parts   = array_filter([$name, $website, $email, $phone]);
+        return implode(' | ', $parts);
+    }
 
     public function __construct() {
         parent::__construct();
@@ -232,6 +242,7 @@ class MaintenanceOfferController extends BaseController {
             exit;
         }
 
+        CustomOfferPDF::$footerText = self::buildPdfFooterText();
         $pdf = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->SetCreator('HandyCRM');
         $pdf->SetAuthor('ECOWATT - Κώστας Γ. Σφακιανάκης & ΣΙΑ Ο.Ε.');
@@ -503,6 +514,7 @@ class MaintenanceOfferController extends BaseController {
                 $pdfFilename    = 'Prosfora_Sintirisis_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $offer['offer_number']) . '.pdf';
                 $attachmentPath = sys_get_temp_dir() . '/' . $pdfFilename;
 
+                CustomOfferPDF::$footerText = self::buildPdfFooterText();
                 $pdfMail = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
                 $pdfMail->SetCreator('HandyCRM');
                 $pdfMail->SetAuthor('ECOWATT - Κώστας Γ. Σφακιανάκης & ΣΙΑ Ο.Ε.');
