@@ -277,6 +277,30 @@ class MaintenanceOfferController extends BaseController {
         $priceNum   = number_format((float)$offer['price'], 2, ',', '.') . ' €';
         $notes      = nl2br(htmlspecialchars($offer['notes'] ?? ''));
 
+        // Load company info from settings (with fallback)
+        try {
+            $coName    = Settings::get('company_name',         'ΚΩΣΤΑΣ Γ. ΣΦΑΚΙΑΝΑΚΗΣ & ΣΙΑ Ο.Ε.');
+            $coDisplay = Settings::get('company_display_name', $coName);
+            $coEmail   = Settings::get('company_email',        'info@ecowatt-energy.gr');
+            $coPhone   = Settings::get('company_phone',        '');
+            $coWebsite = Settings::get('company_website',      'ecowatt-energy.gr');
+            $coTaxId   = Settings::get('company_tax_id',       '');
+            $coAddress = Settings::get('company_address',      '');
+        } catch (\Exception $e) {
+            $coName = $coDisplay = 'ΚΩΣΤΑΣ Γ. ΣΦΑΚΙΑΝΑΚΗΣ & ΣΙΑ Ο.Ε.';
+            $coEmail = 'info@ecowatt-energy.gr'; $coPhone = ''; $coWebsite = 'ecowatt-energy.gr';
+            $coTaxId = ''; $coAddress = '';
+        }
+
+        $coInfoLines = [];
+        if ($coDisplay) $coInfoLines[] = '<b>' . htmlspecialchars($coDisplay) . '</b>';
+        if ($coAddress) $coInfoLines[] = htmlspecialchars($coAddress);
+        if ($coPhone)   $coInfoLines[] = 'Τηλ: ' . htmlspecialchars($coPhone);
+        if ($coEmail)   $coInfoLines[] = 'Email: ' . htmlspecialchars($coEmail);
+        if ($coWebsite) $coInfoLines[] = 'Web: ' . htmlspecialchars($coWebsite);
+        if ($coTaxId)   $coInfoLines[] = 'ΑΦΜ: ' . htmlspecialchars($coTaxId);
+        $coInfoHtml = '<div style="font-size:8pt;color:#1a3c6e;line-height:1.6;text-align:right;">' . implode('<br/>', $coInfoLines) . '</div>';
+
         // Auto-extract images from .docx template if not already present
         $imgDir = __DIR__ . '/../uploads/template_images/';
         if (!is_dir($imgDir) || !file_exists($imgDir . 'image1.jpeg')) {
@@ -330,8 +354,11 @@ class MaintenanceOfferController extends BaseController {
 
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
   <tr>
-    <td width="62%" valign="middle">' . $logoImg . '</td>
-    <td width="38%" align="right" valign="middle">' . $isoImg . '</td>
+    <td width="50%" valign="middle">' . $logoImg . '</td>
+    <td width="50%" align="right" valign="middle">
+      ' . $coInfoHtml . '
+      ' . ($isoImg ? '<div style="margin-top:4px;text-align:right;">' . $isoImg . '</div>' : '') . '
+    </td>
   </tr>
 </table>
 <hr style="border:2px solid #1a3c6e; margin:0 0 8px 0;" />
