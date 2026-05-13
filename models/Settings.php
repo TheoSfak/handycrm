@@ -5,7 +5,7 @@
  */
 class Settings {
     private $db;
-    private $table = 'system_settings';
+    private $table = 'settings';
     private static $cache = [];
 
     public function __construct() {
