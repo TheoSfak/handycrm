@@ -169,12 +169,24 @@ class MaintenanceOfferController extends BaseController {
         }
 
         $input = json_decode(file_get_contents('php://input'), true);
-        $date  = $input['scheduled_date'] ?? null;
+        $date  = isset($input['scheduled_date']) ? trim($input['scheduled_date']) : null;
 
-        // Validate date format
-        if ($date && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            echo json_encode(['success' => false, 'message' => 'Μη έγκυρη ημερομηνία']);
-            exit;
+        // Validate and normalise date format
+        if ($date !== null && $date !== '') {
+            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $date, $m)) {
+                // Convert DD/MM/YYYY → YYYY-MM-DD
+                $date = sprintf('%04d-%02d-%02d', (int)$m[3], (int)$m[2], (int)$m[1]);
+            }
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || !checkdate(
+                (int)substr($date, 5, 2),
+                (int)substr($date, 8, 2),
+                (int)substr($date, 0, 4)
+            )) {
+                echo json_encode(['success' => false, 'message' => 'Μη έγκυρη ημερομηνία (χρησιμοποιήστε το ημερολόγιο)']);
+                exit;
+            }
+        } else {
+            $date = null;
         }
 
         try {
