@@ -100,12 +100,13 @@ class TransformerMaintenanceController extends BaseController {
         $dateTo = $_GET['date_to'] ?? null;
         $isInvoiced = isset($_GET['is_invoiced']) && $_GET['is_invoiced'] !== '' ? $_GET['is_invoiced'] : null;
         $reportSent = isset($_GET['report_sent']) && $_GET['report_sent'] !== '' ? $_GET['report_sent'] : null;
+        $upcoming = isset($_GET['upcoming']) && $_GET['upcoming'] !== '' ? $_GET['upcoming'] : null;
         $page = $_GET['page'] ?? 1;
         $perPage = 20;
         
         // Get maintenances
-        $maintenances = $this->maintenanceModel->getAll($page, $perPage, $search, $dateFrom, $dateTo, $isInvoiced, $reportSent);
-        $totalCount = $this->maintenanceModel->getTotalCount($search, $dateFrom, $dateTo, $isInvoiced, $reportSent);
+        $maintenances = $this->maintenanceModel->getAll($page, $perPage, $search, $dateFrom, $dateTo, $isInvoiced, $reportSent, $upcoming);
+        $totalCount = $this->maintenanceModel->getTotalCount($search, $dateFrom, $dateTo, $isInvoiced, $reportSent, $upcoming);
         $totalPages = ceil($totalCount / $perPage);
         
         $this->view('maintenances/index', [
@@ -115,6 +116,7 @@ class TransformerMaintenanceController extends BaseController {
             'dateTo' => $dateTo,
             'isInvoiced' => $isInvoiced,
             'reportSent' => $reportSent,
+            'upcoming' => $upcoming,
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'totalCount' => $totalCount

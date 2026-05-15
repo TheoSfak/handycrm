@@ -197,6 +197,17 @@ class DashboardController extends BaseController {
             // Merge with existing stats, keeping already retrieved values
             $stats = array_merge($defaults, $stats);
         }
+
+        // Upcoming / overdue transformer maintenances
+        try {
+            require_once 'models/TransformerMaintenance.php';
+            $maintenanceModel = new TransformerMaintenance();
+            $stats['overdue_maintenances']   = $maintenanceModel->getOverdueCount();
+            $stats['upcoming_maintenances']  = $maintenanceModel->getUpcomingCount(30);
+        } catch (Exception $e) {
+            $stats['overdue_maintenances']  = 0;
+            $stats['upcoming_maintenances'] = 0;
+        }
         
         // Check if user is valid before accessing role
         if (!$user || !is_array($user) || !isset($user['role'])) {

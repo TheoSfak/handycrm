@@ -12,7 +12,7 @@ class TransformerMaintenance extends BaseModel {
     /**
      * Get all maintenances with pagination and filters
      */
-    public function getAll($page = 1, $perPage = 20, $search = null, $dateFrom = null, $dateTo = null, $isInvoiced = null, $reportSent = null) {
+    public function getAll($page = 1, $perPage = 20, $search = null, $dateFrom = null, $dateTo = null, $isInvoiced = null, $reportSent = null, $upcoming = null) {
         $offset = ($page - 1) * $perPage;
         
         $sql = "SELECT tm.*, 
@@ -54,8 +54,20 @@ class TransformerMaintenance extends BaseModel {
             $sql .= " AND tm.report_sent = ?";
             $params[] = (int)$reportSent;
         }
-        
-        $sql .= " ORDER BY tm.maintenance_date DESC, tm.created_at DESC LIMIT ? OFFSET ?";
+
+        // Upcoming / overdue filter
+        if ($upcoming !== null && $upcoming !== '') {
+            if ($upcoming === 'overdue') {
+                $sql .= " AND tm.next_maintenance_date < CURDATE()";
+            } else {
+                $days = (int)$upcoming * 30;
+                $sql .= " AND tm.next_maintenance_date >= CURDATE() AND tm.next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)";
+                $params[] = $days;
+            }
+            $sql .= " ORDER BY tm.next_maintenance_date ASC LIMIT ? OFFSET ?";
+        } else {
+            $sql .= " ORDER BY tm.maintenance_date DESC, tm.created_at DESC LIMIT ? OFFSET ?";
+        }
         $params[] = $perPage;
         $params[] = $offset;
         
@@ -65,7 +77,7 @@ class TransformerMaintenance extends BaseModel {
     /**
      * Get total count with filters
      */
-    public function getTotalCount($search = null, $dateFrom = null, $dateTo = null, $isInvoiced = null, $reportSent = null) {
+    public function getTotalCount($search = null, $dateFrom = null, $dateTo = null, $isInvoiced = null, $reportSent = null, $upcoming = null) {
         $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE deleted_at IS NULL";
         $params = [];
         
@@ -98,9 +110,38 @@ class TransformerMaintenance extends BaseModel {
             $sql .= " AND report_sent = ?";
             $params[] = (int)$reportSent;
         }
+
+        // Upcoming / overdue filter
+        if ($upcoming !== null && $upcoming !== '') {
+            if ($upcoming === 'overdue') {
+                $sql .= " AND next_maintenance_date < CURDATE()";
+            } else {
+                $days = (int)$upcoming * 30;
+                $sql .= " AND next_maintenance_date >= CURDATE() AND next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)";
+                $params[] = $days;
+            }
+        }
         
         $result = $this->db->fetchOne($sql, $params);
         return $result['total'];
+    }
+
+    /**
+     * Get count of overdue maintenances (next_maintenance_date already passed)
+     */
+    public function getOverdueCount() {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE deleted_at IS NULL AND next_maintenance_date < CURDATE()";
+        $result = $this->db->fetchOne($sql, []);
+        return (int)($result['total'] ?? 0);
+    }
+
+    /**
+     * Get count of maintenances due within the next N days
+     */
+    public function getUpcomingCount($days = 30) {
+        $sql = "SELECT COUNT(*) as total FROM {$this->table} WHERE deleted_at IS NULL AND next_maintenance_date >= CURDATE() AND next_maintenance_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)";
+        $result = $this->db->fetchOne($sql, [$days]);
+        return (int)($result['total'] ?? 0);
     }
     
     /**

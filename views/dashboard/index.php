@@ -51,6 +51,41 @@ echo $updateChecker->getUpdateNotification();
     </div>
 </div>
 
+<?php if (($stats['overdue_maintenances'] ?? 0) > 0 || ($stats['upcoming_maintenances'] ?? 0) > 0): ?>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center flex-wrap gap-3">
+                    <span class="fw-semibold text-muted me-2">
+                        <i class="fas fa-tools me-1"></i> Συντηρήσεις Μ/Σ:
+                    </span>
+                    <?php if (($stats['overdue_maintenances'] ?? 0) > 0): ?>
+                        <a href="<?= BASE_URL ?>/maintenances?upcoming=overdue" class="text-decoration-none">
+                            <span class="badge bg-danger fs-6 px-3 py-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <?= $stats['overdue_maintenances'] ?> Ληξιπρόθεσμ<?= $stats['overdue_maintenances'] === 1 ? 'η' : 'ες' ?>
+                            </span>
+                        </a>
+                    <?php endif; ?>
+                    <?php if (($stats['upcoming_maintenances'] ?? 0) > 0): ?>
+                        <a href="<?= BASE_URL ?>/maintenances?upcoming=1" class="text-decoration-none">
+                            <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                                <i class="fas fa-clock me-1"></i>
+                                <?= $stats['upcoming_maintenances'] ?> επόμεν<?= $stats['upcoming_maintenances'] === 1 ? 'η' : 'ες' ?> 30 ημέρες
+                            </span>
+                        </a>
+                    <?php endif; ?>
+                    <a href="<?= BASE_URL ?>/maintenances" class="btn btn-sm btn-outline-secondary ms-auto">
+                        <i class="fas fa-list me-1"></i>Όλες οι Συντηρήσεις
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row">
     <!-- Recent Activities -->
     <div class="col-lg-4 mb-4">

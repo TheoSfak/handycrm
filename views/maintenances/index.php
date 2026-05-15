@@ -52,6 +52,26 @@
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
+                <div class="col-12 mt-2 pt-2 border-top">
+                    <label class="form-label fw-semibold"><i class="fas fa-bell me-1"></i>Φίλτρο Επόμενης Συντήρησης</label>
+                    <div class="btn-group flex-wrap" role="group">
+                        <a href="<?= BASE_URL ?>/maintenances" class="btn btn-sm btn-outline-secondary <?= !isset($upcoming) || $upcoming === null ? 'active' : '' ?>">
+                            <i class="fas fa-list me-1"></i>Όλες
+                        </a>
+                        <a href="<?= BASE_URL ?>/maintenances?upcoming=overdue" class="btn btn-sm btn-outline-danger <?= ($upcoming ?? null) === 'overdue' ? 'active' : '' ?>">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Ληξιπρόθεσμες
+                        </a>
+                        <a href="<?= BASE_URL ?>/maintenances?upcoming=1" class="btn btn-sm btn-outline-warning <?= ($upcoming ?? null) === '1' ? 'active' : '' ?>">
+                            <i class="fas fa-clock me-1"></i>1 Μήνας
+                        </a>
+                        <a href="<?= BASE_URL ?>/maintenances?upcoming=3" class="btn btn-sm btn-outline-info <?= ($upcoming ?? null) === '3' ? 'active' : '' ?>">
+                            <i class="fas fa-clock me-1"></i>3 Μήνες
+                        </a>
+                        <a href="<?= BASE_URL ?>/maintenances?upcoming=6" class="btn btn-sm btn-outline-primary <?= ($upcoming ?? null) === '6' ? 'active' : '' ?>">
+                            <i class="fas fa-clock me-1"></i>6 Μήνες
+                        </a>
+                    </div>
+                </div>
             </form>
         </div>
     </div>
@@ -223,6 +243,7 @@
                             if ($dateTo) $queryParams['date_to'] = $dateTo;
                             if (isset($isInvoiced) && $isInvoiced !== '') $queryParams['is_invoiced'] = $isInvoiced;
                             if (isset($reportSent) && $reportSent !== '') $queryParams['report_sent'] = $reportSent;
+                            if (isset($upcoming) && $upcoming !== null) $queryParams['upcoming'] = $upcoming;
                             $queryString = http_build_query($queryParams);
                             $queryPrefix = $queryString ? '&' : '';
                             ?>
