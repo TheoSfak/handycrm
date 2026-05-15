@@ -83,6 +83,20 @@
         </div>
     </div>
 
+    <!-- Print-only header (hidden on screen, shown when printing) -->
+    <?php
+    $printTitle = 'Λίστα Συντηρήσεων Μ/Σ';
+    if (($upcoming ?? null) === 'overdue') $printTitle = 'Ληξιπρόθεσμες Συντηρήσεις Μ/Σ';
+    elseif (($upcoming ?? null) === '1')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενος 1 Μήνας';
+    elseif (($upcoming ?? null) === '3')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενοι 3 Μήνες';
+    elseif (($upcoming ?? null) === '6')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενοι 6 Μήνες';
+    ?>
+    <div class="print-only-header">
+        <h4><?= htmlspecialchars($printTitle) ?></h4>
+        <p>Εκτυπώθηκε: <?= date('d/m/Y H:i') ?> &mdash; Σύνολο: <?= $totalCount ?> εγγραφές</p>
+        <hr>
+    </div>
+
     <!-- Results -->
     <div class="card">
         <div class="card-header">
@@ -383,63 +397,60 @@ function toggleStatus(id, type, checked) {
 }
 </script>
 
-<?php
-$printTitle = 'Λίστα Συντηρήσεων Μ/Σ';
-if (($upcoming ?? null) === 'overdue') $printTitle = 'Ληξιπρόθεσμες Συντηρήσεις Μ/Σ';
-elseif (($upcoming ?? null) === '1')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενος 1 Μήνας';
-elseif (($upcoming ?? null) === '3')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενοι 3 Μήνες';
-elseif (($upcoming ?? null) === '6')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενοι 6 Μήνες';
-?>
-<div class="print-only-header" style="display:none;">
-    <h4><?= htmlspecialchars($printTitle) ?></h4>
-    <p class="text-muted">Εκτυπώθηκε: <?= date('d/m/Y H:i') ?> &mdash; Σύνολο: <?= $totalCount ?> εγγραφές</p>
-    <hr>
-</div>
-
 <style>
+.print-only-header { display: none; }
 @media print {
+    @page { size: A4 landscape; margin: 10mm; }
     /* Hide layout chrome */
-    #sidebar,
-    .sidebar,
-    .main-content > .container-fluid > .row.mb-4:first-child,
+    #sidebar, .sidebar,
+    .app-footer,
+    .row.mb-4:first-child,
     .card.mb-4,
+    .no-print,
     .pagination,
     .btn-group.btn-group-sm,
-    .no-print,
-    .form-check.form-switch {
+    .form-check.form-switch,
+    .card-header a,
+    .card-header .btn {
         display: none !important;
     }
-    /* Show print header */
+    /* Show print header above table */
     .print-only-header {
         display: block !important;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
-    /* Full width table */
-    .main-content {
-        margin-left: 0 !important;
+    /* Remove sidebar offset — full page width */
+    body, .main-content, .container-fluid {
+        margin: 0 !important;
+        padding: 0 !important;
         width: 100% !important;
+        max-width: 100% !important;
     }
     .card {
         border: none !important;
         box-shadow: none !important;
+        width: 100% !important;
     }
     .card-header {
         background: none !important;
-        border-bottom: 1px solid #ccc !important;
-        padding: 6px 0 !important;
+        border-bottom: 1px solid #999 !important;
+        padding: 4px 0 !important;
     }
+    .table-responsive { overflow: visible !important; }
     .table {
-        font-size: 11px;
+        font-size: 10px !important;
+        width: 100% !important;
+        table-layout: auto !important;
     }
+    .table th, .table td { padding: 4px 5px !important; }
     .badge {
-        border: 1px solid #999;
+        border: 1px solid #666 !important;
         color: #000 !important;
         background: none !important;
+        -webkit-print-color-adjust: exact;
     }
     a { text-decoration: none !important; color: #000 !important; }
-    /* Last column (actions) hidden */
+    /* Hide actions column */
     th:last-child, td:last-child { display: none !important; }
-    /* Invoiced / Report columns as plain text */
-    .form-check-input { display: none !important; }
 }
 </style>
