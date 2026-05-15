@@ -140,7 +140,19 @@ class TransformerMaintenanceController extends BaseController {
      * Store new maintenance
      */
     public function store() {
-        
+
+        // Detect silent failure when POST data exceeds post_max_size
+        // PHP empties $_POST and $_FILES without any error in this case
+        if (empty($_POST) && !empty($_SERVER['CONTENT_LENGTH'])) {
+            $maxPost = $this->parseSize(ini_get('post_max_size'));
+            if ((int)$_SERVER['CONTENT_LENGTH'] > $maxPost) {
+                $limitMB = round($maxPost / 1024 / 1024);
+                $_SESSION['error'] = 'Τα αρχεία που επιλέξατε είναι πολύ μεγάλα. Το συνολικό μέγεθος δεν μπορεί να ξεπεράσει τα ' . $limitMB . ' MB. Παρακαλώ μειώστε τον αριθμό ή το μέγεθος των φωτογραφιών.';
+                header('Location: ' . BASE_URL . '/maintenances/create');
+                exit;
+            }
+        }
+
         // Validate required fields
         $required = [
             'customer_name' => 'Όνομα Πελάτη',
@@ -307,7 +319,17 @@ class TransformerMaintenanceController extends BaseController {
      */
     public function update($id) {
 
-        
+        // Detect silent failure when POST data exceeds post_max_size
+        if (empty($_POST) && !empty($_SERVER['CONTENT_LENGTH'])) {
+            $maxPost = $this->parseSize(ini_get('post_max_size'));
+            if ((int)$_SERVER['CONTENT_LENGTH'] > $maxPost) {
+                $limitMB = round($maxPost / 1024 / 1024);
+                $_SESSION['error'] = 'Τα αρχεία που επιλέξατε είναι πολύ μεγάλα. Το συνολικό μέγεθος δεν μπορεί να ξεπεράσει τα ' . $limitMB . ' MB. Παρακαλώ μειώστε τον αριθμό ή το μέγεθος των φωτογραφιών.';
+                header('Location: ' . BASE_URL . '/maintenances/edit/' . (int)$id);
+                exit;
+            }
+        }
+
         $maintenance = $this->maintenanceModel->find($id);
         
         if (!$maintenance) {
@@ -609,6 +631,20 @@ class TransformerMaintenanceController extends BaseController {
         return $result;
     }
     
+    /**
+     * Convert PHP ini size string (e.g. "200M") to bytes
+     */
+    private function parseSize(string $size): int {
+        $unit = strtoupper(substr(trim($size), -1));
+        $value = (int) $size;
+        switch ($unit) {
+            case 'G': return $value * 1024 * 1024 * 1024;
+            case 'M': return $value * 1024 * 1024;
+            case 'K': return $value * 1024;
+            default:  return $value;
+        }
+    }
+
     /**
      * Handle photo uploads for a specific transformer
      */
