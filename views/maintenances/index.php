@@ -53,7 +53,9 @@
                     </button>
                 </div>
                 <div class="col-12 mt-2 pt-2 border-top">
-                    <label class="form-label fw-semibold"><i class="fas fa-bell me-1"></i>Φίλτρο Επόμενης Συντήρησης</label>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                    <label class="form-label fw-semibold mb-1"><i class="fas fa-bell me-1"></i>Φίλτρο Επόμενης Συντήρησης</label>
                     <div class="btn-group flex-wrap" role="group">
                         <a href="<?= BASE_URL ?>/maintenances" class="btn btn-sm btn-outline-secondary <?= !isset($upcoming) || $upcoming === null ? 'active' : '' ?>">
                             <i class="fas fa-list me-1"></i>Όλες
@@ -70,6 +72,11 @@
                         <a href="<?= BASE_URL ?>/maintenances?upcoming=6" class="btn btn-sm btn-outline-primary <?= ($upcoming ?? null) === '6' ? 'active' : '' ?>">
                             <i class="fas fa-clock me-1"></i>6 Μήνες
                         </a>
+                    </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm no-print" onclick="window.print()" title="Εκτύπωση τρέχουσας λίστας">
+                        <i class="fas fa-print me-1"></i>Εκτύπωση
+                    </button>
                     </div>
                 </div>
             </form>
@@ -375,3 +382,64 @@ function toggleStatus(id, type, checked) {
     });
 }
 </script>
+
+<?php
+$printTitle = 'Λίστα Συντηρήσεων Μ/Σ';
+if (($upcoming ?? null) === 'overdue') $printTitle = 'Ληξιπρόθεσμες Συντηρήσεις Μ/Σ';
+elseif (($upcoming ?? null) === '1')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενος 1 Μήνας';
+elseif (($upcoming ?? null) === '3')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενοι 3 Μήνες';
+elseif (($upcoming ?? null) === '6')   $printTitle = 'Συντηρήσεις Μ/Σ — Επόμενοι 6 Μήνες';
+?>
+<div class="print-only-header" style="display:none;">
+    <h4><?= htmlspecialchars($printTitle) ?></h4>
+    <p class="text-muted">Εκτυπώθηκε: <?= date('d/m/Y H:i') ?> &mdash; Σύνολο: <?= $totalCount ?> εγγραφές</p>
+    <hr>
+</div>
+
+<style>
+@media print {
+    /* Hide layout chrome */
+    #sidebar,
+    .sidebar,
+    .main-content > .container-fluid > .row.mb-4:first-child,
+    .card.mb-4,
+    .pagination,
+    .btn-group.btn-group-sm,
+    .no-print,
+    .form-check.form-switch {
+        display: none !important;
+    }
+    /* Show print header */
+    .print-only-header {
+        display: block !important;
+        margin-bottom: 12px;
+    }
+    /* Full width table */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100% !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .card-header {
+        background: none !important;
+        border-bottom: 1px solid #ccc !important;
+        padding: 6px 0 !important;
+    }
+    .table {
+        font-size: 11px;
+    }
+    .badge {
+        border: 1px solid #999;
+        color: #000 !important;
+        background: none !important;
+    }
+    a { text-decoration: none !important; color: #000 !important; }
+    /* Last column (actions) hidden */
+    th:last-child, td:last-child { display: none !important; }
+    /* Invoiced / Report columns as plain text */
+    .form-check-input { display: none !important; }
+}
+</style>
