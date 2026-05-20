@@ -173,7 +173,7 @@ class UploadedContract extends BaseModel {
 
     /**
      * Extract text and key fields from a PDF file using smalot/pdfparser.
-     * Returns array with keys: text, title, amount, start_date, end_date, description
+     * Returns array with keys: text, title, amount, start_date, end_date, description, strategy
      */
     public static function extractFromPdf(string $filePath, ?string $originalFilename = null): array {
         $result = [
@@ -183,6 +183,7 @@ class UploadedContract extends BaseModel {
             'start_date'  => '',
             'end_date'    => '',
             'description' => '',
+            'strategy'    => '',
         ];
 
         if (!file_exists($filePath)) {
@@ -205,29 +206,48 @@ class UploadedContract extends BaseModel {
                 }
                 $pdf  = $parser->parseFile($filePath);
                 $text = $pdf->getText();
+                if (strlen(trim($text)) >= 100) {
+                    $result['strategy'] = 'smalot';
+                }
             }
         } catch (\Exception $e) {
             error_log('PDF smalot extraction error: ' . $e->getMessage());
         }
 
         // ── Strategy 2: pdftotext shell command (poppler-utils) ───────────
-        if (strlen(trim($text)) < 20 || self::greekRatio($text) < 0.03) {
+        // Falls back to exec() on hosts where shell_exec is restricted.
+        // Only triggered when smalot returned very little (<100 chars).
+        if (strlen(trim($text)) < 100) {
             $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
-            if (!in_array('shell_exec', $disabled)) {
-                // -enc UTF-8 ensures Greek characters are returned as UTF-8
-                $cmd = 'pdftotext -enc UTF-8 ' . escapeshellarg($filePath) . ' - 2>&1';
-                $out = @shell_exec($cmd);
-                if ($out && strlen(trim($out)) > 20
-                    && strpos($out, 'command not found') === false
-                    && strpos($out, 'No such file') === false) {
-                    $text = $out;
-                }
+            $cmd = 'pdftotext -enc UTF-8 ' . escapeshellarg($filePath) . ' -';
+            $out = '';
+            if (!in_array('shell_exec', $disabled) && function_exists('shell_exec')) {
+                $out = (string)@shell_exec($cmd . ' 2>&1');
+            } elseif (!in_array('exec', $disabled) && function_exists('exec')) {
+                $lines = [];
+                @exec($cmd . ' 2>/dev/null', $lines);
+                $out = implode("\n", $lines);
+            }
+            if (strlen(trim($out)) > 20
+                && strpos($out, 'command not found') === false
+                && strpos($out, 'No such file') === false
+                && strpos($out, 'Error') === false) {
+                $text = $out;
+                $result['strategy'] = 'pdftotext';
             }
         }
 
         // ── Strategy 3: raw PDF stream extraction (no dependencies) ───────
-        if (strlen(trim($text)) < 20 || self::greekRatio($text) < 0.03) {
-            $text = self::extractTextRaw($filePath);
+        if (strlen(trim($text)) < 100) {
+            $raw3 = self::extractTextRaw($filePath);
+            if (strlen(trim($raw3)) > strlen(trim($text))) {
+                $text = $raw3;
+                $result['strategy'] = 'raw';
+            }
+        }
+
+        if ($result['strategy'] === '' && strlen(trim($text)) >= 100) {
+            $result['strategy'] = 'smalot'; // smalot gave text but ratio was low
         }
 
         // ── Normalize Unicode (NFC) ────────────────────────────────────────

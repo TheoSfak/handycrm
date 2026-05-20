@@ -1,5 +1,11 @@
 # HandyCRM - Change Log
 
+## [1.8.5] - 2026-05-20
+### Fixed
+- **Συμφωνητικά — Σάρωση PDF (0 χαρακτήρες)**: Removed `greekRatio` as a hard fallthrough filter between extraction strategies. Greek government PDFs contain many Latin reference codes (ADAM, 23AWRD...) that diluted the Greek ratio below 3%, causing valid smalot output to be discarded and strategies 2/3 to run unnecessarily. Now only falls through when text is shorter than 100 characters.
+- **Strategy order**: `shell_exec` is tried first for `pdftotext` (was incorrectly deprioritised); `exec()` used as secondary fallback.
+- **Strategy label**: Scan result now shows which extraction method was used, e.g. `2187 χαρακτήρες εξήχθησαν [smalot]`, to aid debugging.
+
 ## [1.8.4] - 2026-05-20
 ### Fixed
 - **Συμφωνητικά — Σάρωση PDF**:

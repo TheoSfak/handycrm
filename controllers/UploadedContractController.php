@@ -157,6 +157,7 @@ class UploadedContractController extends BaseController {
             'end_date'    => $extracted['end_date'],
             'description' => $extracted['description'],
             'text_length' => mb_strlen($extracted['text']),
+            'strategy'    => $extracted['strategy'] ?? '',
         ]);
     }
 

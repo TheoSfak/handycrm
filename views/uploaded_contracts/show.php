@@ -213,8 +213,9 @@ document.getElementById('scanBtn')?.addEventListener('click', function () {
     fillDate('f_end_date',   data.end_date);
 
     const charCount = data.text_length || 0;
+    const strategy  = data.strategy ? ' [' + data.strategy + ']' : '';
     status.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i>'
-      + 'Σάρωση ολοκληρώθηκε (' + charCount + ' χαρακτήρες εξήχθησαν).'
+      + 'Σάρωση ολοκληρώθηκε (' + charCount + ' χαρακτήρες εξήχθησαν' + strategy + ').'
       + '</span> Ελέγξτε τα πεδία και αποθηκεύστε.';
     btn.innerHTML = '<i class="fas fa-check me-1"></i>Σαρώθηκε';
     btn.classList.replace('btn-warning', 'btn-success');
