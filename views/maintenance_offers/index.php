@@ -111,16 +111,15 @@
                                         <?= $offer['sent_at'] ? date('d/m/Y', strtotime($offer['sent_at'])) : '-' ?>
                                     </td>
 
-                                    <!-- Αποδοχή: radio button (one-way toggle) -->
+                                    <!-- Αποδοχή: checkbox (toggle) -->
                                     <td class="text-center" id="accepted-cell-<?= $offer['id'] ?>">
                                         <div class="form-check d-inline-block">
                                             <input class="form-check-input accept-radio"
-                                                   type="radio"
-                                                   name="accept_<?= $offer['id'] ?>"
+                                                   type="checkbox"
                                                    id="accept_<?= $offer['id'] ?>"
                                                    data-id="<?= $offer['id'] ?>"
                                                    <?= $offer['accepted'] ? 'checked' : '' ?>
-                                                   title="Αποδοχή Προσφοράς">
+                                                   title="Αποδοχή / Αναίρεση Αποδοχής Προσφοράς">
                                         </div>
                                         <?php if ($offer['accepted_at']): ?>
                                             <div class="text-success small mt-1" id="accepted-ts-<?= $offer['id'] ?>" style="font-size: 0.72rem;">
@@ -297,11 +296,20 @@
 <script>
 const BASE_URL_JS = '<?= BASE_URL ?>';
 
-// ── Accept radio ────────────────────────────────────────────────────────────
-document.querySelectorAll('.accept-radio').forEach(radio => {
-    radio.addEventListener('change', function () {
-        const id = this.dataset.id;
+// ── Accept checkbox (toggle) ────────────────────────────────────────────────
+document.querySelectorAll('.accept-radio').forEach(checkbox => {
+    checkbox.addEventListener('change', function () {
+        const id      = this.dataset.id;
         const checked = this.checked ? 1 : 0;
+
+        // Confirm before unchecking
+        if (!checked) {
+            if (!confirm('Θέλετε να αναιρέσετε την αποδοχή αυτής της προσφοράς;')) {
+                this.checked = true; // revert
+                return;
+            }
+        }
+
         this.disabled = true;
 
         fetch(BASE_URL_JS + '/maintenance-offers/toggle-accepted/' + id, {
