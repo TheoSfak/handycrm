@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.91] - 2026-05-20
+### Fixed
+- **Translations (en.json)**: Removed duplicate `customers` section that was overwriting the complete one — this caused ALL `customers.*` keys to show as raw text when browsing in English
+
 ## [1.7.90] - 2026-05-20
 ### Fixed
 - **Translations**: Added missing keys in el.json and en.json: `common.notes`, `customers.create`, `customers.update`, `quotes.accepted`, `quotes.rejected` — these were showing as raw keys on the Customers page

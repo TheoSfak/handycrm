@@ -742,11 +742,6 @@
         "notes": "Notes",
         "date_format_placeholder": "DD/MM/YYYY"
     },
-    "customers": {
-        "customer_info": "Customer Information",
-        "create": "Create Customer",
-        "update": "Update Customer"
-    },
     "notifications": {
         "new_notification": "New notification",
         "mark_as_read": "Mark as read",
