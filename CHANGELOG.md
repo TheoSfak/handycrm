@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.92] - 2026-05-20
+### Fixed
+- **Translations**: Fixed `saveTranslations()` in LanguageManager using shallow `array_merge` which replaced entire nested sections (e.g. all `customers.*` keys) when even one key was saved via the translations UI. Changed to deep recursive merge so only the specific saved keys are updated
+
 ## [1.7.91] - 2026-05-20
 ### Fixed
 - **Translations (en.json)**: Removed duplicate `customers` section that was overwriting the complete one — this caused ALL `customers.*` keys to show as raw text when browsing in English

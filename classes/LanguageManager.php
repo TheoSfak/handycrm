@@ -160,10 +160,10 @@ class LanguageManager {
     public function saveTranslations($language, $translations) {
         $filePath = $this->languagesPath . $language . '.json';
         
-        // Merge with existing translations
+        // Deep merge with existing translations to avoid overwriting sibling keys
         if (file_exists($filePath)) {
             $existing = json_decode(file_get_contents($filePath), true) ?? [];
-            $translations = array_merge($existing, $translations);
+            $translations = $this->deepMerge($existing, $translations);
         }
         
         $json = json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -179,6 +179,20 @@ class LanguageManager {
         return false;
     }
     
+    /**
+     * Recursively merge two translation arrays without overwriting sibling keys
+     */
+    private function deepMerge(array $base, array $override): array {
+        foreach ($override as $key => $value) {
+            if (is_array($value) && isset($base[$key]) && is_array($base[$key])) {
+                $base[$key] = $this->deepMerge($base[$key], $value);
+            } else {
+                $base[$key] = $value;
+            }
+        }
+        return $base;
+    }
+
     /**
      * Create a new language file
      */
