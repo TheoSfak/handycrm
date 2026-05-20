@@ -50,7 +50,17 @@
     "new_quote": "Νέα Προσφορά",
     "new_invoice": "Νέο Τιμολόγιο",
     "calendar": "Ημερολόγιο",
-    "mark_as_read": "Επισήμανση ως Αναγνωσμένο"
+    "mark_as_read": "Επισήμανση ως Αναγνωσμένο",
+    "maintenance_reminders": "Υπενθύμιση Συντήρησης - Λήξη Συμβολαίων",
+    "all_contracts": "Όλες οι Προσφορές",
+    "company": "Εταιρεία",
+    "offer_number": "Αρ. Προσφοράς",
+    "contract_end_date": "Ημ. Λήξης",
+    "days_remaining": "Υπολοιπόμενες Ημέρες",
+    "expired": "Έληξε πριν",
+    "days_ago": "ημέρες",
+    "expires_today": "Λήγει σήμερα!",
+    "days": "ημέρες"
   },
   "customers": {
     "title": "Πελάτες",

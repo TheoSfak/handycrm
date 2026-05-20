@@ -93,4 +93,57 @@ class MaintenanceOffer extends BaseModel {
         $stmt->execute($params);
         return (int)$stmt->fetchColumn();
     }
+
+    /**
+     * Count accepted contracts whose contract_end_date has already passed
+     */
+    public function getExpiredCount(): int {
+        $db = $this->db->connect();
+        $stmt = $db->query("
+            SELECT COUNT(*) FROM maintenance_offers
+            WHERE deleted_at IS NULL
+              AND accepted = 1
+              AND contract_end_date IS NOT NULL
+              AND contract_end_date < CURDATE()
+        ");
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Count accepted contracts expiring within the next $days days
+     */
+    public function getExpiringCount(int $days = 30): int {
+        $db = $this->db->connect();
+        $stmt = $db->prepare("
+            SELECT COUNT(*) FROM maintenance_offers
+            WHERE deleted_at IS NULL
+              AND accepted = 1
+              AND contract_end_date IS NOT NULL
+              AND contract_end_date >= CURDATE()
+              AND contract_end_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+        ");
+        $stmt->execute([$days]);
+        return (int)$stmt->fetchColumn();
+    }
+
+    /**
+     * Get list of accepted contracts expiring within $days days (or already expired)
+     * Returns company_name, offer_number, contract_end_date, id
+     */
+    public function getExpiringList(int $days = 30): array {
+        $db = $this->db->connect();
+        $stmt = $db->prepare("
+            SELECT id, offer_number, company_name, phone, contract_end_date,
+                   DATEDIFF(contract_end_date, CURDATE()) AS days_left
+            FROM maintenance_offers
+            WHERE deleted_at IS NULL
+              AND accepted = 1
+              AND contract_end_date IS NOT NULL
+              AND contract_end_date <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+            ORDER BY contract_end_date ASC
+            LIMIT 20
+        ");
+        $stmt->execute([$days]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

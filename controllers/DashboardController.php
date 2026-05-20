@@ -59,6 +59,7 @@ class DashboardController extends BaseController {
             'recent_activities' => $recentActivities,
             'upcoming_appointments' => $upcomingAppointments,
             'notifications' => $notifications,
+            'expiring_contracts' => $stats['expiring_list'] ?? [],
             'current_date' => date('d/m/Y'),
             'current_time' => date('H:i')
         ];
@@ -207,6 +208,22 @@ class DashboardController extends BaseController {
         } catch (Exception $e) {
             $stats['overdue_maintenances']  = 0;
             $stats['upcoming_maintenances'] = 0;
+        }
+
+        // Expiring / expired maintenance offer contracts
+        try {
+            require_once 'models/MaintenanceOffer.php';
+            $offerModel = new MaintenanceOffer();
+            $reminderDays = (int)(Settings::get('maintenance_reminder_days', 30));
+            $stats['expired_contracts']    = $offerModel->getExpiredCount();
+            $stats['expiring_contracts']   = $offerModel->getExpiringCount($reminderDays);
+            $stats['expiring_list']        = $offerModel->getExpiringList($reminderDays);
+            $stats['reminder_days']        = $reminderDays;
+        } catch (Exception $e) {
+            $stats['expired_contracts']  = 0;
+            $stats['expiring_contracts'] = 0;
+            $stats['expiring_list']      = [];
+            $stats['reminder_days']      = 30;
         }
         
         // Check if user is valid before accessing role

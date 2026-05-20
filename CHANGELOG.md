@@ -1,5 +1,15 @@
 # HandyCRM - Change Log
 
+## [1.7.94] - 2026-06-01
+### Added
+- **Υπενθύμιση Συντήρησης**: Dashboard widget showing accepted maintenance offer contracts expiring within 30 days (or already expired). Lists company name, offer number, expiry date and days remaining with colour-coded badges (red ≤7 days, yellow ≤14 days, blue otherwise). Reads `maintenance_reminder_days` setting (default 30) from settings table.
+- **Migration 022**: Added `contract_end_date` column to `maintenance_offers` table; auto-populated from `accepted_at + 1 year` for existing accepted records.
+- **MaintenanceOffer model**: Added `getExpiredCount()`, `getExpiringCount($days)`, `getExpiringList($days)` methods.
+
+## [1.7.93] - 2026-05-20
+### Fixed
+- **Language files**: Removed `languages/el.json` and `languages/en.json` from `.gitignore` so translations are tracked in git and deployed correctly
+
 ## [1.7.92] - 2026-05-20
 ### Fixed
 - **Translations**: Fixed `saveTranslations()` in LanguageManager using shallow `array_merge` which replaced entire nested sections (e.g. all `customers.*` keys) when even one key was saved via the translations UI. Changed to deep recursive merge so only the specific saved keys are updated

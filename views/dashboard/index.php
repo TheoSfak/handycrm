@@ -86,6 +86,70 @@ echo $updateChecker->getUpdateNotification();
 </div>
 <?php endif; ?>
 
+<?php if (($stats['expired_contracts'] ?? 0) > 0 || ($stats['expiring_contracts'] ?? 0) > 0): ?>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="fas fa-bell text-warning me-2"></i>
+                    <?= __('dashboard.maintenance_reminders') ?>
+                </h6>
+                <a href="<?= BASE_URL ?>/maintenance-offers" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i><?= __('dashboard.all_contracts') ?>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th><?= __('dashboard.company') ?></th>
+                                <th><?= __('dashboard.offer_number') ?></th>
+                                <th><?= __('dashboard.contract_end_date') ?></th>
+                                <th><?= __('dashboard.days_remaining') ?></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($expiring_contracts as $contract): ?>
+                            <tr>
+                                <td class="fw-semibold"><?= htmlspecialchars($contract['company_name']) ?></td>
+                                <td><span class="badge bg-secondary"><?= htmlspecialchars($contract['offer_number']) ?></span></td>
+                                <td><?= date('d/m/Y', strtotime($contract['contract_end_date'])) ?></td>
+                                <td>
+                                    <?php $daysLeft = (int)$contract['days_left']; ?>
+                                    <?php if ($daysLeft < 0): ?>
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>
+                                            <?= __('dashboard.expired') ?> <?= abs($daysLeft) ?> <?= __('dashboard.days_ago') ?>
+                                        </span>
+                                    <?php elseif ($daysLeft === 0): ?>
+                                        <span class="badge bg-danger"><?= __('dashboard.expires_today') ?></span>
+                                    <?php elseif ($daysLeft <= 7): ?>
+                                        <span class="badge bg-danger"><?= $daysLeft ?> <?= __('dashboard.days') ?></span>
+                                    <?php elseif ($daysLeft <= 14): ?>
+                                        <span class="badge bg-warning text-dark"><?= $daysLeft ?> <?= __('dashboard.days') ?></span>
+                                    <?php else: ?>
+                                        <span class="badge bg-info text-dark"><?= $daysLeft ?> <?= __('dashboard.days') ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="text-end">
+                                    <a href="<?= BASE_URL ?>/maintenance-offers" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row">
     <!-- Recent Activities -->
     <div class="col-lg-4 mb-4">

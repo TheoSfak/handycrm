@@ -48,7 +48,17 @@
         "new_quote": "New Quote",
         "new_invoice": "New Invoice",
         "calendar": "Calendar",
-        "mark_as_read": "Mark as Read"
+        "mark_as_read": "Mark as Read",
+        "maintenance_reminders": "Maintenance Reminders - Expiring Contracts",
+        "all_contracts": "All Offers",
+        "company": "Company",
+        "offer_number": "Offer No.",
+        "contract_end_date": "Expiry Date",
+        "days_remaining": "Days Remaining",
+        "expired": "Expired",
+        "days_ago": "days ago",
+        "expires_today": "Expires today!",
+        "days": "days"
     },
     "customers": {
         "title": "Customers",
