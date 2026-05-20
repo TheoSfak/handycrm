@@ -129,15 +129,16 @@
                 <i class="fas fa-save me-1"></i> Αποθήκευση
               </button>
 
-              <!-- Delete -->
-              <form method="POST" action="<?= BASE_URL ?>/uploaded-contracts/delete/<?= $contract['id'] ?>"
-                    id="deleteForm" class="mb-0">
-                <input type="hidden" name="csrf_token" value="<?= $this->generateCsrfToken() ?>">
-                <button type="button" class="btn btn-outline-danger" id="deleteBtn">
-                  <i class="fas fa-trash me-1"></i> Διαγραφή
-                </button>
-              </form>
+              <button type="button" class="btn btn-outline-danger" id="deleteBtn">
+                <i class="fas fa-trash me-1"></i> Διαγραφή
+              </button>
             </div>
+          </form>
+
+          <!-- Delete form lives OUTSIDE contractForm to avoid nested-form browser bug -->
+          <form method="POST" action="<?= BASE_URL ?>/uploaded-contracts/delete/<?= $contract['id'] ?>"
+                id="deleteForm" class="d-none">
+            <input type="hidden" name="csrf_token" value="<?= $this->generateCsrfToken() ?>">
           </form>
         </div>
       </div>
