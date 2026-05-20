@@ -445,6 +445,21 @@ class VersionManager {
     }
 
     /**
+     * Run a shell command using exec() or shell_exec(), whichever is available.
+     * Returns the combined output string, or false if both are disabled.
+     */
+    private function shellRun(string $cmd) {
+        $disabled = array_map('trim', explode(',', ini_get('disable_functions') ?: ''));
+        if (!in_array('exec', $disabled)) {
+            $out = []; exec($cmd, $out); return implode("\n", $out);
+        }
+        if (!in_array('shell_exec', $disabled)) {
+            return (string)@shell_exec($cmd);
+        }
+        return false;
+    }
+
+    /**
      * Run composer install automatically to pull in any new PHP dependencies.
      * Tries multiple strategies: system composer binary, project composer.phar,
      * or downloads composer.phar on-the-fly via cURL.
@@ -453,18 +468,18 @@ class VersionManager {
         $rootDir  = $this->rootDir;
         $php      = PHP_BINARY ?: 'php';
 
-        // shell_exec / exec must be available
-        $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
+        // Verify at least one shell function is available
+        $disabled = array_map('trim', explode(',', ini_get('disable_functions') ?: ''));
         if (in_array('shell_exec', $disabled) && in_array('exec', $disabled)) {
-            return ['success' => false, 'message' => 'shell_exec and exec are disabled on this server.'];
+            return ['success' => false, 'message' => 'shell_exec and exec are both disabled on this server.'];
         }
 
         // Find composer binary — check PATH and common server locations
         $composerBin = null;
         $candidates  = ['composer', '/usr/local/bin/composer', '/usr/bin/composer', '/usr/local/sbin/composer'];
         foreach ($candidates as $c) {
-            $test = @shell_exec($c . ' --version 2>&1');
-            if ($test && strpos($test, 'Composer') !== false) {
+            $test = $this->shellRun($c . ' --version 2>&1');
+            if ($test !== false && strpos($test, 'Composer') !== false) {
                 $composerBin = $c;
                 break;
             }
@@ -477,8 +492,8 @@ class VersionManager {
 
         // Last resort: download composer.phar from getcomposer.org
         if (!$composerBin) {
-            $phar        = $rootDir . '/composer.phar';
-            $downloaded  = false;
+            $phar         = $rootDir . '/composer.phar';
+            $downloaded   = false;
             $installerUrl = 'https://getcomposer.org/composer-stable.phar';
 
             if (function_exists('curl_init')) {
@@ -516,7 +531,7 @@ class VersionManager {
         $cmd    = 'COMPOSER_HOME=' . escapeshellarg($composerHome)
                 . ' ' . $composerBin
                 . ' install --no-dev --no-interaction --prefer-dist --working-dir=' . escapeshellarg($rootDir) . ' 2>&1';
-        $output = @shell_exec($cmd);
+        $output = $this->shellRun($cmd);
 
         $success = $output !== null && (
             strpos($output, 'Nothing to install') !== false ||

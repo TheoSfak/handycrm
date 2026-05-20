@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.99] - 2026-05-20
+### Fixed
+- **Composer auto-install**: Replaced all direct `shell_exec()` calls with a `shellRun()` helper that tries `exec()` first and falls back to `shell_exec()`. Fixes fatal error on servers where `shell_exec` is disabled in `disable_functions` but `exec` is available (e.g. CloudLinux shared hosting).
+
 ## [1.7.98] - 2026-05-20
 ### Fixed
 - **Composer auto-install**: Set `COMPOSER_HOME` to a temp directory before running composer, fixing the *"HOME or COMPOSER_HOME environment variable must be set"* error that occurred on shared hosting when PHP runs as a web process without a home directory.
