@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.8.0] - 2026-05-20
+### Security
+- **phpoffice/phpspreadsheet**: Upgraded from `^5.2` to `^5.6.1` (installed: `5.7.0`). Fixes 5 CVEs:
+  - **CVE-2026-34084** *(critical)* — SSRF/RCE via `IOFactory::load()` with user-controlled filename
+  - **CVE-2026-40902** *(high)* — CPU DoS via unbounded row number in XLSX Row Dimensions
+  - **CVE-2026-40863** *(high)* — CPU DoS via unbounded row index in SpreadsheetML XML Reader
+  - **CVE-2026-40296** *(medium)* — XSS via number format `@` text placeholder in HTML writer
+  - **CVE-2026-35453** *(medium)* — XSS via NumberFormat `@` text substitution in HTML Writer
+
 ## [1.7.99] - 2026-05-20
 ### Fixed
 - **Composer auto-install**: Replaced all direct `shell_exec()` calls with a `shellRun()` helper that tries `exec()` first and falls back to `shell_exec()`. Fixes fatal error on servers where `shell_exec` is disabled in `disable_functions` but `exec` is available (e.g. CloudLinux shared hosting).
