@@ -1,5 +1,17 @@
 # HandyCRM - Change Log
 
+## [1.8.2] - 2026-05-20
+### Fixed
+- **Συμφωνητικά — Σάρωση PDF — Ελληνικά**: Comprehensive improvements for Greek PDF text extraction:
+  - Unicode NFC normalization so accented Greek characters (e.g. `ά`, `ή`) match regex patterns correctly
+  - `pdftotext` now called with `-enc UTF-8` flag to ensure Greek output
+  - `smalot/pdfparser` configured with `setFontSpaceLimit(-100)` for better Greek word spacing
+  - Added `greekRatio()` quality check — if extracted text contains < 3% Greek characters the scanner falls through to the next strategy instead of using garbled output
+  - Amount detection now finds amounts after Greek labels (`ΑΜΟΙΒΗ`, `ΤΙΜΗΜΑ`, `ΠΟΣΟ`, `ΣΥΝΟΛΟ`) and handles `€ 1.234,56` (symbol before number) format
+  - Title fallback now skips digit-heavy lines and protocol-reference lines (`Α.Π.`, `ΑΡ.ΠΡΩΤ.`)
+  - Description patterns extended: `ΑΝΤΙΚΕΙΜΕΝΟ ΤΗΣ ΣΥΜΒΑΣΗΣ`, `ΠΕΡΙΓΡΑΦΗ`, `ΘΕΜΑ`
+- **Συμφωνητικά — Διαγραφή**: Delete button now works — the delete `<form>` was nested inside the save form (invalid HTML, browser ignored it); moved outside as a hidden form.
+
 ## [1.8.1] - 2026-05-20
 ### Fixed
 - **Συμφωνητικά — PDF Preview**: Changed `X-Frame-Options` from `DENY` to `SAMEORIGIN` in `.htaccess` so the PDF iframe loads correctly within the same domain.
