@@ -150,6 +150,59 @@ echo $updateChecker->getUpdateNotification();
 </div>
 <?php endif; ?>
 
+<?php if (($stats['expiring_uploaded_contracts'] ?? 0) > 0): ?>
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="fas fa-file-signature text-warning me-2"></i>
+                    Συμφωνητικά — Επερχόμενες Λήξεις
+                </h6>
+                <a href="<?= BASE_URL ?>/uploaded-contracts" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i>Όλα τα Συμφωνητικά
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Πελάτης</th>
+                                <th>Τίτλος</th>
+                                <th>Ημ. Λήξης</th>
+                                <th>Υπολ. Ημέρες</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($expiring_uploaded_contracts as $uc): ?>
+                            <tr>
+                                <td class="fw-semibold"><?= htmlspecialchars($uc['customer_name']) ?></td>
+                                <td class="text-muted small"><?= htmlspecialchars($uc['title'] ?: '—') ?></td>
+                                <td><?= date('d/m/Y', strtotime($uc['end_date'])) ?></td>
+                                <td>
+                                    <?php $dl = (int)$uc['days_left']; ?>
+                                    <?php if ($dl < 0): ?>
+                                        <span class="badge bg-danger"><i class="fas fa-exclamation-triangle me-1"></i><?= __('dashboard.expired') ?> <?= abs($dl) ?> <?= __('dashboard.days_ago') ?></span>
+                                    <?php elseif ($dl === 0): ?>
+                                        <span class="badge bg-danger"><?= __('dashboard.expires_today') ?></span>
+                                    <?php elseif ($dl <= 7): ?>
+                                        <span class="badge bg-danger"><?= $dl ?> <?= __('dashboard.days') ?></span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning text-dark"><?= $dl ?> <?= __('dashboard.days') ?></span>
+                                    <?php endif; ?>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <div class="row">
     <!-- Recent Activities -->
     <div class="col-lg-4 mb-4">

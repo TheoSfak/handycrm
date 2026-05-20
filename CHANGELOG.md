@@ -1,5 +1,13 @@
 # HandyCRM - Change Log
 
+## [1.7.95] - 2026-05-20
+### Added
+- **Συμφωνητικά**: New section in sidebar (Διαχείριση). Upload signed contract PDFs manually. After upload a "Scan PDF" button auto-extracts: title, agreed amount (€), start date, end date, description of works. All extracted fields are editable. PDF preview embedded inline. Delete with confirmation.
+- **Migration 023**: New `uploaded_contracts` table (customer_name, file_path, title, amount, start_date, end_date, description, notes, extracted_text, soft-delete).
+- **UploadedContract model**: CRUD + `extractFromPdf()` using `smalot/pdfparser`. Regex extraction for dates, amounts (€), title, description.
+- **Dashboard reminder**: Widget showing uploaded contracts whose `end_date` is within 30 days (or already expired).
+- **composer.json**: Added `smalot/pdfparser ^2.0` dependency (run `composer install` on server after deploy).
+
 ## [1.7.94] - 2026-06-01
 ### Added
 - **Υπενθύμιση Συντήρησης**: Dashboard widget showing accepted maintenance offer contracts expiring within 30 days (or already expired). Lists company name, offer number, expiry date and days remaining with colour-coded badges (red ≤7 days, yellow ≤14 days, blue otherwise). Reads `maintenance_reminder_days` setting (default 30) from settings table.

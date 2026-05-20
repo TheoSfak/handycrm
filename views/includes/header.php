@@ -767,6 +767,14 @@
             </li>
             <?php endif; ?>
 
+            <?php if ($isAdmin || $isSupervisor): ?>
+            <li class="nav-item">
+                <a class="nav-link <?= strpos($currentRoute, '/uploaded-contracts') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/uploaded-contracts">
+                    <i class="fas fa-file-signature"></i> Συμφωνητικά
+                </a>
+            </li>
+            <?php endif; ?>
+
             <?php if ($isAdmin || $isSupervisor || can('materials.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/materials') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/materials">
@@ -872,6 +880,7 @@
                     elseif (strpos($uri, '/appointments/calendar') !== false) echo __('menu.calendar');
                     elseif (strpos($uri, '/appointments') !== false) echo __('menu.appointments');
                     elseif (strpos($uri, '/quotes') !== false)      echo __('menu.quotes');
+                    elseif (strpos($uri, '/uploaded-contracts') !== false) echo 'Συμφωνητικά';
                     elseif (strpos($uri, '/materials') !== false)   echo __('menu.materials');
                     elseif (strpos($uri, '/reports') !== false)     echo __('menu.reports');
                     elseif (strpos($uri, '/users') !== false)       echo __('menu.users');

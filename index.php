@@ -404,6 +404,31 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         echo "<h1>404 - Maintenance page not found</h1>";
     }
     
+} elseif (strpos($currentRoute, '/uploaded-contracts') === 0) {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+    require_once 'controllers/UploadedContractController.php';
+    $controller = new UploadedContractController();
+
+    if ($currentRoute === '/uploaded-contracts' || $currentRoute === '/uploaded-contracts/') {
+        $controller->index();
+    } elseif ($currentRoute === '/uploaded-contracts/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/^\/uploaded-contracts\/show\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->show((int)$matches[1]);
+    } elseif (preg_match('/^\/uploaded-contracts\/scan\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->scan((int)$matches[1]);
+    } elseif (preg_match('/^\/uploaded-contracts\/update\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update((int)$matches[1]);
+    } elseif (preg_match('/^\/uploaded-contracts\/delete\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete((int)$matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Page not found</h1>";
+    }
+
 } elseif (strpos($currentRoute, '/maintenance-offers') === 0) {
     if (!isset($_SESSION['user_id'])) {
         header('Location: ?route=/login');

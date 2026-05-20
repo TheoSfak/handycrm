@@ -60,6 +60,7 @@ class DashboardController extends BaseController {
             'upcoming_appointments' => $upcomingAppointments,
             'notifications' => $notifications,
             'expiring_contracts' => $stats['expiring_list'] ?? [],
+            'expiring_uploaded_contracts' => $stats['expiring_uploaded_list'] ?? [],
             'current_date' => date('d/m/Y'),
             'current_time' => date('H:i')
         ];
@@ -224,6 +225,17 @@ class DashboardController extends BaseController {
             $stats['expiring_contracts'] = 0;
             $stats['expiring_list']      = [];
             $stats['reminder_days']      = 30;
+        }
+
+        // Expiring uploaded contract documents
+        try {
+            require_once 'models/UploadedContract.php';
+            $ucModel = new UploadedContract();
+            $stats['expiring_uploaded_contracts'] = $ucModel->getExpiringCount(30);
+            $stats['expiring_uploaded_list']      = $ucModel->getExpiringList(30);
+        } catch (Exception $e) {
+            $stats['expiring_uploaded_contracts'] = 0;
+            $stats['expiring_uploaded_list']      = [];
         }
         
         // Check if user is valid before accessing role
