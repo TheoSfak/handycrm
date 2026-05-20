@@ -26,6 +26,8 @@ Thumbs.db
 
 # Temporary and cache files
 run_composer_install.php
+run_composer_audit.php
+run_composer_update.php
 composer.phar
 *.log
 *.tmp
