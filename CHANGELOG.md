@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.8.1] - 2026-05-20
+### Fixed
+- **Συμφωνητικά — PDF Preview**: Changed `X-Frame-Options` from `DENY` to `SAMEORIGIN` in `.htaccess` so the PDF iframe loads correctly within the same domain.
+- **Συμφωνητικά — Σάρωση PDF — Ημερομηνίες**: Date regex now restricts year to `1900-2099`, preventing reference numbers like `5024` from being misidentified as dates.
+- **Συμφωνητικά — Σάρωση PDF — Τίτλος**: Improved title extraction fallback — skips lines with protocol/reference number patterns (Α. Π., ΑΡ. ΠΡΩΤ., etc.) and lines that start with dates or numbers.
+- **Συμφωνητικά — Σάρωση PDF — Ποσό**: Improved amount regex to handle Greek thousand-separator format (`1.234,56 €`), plain comma-decimal (`1234,56 €`), and integer-only amounts.
+
 ## [1.8.0] - 2026-05-20
 ### Security
 - **phpoffice/phpspreadsheet**: Upgraded from `^5.2` to `^5.6.1` (installed: `5.7.0`). Fixes 5 CVEs:

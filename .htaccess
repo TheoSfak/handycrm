@@ -99,8 +99,8 @@ RewriteRule ^(.*)$ index.php?route=/$1 [QSA,L]
     # Enable XSS protection
     Header always set X-XSS-Protection "1; mode=block"
     
-    # Prevent clickjacking
-    Header always set X-Frame-Options DENY
+    # Prevent clickjacking - SAMEORIGIN allows iframe within same domain (e.g. PDF preview)
+    Header always set X-Frame-Options SAMEORIGIN
     
     # Referrer policy
     Header always set Referrer-Policy "strict-origin-when-cross-origin"

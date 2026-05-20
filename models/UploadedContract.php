@@ -225,30 +225,48 @@ class UploadedContract extends BaseModel {
         }
 
         // ── TITLE ──────────────────────────────────────────────────────────
-        if (preg_match('/ΣΥΜΦΩΝΗΤΙΚ[ΟΑ]\s+[^\n]{5,80}/ui', $text, $m)) {
-            $result['title'] = trim($m[0]);
-        } elseif (preg_match('/ΣΥΜΒΑΣΗ\s+[^\n]{5,80}/ui', $text, $m)) {
+        // 1. Look for a full line containing a contract keyword
+        if (preg_match('/^.*(?:ΣΥΜΦΩΝΗΤΙΚ[ΟΑ]|ΣΥΜΒΑΣΗ|ΣΥΜΒΟΛΑΙΟ).{0,120}$/mui', $text, $m)) {
             $result['title'] = trim($m[0]);
         } else {
+            // 2. Fallback: first "clean" all-caps-ish line (skip lines with digits/refs)
             foreach (explode("\n", $text) as $line) {
                 $line = trim($line);
-                if (mb_strlen($line) >= 10) {
-                    $result['title'] = mb_substr($line, 0, 200);
+                // Skip short, mostly-numeric, or reference-number lines
+                if (mb_strlen($line) < 15) continue;
+                if (preg_match('/\d{4}.*Π\.|Α\.\s*Π\.|ΑΡ\.\s*ΠΡΩΤ/ui', $line)) continue;
+                if (preg_match('/^\s*[\d\.\,\/\-\s]+$/', $line)) continue;
+                $result['title'] = mb_substr($line, 0, 200);
+                break;
+            }
+        }
+
+        // ── AMOUNT ─────────────────────────────────────────────────────────
+        // Matches: 1.234,56 € / 1234,56€ / 1.234.000,00 EUR / ευρώ
+        $amountPatterns = [
+            // Greek thousand-separator format: 1.234,56 €
+            '/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?)\s*(?:€|EUR|ευρ)/iu',
+            // Plain with comma decimal: 1234,56 €
+            '/(\d+,\d{1,2})\s*(?:€|EUR|ευρ)/iu',
+            // Plain integer: 1234 €
+            '/(\d{3,})\s*(?:€|EUR|ευρ)/iu',
+        ];
+        foreach ($amountPatterns as $pat) {
+            if (preg_match($pat, $text, $m)) {
+                $raw = $m[1];
+                // Remove thousand dots, convert comma decimal to dot
+                $raw = str_replace('.', '', $raw);
+                $raw = str_replace(',', '.', $raw);
+                if (is_numeric($raw)) {
+                    $result['amount'] = $raw;
                     break;
                 }
             }
         }
 
-        // ── AMOUNT ─────────────────────────────────────────────────────────
-        if (preg_match('/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)\s*(?:€|EUR|ευρ)/iu', $text, $m)) {
-            $raw = $m[1];
-            $raw = str_replace('.', '', $raw);
-            $raw = str_replace(',', '.', $raw);
-            $result['amount'] = $raw;
-        }
-
         // ── DATES ──────────────────────────────────────────────────────────
-        $datePattern = '/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})\b/';
+        // Restrict year to 1900-2099 to avoid misidentifying reference numbers as years
+        $datePattern = '/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-]((?:19|20)\d{2})\b/';
         preg_match_all($datePattern, $text, $dateMatches, PREG_SET_ORDER);
         $dates = [];
         foreach ($dateMatches as $dm) {
