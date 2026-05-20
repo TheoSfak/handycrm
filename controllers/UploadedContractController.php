@@ -139,8 +139,8 @@ class UploadedContractController extends BaseController {
             return;
         }
 
-        $filePath = __DIR__ . '/../' . $contract['file_path'];
-        $extracted = UploadedContract::extractFromPdf($filePath);
+        $filePath  = __DIR__ . '/../' . $contract['file_path'];
+        $extracted = UploadedContract::extractFromPdf($filePath, $contract['original_filename'] ?? null);
 
         // Persist raw text to DB
         if (!empty($extracted['text'])) {

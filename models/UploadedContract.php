@@ -175,7 +175,7 @@ class UploadedContract extends BaseModel {
      * Extract text and key fields from a PDF file using smalot/pdfparser.
      * Returns array with keys: text, title, amount, start_date, end_date, description
      */
-    public static function extractFromPdf(string $filePath): array {
+    public static function extractFromPdf(string $filePath, ?string $originalFilename = null): array {
         $result = [
             'text'        => '',
             'title'       => '',
@@ -241,6 +241,14 @@ class UploadedContract extends BaseModel {
             }
         }
 
+        // ── Fix inter-character spaces ─────────────────────────────────────
+        // smalot/pdfparser sometimes extracts large-font headers as
+        // "Σ Υ Μ Β Α Σ Η" instead of "ΣΥΜΒΑΣΗ". Collapse runs of 3+ single
+        // uppercase characters each followed by a space.
+        $text = preg_replace_callback('/(?:[Α-ΩA-Z\d] ){3,}/u', function ($m) {
+            return preg_replace('/\s+/u', '', $m[0]);
+        }, $text) ?? $text;
+
         $result['text'] = $text;
         if (strlen(trim($text)) === 0) {
             return $result;
@@ -264,14 +272,31 @@ class UploadedContract extends BaseModel {
             foreach (explode("\n", $text) as $line) {
                 $line = trim($line);
                 if (mb_strlen($line) < 15) continue;
-                if (preg_match('/Α\.\s*Π\.|ΑΡ\.\s*ΠΡΩΤ|ΑΡΙΘ\.\s*ΠΡΩΤ/ui', $line)) continue;
+                // Skip article/clause numbers like "1.", "2.", "(α)"
+                if (preg_match('/^\s*[\d]+[\.)]/u', $line)) continue;
+                // Skip protocol/reference markers
+                if (preg_match('/Α\.\s*Π\.|ΑΡ\.\s*ΠΡΩΤ|ΑΡΙΘ\.\s*ΠΡΩΤ|ΑΔΑΜ:/ui', $line)) continue;
+                // Skip lines with email or URL
+                if (preg_match('/@|www\.|http/i', $line)) continue;
+                // Skip lines with phone numbers (4+ consecutive digits not part of a year)
+                if (preg_match('/\d{6,}/', $line)) continue;
+                // Skip lines with quoted text markers «»
+                if (preg_match('/[«»]/', $line)) continue;
+                // Skip lines that are mostly numeric
                 if (preg_match('/^\s*[\d\.\,\/\-\s]+$/', $line)) continue;
-                // Skip lines that are mostly numbers (reference codes, page numbers)
                 $digitCount = preg_match_all('/\d/', $line);
                 if ($digitCount > mb_strlen($line) * 0.4) continue;
                 $result['title'] = mb_substr($line, 0, 200);
                 break;
             }
+        }
+
+        // 3. Last resort: derive title from original filename
+        if ($result['title'] === '' && $originalFilename) {
+            $base = pathinfo($originalFilename, PATHINFO_FILENAME);
+            $base = str_replace(['_', '-'], ' ', $base);
+            $base = preg_replace('/\s+/', ' ', $base);
+            $result['title'] = mb_substr(trim($base), 0, 200);
         }
 
         // ── AMOUNT ─────────────────────────────────────────────────────────
@@ -302,22 +327,43 @@ class UploadedContract extends BaseModel {
         }
 
         // ── DATES ──────────────────────────────────────────────────────────
-        // Restrict year to 1900-2099 to avoid misidentifying reference numbers as years
-        $datePattern = '/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-]((?:19|20)\d{2})\b/';
-        preg_match_all($datePattern, $text, $dateMatches, PREG_SET_ORDER);
-        $dates = [];
-        foreach ($dateMatches as $dm) {
-            $day   = str_pad($dm[1], 2, '0', STR_PAD_LEFT);
-            $month = str_pad($dm[2], 2, '0', STR_PAD_LEFT);
-            $year  = $dm[3];
+        // Lookbehind filters out reference-code dates like "3122/07-03-2025"
+        // (where the date is immediately preceded by / or a digit).
+        $datePat = '/(?<![\d\/])(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-]((?:19|20)\d{2})(?!\d)/u';
+        preg_match_all($datePat, $text, $dm, PREG_SET_ORDER);
+        $allDates = [];
+        foreach ($dm as $d) {
+            $day   = str_pad($d[1], 2, '0', STR_PAD_LEFT);
+            $month = str_pad($d[2], 2, '0', STR_PAD_LEFT);
+            $year  = $d[3];
             if ((int)$month >= 1 && (int)$month <= 12 && (int)$day >= 1 && (int)$day <= 31) {
-                $dates[] = "$year-$month-$day";
+                $allDates[] = "$year-$month-$day";
             }
         }
-        if (!empty($dates)) {
-            sort($dates);
-            $result['start_date'] = $dates[0];
-            $result['end_date']   = end($dates);
+        if (!empty($allDates)) {
+            sort($allDates);
+            // 1. Try keyword-based start date (από / έναρξη / υπογραφή)
+            $startKw = '/(?:από\s+|εναρξ|αρχ[ήη]|υπογραφ|συνήφθ|συνάφθ)[^\d\/]{0,40}(?<![\d\/])(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-]((?:19|20)\d{2})(?!\d)/ui';
+            $endKw   = '/(?:έως\s+|εως\s+|μέχρι|μεχρι|λήξεω|λήξη|ληξ[^α])[^\d\/]{0,40}(?<![\d\/])(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-]((?:19|20)\d{2})(?!\d)/ui';
+
+            if (preg_match($startKw, $text, $m)) {
+                $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+                $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+                if ((int)$mo <= 12 && (int)$d <= 31) $result['start_date'] = "{$m[3]}-$mo-$d";
+            }
+            if (preg_match($endKw, $text, $m)) {
+                $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+                $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+                if ((int)$mo <= 12 && (int)$d <= 31) $result['end_date'] = "{$m[3]}-$mo-$d";
+            }
+
+            // 2. Fallback to min/max; prefer recent dates (>=2015) if available
+            if ($result['start_date'] === '' || $result['end_date'] === '') {
+                $recent = array_values(array_filter($allDates, fn($x) => substr($x, 0, 4) >= '2015'));
+                $pool   = !empty($recent) ? $recent : $allDates;
+                if ($result['start_date'] === '') $result['start_date'] = $pool[0];
+                if ($result['end_date']   === '') $result['end_date']   = end($pool);
+            }
         }
 
         // ── DESCRIPTION ────────────────────────────────────────────────────
