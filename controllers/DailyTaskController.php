@@ -19,63 +19,97 @@ if (!class_exists('TCPDF')) {
  */
 class CustomDailyTaskPDF extends TCPDF {
     private $logoPath = null;
-    
+    private $companySettings = [];
+
     public function setLogoPath($path) {
         $this->logoPath = $path;
     }
-    
+
+    public function setCompanySettings(array $settings) {
+        $this->companySettings = $settings;
+    }
+
     public function Header() {
-        // Logo (if exists)
-        if ($this->logoPath && file_exists($this->logoPath)) {
-            $this->Image($this->logoPath, 15, 10, 35, '', '', '', 'T', false, 300, '', false, false, 0, false, false, false);
+        $hasLogo = $this->logoPath && file_exists($this->logoPath);
+        $companyName = $this->companySettings['company_name'] ?? '';
+        $companyDisplayName = $this->companySettings['company_display_name'] ?? '';
+        $displayName = !empty($companyDisplayName) ? $companyDisplayName : $companyName;
+
+        // Build contact line parts
+        $contactParts = [];
+        if (!empty($this->companySettings['company_website'])) $contactParts[] = $this->companySettings['company_website'];
+        if (!empty($this->companySettings['company_email']))   $contactParts[] = $this->companySettings['company_email'];
+        if (!empty($this->companySettings['company_phone']))   $contactParts[] = 'Τηλ: ' . $this->companySettings['company_phone'];
+        $contactLine = implode(' | ', $contactParts);
+
+        // Build details line parts
+        $detailParts = [];
+        if (!empty($this->companySettings['company_address'])) $detailParts[] = $this->companySettings['company_address'];
+        if (!empty($this->companySettings['company_tax_id']))  $detailParts[] = 'ΑΦΜ: ' . $this->companySettings['company_tax_id'];
+        $detailLine = implode(' | ', $detailParts);
+
+        // Logo
+        if ($hasLogo) {
+            $this->Image($this->logoPath, 15, 8, 35, '', '', '', 'T', false, 300, '', false, false, 0, false, false, false);
         }
-        
-        // Set font for header
+
+        $xStart = $hasLogo ? 55 : 15;
+        $yPos   = 8;
+
+        // Company name
         $this->SetFont('dejavusans', 'B', 16);
         $this->SetTextColor(0, 102, 204);
-        
-        // Company name - adjust position if logo exists
-        $yPos = $this->logoPath && file_exists($this->logoPath) ? 10 : 15;
         $this->SetY($yPos);
-        $this->SetX(55); // Offset to the right of logo
-        $this->Cell(0, 10, 'ECOWATT Ενεργειακές Λύσεις', 0, 1, 'L');
-        
-        // Set font for subtitle
-        $this->SetFont('dejavusans', '', 9);
-        $this->SetTextColor(80, 80, 80);
-        $this->SetX(55);
-        $this->Cell(0, 5, 'ecowatt.gr | notifications@ecowatt.gr | Τηλ: +30 210 1234567', 0, 1, 'L');
-        
-        // Line
+        $this->SetX($xStart);
+        $this->Cell(0, 10, $displayName, 0, 1, 'L');
+
+        // Contact line
+        if ($contactLine) {
+            $this->SetFont('dejavusans', '', 9);
+            $this->SetTextColor(80, 80, 80);
+            $this->SetX($xStart);
+            $this->Cell(0, 5, $contactLine, 0, 1, 'L');
+        }
+
+        // Address / VAT line
+        if ($detailLine) {
+            $this->SetFont('dejavusans', '', 8);
+            $this->SetTextColor(100, 100, 100);
+            $this->SetX($xStart);
+            $this->Cell(0, 5, $detailLine, 0, 1, 'L');
+        }
+
+        // Horizontal rule
         $this->SetLineWidth(0.5);
         $this->SetDrawColor(0, 102, 204);
-        $this->Line(15, 35, $this->getPageWidth() - 15, 35);
-        
-        // Add some space
+        $this->Line(15, 37, $this->getPageWidth() - 15, 37);
+
         $this->Ln(5);
     }
-    
+
     public function Footer() {
+        $companyName = $this->companySettings['company_name'] ?? '';
+        $companyDisplayName = $this->companySettings['company_display_name'] ?? '';
+        $displayName = !empty($companyDisplayName) ? $companyDisplayName : $companyName;
+        $footerText = $displayName ? $displayName . ' - Εργασία Ημέρας' : 'Εργασία Ημέρας';
+
         // Position at 15 mm from bottom
         $this->SetY(-15);
-        
-        // Background color for footer
+
+        // Background
         $this->SetFillColor(240, 240, 240);
         $this->Rect(0, $this->GetY(), $this->getPageWidth(), 15, 'F');
-        
+
         // Line above footer
         $this->SetLineWidth(0.5);
         $this->SetDrawColor(0, 102, 204);
         $this->Line(10, $this->GetY(), $this->getPageWidth() - 10, $this->GetY());
-        
+
         $this->SetY(-12);
         $this->SetFont('dejavusans', '', 8);
         $this->SetTextColor(60, 60, 60);
-        
-        // Company details
-        $footerText = 'ECOWATT Ενεργειακές Λύσεις - Εργασία Ημέρας';
         $this->Cell(0, 5, $footerText, 0, 1, 'C');
-        
+
         // Page number
         $this->SetY(-8);
         $this->SetFont('dejavusans', 'I', 7);
@@ -96,6 +130,24 @@ class DailyTaskController extends BaseController {
         }
         
         $this->taskModel = new DailyTask();
+    }
+
+    /**
+     * Fetch company settings from DB for PDF header/footer
+     */
+    private function getCompanySettingsForPdf(): array {
+        $keys = ['company_name', 'company_display_name', 'company_address', 'company_phone',
+                 'company_email', 'company_tax_id', 'company_website', 'company_logo'];
+        $database = new Database();
+        $pdo = $database->connect();
+        $placeholders = implode(',', array_fill(0, count($keys), '?'));
+        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ($placeholders)");
+        $stmt->execute($keys);
+        $settings = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+        return $settings;
     }
 
     private function syncTaskHoursFromTechnicians($taskId, DailyTaskTechnician $technicianModel) {
@@ -776,52 +828,25 @@ class DailyTaskController extends BaseController {
                     throw new Exception('Οι ρυθμίσεις SMTP δεν έχουν ρυθμιστεί. Παρακαλώ ρυθμίστε τα στοιχεία email από τις Ρυθμίσεις Συστήματος.');
                 }
                 
-                // Get company logo from settings (try multiple possible table structures)
-                $logoPath = null;
-                try {
-                    
-                    // Temporarily disable exceptions to test queries
-                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_SILENT);
-                    
-                    // Try different possible query formats
-                    $possibleQueries = [
-                        // Format 1: setting_key, setting_value
-                        ["SELECT setting_value FROM settings WHERE setting_key = 'company_logo' LIMIT 1", 'setting_value'],
-                        // Format 2: key, value
-                        ["SELECT `value` FROM settings WHERE `key` = 'company_logo' LIMIT 1", 'value'],
-                        // Format 3: name, value
-                        ["SELECT `value` FROM settings WHERE `name` = 'company_logo' LIMIT 1", 'value'],
-                    ];
-                    
-                    foreach ($possibleQueries as list($query, $column)) {
-                        $stmt = $pdo->query($query);
-                        if ($stmt) {
-                            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-                            if ($result && !empty($result[$column])) {
-                                $logoPath = __DIR__ . '/..' . $result[$column];
-                                break; // Found it, stop trying
-                            }
-                        }
-                    }
-                    
-                    // Restore exception mode
-                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                    
-                } catch (Exception $e) {
-                    // Logo is optional, continue without it
-                }
-                
+                // Get company settings for PDF header/footer
+                $companySettings = $this->getCompanySettingsForPdf();
+
                 // Generate PDF with custom header/footer
                 $pdf = new CustomDailyTaskPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-                
+                $pdf->setCompanySettings($companySettings);
+
                 // Set logo if available
-                if ($logoPath && file_exists($logoPath)) {
-                    $pdf->setLogoPath($logoPath);
+                if (!empty($companySettings['company_logo'])) {
+                    $logoPath = __DIR__ . '/..' . $companySettings['company_logo'];
+                    if (file_exists($logoPath)) {
+                        $pdf->setLogoPath($logoPath);
+                    }
                 }
-                
+
                 // Set document information
+                $emailCompanyName = $companySettings['company_display_name'] ?? $companySettings['company_name'] ?? 'HandyCRM';
                 $pdf->SetCreator('HandyCRM');
-                $pdf->SetAuthor('ECOWATT');
+                $pdf->SetAuthor($emailCompanyName);
                 $pdf->SetTitle('Εργασία Ημέρας - ' . $task['task_number']);
                 $pdf->SetSubject('Εργασία Ημέρας');
                 
@@ -920,17 +945,22 @@ class DailyTaskController extends BaseController {
             $task['technicians_list'] = $technicianModel->getByDailyTask($id);
             
             // Create PDF
+            $companySettings = $this->getCompanySettingsForPdf();
             $pdf = new CustomDailyTaskPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-            
-            // Set logo path
-            $logoPath = __DIR__ . '/../assets/images/logo.png';
-            if (file_exists($logoPath)) {
-                $pdf->setLogoPath($logoPath);
+            $pdf->setCompanySettings($companySettings);
+
+            // Set logo from settings
+            if (!empty($companySettings['company_logo'])) {
+                $logoPath = __DIR__ . '/..' . $companySettings['company_logo'];
+                if (file_exists($logoPath)) {
+                    $pdf->setLogoPath($logoPath);
+                }
             }
-            
+
             // Set document information
+            $companyName = $companySettings['company_display_name'] ?? $companySettings['company_name'] ?? 'HandyCRM';
             $pdf->SetCreator('HandyCRM');
-            $pdf->SetAuthor('ECOWATT');
+            $pdf->SetAuthor($companyName);
             $pdf->SetTitle('Εργασία Ημέρας ' . $task['task_number']);
             $pdf->SetSubject('Εργασία Ημέρας');
             

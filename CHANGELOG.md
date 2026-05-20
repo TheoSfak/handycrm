@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.84] - 2026-05-20
+### Fixed
+- **Εργασίες Ημέρας**: Το PDF export και το αποστολή email με PDF χρησιμοποιούν πλέον τα στοιχεία εταιρείας από τις Ρυθμίσεις (λογότυπο, επωνυμία, διεύθυνση, ΑΦΜ, τηλέφωνο, email, website) αντί hardcoded τιμών στο header/footer
+
 ## [1.7.83] - 2026-05-15
 ### Fixed
 - **Συντηρήσεις Μ/Σ**: Αδυναμία αποθήκευσης όταν ανεβαίνουν πολλές φωτογραφίες υψηλής ανάλυσης — αυξήθηκαν τα PHP upload limits (`upload_max_filesize` 50M, `post_max_size` 200M, `memory_limit` 256M, `max_file_uploads` 50)
