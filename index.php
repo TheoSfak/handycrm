@@ -424,6 +424,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->update((int)$matches[1]);
     } elseif (preg_match('/^\/uploaded-contracts\/delete\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->delete((int)$matches[1]);
+    } elseif (preg_match('/^\/uploaded-contracts\/file\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->file((int)$matches[1]);
     } else {
         header('HTTP/1.0 404 Not Found');
         echo "<h1>404 - Page not found</h1>";

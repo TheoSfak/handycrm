@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.7.97] - 2026-05-20
+### Fixed
+- **Συμφωνητικά — Σάρωση PDF**: Added two fallback extraction strategies when `smalot/pdfparser` is not installed. The scan button now works without composer:
+  1. `pdftotext` shell command (poppler-utils, available on most Linux servers)
+  2. Raw PHP PDF stream parser with FlateDecode decompression and Greek encoding detection
+- **Συμφωνητικά — PDF Preview**: iframe now loads via `/uploaded-contracts/file/{id}` PHP endpoint instead of direct file URL, fixing "refused to connect" errors when the web server doesn’t serve the `uploads/` directory directly.
+
 ## [1.7.96] - 2026-05-20
 ### Changed
 - **Auto-update (VersionManager)**: `composer install` now runs automatically as part of the in-app update process (Settings → Updates). Tries system `composer` binary, then `composer.phar` in project root, then downloads `composer.phar` on-the-fly — so new PHP dependencies (e.g. `smalot/pdfparser` for v1.7.95) are installed without any SSH access.

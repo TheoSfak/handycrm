@@ -227,4 +227,35 @@ class UploadedContractController extends BaseController {
         }
         return null;
     }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // GET /uploaded-contracts/file/{id}  — stream PDF to browser
+    // ─────────────────────────────────────────────────────────────────────
+    public function file(int $id): void {
+        $this->requireAdminOrSupervisor();
+
+        $contract = $this->model->findActive($id);
+        if (!$contract) {
+            http_response_code(404);
+            exit('Not found');
+        }
+
+        $filePath = __DIR__ . '/../' . $contract['file_path'];
+        if (!file_exists($filePath)) {
+            http_response_code(404);
+            exit('File not found');
+        }
+
+        // Sanitise filename for Content-Disposition
+        $safeName = preg_replace('/[^\w\-.]/', '_', $contract['original_filename']) ?: 'contract.pdf';
+
+        header('Content-Type: application/pdf');
+        header('Content-Length: ' . filesize($filePath));
+        header('Content-Disposition: inline; filename="' . $safeName . '"');
+        header('Cache-Control: private, max-age=3600');
+        header('X-Content-Type-Options: nosniff');
+
+        readfile($filePath);
+        exit;
+    }
 }

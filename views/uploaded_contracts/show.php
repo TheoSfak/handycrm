@@ -32,13 +32,13 @@
       <div class="card border-0 shadow-sm mb-3">
         <div class="card-header bg-white d-flex align-items-center justify-content-between">
           <h6 class="mb-0"><i class="fas fa-file-pdf text-danger me-2"></i>Αρχείο PDF</h6>
-          <a href="<?= BASE_URL ?>/<?= htmlspecialchars($contract['file_path']) ?>"
+          <a href="<?= BASE_URL ?>/uploaded-contracts/file/<?= $contract['id'] ?>"
              target="_blank" class="btn btn-sm btn-outline-secondary">
             <i class="fas fa-external-link-alt me-1"></i>Άνοιγμα
           </a>
         </div>
         <div class="card-body p-0">
-          <iframe src="<?= BASE_URL ?>/<?= htmlspecialchars($contract['file_path']) ?>#toolbar=1"
+          <iframe src="<?= BASE_URL ?>/uploaded-contracts/file/<?= $contract['id'] ?>#toolbar=1"
                   class="w-100 border-0 rounded-bottom"
                   style="height:420px;" title="PDF Preview"></iframe>
         </div>

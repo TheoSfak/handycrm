@@ -189,81 +189,181 @@ class UploadedContract extends BaseModel {
             return $result;
         }
 
+        // ── Strategy 1: smalot/pdfparser (best quality) ───────────────────
+        $text = '';
         try {
             $parserClass = '\Smalot\PdfParser\Parser';
-            if (!class_exists($parserClass)) {
-                return $result;
+            if (class_exists($parserClass)) {
+                $parser = new $parserClass();
+                $pdf    = $parser->parseFile($filePath);
+                $text   = $pdf->getText();
             }
-            $parser  = new $parserClass();
-            $pdf     = $parser->parseFile($filePath);
-            $text    = $pdf->getText();
-            $result['text'] = $text;
+        } catch (\Exception $e) {
+            error_log('PDF smalot extraction error: ' . $e->getMessage());
+        }
 
-            // ── TITLE ─────────────────────────────────────────────────────
-            // Look for "ΣΥΜΦΩΝΗΤΙΚΟ", "ΣΥΜΦΩΝΙΑ", "ΣΥΜΒΑΣΗ", "ΣΥΜΒΟΛΑΙΟ"
-            // or the first meaningful non-whitespace line
-            if (preg_match('/ΣΥΜΦΩΝΗΤΙΚ[ΟΑ]\s+[^\n]{5,80}/ui', $text, $m)) {
-                $result['title'] = trim($m[0]);
-            } elseif (preg_match('/ΣΥΜΒΑΣΗ\s+[^\n]{5,80}/ui', $text, $m)) {
-                $result['title'] = trim($m[0]);
-            } else {
-                // First substantial line
-                foreach (explode("\n", $text) as $line) {
-                    $line = trim($line);
-                    if (mb_strlen($line) >= 10) {
-                        $result['title'] = mb_substr($line, 0, 200);
-                        break;
-                    }
+        // ── Strategy 2: pdftotext shell command (poppler-utils) ───────────
+        if (strlen(trim($text)) < 20) {
+            $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
+            if (!in_array('shell_exec', $disabled)) {
+                $cmd  = 'pdftotext ' . escapeshellarg($filePath) . ' - 2>&1';
+                $out  = @shell_exec($cmd);
+                if ($out && strlen(trim($out)) > 20 && strpos($out, 'command not found') === false && strpos($out, 'No such file') === false) {
+                    $text = $out;
                 }
             }
+        }
 
-            // ── AMOUNT ────────────────────────────────────────────────────
-            // Match patterns like: 1.500,00 € / €1.500,00 / 1500 ευρώ
-            if (preg_match('/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)\s*(?:€|EUR|ευρ)/iu', $text, $m)) {
-                // Normalize Greek number format (1.500,00 → 1500.00)
-                $raw = $m[1];
-                $raw = str_replace('.', '', $raw);  // remove thousand sep
-                $raw = str_replace(',', '.', $raw); // decimal sep
-                $result['amount'] = $raw;
-            }
+        // ── Strategy 3: raw PDF stream extraction (no dependencies) ───────
+        if (strlen(trim($text)) < 20) {
+            $text = self::extractTextRaw($filePath);
+        }
 
-            // ── DATES ─────────────────────────────────────────────────────
-            // Collect all dates in the document (dd/mm/yyyy or dd-mm-yyyy or dd.mm.yyyy)
-            $datePattern = '/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})\b/';
-            preg_match_all($datePattern, $text, $dateMatches, PREG_SET_ORDER);
+        $result['text'] = $text;
+        if (strlen(trim($text)) === 0) {
+            return $result;
+        }
 
-            $dates = [];
-            foreach ($dateMatches as $dm) {
-                $day   = str_pad($dm[1], 2, '0', STR_PAD_LEFT);
-                $month = str_pad($dm[2], 2, '0', STR_PAD_LEFT);
-                $year  = $dm[3];
-                if ((int)$month >= 1 && (int)$month <= 12 && (int)$day >= 1 && (int)$day <= 31) {
-                    $dates[] = "$year-$month-$day";
-                }
-            }
-
-            if (!empty($dates)) {
-                sort($dates);
-                $result['start_date'] = $dates[0];
-                $result['end_date']   = end($dates);
-            }
-
-            // ── DESCRIPTION ───────────────────────────────────────────────
-            // Look for "ΑΝΤΙΚΕΙΜΕΝΟ", "ΕΡΓΑΣΙΕΣ", "ΕΡΓΟ", "ΑΦΟΡΑ"
-            foreach (['/ΑΝΤΙΚΕΙΜΕΝΟ[:\s]+([^\n]{10,300})/ui',
-                      '/ΕΡΓΑΣΙΕΣ[:\s]+([^\n]{10,300})/ui',
-                      '/ΑΦΟΡΑ[:\s]+([^\n]{10,300})/ui',
-                      '/ΑΦΟΡ[ΑΩ]\s+(?:ΤΗΝ|ΤΟ|ΤΑ)\s+([^\n]{10,300})/ui'] as $pat) {
-                if (preg_match($pat, $text, $m)) {
-                    $result['description'] = trim($m[1]);
+        // ── TITLE ──────────────────────────────────────────────────────────
+        if (preg_match('/ΣΥΜΦΩΝΗΤΙΚ[ΟΑ]\s+[^\n]{5,80}/ui', $text, $m)) {
+            $result['title'] = trim($m[0]);
+        } elseif (preg_match('/ΣΥΜΒΑΣΗ\s+[^\n]{5,80}/ui', $text, $m)) {
+            $result['title'] = trim($m[0]);
+        } else {
+            foreach (explode("\n", $text) as $line) {
+                $line = trim($line);
+                if (mb_strlen($line) >= 10) {
+                    $result['title'] = mb_substr($line, 0, 200);
                     break;
                 }
             }
+        }
 
-        } catch (\Exception $e) {
-            error_log('PDF extraction error: ' . $e->getMessage());
+        // ── AMOUNT ─────────────────────────────────────────────────────────
+        if (preg_match('/(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{1,2})?)\s*(?:€|EUR|ευρ)/iu', $text, $m)) {
+            $raw = $m[1];
+            $raw = str_replace('.', '', $raw);
+            $raw = str_replace(',', '.', $raw);
+            $result['amount'] = $raw;
+        }
+
+        // ── DATES ──────────────────────────────────────────────────────────
+        $datePattern = '/\b(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})\b/';
+        preg_match_all($datePattern, $text, $dateMatches, PREG_SET_ORDER);
+        $dates = [];
+        foreach ($dateMatches as $dm) {
+            $day   = str_pad($dm[1], 2, '0', STR_PAD_LEFT);
+            $month = str_pad($dm[2], 2, '0', STR_PAD_LEFT);
+            $year  = $dm[3];
+            if ((int)$month >= 1 && (int)$month <= 12 && (int)$day >= 1 && (int)$day <= 31) {
+                $dates[] = "$year-$month-$day";
+            }
+        }
+        if (!empty($dates)) {
+            sort($dates);
+            $result['start_date'] = $dates[0];
+            $result['end_date']   = end($dates);
+        }
+
+        // ── DESCRIPTION ────────────────────────────────────────────────────
+        foreach (['/ΑΝΤΙΚΕΙΜΕΝΟ[:\s]+([^\n]{10,300})/ui',
+                  '/ΕΡΓΑΣΙΕΣ[:\s]+([^\n]{10,300})/ui',
+                  '/ΑΦΟΡΑ[:\s]+([^\n]{10,300})/ui',
+                  '/ΑΦΟΡ[ΑΩ]\s+(?:ΤΗΝ|ΤΟ|ΤΑ)\s+([^\n]{10,300})/ui'] as $pat) {
+            if (preg_match($pat, $text, $m)) {
+                $result['description'] = trim($m[1]);
+                break;
+            }
         }
 
         return $result;
+    }
+
+    /**
+     * Raw fallback: decompress PDF content streams and extract plain text.
+     * Works for most PDFs generated by Word / LibreOffice without any library.
+     */
+    private static function extractTextRaw(string $filePath): string {
+        $content = file_get_contents($filePath);
+        if (!$content) {
+            return '';
+        }
+
+        $text = '';
+
+        // Try decompressing FlateDecode streams first (most modern PDFs)
+        if (function_exists('gzuncompress') || function_exists('gzinflate')) {
+            if (preg_match_all('/stream\r?\n(.*?)\r?\nendstream/s', $content, $streams)) {
+                foreach ($streams[1] as $stream) {
+                    $decompressed = false;
+                    if (function_exists('gzuncompress')) {
+                        $decompressed = @gzuncompress($stream);
+                    }
+                    if ($decompressed === false && function_exists('gzinflate')) {
+                        $decompressed = @gzinflate(substr($stream, 2));
+                    }
+                    $src = $decompressed !== false ? $decompressed : $stream;
+                    $text .= self::extractBtEtText($src) . "\n";
+                }
+            }
+        }
+
+        // Also scan the raw PDF for uncompressed BT...ET blocks
+        $text .= self::extractBtEtText($content);
+
+        // Normalise whitespace
+        $text = preg_replace('/[ \t]+/', ' ', $text);
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+
+        return trim($text);
+    }
+
+    /** Extract text from PDF BT...ET operator blocks */
+    private static function extractBtEtText(string $src): string {
+        $out = '';
+        if (!preg_match_all('/BT\s+(.*?)\s*ET/s', $src, $blocks)) {
+            return $out;
+        }
+        foreach ($blocks[1] as $block) {
+            // Parenthesis strings: (Hello) Tj  or  [(Hel) -30 (lo)] TJ
+            if (preg_match_all('/\(((?:[^()\\\\]|\\\\.)*)\)\s*Tj/s', $block, $m)) {
+                foreach ($m[1] as $t) {
+                    $out .= self::decodePdfStr($t);
+                }
+                $out .= "\n";
+            }
+            if (preg_match_all('/\[((?:[^\[\]]|\\\\.)*)\]\s*TJ/s', $block, $m)) {
+                foreach ($m[1] as $arr) {
+                    if (preg_match_all('/\(((?:[^()\\\\]|\\\\.)*)\)/s', $arr, $parts)) {
+                        foreach ($parts[1] as $t) {
+                            $out .= self::decodePdfStr($t);
+                        }
+                    }
+                }
+                $out .= "\n";
+            }
+        }
+        return $out;
+    }
+
+    /** Decode a raw PDF string (octal escapes, encoding detection) */
+    private static function decodePdfStr(string $s): string {
+        // Octal escapes \ddd
+        $s = preg_replace_callback('/\\\\([0-7]{3})/', function($m) {
+            return chr(octdec($m[1]));
+        }, $s);
+        // Common escapes
+        $s = str_replace(['\\n','\\r','\\t','\\\\','\\(','\\)'],
+                         ["\n", "\r", "\t", '\\',   '(',   ')'], $s);
+        // Convert to UTF-8 if needed
+        if (!mb_check_encoding($s, 'UTF-8')) {
+            foreach (['ISO-8859-7','Windows-1253','ISO-8859-1'] as $enc) {
+                $converted = @mb_convert_encoding($s, 'UTF-8', $enc);
+                if ($converted && mb_check_encoding($converted, 'UTF-8')) {
+                    return $converted;
+                }
+            }
+        }
+        return $s;
     }
 }
