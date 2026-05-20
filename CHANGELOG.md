@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.8.4] - 2026-05-20
+### Fixed
+- **Συμφωνητικά — Σάρωση PDF**:
+  - **Amount `ανέρχεται σε`**: Added dedicated pattern for the Greek procurement phrase *"ανέρχεται σε 7.865,00 ευρώ"* — previously `0,00` was returned because `τίμημα` (accented) was not matched case-insensitively by PCRE.
+  - **Amount keyword accent**: Added `τ[ίι]μημα` to match both accented and plain `τίμημα`/`τιμημα` variants.
+  - **Filename title `&amp;`**: `html_entity_decode()` now applied to filename before using it as a title fallback, preventing `&amp;` showing literally in the title field.
+
 ## [1.8.3] - 2026-05-20
 ### Fixed
 - **Συμφωνητικά — Σάρωση PDF**: Further improvements for Greek public-procurement contract parsing:

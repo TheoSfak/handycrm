@@ -294,6 +294,7 @@ class UploadedContract extends BaseModel {
         // 3. Last resort: derive title from original filename
         if ($result['title'] === '' && $originalFilename) {
             $base = pathinfo($originalFilename, PATHINFO_FILENAME);
+            $base = html_entity_decode($base, ENT_QUOTES | ENT_HTML5, 'UTF-8'); // decode &amp; etc.
             $base = str_replace(['_', '-'], ' ', $base);
             $base = preg_replace('/\s+/', ' ', $base);
             $result['title'] = mb_substr(trim($base), 0, 200);
@@ -302,8 +303,10 @@ class UploadedContract extends BaseModel {
         // ── AMOUNT ─────────────────────────────────────────────────────────
         // Try keyword-based patterns first (more reliable in Greek contracts)
         $amountPatterns = [
-            // Label before amount: ΑΜΟΙΒΗ / ΤΙΜΗΜΑ / ΠΟΣΟ / ΣΥΝΟΛΟ followed by number
-            '/(?:ΑΜΟΙΒ[ΗΑ]|ΤΙΜΗΜΑ|ΠΟΣΟ|ΣΥΝΟΛ[ΟΑ]|ΤΙΜΗ\s+ΣΥΜΒΑΣ)[^\d]{0,30}([\d]{1,3}(?:[\.\s]\d{3})*(?:,\d{1,2})?)/ui',
+            // "ανέρχεται σε X ευρώ" — very common in Greek procurement contracts
+            '/ανέρχεται\s+σε\s+([\d]{1,3}(?:[\.,\s]\d{3})*(?:[,\.]\d{1,2})?)\s*(?:€|ευρ)/iu',
+            // Label before amount: ΑΜΟΙΒΗ / ΤΙΜΗΜΑ (also accented τίμημα) / ΠΟΣΟ / ΣΥΝΟΛΟ
+            '/(?:ΑΜΟΙΒ[ΗΑ]|τ[ίι]μημα|ΤΙΜΗΜΑ|ΠΟΣΟ|ΣΥΝΟΛ[ΟΑ]|ΤΙΜΗ\s+ΣΥΜΒΑΣ)[^\d]{0,30}([\d]{1,3}(?:[\.\s]\d{3})*(?:,\d{1,2})?)/ui',
             // € before number: € 1.234,56
             '/€\s*([\d]{1,3}(?:\.\d{3})*(?:,\d{1,2})?)/u',
             // Greek thousand-separator: 1.234,56 €/EUR/ευρ
