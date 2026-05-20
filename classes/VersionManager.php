@@ -508,7 +508,14 @@ class VersionManager {
         }
 
         // Run composer install
-        $cmd    = $composerBin . ' install --no-dev --no-interaction --prefer-dist --working-dir=' . escapeshellarg($rootDir) . ' 2>&1';
+        // Set COMPOSER_HOME so it works when HOME env is unset (shared hosting / web context)
+        $composerHome = sys_get_temp_dir() . '/composer_home_handycrm';
+        if (!is_dir($composerHome)) {
+            @mkdir($composerHome, 0755, true);
+        }
+        $cmd    = 'COMPOSER_HOME=' . escapeshellarg($composerHome)
+                . ' ' . $composerBin
+                . ' install --no-dev --no-interaction --prefer-dist --working-dir=' . escapeshellarg($rootDir) . ' 2>&1';
         $output = @shell_exec($cmd);
 
         $success = $output !== null && (

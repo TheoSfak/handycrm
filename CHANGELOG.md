@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.98] - 2026-05-20
+### Fixed
+- **Composer auto-install**: Set `COMPOSER_HOME` to a temp directory before running composer, fixing the *"HOME or COMPOSER_HOME environment variable must be set"* error that occurred on shared hosting when PHP runs as a web process without a home directory.
+
 ## [1.7.97] - 2026-05-20
 ### Fixed
 - **Συμφωνητικά — Σάρωση PDF**: Added two fallback extraction strategies when `smalot/pdfparser` is not installed. The scan button now works without composer:
