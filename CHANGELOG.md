@@ -1,5 +1,16 @@
 # HandyCRM - Change Log
 
+## [1.8.3] - 2026-05-20
+### Fixed
+- **Συμφωνητικά — Σάρωση PDF**: Further improvements for Greek public-procurement contract parsing:
+  - **Inter-character spaces**: smalot/pdfparser sometimes extracts large-font headers as `Σ Υ Μ Β Α Σ Η`; runs of 3+ space-separated uppercase letters are now collapsed before matching.
+  - **Dates — reference-number filter**: lookbehind `(?<![\d\/])` prevents dates inside reference codes like `3122/07-03-2025` from being captured.
+  - **Dates — recent-date preference**: when falling back to min/max, dates before 2015 are ignored if more recent dates exist (avoids picking up old law-reference dates like 25/06/1997).
+  - **Dates — keyword detection**: patterns for `από`/`έναρξη`/`υπογραφή` (start) and `έως`/`λήξη` (end) now take priority.
+  - **Title fallback**: now skips lines starting with clause numbers (`1.`, `2.`), containing emails, phone numbers (6+ digits), or `«»` quote marks.
+  - **Title last-resort**: if no title is found in PDF text, derives it from the original filename (e.g. `SYMVASI_SYNTIRISI_...pdf` → `SYMVASI SYNTIRISI ...`).
+  - Controller now passes `original_filename` to `extractFromPdf()`.
+
 ## [1.8.2] - 2026-05-20
 ### Fixed
 - **Συμφωνητικά — Σάρωση PDF — Ελληνικά**: Comprehensive improvements for Greek PDF text extraction:
