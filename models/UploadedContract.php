@@ -194,29 +194,51 @@ class UploadedContract extends BaseModel {
         try {
             $parserClass = '\Smalot\PdfParser\Parser';
             if (class_exists($parserClass)) {
-                $parser = new $parserClass();
-                $pdf    = $parser->parseFile($filePath);
-                $text   = $pdf->getText();
+                $configClass = '\Smalot\PdfParser\Config';
+                if (class_exists($configClass)) {
+                    $cfg = new $configClass();
+                    $cfg->setFontSpaceLimit(-100); // improves word spacing in Greek PDFs
+                    $cfg->setRetainImageContent(false);
+                    $parser = new $parserClass([], $cfg);
+                } else {
+                    $parser = new $parserClass();
+                }
+                $pdf  = $parser->parseFile($filePath);
+                $text = $pdf->getText();
             }
         } catch (\Exception $e) {
             error_log('PDF smalot extraction error: ' . $e->getMessage());
         }
 
         // ── Strategy 2: pdftotext shell command (poppler-utils) ───────────
-        if (strlen(trim($text)) < 20) {
+        if (strlen(trim($text)) < 20 || self::greekRatio($text) < 0.03) {
             $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
             if (!in_array('shell_exec', $disabled)) {
-                $cmd  = 'pdftotext ' . escapeshellarg($filePath) . ' - 2>&1';
-                $out  = @shell_exec($cmd);
-                if ($out && strlen(trim($out)) > 20 && strpos($out, 'command not found') === false && strpos($out, 'No such file') === false) {
+                // -enc UTF-8 ensures Greek characters are returned as UTF-8
+                $cmd = 'pdftotext -enc UTF-8 ' . escapeshellarg($filePath) . ' - 2>&1';
+                $out = @shell_exec($cmd);
+                if ($out && strlen(trim($out)) > 20
+                    && strpos($out, 'command not found') === false
+                    && strpos($out, 'No such file') === false) {
                     $text = $out;
                 }
             }
         }
 
         // ── Strategy 3: raw PDF stream extraction (no dependencies) ───────
-        if (strlen(trim($text)) < 20) {
+        if (strlen(trim($text)) < 20 || self::greekRatio($text) < 0.03) {
             $text = self::extractTextRaw($filePath);
+        }
+
+        // ── Normalize Unicode (NFC) ────────────────────────────────────────
+        // Greek PDFs often have decomposed chars (e.g. α + combining tonos)
+        // that won't match regex patterns unless normalized to NFC.
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', ' ', $text) ?? $text;
+        if (function_exists('normalizer_normalize')) {
+            $norm = normalizer_normalize($text, Normalizer::FORM_C);
+            if ($norm !== false && $norm !== '') {
+                $text = $norm;
+            }
         }
 
         $result['text'] = $text;
@@ -225,39 +247,54 @@ class UploadedContract extends BaseModel {
         }
 
         // ── TITLE ──────────────────────────────────────────────────────────
-        // 1. Look for a full line containing a contract keyword
-        if (preg_match('/^.*(?:ΣΥΜΦΩΝΗΤΙΚ[ΟΑ]|ΣΥΜΒΑΣΗ|ΣΥΜΒΟΛΑΙΟ).{0,120}$/mui', $text, $m)) {
-            $result['title'] = trim($m[0]);
-        } else {
-            // 2. Fallback: first "clean" all-caps-ish line (skip lines with digits/refs)
+        // 1. Full line that starts with or contains a contract-type keyword
+        $titlePatterns = [
+            '/^[ \t]*(?:ΙΔΙΩΤΙΚΟ\s+)?ΣΥΜΦΩΝΗΤΙΚ[ΟΑ].{0,150}$/mui',
+            '/^[ \t]*(?:ΙΔΙΩΤΙΚΗ\s+)?ΣΥΜΒΑΣΗ.{0,150}$/mui',
+            '/^[ \t]*ΣΥΜΒΟΛΑΙΟ.{0,150}$/mui',
+        ];
+        foreach ($titlePatterns as $pat) {
+            if (preg_match($pat, $text, $m)) {
+                $result['title'] = trim($m[0]);
+                break;
+            }
+        }
+        if ($result['title'] === '') {
+            // 2. Fallback: first "clean" line (skip reference/date/number-heavy lines)
             foreach (explode("\n", $text) as $line) {
                 $line = trim($line);
-                // Skip short, mostly-numeric, or reference-number lines
                 if (mb_strlen($line) < 15) continue;
-                if (preg_match('/\d{4}.*Π\.|Α\.\s*Π\.|ΑΡ\.\s*ΠΡΩΤ/ui', $line)) continue;
+                if (preg_match('/Α\.\s*Π\.|ΑΡ\.\s*ΠΡΩΤ|ΑΡΙΘ\.\s*ΠΡΩΤ/ui', $line)) continue;
                 if (preg_match('/^\s*[\d\.\,\/\-\s]+$/', $line)) continue;
+                // Skip lines that are mostly numbers (reference codes, page numbers)
+                $digitCount = preg_match_all('/\d/', $line);
+                if ($digitCount > mb_strlen($line) * 0.4) continue;
                 $result['title'] = mb_substr($line, 0, 200);
                 break;
             }
         }
 
         // ── AMOUNT ─────────────────────────────────────────────────────────
-        // Matches: 1.234,56 € / 1234,56€ / 1.234.000,00 EUR / ευρώ
+        // Try keyword-based patterns first (more reliable in Greek contracts)
         $amountPatterns = [
-            // Greek thousand-separator format: 1.234,56 €
-            '/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?)\s*(?:€|EUR|ευρ)/iu',
-            // Plain with comma decimal: 1234,56 €
-            '/(\d+,\d{1,2})\s*(?:€|EUR|ευρ)/iu',
-            // Plain integer: 1234 €
-            '/(\d{3,})\s*(?:€|EUR|ευρ)/iu',
+            // Label before amount: ΑΜΟΙΒΗ / ΤΙΜΗΜΑ / ΠΟΣΟ / ΣΥΝΟΛΟ followed by number
+            '/(?:ΑΜΟΙΒ[ΗΑ]|ΤΙΜΗΜΑ|ΠΟΣΟ|ΣΥΝΟΛ[ΟΑ]|ΤΙΜΗ\s+ΣΥΜΒΑΣ)[^\d]{0,30}([\d]{1,3}(?:[\.\s]\d{3})*(?:,\d{1,2})?)/ui',
+            // € before number: € 1.234,56
+            '/€\s*([\d]{1,3}(?:\.\d{3})*(?:,\d{1,2})?)/u',
+            // Greek thousand-separator: 1.234,56 €/EUR/ευρ
+            '/([\d]{1,3}(?:\.\d{3})+(?:,\d{1,2})?)\s*(?:€|EUR|ευρ)/iu',
+            // Plain comma-decimal: 1234,56 €/EUR/ευρ
+            '/([\d]+,\d{1,2})\s*(?:€|EUR|ευρ)/iu',
+            // Integer only: 1234 €/EUR/ευρ
+            '/([\d]{3,})\s*(?:€|EUR|ευρ)/iu',
         ];
         foreach ($amountPatterns as $pat) {
             if (preg_match($pat, $text, $m)) {
-                $raw = $m[1];
-                // Remove thousand dots, convert comma decimal to dot
-                $raw = str_replace('.', '', $raw);
-                $raw = str_replace(',', '.', $raw);
-                if (is_numeric($raw)) {
+                $raw = trim($m[1]);
+                $raw = preg_replace('/\s/', '', $raw); // remove any spaces used as thousand-sep
+                $raw = str_replace('.', '', $raw);     // remove dot thousand-separator
+                $raw = str_replace(',', '.', $raw);    // comma decimal → dot decimal
+                if (is_numeric($raw) && (float)$raw > 0) {
                     $result['amount'] = $raw;
                     break;
                 }
@@ -284,10 +321,16 @@ class UploadedContract extends BaseModel {
         }
 
         // ── DESCRIPTION ────────────────────────────────────────────────────
-        foreach (['/ΑΝΤΙΚΕΙΜΕΝΟ[:\s]+([^\n]{10,300})/ui',
-                  '/ΕΡΓΑΣΙΕΣ[:\s]+([^\n]{10,300})/ui',
-                  '/ΑΦΟΡΑ[:\s]+([^\n]{10,300})/ui',
-                  '/ΑΦΟΡ[ΑΩ]\s+(?:ΤΗΝ|ΤΟ|ΤΑ)\s+([^\n]{10,300})/ui'] as $pat) {
+        $descPatterns = [
+            '/ΑΝΤΙΚΕΙΜΕΝΟ\s+ΤΗΣ?\s+ΣΥΜΒ[^\n]{0,20}[\n:]+\s*([^\n]{10,400})/ui',
+            '/ΑΝΤΙΚΕΙΜΕΝΟ\s*[:\-]\s*([^\n]{10,400})/ui',
+            '/ΠΕΡΙΓΡΑΦΗ\s+ΕΡΓΑΣΙ[^\n]{0,20}[\n:]+\s*([^\n]{10,400})/ui',
+            '/ΠΕΡΙΓΡΑΦΗ\s*[:\-]\s*([^\n]{10,400})/ui',
+            '/ΘΕΜΑ\s*[:\-]\s*([^\n]{10,400})/ui',
+            '/ΕΡΓΑΣΙΕΣ\s*[:\-]\s*([^\n]{10,400})/ui',
+            '/ΑΦΟΡΑ\s*[:\-]?\s*(?:ΤΗΝ|ΤΟ|ΤΑ)?\s*([^\n]{10,400})/ui',
+        ];
+        foreach ($descPatterns as $pat) {
             if (preg_match($pat, $text, $m)) {
                 $result['description'] = trim($m[1]);
                 break;
@@ -295,6 +338,14 @@ class UploadedContract extends BaseModel {
         }
 
         return $result;
+    }
+
+    /** Return ratio of Greek Unicode characters to total characters (0.0 – 1.0) */
+    private static function greekRatio(string $text): float {
+        $total = mb_strlen(trim($text));
+        if ($total === 0) return 0.0;
+        preg_match_all('/[\x{0370}-\x{03FF}\x{1F00}-\x{1FFF}]/u', $text, $m);
+        return count($m[0]) / $total;
     }
 
     /**
