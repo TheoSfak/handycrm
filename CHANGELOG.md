@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.89] - 2026-05-20
+### Changed
+- **Settings**: Moved "Email Settings" button from Προχωρημένα tab to dedicated SMTP Email tab (now shows as a proper tab pane)
+
 ## [1.7.88] - 2026-05-20
 ### Changed
 - **Προσφορές Συντήρησης**: Το κουμπί αποδοχής άλλαξε από radio σε checkbox ώστε να είναι δυνατή η αναίρεση της αποδοχής με διαλογικό επιβεβαίωσης

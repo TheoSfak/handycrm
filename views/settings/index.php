@@ -435,14 +435,25 @@
                                 <a href="<?= BASE_URL ?>/users" class="btn btn-outline-secondary">
                                     <i class="fas fa-users"></i> <?= __('settings.user_management') ?>
                                 </a>
-                                <a href="<?= BASE_URL ?>/email/email-settings-phpmailer.php" class="btn btn-outline-warning">
-                                    <i class="fas fa-envelope"></i> Email Settings
-                                </a>
-                            </div>
+                                            </div>
                         </div>
                     </div>
                 </div><!-- /advanced tab -->
-                
+
+                <!-- SMTP Email Tab -->
+                <div class="tab-pane fade" id="smtp" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-envelope fa-3x text-warning mb-3"></i>
+                            <h5 class="mb-2">Email Settings (PHPMailer)</h5>
+                            <p class="text-muted mb-4"><?= __('settings.email_settings_desc') ?? 'Διαχείριση ρυθμίσεων SMTP για αποστολή email μέσω PHPMailer.' ?></p>
+                            <a href="<?= BASE_URL ?>/email/email-settings-phpmailer.php" class="btn btn-warning btn-lg">
+                                <i class="fas fa-cog"></i> <?= __('settings.open_email_settings') ?? 'Άνοιγμα Email Settings' ?>
+                            </a>
+                        </div>
+                    </div>
+                </div><!-- /smtp tab -->
+
             </div><!-- /tab-content -->
             
             <!-- Save Button (Fixed at bottom) -->
