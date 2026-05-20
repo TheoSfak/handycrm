@@ -91,28 +91,56 @@ class CustomDailyTaskPDF extends TCPDF {
         $companyName = $this->companySettings['company_name'] ?? '';
         $companyDisplayName = $this->companySettings['company_display_name'] ?? '';
         $displayName = !empty($companyDisplayName) ? $companyDisplayName : $companyName;
-        $footerText = $displayName ? $displayName . ' - Εργασία Ημέρας' : 'Εργασία Ημέρας';
 
-        // Position at 15 mm from bottom
-        $this->SetY(-15);
+        // Build address / VAT line
+        $detailParts = [];
+        if (!empty($this->companySettings['company_address'])) $detailParts[] = $this->companySettings['company_address'];
+        if (!empty($this->companySettings['company_tax_id']))  $detailParts[] = 'ΑΦΜ: ' . $this->companySettings['company_tax_id'];
+        $detailLine = implode(' | ', $detailParts);
+
+        // Build contact line
+        $contactParts = [];
+        if (!empty($this->companySettings['company_website'])) $contactParts[] = $this->companySettings['company_website'];
+        if (!empty($this->companySettings['company_email']))   $contactParts[] = $this->companySettings['company_email'];
+        if (!empty($this->companySettings['company_phone']))   $contactParts[] = 'Τηλ: ' . $this->companySettings['company_phone'];
+        $contactLine = implode(' | ', $contactParts);
+
+        // Footer height: 26mm from bottom
+        $this->SetY(-26);
 
         // Background
         $this->SetFillColor(240, 240, 240);
-        $this->Rect(0, $this->GetY(), $this->getPageWidth(), 15, 'F');
+        $this->Rect(0, $this->GetY(), $this->getPageWidth(), 26, 'F');
 
         // Line above footer
         $this->SetLineWidth(0.5);
         $this->SetDrawColor(0, 102, 204);
         $this->Line(10, $this->GetY(), $this->getPageWidth() - 10, $this->GetY());
 
-        $this->SetY(-12);
-        $this->SetFont('dejavusans', '', 8);
-        $this->SetTextColor(60, 60, 60);
-        $this->Cell(0, 5, $footerText, 0, 1, 'C');
+        // Company name
+        $this->SetY(-24);
+        $this->SetFont('dejavusans', 'B', 9);
+        $this->SetTextColor(40, 40, 40);
+        $this->Cell(0, 5, $displayName, 0, 1, 'C');
+
+        // Address / VAT
+        if ($detailLine) {
+            $this->SetFont('dejavusans', '', 7);
+            $this->SetTextColor(80, 80, 80);
+            $this->Cell(0, 4, $detailLine, 0, 1, 'C');
+        }
+
+        // Contact line
+        if ($contactLine) {
+            $this->SetFont('dejavusans', '', 7);
+            $this->SetTextColor(80, 80, 80);
+            $this->Cell(0, 4, $contactLine, 0, 1, 'C');
+        }
 
         // Page number
         $this->SetY(-8);
         $this->SetFont('dejavusans', 'I', 7);
+        $this->SetTextColor(120, 120, 120);
         $this->Cell(0, 3, 'Σελίδα ' . $this->getAliasNumPage() . ' από ' . $this->getAliasNbPages(), 0, 0, 'C');
     }
 }
@@ -837,7 +865,7 @@ class DailyTaskController extends BaseController {
 
                 // Set logo if available
                 if (!empty($companySettings['company_logo'])) {
-                    $logoPath = __DIR__ . '/..' . $companySettings['company_logo'];
+                    $logoPath = __DIR__ . '/../' . $companySettings['company_logo'];
                     if (file_exists($logoPath)) {
                         $pdf->setLogoPath($logoPath);
                     }
@@ -853,8 +881,8 @@ class DailyTaskController extends BaseController {
                 // Set margins (increased top margin for header)
                 $pdf->SetMargins(15, 40, 15);
                 $pdf->SetHeaderMargin(5);
-                $pdf->SetFooterMargin(15);
-                $pdf->SetAutoPageBreak(TRUE, 20);
+                $pdf->SetFooterMargin(28);
+                $pdf->SetAutoPageBreak(TRUE, 32);
                 
                 // Add page
                 $pdf->AddPage();
@@ -951,7 +979,7 @@ class DailyTaskController extends BaseController {
 
             // Set logo from settings
             if (!empty($companySettings['company_logo'])) {
-                $logoPath = __DIR__ . '/..' . $companySettings['company_logo'];
+                $logoPath = __DIR__ . '/../' . $companySettings['company_logo'];
                 if (file_exists($logoPath)) {
                     $pdf->setLogoPath($logoPath);
                 }
@@ -967,10 +995,10 @@ class DailyTaskController extends BaseController {
             // Set margins
             $pdf->SetMargins(15, 45, 15);
             $pdf->SetHeaderMargin(10);
-            $pdf->SetFooterMargin(10);
+            $pdf->SetFooterMargin(28);
             
             // Set auto page breaks
-            $pdf->SetAutoPageBreak(TRUE, 20);
+            $pdf->SetAutoPageBreak(TRUE, 32);
             
             // Add a page
             $pdf->AddPage();
