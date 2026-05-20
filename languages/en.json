@@ -383,7 +383,9 @@
         "export_pdf": "Export PDF",
         "pdf_coming_soon": "PDF export feature will be added soon",
         "edit_quote": "Edit Quote",
-        "item_placeholder": "e.g. Electrical panel installation"
+        "item_placeholder": "e.g. Electrical panel installation",
+        "accepted": "Accepted",
+        "rejected": "Rejected"
     },
     "materials": {
         "title": "Materials",
@@ -734,10 +736,16 @@
         "hide": "Hide",
         "more": "More",
         "less": "Less",
+        "new": "New",
+        "create": "Create",
+        "update": "Update",
+        "notes": "Notes",
         "date_format_placeholder": "DD/MM/YYYY"
     },
     "customers": {
-        "customer_info": "Customer Information"
+        "customer_info": "Customer Information",
+        "create": "Create Customer",
+        "update": "Update Customer"
     },
     "notifications": {
         "new_notification": "New notification",

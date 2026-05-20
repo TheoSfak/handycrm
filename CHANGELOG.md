@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.7.90] - 2026-05-20
+### Fixed
+- **Translations**: Added missing keys in el.json and en.json: `common.notes`, `customers.create`, `customers.update`, `quotes.accepted`, `quotes.rejected` — these were showing as raw keys on the Customers page
+
 ## [1.7.89] - 2026-05-20
 ### Changed
 - **Settings**: Moved "Email Settings" button from Προχωρημένα tab to dedicated SMTP Email tab (now shows as a proper tab pane)
