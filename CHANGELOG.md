@@ -1,5 +1,10 @@
 # HandyCRM - Change Log
 
+## [1.7.96] - 2026-05-20
+### Changed
+- **Auto-update (VersionManager)**: `composer install` now runs automatically as part of the in-app update process (Settings → Updates). Tries system `composer` binary, then `composer.phar` in project root, then downloads `composer.phar` on-the-fly — so new PHP dependencies (e.g. `smalot/pdfparser` for v1.7.95) are installed without any SSH access.
+- **VersionManager**: Added `composer.json`, `helpers/`, and `assets/` to the list of files copied during an update (were previously skipped).
+
 ## [1.7.95] - 2026-05-20
 ### Added
 - **Συμφωνητικά**: New section in sidebar (Διαχείριση). Upload signed contract PDFs manually. After upload a "Scan PDF" button auto-extracts: title, agreed amount (€), start date, end date, description of works. All extracted fields are editable. PDF preview embedded inline. Delete with confirmation.

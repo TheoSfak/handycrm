@@ -58,7 +58,13 @@ class VersionManager {
             if (!$installResult) {
                 throw new Exception('Failed to install files');
             }
-            
+
+            // Step 4b: Run composer install (auto-installs new PHP dependencies)
+            $composerResult = $this->runComposerInstall();
+            if (!$composerResult['success']) {
+                error_log('VersionManager - Composer warning: ' . $composerResult['message']);
+            }
+
             // Step 5: Run database migrations using AutoMigration
             require_once __DIR__ . '/Database.php';
             require_once __DIR__ . '/AutoMigration.php';
@@ -88,11 +94,16 @@ class VersionManager {
             // Step 7: Cleanup
             $this->cleanup($zipFile, $extractPath);
             
+            $composerMessage = $composerResult['success']
+                ? ' Οι βιβλιοθήκες ενημερώθηκαν (composer).'
+                : ' (Προσοχή: composer install απέτυχε — εκτελέστε χειροκίνητα αν χρειαστεί.)';
+
             return [
                 'success' => true,
-                'message' => "Η έκδοση v{$version} εγκαταστάθηκε επιτυχώς!{$migrationMessage} Το backup αποθηκεύτηκε.",
+                'message' => "Η έκδοση v{$version} εγκαταστάθηκε επιτυχώς!{$migrationMessage}{$composerMessage} Το backup αποθηκεύτηκε.",
                 'backup_name' => $backupResult['backup_name'],
-                'migrations' => $migrationResult
+                'migrations' => $migrationResult,
+                'composer'   => $composerResult
             ];
             
         } catch (Exception $e) {
@@ -216,9 +227,12 @@ class VersionManager {
                 'views/',
                 'public/',
                 'migrations/',
+                'helpers/',
+                'assets/',
                 'index.php',
                 '.htaccess',
-                'VERSION'
+                'VERSION',
+                'composer.json'
             ];
             
             // Files and directories to NEVER overwrite
@@ -428,5 +442,84 @@ class VersionManager {
         }
         
         return true;
+    }
+
+    /**
+     * Run composer install automatically to pull in any new PHP dependencies.
+     * Tries multiple strategies: system composer binary, project composer.phar,
+     * or downloads composer.phar on-the-fly via cURL.
+     */
+    private function runComposerInstall() {
+        $rootDir  = $this->rootDir;
+        $php      = PHP_BINARY ?: 'php';
+
+        // shell_exec / exec must be available
+        $disabled = array_map('trim', explode(',', ini_get('disable_functions')));
+        if (in_array('shell_exec', $disabled) && in_array('exec', $disabled)) {
+            return ['success' => false, 'message' => 'shell_exec and exec are disabled on this server.'];
+        }
+
+        // Find composer binary — check PATH and common server locations
+        $composerBin = null;
+        $candidates  = ['composer', '/usr/local/bin/composer', '/usr/bin/composer', '/usr/local/sbin/composer'];
+        foreach ($candidates as $c) {
+            $test = @shell_exec($c . ' --version 2>&1');
+            if ($test && strpos($test, 'Composer') !== false) {
+                $composerBin = $c;
+                break;
+            }
+        }
+
+        // Fallback: composer.phar in project root (may have been placed manually)
+        if (!$composerBin && file_exists($rootDir . '/composer.phar')) {
+            $composerBin = escapeshellarg($php) . ' ' . escapeshellarg($rootDir . '/composer.phar');
+        }
+
+        // Last resort: download composer.phar from getcomposer.org
+        if (!$composerBin) {
+            $phar        = $rootDir . '/composer.phar';
+            $downloaded  = false;
+            $installerUrl = 'https://getcomposer.org/composer-stable.phar';
+
+            if (function_exists('curl_init')) {
+                $ch = curl_init($installerUrl);
+                $fp = fopen($phar, 'wb');
+                curl_setopt_array($ch, [
+                    CURLOPT_FILE           => $fp,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_TIMEOUT        => 120,
+                    CURLOPT_USERAGENT      => 'HandyCRM-VersionManager',
+                    CURLOPT_SSL_VERIFYPEER => true,
+                ]);
+                $ok       = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                fclose($fp);
+                $downloaded = $ok && $httpCode === 200 && file_exists($phar) && filesize($phar) > 100000;
+            }
+
+            if ($downloaded) {
+                $composerBin = escapeshellarg($php) . ' ' . escapeshellarg($phar);
+            }
+        }
+
+        if (!$composerBin) {
+            return ['success' => false, 'message' => 'Could not locate composer. Run: composer install on the server.'];
+        }
+
+        // Run composer install
+        $cmd    = $composerBin . ' install --no-dev --no-interaction --prefer-dist --working-dir=' . escapeshellarg($rootDir) . ' 2>&1';
+        $output = @shell_exec($cmd);
+
+        $success = $output !== null && (
+            strpos($output, 'Nothing to install') !== false ||
+            strpos($output, 'Installing ') !== false ||
+            strpos($output, 'Generating autoload') !== false ||
+            strpos($output, 'No packages') !== false
+        );
+
+        error_log('VersionManager - composer install output: ' . ($output ?: '(empty)'));
+
+        return ['success' => $success, 'message' => $output ?: '(no output)'];
     }
 }
