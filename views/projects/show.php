@@ -83,7 +83,7 @@
                     <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
                         <i class="fas fa-sync-alt"></i> <?= __('projects.change_status') ?>
                     </button>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu" style="z-index: 9999;">
                         <li>
                             <a class="dropdown-item" href="#" onclick="changeStatus('new', <?= $project['id'] ?>)">
                                 <i class="fas fa-circle text-info"></i> <?= __('projects.new') ?>
