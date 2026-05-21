@@ -237,9 +237,11 @@ class BaseController {
      * Return JSON response
      */
     protected function json($data, $statusCode = 200) {
+        // Clear any accidental output (PHP warnings/notices) that would corrupt JSON
+        while (ob_get_level() > 0) { ob_end_clean(); }
         http_response_code($statusCode);
-        header('Content-Type: application/json');
-        echo json_encode($data);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
         exit;
     }
     

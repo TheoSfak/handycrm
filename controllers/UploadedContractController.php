@@ -133,32 +133,37 @@ class UploadedContractController extends BaseController {
     public function scan(int $id): void {
         $this->requireAdminOrSupervisor();
 
-        $contract = $this->model->findActive($id);
-        if (!$contract) {
-            $this->json(['success' => false, 'message' => 'Δεν βρέθηκε το αρχείο'], 404);
-            return;
+        try {
+            $contract = $this->model->findActive($id);
+            if (!$contract) {
+                $this->json(['success' => false, 'message' => 'Δεν βρέθηκε το αρχείο'], 404);
+                return;
+            }
+
+            $filePath  = __DIR__ . '/../' . $contract['file_path'];
+            $extracted = UploadedContract::extractFromPdf($filePath, $contract['original_filename'] ?? null);
+
+            // Persist raw text to DB
+            if (!empty($extracted['text'])) {
+                $db   = (new Database())->connect();
+                $stmt = $db->prepare("UPDATE uploaded_contracts SET extracted_text = ? WHERE id = ?");
+                $stmt->execute([mb_substr($extracted['text'], 0, 60000), $id]);
+            }
+
+            $this->json([
+                'success'     => true,
+                'title'       => $extracted['title'],
+                'amount'      => $extracted['amount'],
+                'start_date'  => $extracted['start_date'],
+                'end_date'    => $extracted['end_date'],
+                'description' => $extracted['description'],
+                'text_length' => mb_strlen($extracted['text']),
+                'strategy'    => $extracted['strategy'] ?? '',
+            ]);
+        } catch (\Throwable $e) {
+            error_log('UploadedContract scan error [id=' . $id . ']: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Σφάλμα κατά την ανάλυση: ' . $e->getMessage()], 500);
         }
-
-        $filePath  = __DIR__ . '/../' . $contract['file_path'];
-        $extracted = UploadedContract::extractFromPdf($filePath, $contract['original_filename'] ?? null);
-
-        // Persist raw text to DB
-        if (!empty($extracted['text'])) {
-            $db   = (new Database())->connect();
-            $stmt = $db->prepare("UPDATE uploaded_contracts SET extracted_text = ? WHERE id = ?");
-            $stmt->execute([mb_substr($extracted['text'], 0, 60000), $id]);
-        }
-
-        $this->json([
-            'success'     => true,
-            'title'       => $extracted['title'],
-            'amount'      => $extracted['amount'],
-            'start_date'  => $extracted['start_date'],
-            'end_date'    => $extracted['end_date'],
-            'description' => $extracted['description'],
-            'text_length' => mb_strlen($extracted['text']),
-            'strategy'    => $extracted['strategy'] ?? '',
-        ]);
     }
 
     // ─────────────────────────────────────────────────────────────────────
