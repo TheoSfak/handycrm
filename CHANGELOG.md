@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.8.11] - 2026-05-21
+### Fixed
+- **Σάρωση PDF - `mb_convert_encoding invalid encoding "CP1253"`**: Neither `Windows-1253` nor `CP1253` are universally accepted by PHP mbstring across all server builds. Rewrote `decodePdfBytes()` to use `iconv()` as the primary converter (much broader encoding alias support), with `mb_convert_encoding` as fallback. Tries `CP1253`, `WINDOWS-1253`, `windows-1253`, `ISO-8859-7` in order until one works.
+
 ## [1.8.10] - 2026-05-21
 ### Fixed
 - **Σάρωση PDF - `mb_convert_encoding(): invalid encoding "Windows-1253"`**: PHP's mbstring does not recognise `Windows-1253` as an encoding alias. Changed to the correct alias `CP1253` (and the fallback too). The hex-string Greek extraction (added in v1.8.7) now works without throwing an exception.

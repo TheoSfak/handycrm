@@ -524,19 +524,33 @@ class UploadedContract extends BaseModel {
         if (mb_check_encoding($bytes, 'UTF-8')) {
             return $bytes;
         }
-        // Try Greek encodings first (most Greek gov PDFs use Windows-1253 / CP1253)
-        // mbstring uses "CP1253" not "Windows-1253"
-        foreach (['CP1253', 'ISO-8859-7', 'ISO-8859-1'] as $enc) {
-            $converted = @mb_convert_encoding($bytes, 'UTF-8', $enc);
-            if ($converted !== false && $converted !== '') {
-                // Only accept if the result contains actual Greek Unicode characters
-                if (preg_match('/[\x{0370}-\x{03FF}]/u', $converted)) {
-                    return $converted;
-                }
+
+        // Helper: try one encoding via iconv (preferred) then mb_convert_encoding.
+        // Uses multiple alias variants because support varies between servers/builds.
+        $tryEnc = function(string $enc) use ($bytes): string {
+            if (function_exists('iconv')) {
+                $r = @iconv($enc, 'UTF-8//IGNORE', $bytes);
+                if ($r !== false && $r !== '') return $r;
+            }
+            // mb_convert_encoding alias varies: try as-is, then strip dashes/dots
+            foreach ([$enc, str_replace(['-', '.'], '', $enc)] as $alias) {
+                $r = @mb_convert_encoding($bytes, 'UTF-8', $alias);
+                if ($r !== false && $r !== '') return $r;
+            }
+            return '';
+        };
+
+        // Try Greek encodings in order; keep first that yields actual Greek chars.
+        foreach (['CP1253', 'WINDOWS-1253', 'windows-1253', 'ISO-8859-7'] as $enc) {
+            $converted = $tryEnc($enc);
+            if ($converted !== '' && preg_match('/[\x{0370}-\x{03FF}]/u', $converted)) {
+                return $converted;
             }
         }
-        // Fallback: best-effort CP1253 regardless
-        return (string)@mb_convert_encoding($bytes, 'UTF-8', 'CP1253');
+
+        // Fallback: best-effort CP1253/ISO-8859-7 regardless of Greek content
+        $r = $tryEnc('CP1253');
+        return $r !== '' ? $r : $tryEnc('ISO-8859-7');
     }
 
     /** Decode a raw PDF literal string (octal/common escapes + encoding) */
