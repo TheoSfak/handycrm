@@ -1,5 +1,11 @@
 # HandyCRM - Change Log
 
+## [1.8.6] - 2026-05-21
+### Fixed
+- **Συμφωνητικά — Ποσό με αποκομμένα ελληνικά**: Greek government PDFs that use custom font encoding (e.g. ΚΕΔΑ/ΕΣΗΔΗΣ contracts) lose all Greek words during extraction, leaving bare numbers. Two new fallbacks added:
+  - **Article 5.1 pattern**: Greek procurement contracts (N.4412/2016) always put the contract price in article 5.1 — pattern `/5\.1[^0-9]{0,20}(\d{1,3}(?:\.\d{3})+,\d{2})/` matches `7.865,00` even without surrounding Greek text.
+  - **Largest formatted number**: If all keyword/currency patterns fail, the largest `X.XXX,XX`-formatted number in the document is used as the amount (contract values are almost always the largest monetary figure).
+
 ## [1.8.5] - 2026-05-20
 ### Fixed
 - **Συμφωνητικά — Σάρωση PDF (0 χαρακτήρες)**: Removed `greekRatio` as a hard fallthrough filter between extraction strategies. Greek government PDFs contain many Latin reference codes (ADAM, 23AWRD...) that diluted the Greek ratio below 3%, causing valid smalot output to be discarded and strategies 2/3 to run unnecessarily. Now only falls through when text is shorter than 100 characters.

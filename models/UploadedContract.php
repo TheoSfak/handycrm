@@ -335,6 +335,9 @@ class UploadedContract extends BaseModel {
             '/([\d]+,\d{1,2})\s*(?:€|EUR|ευρ)/iu',
             // Integer only: 1234 €/EUR/ευρ
             '/([\d]{3,})\s*(?:€|EUR|ευρ)/iu',
+            // Article 5.1 of N.4412/2016 contracts — contract price with stripped Greek text
+            // e.g. "5.1. 7.865,00" where the Greek word for "price" has been lost
+            '/5\.1[^0-9]{0,20}([\d]{1,3}(?:\.\d{3})+,\d{2})/u',
         ];
         foreach ($amountPatterns as $pat) {
             if (preg_match($pat, $text, $m)) {
@@ -345,6 +348,19 @@ class UploadedContract extends BaseModel {
                 if (is_numeric($raw) && (float)$raw > 0) {
                     $result['amount'] = $raw;
                     break;
+                }
+            }
+        }
+
+        // Last-resort amount: largest Greek-formatted number (X.XXX,XX) in the document.
+        // Handles PDFs where font encoding strips Greek keywords, leaving bare numbers.
+        if ($result['amount'] === '') {
+            preg_match_all('/(?<!\d)([\d]{1,3}(?:\.\d{3})+,\d{2})(?!\d)/u', $text, $am);
+            if (!empty($am[1])) {
+                $best = 0.0;
+                foreach ($am[1] as $candidate) {
+                    $val = (float)str_replace(',', '.', str_replace('.', '', $candidate));
+                    if ($val > $best) { $best = $val; $result['amount'] = str_replace('.', '', $candidate); $result['amount'] = str_replace(',', '.', $result['amount']); }
                 }
             }
         }
