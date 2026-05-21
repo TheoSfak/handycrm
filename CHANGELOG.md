@@ -1,5 +1,11 @@
 # HandyCRM - Change Log
 
+## [1.8.7] - 2026-05-21
+### Fixed
+- **Συμφωνητικά — Εξαγωγή ελληνικών χαρακτήρων**: Raw PDF extraction (`extractBtEtText`) now also decodes **hex strings** (`<C1EDDC...> Tj` / `[<...>] TJ` operators). Many Greek PDFs from government systems (DIAVGEIA, ESIDIS) encode text as hex bytes in Windows-1253 or ISO-8859-7. Previously only literal-string `(...)` operators were handled, causing Greek characters to silently disappear.
+  - Added `decodePdfBytes()` helper: decodes raw bytes to UTF-8, trying Windows-1253 then ISO-8859-7, accepting the result only if it contains actual Greek Unicode characters.
+  - Refactored `decodePdfStr()` to delegate to `decodePdfBytes()` after escape processing.
+
 ## [1.8.6] - 2026-05-21
 ### Fixed
 - **Συμφωνητικά — Ποσό με αποκομμένα ελληνικά**: Greek government PDFs that use custom font encoding (e.g. ΚΕΔΑ/ΕΣΗΔΗΣ contracts) lose all Greek words during extraction, leaving bare numbers. Two new fallbacks added:

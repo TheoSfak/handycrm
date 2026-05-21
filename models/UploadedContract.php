@@ -472,27 +472,37 @@ class UploadedContract extends BaseModel {
         return trim($text);
     }
 
-    /** Extract text from PDF BT...ET operator blocks */
+    /** Extract text from PDF BT...ET operator blocks (literal + hex strings) */
     private static function extractBtEtText(string $src): string {
         $out = '';
         if (!preg_match_all('/BT\s+(.*?)\s*ET/s', $src, $blocks)) {
             return $out;
         }
         foreach ($blocks[1] as $block) {
-            // Parenthesis strings: (Hello) Tj  or  [(Hel) -30 (lo)] TJ
+            // ── Literal strings: (Hello) Tj  or  [(Hel) -30 (lo)] TJ ──────
             if (preg_match_all('/\(((?:[^()\\\\]|\\\\.)*)\)\s*Tj/s', $block, $m)) {
-                foreach ($m[1] as $t) {
-                    $out .= self::decodePdfStr($t);
-                }
+                foreach ($m[1] as $t) { $out .= self::decodePdfStr($t); }
                 $out .= "\n";
             }
             if (preg_match_all('/\[((?:[^\[\]]|\\\\.)*)\]\s*TJ/s', $block, $m)) {
                 foreach ($m[1] as $arr) {
+                    // literal substrings inside TJ array
                     if (preg_match_all('/\(((?:[^()\\\\]|\\\\.)*)\)/s', $arr, $parts)) {
-                        foreach ($parts[1] as $t) {
-                            $out .= self::decodePdfStr($t);
+                        foreach ($parts[1] as $t) { $out .= self::decodePdfStr($t); }
+                    }
+                    // hex substrings inside TJ array  e.g. <C1ED>
+                    if (preg_match_all('/<([0-9A-Fa-f]{2,})>/', $arr, $hparts)) {
+                        foreach ($hparts[1] as $hex) {
+                            $out .= self::decodePdfBytes(@pack('H*', $hex));
                         }
                     }
+                }
+                $out .= "\n";
+            }
+            // ── Hex strings: <C1EDDC...> Tj ─────────────────────────────────
+            if (preg_match_all('/<([0-9A-Fa-f]{2,})>\s*Tj/s', $block, $m)) {
+                foreach ($m[1] as $hex) {
+                    $out .= self::decodePdfBytes(@pack('H*', $hex));
                 }
                 $out .= "\n";
             }
@@ -500,7 +510,30 @@ class UploadedContract extends BaseModel {
         return $out;
     }
 
-    /** Decode a raw PDF string (octal escapes, encoding detection) */
+    /**
+     * Decode raw bytes (from a PDF hex or literal string) to UTF-8.
+     * Tries Windows-1253 and ISO-8859-7 (Greek encodings) before giving up.
+     */
+    private static function decodePdfBytes(string $bytes): string {
+        if ($bytes === '') return '';
+        if (mb_check_encoding($bytes, 'UTF-8')) {
+            return $bytes;
+        }
+        // Try Greek encodings first (most Greek gov PDFs use Windows-1253)
+        foreach (['Windows-1253', 'ISO-8859-7', 'ISO-8859-1'] as $enc) {
+            $converted = @mb_convert_encoding($bytes, 'UTF-8', $enc);
+            if ($converted !== false && $converted !== '') {
+                // Only accept if the result contains actual Greek Unicode characters
+                if (preg_match('/[\x{0370}-\x{03FF}]/u', $converted)) {
+                    return $converted;
+                }
+            }
+        }
+        // Fallback: best-effort Windows-1253 regardless
+        return (string)@mb_convert_encoding($bytes, 'UTF-8', 'Windows-1253');
+    }
+
+    /** Decode a raw PDF literal string (octal/common escapes + encoding) */
     private static function decodePdfStr(string $s): string {
         // Octal escapes \ddd
         $s = preg_replace_callback('/\\\\([0-7]{3})/', function($m) {
@@ -509,15 +542,6 @@ class UploadedContract extends BaseModel {
         // Common escapes
         $s = str_replace(['\\n','\\r','\\t','\\\\','\\(','\\)'],
                          ["\n", "\r", "\t", '\\',   '(',   ')'], $s);
-        // Convert to UTF-8 if needed
-        if (!mb_check_encoding($s, 'UTF-8')) {
-            foreach (['ISO-8859-7','Windows-1253','ISO-8859-1'] as $enc) {
-                $converted = @mb_convert_encoding($s, 'UTF-8', $enc);
-                if ($converted && mb_check_encoding($converted, 'UTF-8')) {
-                    return $converted;
-                }
-            }
-        }
-        return $s;
+        return self::decodePdfBytes($s);
     }
 }
