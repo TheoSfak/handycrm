@@ -357,10 +357,15 @@ class UploadedContract extends BaseModel {
         if ($result['amount'] === '') {
             preg_match_all('/(?<!\d)([\d]{1,3}(?:\.\d{3})+,\d{2})(?!\d)/u', $text, $am);
             if (!empty($am[1])) {
-                $best = 0.0;
+                // Use the FIRST large formatted number (>= 100), not the largest.
+                // In Greek procurement contracts the price ex-ΦΠΑ appears before
+                // the ΦΠΑ amount and the total-with-ΦΠΑ, so "first" is more reliable.
                 foreach ($am[1] as $candidate) {
                     $val = (float)str_replace(',', '.', str_replace('.', '', $candidate));
-                    if ($val > $best) { $best = $val; $result['amount'] = str_replace('.', '', $candidate); $result['amount'] = str_replace(',', '.', $result['amount']); }
+                    if ($val >= 100.0) {
+                        $result['amount'] = (string)$val;
+                        break;
+                    }
                 }
             }
         }

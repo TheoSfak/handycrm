@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.8.8] - 2026-05-21
+### Fixed
+- **Συμφωνητικά — Symbol-font PDFs (0 χαρακτήρες)**:
+  - **Amount fallback: first large number, not largest**: Greek procurement contracts list items as *price ex-ΦΠΑ → ΦΠΔ1 amount → total with ΦΠΔ1*. Picking the LARGEST formatted number (e.g. 18.500,00) incorrectly returns the total-with-ΦΠΑ instead of the contract price (14.919,35). Now uses the FIRST large formatted number (≥ 100 €) instead.
+  - **Strategy fallthrough threshold**: reduced from 100 → 50 characters. Symbol-font PDFs only yield extracted numbers (e.g. “14.919,35 3.580,65 18.500,00” which is ~ 35–40 chars); the previous 100-char threshold caused the valid short extraction to be discarded.
+- **Note**: PDFs using Symbol/Type1 fonts that map Greek letters to Latin character codes (e.g. military contracts) cannot have their Greek text recovered without OCR. Dates and amounts embedded as plain numbers are still extracted.
+
 ## [1.8.7] - 2026-05-21
 ### Fixed
 - **Συμφωνητικά — Εξαγωγή ελληνικών χαρακτήρων**: Raw PDF extraction (`extractBtEtText`) now also decodes **hex strings** (`<C1EDDC...> Tj` / `[<...>] TJ` operators). Many Greek PDFs from government systems (DIAVGEIA, ESIDIS) encode text as hex bytes in Windows-1253 or ISO-8859-7. Previously only literal-string `(...)` operators were handled, causing Greek characters to silently disappear.
