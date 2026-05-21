@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.8.10] - 2026-05-21
+### Fixed
+- **Σάρωση PDF - `mb_convert_encoding(): invalid encoding "Windows-1253"`**: PHP's mbstring does not recognise `Windows-1253` as an encoding alias. Changed to the correct alias `CP1253` (and the fallback too). The hex-string Greek extraction (added in v1.8.7) now works without throwing an exception.
+
 ## [1.8.9] - 2026-05-21
 ### Fixed
 - **Σάρωση PDF - "Αποτυχία επικοινωνίας με τον server"**: Added `try/catch (Throwable)` around the entire scan action body so any uncaught PHP exception returns a valid JSON error response instead of an HTML error page that the browser cannot parse as JSON. The `.catch()` in the JS client will now only fire for genuine network failures.

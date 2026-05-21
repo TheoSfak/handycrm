@@ -524,8 +524,9 @@ class UploadedContract extends BaseModel {
         if (mb_check_encoding($bytes, 'UTF-8')) {
             return $bytes;
         }
-        // Try Greek encodings first (most Greek gov PDFs use Windows-1253)
-        foreach (['Windows-1253', 'ISO-8859-7', 'ISO-8859-1'] as $enc) {
+        // Try Greek encodings first (most Greek gov PDFs use Windows-1253 / CP1253)
+        // mbstring uses "CP1253" not "Windows-1253"
+        foreach (['CP1253', 'ISO-8859-7', 'ISO-8859-1'] as $enc) {
             $converted = @mb_convert_encoding($bytes, 'UTF-8', $enc);
             if ($converted !== false && $converted !== '') {
                 // Only accept if the result contains actual Greek Unicode characters
@@ -534,8 +535,8 @@ class UploadedContract extends BaseModel {
                 }
             }
         }
-        // Fallback: best-effort Windows-1253 regardless
-        return (string)@mb_convert_encoding($bytes, 'UTF-8', 'Windows-1253');
+        // Fallback: best-effort CP1253 regardless
+        return (string)@mb_convert_encoding($bytes, 'UTF-8', 'CP1253');
     }
 
     /** Decode a raw PDF literal string (octal/common escapes + encoding) */
