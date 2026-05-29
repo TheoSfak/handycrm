@@ -29,6 +29,7 @@
         :root {
             --sidebar-bg:       #0f172a;
             --sidebar-width:    258px;
+            --sidebar-footer-height: 56px;
             --accent:           #0ea5e9;
             --accent-dark:      #0284c7;
             --accent-glow:      rgba(14,165,233,0.18);
@@ -72,7 +73,7 @@
             transition: transform 0.3s cubic-bezier(.4,0,.2,1);
             overflow-y: auto;
             overflow-x: hidden;
-            padding-bottom: 80px;
+            padding-bottom: calc(var(--sidebar-footer-height) + 20px);
             scrollbar-width: thin;
             scrollbar-color: rgba(255,255,255,0.08) transparent;
         }
@@ -184,9 +185,13 @@
             position: absolute;
             bottom: 0;
             width: 100%;
+            height: var(--sidebar-footer-height);
             padding: 12px 20px;
             border-top: 1px solid rgba(255,255,255,0.06);
             background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .sidebar-footer small {
