@@ -431,6 +431,68 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         echo "<h1>404 - Page not found</h1>";
     }
 
+} elseif (strpos($currentRoute, '/knowledge-base') === 0) {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+
+    require_once 'controllers/KnowledgeBaseController.php';
+    $controller = new KnowledgeBaseController();
+
+    if ($currentRoute === '/knowledge-base' || $currentRoute === '/knowledge-base/') {
+        $controller->index();
+    } elseif ($currentRoute === '/knowledge-base/create') {
+        $controller->create();
+    } elseif ($currentRoute === '/knowledge-base/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/^\/knowledge-base\/show\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->show((int)$matches[1]);
+    } elseif (preg_match('/^\/knowledge-base\/edit\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->edit((int)$matches[1]);
+    } elseif (preg_match('/^\/knowledge-base\/update\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->update((int)$matches[1]);
+    } elseif (preg_match('/^\/knowledge-base\/delete\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete((int)$matches[1]);
+    } elseif (preg_match('/^\/knowledge-base\/file\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->file((int)$matches[1]);
+    } elseif ($currentRoute === '/knowledge-base/categories') {
+        $controller->categories();
+    } elseif ($currentRoute === '/knowledge-base/categories/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->storeCategory();
+    } elseif (preg_match('/^\/knowledge-base\/categories\/delete\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->deleteCategory((int)$matches[1]);
+    } elseif (preg_match('/^\/knowledge-base\/export-pdf\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->exportPdf((int)$matches[1]);
+    } elseif ($currentRoute === '/knowledge-base/export-pdf') {
+        $controller->exportListPdf();
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Knowledge Base page not found</h1>";
+    }
+
+} elseif (strpos($currentRoute, '/price-lists') === 0) {
+    if (!isset($_SESSION['user_id'])) {
+        header('Location: ?route=/login');
+        exit;
+    }
+
+    require_once 'controllers/PriceListsController.php';
+    $controller = new PriceListsController();
+
+    if ($currentRoute === '/price-lists' || $currentRoute === '/price-lists/') {
+        $controller->index();
+    } elseif ($currentRoute === '/price-lists/store' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->store();
+    } elseif (preg_match('/^\/price-lists\/file\/(\d+)$/', $currentRoute, $matches)) {
+        $controller->file((int)$matches[1]);
+    } elseif (preg_match('/^\/price-lists\/delete\/(\d+)$/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->delete((int)$matches[1]);
+    } else {
+        header('HTTP/1.0 404 Not Found');
+        echo "<h1>404 - Price Lists page not found</h1>";
+    }
+
 } elseif (strpos($currentRoute, '/maintenance-offers') === 0) {
     if (!isset($_SESSION['user_id'])) {
         header('Location: ?route=/login');
