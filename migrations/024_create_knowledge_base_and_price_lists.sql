@@ -1,6 +1,9 @@
 -- Migration: Knowledge Base and Price Lists
 -- Date: 2026-05-29
 
+SET SESSION lock_wait_timeout = 10;
+SET SESSION innodb_lock_wait_timeout = 10;
+
 CREATE TABLE IF NOT EXISTS `knowledge_articles` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `title` VARCHAR(255) NOT NULL,

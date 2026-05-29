@@ -32,6 +32,19 @@ class AutoMigration {
         
         try {
             $this->db->execute($sql);
+
+            // Keep compatibility with UpdateController which stores/reads version.
+            try {
+                $colStmt = $this->db->execute("SHOW COLUMNS FROM migrations LIKE 'version'");
+                $hasVersionColumn = $colStmt && $colStmt->rowCount() > 0;
+
+                if (!$hasVersionColumn) {
+                    $this->db->execute("ALTER TABLE migrations ADD COLUMN version VARCHAR(20) NULL AFTER migration");
+                    $this->db->execute("ALTER TABLE migrations ADD INDEX idx_version (version)");
+                }
+            } catch (Exception $e) {
+                error_log('AutoMigration: Failed to ensure migrations.version column - ' . $e->getMessage());
+            }
         } catch (Exception $e) {
             error_log('AutoMigration: Failed to create migrations table - ' . $e->getMessage());
         }
