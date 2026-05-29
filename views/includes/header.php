@@ -798,7 +798,7 @@
             <?php if ($isAdmin || $isSupervisor || $isTechnician || can('knowledge_base.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/knowledge-base') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/knowledge-base">
-                    <i class="fas fa-book-open"></i> <?= __('menu.knowledge_base') ?>
+                    <i class="fas fa-book-open"></i> <?= __('menu.knowledge_base', 'Βάση Γνώσης') ?>
                 </a>
             </li>
             <?php endif; ?>
@@ -806,7 +806,7 @@
             <?php if ($isAdmin || $isSupervisor || $isTechnician || can('price_lists.view')): ?>
             <li class="nav-item">
                 <a class="nav-link <?= strpos($currentRoute, '/price-lists') !== false ? 'active' : '' ?>" href="<?= BASE_URL ?>/price-lists">
-                    <i class="fas fa-tags"></i> <?= __('menu.price_lists') ?>
+                    <i class="fas fa-tags"></i> <?= __('menu.price_lists', 'Τιμοκατάλογοι') ?>
                 </a>
             </li>
             <?php endif; ?>
@@ -902,8 +902,8 @@
                     elseif (strpos($uri, '/appointments') !== false) echo __('menu.appointments');
                     elseif (strpos($uri, '/quotes') !== false)      echo __('menu.quotes');
                     elseif (strpos($uri, '/uploaded-contracts') !== false) echo 'Συμφωνητικά';
-                    elseif (strpos($uri, '/knowledge-base') !== false) echo __('menu.knowledge_base');
-                    elseif (strpos($uri, '/price-lists') !== false) echo __('menu.price_lists');
+                    elseif (strpos($uri, '/knowledge-base') !== false) echo __('menu.knowledge_base', 'Βάση Γνώσης');
+                    elseif (strpos($uri, '/price-lists') !== false) echo __('menu.price_lists', 'Τιμοκατάλογοι');
                     elseif (strpos($uri, '/materials') !== false)   echo __('menu.materials');
                     elseif (strpos($uri, '/reports') !== false)     echo __('menu.reports');
                     elseif (strpos($uri, '/users') !== false)       echo __('menu.users');
