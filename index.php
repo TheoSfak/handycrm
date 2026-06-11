@@ -518,6 +518,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->exportWord((int)$matches[1]);
     } elseif (preg_match('/\/maintenance-offers\/send-email\/(\d+)/', $currentRoute, $matches)) {
         $controller->sendEmail((int)$matches[1]);
+    } elseif (preg_match('/\/maintenance-offers\/show\/(\d+)/', $currentRoute, $matches)) {
+        $controller->show((int)$matches[1]);
     } elseif (preg_match('/\/maintenance-offers\/edit\/(\d+)/', $currentRoute, $matches)) {
         $controller->edit((int)$matches[1]);
     } elseif (preg_match('/\/maintenance-offers\/update\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -137,6 +137,35 @@ class MaintenanceOfferController extends BaseController {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // SHOW (view details)
+    // ──────────────────────────────────────────────────────────────────────────
+    public function show(int $id): void {
+        $offer = $this->offerModel->find($id);
+        if (!$offer) {
+            $_SESSION['error'] = 'Η προσφορά δεν βρέθηκε.';
+            header('Location: ' . BASE_URL . '/maintenance-offers');
+            exit;
+        }
+
+        // Fetch created_by_name if not already joined
+        if (empty($offer['created_by_name']) && !empty($offer['created_by'])) {
+            try {
+                $db = $this->db->connect();
+                $stmt = $db->prepare("SELECT CONCAT(first_name, ' ', last_name) FROM users WHERE id = ?");
+                $stmt->execute([$offer['created_by']]);
+                $offer['created_by_name'] = $stmt->fetchColumn() ?: '';
+            } catch (\Exception $e) {
+                $offer['created_by_name'] = '';
+            }
+        }
+
+        $this->view('maintenance_offers/show', [
+            'title' => 'Προσφορά ' . $offer['offer_number'] . ' - ' . APP_NAME,
+            'offer' => $offer,
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // EDIT FORM
     // ──────────────────────────────────────────────────────────────────────────
     public function edit(int $id): void {

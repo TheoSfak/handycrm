@@ -166,6 +166,11 @@
                                     <!-- Actions -->
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
+                                            <!-- View -->
+                                            <a href="<?= BASE_URL ?>/maintenance-offers/show/<?= $offer['id'] ?>"
+                                               class="btn btn-outline-info" title="Προβολή">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
                                             <!-- Edit -->
                                             <a href="<?= BASE_URL ?>/maintenance-offers/edit/<?= $offer['id'] ?>"
                                                class="btn btn-outline-warning" title="Επεξεργασία">

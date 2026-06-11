@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.8.18] - 2026-06-11
+### Added
+- **Maintenance Offers — View**: Added view (show) page with read-only detail layout displaying company info, offer details, status bar (accepted/expiry/scheduled date), acceptance timestamp, notes and metadata. Eye icon button added to the offers list.
+
 ## [1.8.17] - 2026-06-11
 ### Added
 - **Maintenance Offers — Edit**: Added edit button in the offers list and a full edit form to correct offer details (company name, address, phone, email, transformers count, price, expiry date, notes).
