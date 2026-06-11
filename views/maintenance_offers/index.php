@@ -166,6 +166,11 @@
                                     <!-- Actions -->
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
+                                            <!-- Edit -->
+                                            <a href="<?= BASE_URL ?>/maintenance-offers/edit/<?= $offer['id'] ?>"
+                                               class="btn btn-outline-warning" title="Επεξεργασία">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
                                             <!-- Export PDF -->
                                             <a href="<?= BASE_URL ?>/maintenance-offers/export-pdf/<?= $offer['id'] ?>"
                                                class="btn btn-outline-danger" title="Λήψη PDF" target="_blank">

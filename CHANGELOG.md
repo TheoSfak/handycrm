@@ -1,5 +1,9 @@
 # HandyCRM - Change Log
 
+## [1.8.17] - 2026-06-11
+### Added
+- **Maintenance Offers — Edit**: Added edit button in the offers list and a full edit form to correct offer details (company name, address, phone, email, transformers count, price, expiry date, notes).
+
 ## [1.8.11] - 2026-05-21
 ### Fixed
 - **Σάρωση PDF - `mb_convert_encoding invalid encoding "CP1253"`**: Neither `Windows-1253` nor `CP1253` are universally accepted by PHP mbstring across all server builds. Rewrote `decodePdfBytes()` to use `iconv()` as the primary converter (much broader encoding alias support), with `mb_convert_encoding` as fallback. Tries `CP1253`, `WINDOWS-1253`, `windows-1253`, `ISO-8859-7` in order until one works.

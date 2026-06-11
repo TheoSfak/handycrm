@@ -137,6 +137,71 @@ class MaintenanceOfferController extends BaseController {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // EDIT FORM
+    // ──────────────────────────────────────────────────────────────────────────
+    public function edit(int $id): void {
+        $offer = $this->offerModel->find($id);
+        if (!$offer) {
+            $_SESSION['error'] = 'Η προσφορά δεν βρέθηκε.';
+            header('Location: ' . BASE_URL . '/maintenance-offers');
+            exit;
+        }
+
+        $this->view('maintenance_offers/edit', [
+            'title' => 'Επεξεργασία Προσφοράς - ' . APP_NAME,
+            'offer' => $offer,
+        ]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // UPDATE
+    // ──────────────────────────────────────────────────────────────────────────
+    public function update(int $id): void {
+        $offer = $this->offerModel->find($id);
+        if (!$offer) {
+            $_SESSION['error'] = 'Η προσφορά δεν βρέθηκε.';
+            header('Location: ' . BASE_URL . '/maintenance-offers');
+            exit;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (\Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο αίτημα.';
+            header('Location: ' . BASE_URL . '/maintenance-offers/edit/' . $id);
+            exit;
+        }
+
+        $count       = max(1, (int)($_POST['transformers_count'] ?? 1));
+        $customPrice = isset($_POST['custom_price']) && $_POST['custom_price'] !== ''
+            ? (float)$_POST['custom_price']
+            : null;
+        $price = $customPrice ?? MaintenanceOffer::calculatePrice($count);
+
+        $data = [
+            'company_name'       => trim($_POST['company_name'] ?? ''),
+            'address'            => trim($_POST['address'] ?? ''),
+            'phone'              => trim($_POST['phone'] ?? ''),
+            'email'              => trim($_POST['email'] ?? ''),
+            'transformers_count' => $count,
+            'price'              => $price,
+            'offer_expiry_date'  => $_POST['offer_expiry_date'] ?: null,
+            'notes'              => trim($_POST['notes'] ?? ''),
+        ];
+
+        if (empty($data['company_name'])) {
+            $_SESSION['error'] = 'Η επωνυμία επιχείρησης είναι υποχρεωτική.';
+            header('Location: ' . BASE_URL . '/maintenance-offers/edit/' . $id);
+            exit;
+        }
+
+        $this->offerModel->update($id, $data);
+        $_SESSION['success'] = 'Η προσφορά ' . htmlspecialchars($offer['offer_number']) . ' ενημερώθηκε επιτυχώς.';
+        header('Location: ' . BASE_URL . '/maintenance-offers');
+        exit;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // TOGGLE ACCEPTED (AJAX / radio button click)
     // ──────────────────────────────────────────────────────────────────────────
     public function toggleAccepted(int $id): void {
