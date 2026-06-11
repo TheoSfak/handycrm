@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.8.19] - 2026-06-11
+### Added
+- **Dashboard — Εγκεκριμένες Συντηρήσεις**: New card showing all accepted maintenance offers (company, phone, transformers count, price, acceptance date) placed above the contracts section.
+- **Dashboard — Προγραμματισμένες Συντηρήσεις**: New card showing maintenance offers with a future scheduled date only (company, transformers count, price, scheduled date), sorted ascending.
+### Fixed
+- **Dashboard — Contracts table**: Fixed white text on white background in the Συμφωνητικά expiring contracts card headers and table body; applied `text-dark` to ensure readability.
+
 ## [1.8.18] - 2026-06-11
 ### Added
 - **Maintenance Offers — View**: Added view (show) page with read-only detail layout displaying company info, offer details, status bar (accepted/expiry/scheduled date), acceptance timestamp, notes and metadata. Eye icon button added to the offers list.

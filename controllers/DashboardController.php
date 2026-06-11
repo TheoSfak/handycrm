@@ -61,6 +61,8 @@ class DashboardController extends BaseController {
             'notifications' => $notifications,
             'expiring_contracts' => $stats['expiring_list'] ?? [],
             'expiring_uploaded_contracts' => $stats['expiring_uploaded_list'] ?? [],
+            'accepted_maintenance_offers' => $stats['accepted_list'] ?? [],
+            'scheduled_maintenance_offers' => $stats['scheduled_future_list'] ?? [],
             'current_date' => date('d/m/Y'),
             'current_time' => date('H:i')
         ];
@@ -220,6 +222,8 @@ class DashboardController extends BaseController {
             $stats['expiring_contracts']   = $offerModel->getExpiringCount($reminderDays);
             $stats['expiring_list']        = $offerModel->getExpiringList($reminderDays);
             $stats['reminder_days']        = $reminderDays;
+            $stats['accepted_list']        = $offerModel->getAcceptedList();
+            $stats['scheduled_future_list'] = $offerModel->getScheduledFutureList();
         } catch (Exception $e) {
             $stats['expired_contracts']  = 0;
             $stats['expiring_contracts'] = 0;

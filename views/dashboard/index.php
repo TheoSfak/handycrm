@@ -86,12 +86,115 @@ echo $updateChecker->getUpdateNotification();
 </div>
 <?php endif; ?>
 
+<?php
+$_acceptedOffers   = $accepted_maintenance_offers ?? [];
+$_scheduledOffers  = $scheduled_maintenance_offers ?? [];
+if (!empty($_acceptedOffers) || !empty($_scheduledOffers)):
+    $colClass = (!empty($_acceptedOffers) && !empty($_scheduledOffers)) ? 'col-lg-6' : 'col-12';
+?>
+<div class="row mb-4">
+    <?php if (!empty($_acceptedOffers)): ?>
+    <div class="<?= $colClass ?> mb-3 mb-lg-0">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-semibold text-dark">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    Εγκεκριμένες Συντηρήσεις
+                </h6>
+                <a href="<?= BASE_URL ?>/maintenance-offers?accepted=1" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i>Όλες
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Επωνυμία</th>
+                                <th>Τηλ.</th>
+                                <th class="text-center">Αρ. Μ/Σ</th>
+                                <th class="text-end">Τιμή</th>
+                                <th>Ημ. Αποδοχής</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-dark">
+                            <?php foreach ($_acceptedOffers as $_ao): ?>
+                            <tr>
+                                <td class="fw-semibold"><?= htmlspecialchars($_ao['company_name']) ?></td>
+                                <td class="text-muted small"><?= htmlspecialchars($_ao['phone'] ?: '—') ?></td>
+                                <td class="text-center"><span class="badge bg-info"><?= (int)$_ao['transformers_count'] ?></span></td>
+                                <td class="text-end fw-bold text-success"><?= number_format((float)$_ao['price'], 2, ',', '.') ?> €</td>
+                                <td class="small"><?= $_ao['accepted_at'] ? date('d/m/Y', strtotime($_ao['accepted_at'])) : '—' ?></td>
+                                <td class="text-end">
+                                    <a href="<?= BASE_URL ?>/maintenance-offers/show/<?= $_ao['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Προβολή">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($_scheduledOffers)): ?>
+    <div class="<?= $colClass ?>">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                <h6 class="mb-0 fw-semibold text-dark">
+                    <i class="fas fa-calendar-check text-primary me-2"></i>
+                    Προγραμματισμένες Συντηρήσεις
+                </h6>
+                <a href="<?= BASE_URL ?>/maintenance-offers" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-list me-1"></i>Όλες
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Επωνυμία</th>
+                                <th class="text-center">Αρ. Μ/Σ</th>
+                                <th class="text-end">Τιμή</th>
+                                <th>Ημ. Προγρ/σμού</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-dark">
+                            <?php foreach ($_scheduledOffers as $_so): ?>
+                            <tr>
+                                <td class="fw-semibold"><?= htmlspecialchars($_so['company_name']) ?></td>
+                                <td class="text-center"><span class="badge bg-info"><?= (int)$_so['transformers_count'] ?></span></td>
+                                <td class="text-end fw-bold text-success"><?= number_format((float)$_so['price'], 2, ',', '.') ?> €</td>
+                                <td class="small text-primary fw-semibold"><?= date('d/m/Y', strtotime($_so['scheduled_date'])) ?></td>
+                                <td class="text-end">
+                                    <a href="<?= BASE_URL ?>/maintenance-offers/show/<?= $_so['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Προβολή">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
+
 <?php if (($stats['expired_contracts'] ?? 0) > 0 || ($stats['expiring_contracts'] ?? 0) > 0): ?>
 <div class="row mb-4">
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                <h6 class="mb-0 fw-semibold">
+                <h6 class="mb-0 fw-semibold text-dark">
                     <i class="fas fa-bell text-warning me-2"></i>
                     <?= __('dashboard.maintenance_reminders') ?>
                 </h6>
@@ -155,7 +258,7 @@ echo $updateChecker->getUpdateNotification();
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
-                <h6 class="mb-0 fw-semibold">
+                <h6 class="mb-0 fw-semibold text-dark">
                     <i class="fas fa-file-signature text-warning me-2"></i>
                     Συμφωνητικά — Επερχόμενες Λήξεις
                 </h6>
@@ -174,7 +277,7 @@ echo $updateChecker->getUpdateNotification();
                                 <th>Υπολ. Ημέρες</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-dark">
                             <?php foreach ($expiring_uploaded_contracts as $uc): ?>
                             <tr>
                                 <td class="fw-semibold"><?= htmlspecialchars($uc['customer_name']) ?></td>

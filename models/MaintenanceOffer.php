@@ -95,6 +95,36 @@ class MaintenanceOffer extends BaseModel {
     }
 
     /**
+     * Get all accepted offers ordered by accepted_at DESC (for dashboard)
+     */
+    public function getAcceptedList(): array {
+        $db = $this->db->connect();
+        $stmt = $db->query("
+            SELECT id, offer_number, company_name, phone, transformers_count, price, accepted_at
+            FROM maintenance_offers
+            WHERE deleted_at IS NULL AND accepted = 1
+            ORDER BY accepted_at DESC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get offers with a future scheduled_date (for dashboard)
+     */
+    public function getScheduledFutureList(): array {
+        $db = $this->db->connect();
+        $stmt = $db->query("
+            SELECT id, offer_number, company_name, transformers_count, price, scheduled_date
+            FROM maintenance_offers
+            WHERE deleted_at IS NULL
+              AND scheduled_date IS NOT NULL
+              AND scheduled_date >= CURDATE()
+            ORDER BY scheduled_date ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Count accepted contracts whose contract_end_date has already passed
      */
     public function getExpiredCount(): int {
