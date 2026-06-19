@@ -858,16 +858,20 @@ class ProjectReportController extends BaseController {
 
         // Project Total card — shown only when manually entered
         if ($projectTotal !== null && $projectTotal > 0) {
-            $vatAmount  = $projectTotal * 0.24;
+            $vatAmount   = $projectTotal * 0.24;
+            $totalWithVat = $projectTotal + $vatAmount;
             $html .= '<div nobr="true" style="margin-top: 20px;">';
             $html .= '<table style="width: 100%; border: none;">';
             $html .= '<tr>';
             $html .= '<td style="width: 100%; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΟΥ</div>';
-            $html .= '<div style="font-size: 22px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($projectTotal, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ) &nbsp;|&nbsp; ΦΠΑ 24%: ' . number_format($vatAmount, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0;">';
+            $html .= '<tr><td style="border: none; padding: 14px 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9; margin-bottom: 4px;">ΣΥΝΟΛΟ ΕΡΓΟΥ</div>';
+            $html .= '<div style="font-size: 22px; font-weight: bold; color: white;">' . number_format($totalWithVat, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.85; margin-top: 5px;">';
+            $html .= 'χωρίς ΦΠΑ: ' . number_format($projectTotal, 2, ',', '.') . ' ' . $currencySymbol;
+            $html .= ' &nbsp;|&nbsp; ΦΠΑ 24%: ' . number_format($vatAmount, 2, ',', '.') . ' ' . $currencySymbol;
+            $html .= '</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';
