@@ -782,11 +782,8 @@ class ProjectReportController extends BaseController {
 
         $showLaborCard     = !empty($labor);
         $showMaterialsCard = !empty($materials);
-        // Grand Total: only when at least one section has prices visible
-        $showTotalCard = !($hideMaterialsPrices && ($hideLaborPrices || !$showLaborCard));
-        if (!$showMaterialsCard && !$showLaborCard) {
-            $showTotalCard = false;
-        }
+        // Grand Total: only when BOTH materials and labor are present and at least one has prices
+        $showTotalCard = $showLaborCard && $showMaterialsCard && !($hideLaborPrices && $hideMaterialsPrices);
 
         $visibleCards = (int)$showMaterialsCard + (int)$showLaborCard + (int)$showTotalCard;
         if ($visibleCards === 0) $visibleCards = 1;
