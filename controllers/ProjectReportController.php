@@ -867,11 +867,9 @@ class ProjectReportController extends BaseController {
             $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0;">';
             $html .= '<tr><td style="border: none; padding: 14px 12px; text-align: center; vertical-align: middle;">';
             $html .= '<div style="font-size: 10px; color: white; opacity: 0.9; margin-bottom: 4px;">ΣΥΝΟΛΟ ΕΡΓΟΥ</div>';
-            $html .= '<div style="font-size: 22px; font-weight: bold; color: white;">' . number_format($totalWithVat, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.85; margin-top: 5px;">';
-            $html .= 'χωρίς ΦΠΑ: ' . number_format($projectTotal, 2, ',', '.') . ' ' . $currencySymbol;
-            $html .= ' &nbsp;|&nbsp; ΦΠΑ 24%: ' . number_format($vatAmount, 2, ',', '.') . ' ' . $currencySymbol;
-            $html .= '</div>';
+            $html .= '<div style="font-size: 22px; font-weight: bold; color: white;">' . number_format($projectTotal, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+            $html .= '<div style="font-size: 9px; color: white; opacity: 0.9; margin-top: 4px;">Με ΦΠΑ 24%: ' . number_format($totalWithVat, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
             $html .= '</td></tr>';
             $html .= '</table>';
             $html .= '</td>';
