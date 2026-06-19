@@ -1291,6 +1291,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         </label>
                     </div>
 
+                    <div id="projectTotalWrapper" class="mb-3" style="display:none;">
+                        <hr>
+                        <label for="project_total" class="form-label"><strong>Σύνολο Έργου</strong></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="project_total" name="project_total" min="0" step="0.01" placeholder="π.χ. 1500.00">
+                            <span class="input-group-text">€ (χωρίς ΦΠΑ)</span>
+                        </div>
+                        <small class="text-muted">Αν συμπληρωθεί, εμφανίζεται κάρτα στο τέλος της αναφοράς</small>
+                    </div>
+
                     <hr>
 
                     <div class="mb-3">
@@ -1368,6 +1378,25 @@ function toggleDateInputs() {
         toDate.setAttribute('required', 'required');
     }
 }
+
+function toggleProjectTotal() {
+    const isMaterialsOnly = document.getElementById('contentMaterials').checked;
+    const hideMaterialsPrices = document.getElementById('hideMaterialsPricesCheck').checked;
+    const wrapper = document.getElementById('projectTotalWrapper');
+    if (isMaterialsOnly && hideMaterialsPrices) {
+        wrapper.style.display = 'block';
+    } else {
+        wrapper.style.display = 'none';
+        document.getElementById('project_total').value = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[name="report_content"]').forEach(function(r) {
+        r.addEventListener('change', toggleProjectTotal);
+    });
+    document.getElementById('hideMaterialsPricesCheck').addEventListener('change', toggleProjectTotal);
+});
 
 function toggleEmailInput() {
     const sendByEmailCheck = document.getElementById('sendByEmailCheck');

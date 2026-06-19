@@ -92,6 +92,15 @@ class ProjectReportController extends BaseController {
         // Show tasks section (dates + descriptions table)
         $showTasks = !isset($_POST['show_tasks']) || $_POST['show_tasks'] === '1';
 
+        // Optional project total (shown only when materials-only + hide material prices)
+        $projectTotal = null;
+        if (isset($_POST['project_total']) && $_POST['project_total'] !== '') {
+            $val = floatval($_POST['project_total']);
+            if ($val > 0) {
+                $projectTotal = $val;
+            }
+        }
+
         // Get report notes
         $reportNotes = isset($_POST['report_notes']) && !empty($_POST['report_notes']) ? $_POST['report_notes'] : null;
         
@@ -126,7 +135,7 @@ class ProjectReportController extends BaseController {
         $totals = $this->calculateTotals($materials, $labor);
         
         // Generate PDF
-        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks);
+        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal);
     }
     
     private function getProject($projectId) {
@@ -316,7 +325,7 @@ class ProjectReportController extends BaseController {
         ];
     }
     
-    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true) {
+    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null) {
         // Create new PDF document with custom footer
         $pdf = new CustomPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         
@@ -342,7 +351,7 @@ class ProjectReportController extends BaseController {
         $pdf->SetFont('dejavusans', '', 10);
         
         // Build HTML content
-        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks);
+        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal);
         
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -473,7 +482,7 @@ class ProjectReportController extends BaseController {
         return $html;
     }
     
-    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true) {
+    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null) {
         // Always use HTML entity for euro to avoid server encoding issues
         // The database might have corrupted € character depending on server charset
         $currencySymbol = '&euro;';
@@ -846,6 +855,27 @@ class ProjectReportController extends BaseController {
         $html .= '</tr>';
         $html .= '</table>';
         $html .= '</div>'; // end nobr summary cards
+
+        // Project Total card — shown only when manually entered
+        if ($projectTotal !== null && $projectTotal > 0) {
+            $vatAmount  = $projectTotal * 0.24;
+            $html .= '<div nobr="true" style="margin-top: 20px;">';
+            $html .= '<table style="width: 100%; border: none;">';
+            $html .= '<tr>';
+            $html .= '<td style="width: 100%; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΟΥ</div>';
+            $html .= '<div style="font-size: 22px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($projectTotal, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ) &nbsp;|&nbsp; ΦΠΑ 24%: ' . number_format($vatAmount, 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
+            $html .= '</tr>';
+            $html .= '</table>';
+            $html .= '</div>';
+        }
+
         if (!empty($reportNotes)) {
             $html .= '<h2 style="margin-top: 40px; margin-bottom: 15px;">ΠΑΡΑΤΗΡΗΣΕΙΣ</h2>';
             $html .= '<div style="border-top: 2px solid #3498db; margin-bottom: 20px;"></div>';
