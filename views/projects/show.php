@@ -1281,9 +1281,18 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                         <small class="text-muted">Επιλέξτε ποια στοιχεία θα εμφανίζονται στην αναφορά</small>
                     </div>
-                    
+
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="showTasksCheck" name="show_tasks" value="1" checked>
+                        <label class="form-check-label" for="showTasksCheck">
+                            <strong>Εμφάνιση Εργασιών</strong>
+                            <br>
+                            <small class="text-muted">Πίνακας εργασιών με ημερομηνίες και περιγραφές</small>
+                        </label>
+                    </div>
+
                     <hr>
-                    
+
                     <div class="mb-3">
                         <label for="report_notes" class="form-label"><strong><?= __('projects.report_notes') ?></strong></label>
                         <textarea class="form-control" id="report_notes" name="report_notes" rows="4" placeholder="<?= __('projects.report_notes_placeholder') ?>"></textarea>

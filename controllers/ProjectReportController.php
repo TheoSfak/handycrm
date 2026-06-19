@@ -88,7 +88,10 @@ class ProjectReportController extends BaseController {
         
         // Get report content filter (materials, labor, or both)
         $reportContent = isset($_POST['report_content']) ? $_POST['report_content'] : 'both';
-        
+
+        // Show tasks section (dates + descriptions table)
+        $showTasks = !isset($_POST['show_tasks']) || $_POST['show_tasks'] === '1';
+
         // Get report notes
         $reportNotes = isset($_POST['report_notes']) && !empty($_POST['report_notes']) ? $_POST['report_notes'] : null;
         
@@ -123,7 +126,7 @@ class ProjectReportController extends BaseController {
         $totals = $this->calculateTotals($materials, $labor);
         
         // Generate PDF
-        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes);
+        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks);
     }
     
     private function getProject($projectId) {
@@ -313,7 +316,7 @@ class ProjectReportController extends BaseController {
         ];
     }
     
-    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null) {
+    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true) {
         // Create new PDF document with custom footer
         $pdf = new CustomPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         
@@ -339,7 +342,7 @@ class ProjectReportController extends BaseController {
         $pdf->SetFont('dejavusans', '', 10);
         
         // Build HTML content
-        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes);
+        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks);
         
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -470,7 +473,7 @@ class ProjectReportController extends BaseController {
         return $html;
     }
     
-    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null) {
+    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true) {
         // Always use HTML entity for euro to avoid server encoding issues
         // The database might have corrupted € character depending on server charset
         $currencySymbol = '&euro;';
@@ -650,7 +653,7 @@ class ProjectReportController extends BaseController {
         $html .= '</p>';
         
         // Tasks Section
-        if (!empty($tasks)) {
+        if ($showTasks && !empty($tasks)) {
             $showLaborColumn = !empty($labor);
             $html .= '<h2><i class="fas fa-tasks"></i> ΕΡΓΑΣΙΕΣ</h2>';
             $html .= '<table>';
