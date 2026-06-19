@@ -90,7 +90,7 @@ class ProjectReportController extends BaseController {
         $reportContent = isset($_POST['report_content']) ? $_POST['report_content'] : 'both';
 
         // Show tasks section (dates + descriptions table)
-        $showTasks = !isset($_POST['show_tasks']) || $_POST['show_tasks'] === '1';
+        $showTasks = isset($_POST['show_tasks']) && $_POST['show_tasks'] === '1';
 
         // Optional project total (shown only when materials-only + hide material prices)
         $projectTotal = null;
