@@ -651,10 +651,15 @@ class ProjectReportController extends BaseController {
         
         // Tasks Section
         if (!empty($tasks)) {
+            $showLaborColumn = !empty($labor);
             $html .= '<h2><i class="fas fa-tasks"></i> ΕΡΓΑΣΙΕΣ</h2>';
             $html .= '<table>';
             $html .= '<thead nobr="true">';
-            $html .= '<tr nobr="true"><th style="width: 20%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 55%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 25%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
+            if ($showLaborColumn) {
+                $html .= '<tr nobr="true"><th style="width: 20%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 55%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 25%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
+            } else {
+                $html .= '<tr nobr="true"><th style="width: 25%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 75%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th></tr>';
+            }
             $html .= '</thead>';
             $html .= '<tbody>';
             foreach ($tasks as $task) {
@@ -662,25 +667,33 @@ class ProjectReportController extends BaseController {
                 $techCount = (int)($task['tech_count'] ?? 0);
                 $taskDays = (int)($task['task_hmeromisthia'] ?? 0);
 
-                if ($techCount > 0) {
-                    $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $taskDays . ' (8ωρα)</span>';
-                } else {
-                    $laborCell = 'Τεχνικοί: -';
-                }
-
                 $html .= '<tr nobr="true">';
                 if (($task['task_type'] ?? 'single_day') === 'date_range' && !empty($task['date_from']) && !empty($task['date_to'])) {
                     $dateCell = date('d/m/Y', strtotime($task['date_from'])) . '<br><span style="font-size:9px; color:#7f8c8d;">έως ' . date('d/m/Y', strtotime($task['date_to'])) . '</span>';
                 } else {
                     $dateCell = date('d/m/Y', strtotime($displayDate));
                 }
-                $html .= '<td style="width: 20%;">' . $dateCell . '</td>';
-                $html .= '<td style="width: 55%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
-                if (!empty($task['notes'])) {
-                    $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
+                if ($showLaborColumn) {
+                    if ($techCount > 0) {
+                        $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $taskDays . ' (8ωρα)</span>';
+                    } else {
+                        $laborCell = 'Τεχνικοί: -';
+                    }
+                    $html .= '<td style="width: 20%;">' . $dateCell . '</td>';
+                    $html .= '<td style="width: 55%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
+                    if (!empty($task['notes'])) {
+                        $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
+                    }
+                    $html .= '</td>';
+                    $html .= '<td style="width: 25%; text-align: center; font-size: 9px;">' . $laborCell . '</td>';
+                } else {
+                    $html .= '<td style="width: 25%;">' . $dateCell . '</td>';
+                    $html .= '<td style="width: 75%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
+                    if (!empty($task['notes'])) {
+                        $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
+                    }
+                    $html .= '</td>';
                 }
-                $html .= '</td>';
-                $html .= '<td style="width: 25%; text-align: center; font-size: 9px;">' . $laborCell . '</td>';
                 $html .= '</tr>';
             }
             $html .= '</tbody>';
@@ -763,51 +776,62 @@ class ProjectReportController extends BaseController {
         $html .= '<div nobr="true">';
         $html .= '<h2 style="margin-top: 100px; margin-bottom: 15px;">ΣΥΓΚΕΝΤΡΩΤΙΚΑ ΣΤΟΙΧΕΙΑ</h2>';
         $html .= '<div style="border-top: 2px solid #3498db; margin-bottom: 20px;"></div>';
-        
+
+        $showLaborCard     = !empty($labor);
+        $showMaterialsCard = !empty($materials);
+        // Grand Total: only when at least one section has prices visible
+        $showTotalCard = !($hideMaterialsPrices && ($hideLaborPrices || !$showLaborCard));
+        if (!$showMaterialsCard && !$showLaborCard) {
+            $showTotalCard = false;
+        }
+
+        $visibleCards = (int)$showMaterialsCard + (int)$showLaborCard + (int)$showTotalCard;
+        if ($visibleCards === 0) $visibleCards = 1;
+        $colWidth = $visibleCards >= 3 ? '33.33%' : ($visibleCards === 2 ? '50%' : '100%');
+
         $html .= '<table style="margin-bottom: 20px; border: none;">';
         $html .= '<tr>';
-        
-        // Determine column count for layout
-        $bothHidden  = $hideLaborPrices && $hideMaterialsPrices;
-        $noneHidden  = !$hideLaborPrices && !$hideMaterialsPrices;
-        $colWidth    = $noneHidden ? '33.33%' : '50%';
-        
+
         // Materials Card
-        $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
-        $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
-        $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-        $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
-        if ($hideMaterialsPrices) {
-            $html .= '<div style="font-size: 24px; font-weight: bold; color: white; margin-top: 5px;">' . $totals['total_materials'] . '</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">είδη</div>';
-        } else {
-            $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_materials'] . ' είδη</div>';
+        if ($showMaterialsCard) {
+            $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
+            if ($hideMaterialsPrices) {
+                $html .= '<div style="font-size: 24px; font-weight: bold; color: white; margin-top: 5px;">' . $totals['total_materials'] . '</div>';
+                $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">είδη</div>';
+            } else {
+                $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+                $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+                $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_materials'] . ' είδη</div>';
+            }
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
         }
-        $html .= '</td></tr>';
-        $html .= '</table>';
-        $html .= '</td>';
-        
-        // Labor Card
-        $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
-        $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
-        $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-        $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
-        if ($hideLaborPrices) {
-            $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
-            $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
-        } else {
-            $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+
+        // Labor Card — only when labor data exists
+        if ($showLaborCard) {
+            $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+            $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
+            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
+            if ($hideLaborPrices) {
+                $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+                $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
+            } else {
+                $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+                $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+                $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+            }
+            $html .= '</td></tr>';
+            $html .= '</table>';
+            $html .= '</td>';
         }
-        $html .= '</td></tr>';
-        $html .= '</table>';
-        $html .= '</td>';
-        
-        // Grand Total Card — only when at least one section shows prices
-        if (!$bothHidden) {
+
+        // Grand Total Card
+        if ($showTotalCard) {
             $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
             $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
             $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
@@ -818,7 +842,7 @@ class ProjectReportController extends BaseController {
             $html .= '</table>';
             $html .= '</td>';
         }
-        
+
         $html .= '</tr>';
         $html .= '</table>';
         $html .= '</div>'; // end nobr summary cards
