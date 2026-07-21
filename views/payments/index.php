@@ -530,6 +530,8 @@ require_once 'views/includes/header.php';
 </div>
 
 <script>
+const csrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
+
 // Quick Date Range Presets
 function setDateRange(preset) {
     const weekStartInput = document.getElementById('week_start');
@@ -677,6 +679,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Send AJAX request
                 const formData = new FormData();
                 selectedIds.forEach(id => formData.append('labor_ids[]', id));
+                formData.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
 
                 fetch('<?= BASE_URL ?>/payments/mark-entries-paid', {
                     method: 'POST',
@@ -715,6 +718,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const formData = new FormData();
                 selectedIds.forEach(id => formData.append('labor_ids[]', id));
+                formData.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
 
                 fetch('<?= BASE_URL ?>/payments/mark-entries-unpaid', {
                     method: 'POST',
@@ -754,6 +758,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('technician_id', technicianId);
                 formData.append('week_start', weekStart);
                 formData.append('week_end', weekEnd);
+                formData.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
 
                 fetch('<?= BASE_URL ?>/payments/mark-week-paid', {
                     method: 'POST',
@@ -797,6 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('technician_id', technicianId);
                 formData.append('week_start', weekStart);
                 formData.append('week_end', weekEnd);
+                formData.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
 
                 fetch('<?= BASE_URL ?>/payments/mark-week-unpaid', {
                     method: 'POST',
@@ -895,7 +901,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append('week_start', weekStart);
             formData.append('week_end', weekEnd);
-            
+            formData.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
+
             fetch('<?= BASE_URL ?>/payments/mark-all-paid', {
                 method: 'POST',
                 body: formData

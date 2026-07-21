@@ -170,12 +170,20 @@ class PaymentsController extends BaseController {
      */
     public function markPaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markPaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $technicianId = $_POST['technician_id'] ?? null;
             $weekStart = $_POST['week_start'] ?? null;
@@ -226,12 +234,20 @@ class PaymentsController extends BaseController {
      */
     public function markUnpaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markUnpaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $paymentId = $_POST['payment_id'] ?? null;
             
@@ -281,12 +297,20 @@ class PaymentsController extends BaseController {
      */
     public function markEntriesPaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markEntriesPaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $laborIds = $_POST['labor_ids'] ?? [];
             
@@ -321,12 +345,20 @@ class PaymentsController extends BaseController {
      */
     public function markEntriesUnpaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markEntriesUnpaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $laborIds = $_POST['labor_ids'] ?? [];
             
@@ -355,17 +387,25 @@ class PaymentsController extends BaseController {
      */
     public function markWeekPaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markWeekPaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $technicianId = $_POST['technician_id'] ?? null;
             $weekStart = $_POST['week_start'] ?? null;
             $weekEnd = $_POST['week_end'] ?? null;
-            
+
             if (!$technicianId || !$weekStart || !$weekEnd) {
                 throw new Exception('Missing required parameters');
             }
@@ -398,17 +438,25 @@ class PaymentsController extends BaseController {
      */
     public function markWeekUnpaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markWeekUnpaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $technicianId = $_POST['technician_id'] ?? null;
             $weekStart = $_POST['week_start'] ?? null;
             $weekEnd = $_POST['week_end'] ?? null;
-            
+
             if (!$technicianId || !$weekStart || !$weekEnd) {
                 throw new Exception('Missing required parameters');
             }
@@ -434,12 +482,20 @@ class PaymentsController extends BaseController {
      */
     public function markAllPaid() {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('PaymentsController::markAllPaid - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $weekStart = $_POST['week_start'] ?? null;
         $weekEnd = $_POST['week_end'] ?? null;
         
