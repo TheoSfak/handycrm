@@ -15,6 +15,7 @@
             <div class="card">
                 <div class="card-body">
                     <form method="POST" action="<?= BASE_URL ?>/roles/edit/<?= $role['id'] ?>">
+                        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                         <!-- Basic Info -->
                         <div class="row mb-4">
                             <div class="col-md-6">

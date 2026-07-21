@@ -18,6 +18,7 @@
             <div class="card">
                 <div class="card-body">
                     <form method="POST" action="<?= BASE_URL ?>/roles/permissions/<?= $role['id'] ?>">
+                        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                         <?php if (!empty($permissions)): ?>
                             <?php 
                             // Create array of role permission IDs for easy checking

@@ -68,7 +68,16 @@ class RoleController extends BaseController {
             header('Location: ' . BASE_URL . '/roles');
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('RoleController::store - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/roles/create');
+            exit;
+        }
+
         // Validate input
         $name = trim($_POST['name'] ?? '');
         $display_name = trim($_POST['display_name'] ?? '');
@@ -146,7 +155,16 @@ class RoleController extends BaseController {
             header('Location: ' . BASE_URL . '/roles');
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('RoleController::update - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/roles/edit/' . $id);
+            exit;
+        }
+
         $role = $this->roleModel->getById($id);
         
         if (!$role) {
@@ -205,7 +223,16 @@ class RoleController extends BaseController {
             header('Location: ' . BASE_URL . '/roles');
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('RoleController::delete - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/roles');
+            exit;
+        }
+
         $role = $this->roleModel->getById($id);
         
         if (!$role) {
@@ -253,8 +280,17 @@ class RoleController extends BaseController {
         }
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $this->validateCsrfToken();
+            } catch (Exception $e) {
+                error_log('RoleController::permissions - Error: ' . $e->getMessage());
+                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+                header('Location: ' . BASE_URL . '/roles/permissions/' . $id);
+                exit;
+            }
+
             $permissions = $_POST['permissions'] ?? [];
-            
+
             // Update permissions
             $this->roleModel->clearPermissions($id);
             if (!empty($permissions)) {
