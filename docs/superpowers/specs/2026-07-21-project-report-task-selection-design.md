@@ -1,12 +1,20 @@
-# Επιλογή Συγκεκριμένων Εργασιών στην Αναφορά Έργου — Design Spec
+# Βελτιώσεις Αναφοράς Έργου (Anafora Ergou) — Design Spec
 
 **Ημερομηνία:** 2026-07-21
 **Κατάσταση:** Εγκεκριμένο design, έτοιμο για implementation plan
 **Stack:** PHP (MVC, χωρίς framework), MySQL/MariaDB, Bootstrap 5 + vanilla JS, TCPDF
 
+Δύο σχετικές βελτιώσεις στο ίδιο modal («Αναφορά Έργου» / Anafora Ergou) και τον
+ίδιο controller (`ProjectReportController`):
+
+1. **Επιλογή συγκεκριμένων εργασιών** μέσω checkboxes, σε συνδυασμό με το
+   υπάρχον φίλτρο ημερομηνιών (§1-5).
+2. **Προσαρμοσμένο όνομα αναφοράς** — προαιρετικός υπότιτλος που προστίθεται
+   στον τίτλο του project (§6).
+
 ---
 
-## 1. Σκοπός
+## 1. Σκοπός (Επιλογή Εργασιών)
 
 Στη σελίδα έργου (`views/projects/show.php`), το κουμπί **«Αναφορά Έργου» (Anafora
 Ergou)** ανοίγει ένα modal (`#reportModal`) που παράγει PDF αναφορά μέσω
@@ -59,7 +67,7 @@ modal και δεν πρέπει να τα επηρεάσουν.
 
 ---
 
-## 3. Σχεδίαση — UI (modal αναφοράς)
+## 3. Σχεδίαση — UI (modal αναφοράς) για την επιλογή εργασιών
 
 Νέα ενότητα **«Επιλογή Εργασιών»** μέσα στο `#reportModal`, τοποθετημένη αμέσως
 μετά το block ημερομηνιών (`#dateInputs`) και πριν τα checkboxes απόκρυψης τιμών.
@@ -144,7 +152,7 @@ if (!isset($reportTaskOptions)) {
 
 ---
 
-## 4. Σχεδίαση — Backend / data flow
+## 4. Σχεδίαση — Backend / data flow για την επιλογή εργασιών
 
 Στο `controllers/ProjectReportController.php`:
 
@@ -162,7 +170,7 @@ if (isset($_POST['task_ids']) && is_array($_POST['task_ids'])) {
 
 - Αν το key `task_ids` λείπει εντελώς από το POST → `null` → καμία αλλαγή
   συμπεριφοράς (fallback ασφαλείας, μια και αυτό είναι το μόνο σημείο κλήσης
-  του controller — βλ. §6 — αλλά προστατεύει από μελλοντικές παραλλαγές του
+  του controller — βλ. §8 — αλλά προστατεύει από μελλοντικές παραλλαγές του
   form).
 - Αν υπάρχει αλλά είναι άδειο array (ο admin ξε-τσεκάρισε τα πάντα και το
   client-side guard παρακάμφθηκε κάπως) → κενό array, όχι `null`.
@@ -201,7 +209,7 @@ private function getTasks($projectId, $fromDate = null, $toDate = null, $taskIds
 
 ---
 
-## 5. Edge cases & προεπιλογές (σύνοψη)
+## 5. Edge cases & προεπιλογές — επιλογή εργασιών (σύνοψη)
 
 | Περίπτωση | Συμπεριφορά |
 |---|---|
@@ -216,7 +224,94 @@ private function getTasks($projectId, $fromDate = null, $toDate = null, $taskIds
 
 ---
 
-## 6. Εκτός scope
+## 6. Προσαρμοσμένο Όνομα Αναφοράς (Υπότιτλος)
+
+### Σκοπός
+
+Εκτός από το ποιες εργασίες μπαίνουν στην αναφορά, ο admin θέλει να δώσει στην
+αναφορά ένα αναγνωρίσιμο όνομα που ξεκινάει από τον τίτλο του project και
+προσθέτει έναν δικό του υπότιτλο/ενότητα — π.χ. project **«Creta Maris»** +
+υπότιτλος **«Γραφεία»** → **«Creta Maris - Γραφεία»**. Χρήσιμο όταν ένα project
+καλύπτει πολλαπλές περιοχές/κτίρια ενός μεγάλου site (π.χ. ξενοδοχειακό
+συγκρότημα) και ο admin θέλει ξεχωριστές, ευδιάκριτες αναφορές ανά περιοχή —
+συχνά σε συνδυασμό με την επιλογή εργασιών του §1-5 (π.χ. «οι εργασίες στα
+Γραφεία» ως ξεχωριστή, ονομασμένη αναφορά).
+
+Επιβεβαιώθηκε με τον χρήστη: το συνδυασμένο όνομα εμφανίζεται **και** ως ορατός
+τίτλος μέσα στο PDF **και** ως βάση του ονόματος αρχείου (κατέβασμα + email
+attachment).
+
+### Εύρημα που απλοποιεί την υλοποίηση
+
+Στο σημερινό `generatePDF()` (γραμμές 377 & 436, ο ίδιος κώδικας διπλασιασμένος
+στο download-path και στο email-path), το filename υπολογίζεται από:
+
+```php
+$customerName = !empty($customer['name']) ? $customer['name'] : (!empty($project['title']) ? $project['title'] : 'Report');
+```
+
+Ο πίνακας `customers` **δεν έχει καθόλου στήλη `name`** (μόνο `first_name`,
+`last_name`, `company_name` — επιβεβαιωμένο στο `database/handycrm.sql:106-130`).
+Άρα το `!empty($customer['name'])` είναι **πάντα false** στην πράξη — το filename
+ήδη βασίζεται πάντα στο `$project['title']` σήμερα. Η νέα λειτουργία λοιπόν
+**δεν αλλάζει καμία υπάρχουσα συμπεριφορά filename για κενό υπότιτλο** — απλώς
+προσθέτει το προαιρετικό suffix από πάνω, και ταυτόχρονα καθαρίζει έναν νεκρό
+κλάδο κώδικα που βρίσκεται ακριβώς στις γραμμές που αγγίζουμε.
+
+### UI
+
+Νέο προαιρετικό πεδίο κειμένου στην **κορυφή** του `#reportModal` (πριν το block
+ημερομηνιών): ετικέτα **«Υπότιτλος Αναφοράς (προαιρετικό)»**,
+`name="report_subtitle"`, placeholder «π.χ. Γραφεία». Από κάτω, μια μικρή
+live-updating προεπισκόπηση (ενημερώνεται σε κάθε `input` event) που δείχνει
+ακριβώς τον τελικό τίτλο πριν γίνει submit:
+
+```
+Υπότιτλος Αναφοράς (προαιρετικό)
+[ Γραφεία________________ ]
+Τίτλος αναφοράς: Creta Maris - Γραφεία
+```
+
+Αν το πεδίο μείνει κενό, η προεπισκόπηση δείχνει απλά τον τίτλο του project
+(«Creta Maris»), χωρίς παύλα.
+
+### Backend
+
+Στο `ProjectReportController.php`:
+
+- `generate()`: διαβάζει `$reportSubtitle = trim($_POST['report_subtitle'] ?? '')`.
+- Υπολογισμός ενιαίου ονόματος αναφοράς, μία φορά:
+  ```php
+  $reportName = $project['title'];
+  if ($reportSubtitle !== '') {
+      $reportName .= ' - ' . $reportSubtitle;
+  }
+  ```
+- **Τίτλος μέσα στο PDF** (`buildHTMLContent()`, γραμμή 652): αντί για
+  `htmlspecialchars($project['title'])`, γίνεται `htmlspecialchars($reportName)`.
+  Το `$reportName` περνάει ως νέα παράμετρος στο `buildHTMLContent()`.
+- **Filename** (και στα δύο σημεία, γραμμές 377 και 436): το dead-code check
+  `!empty($customer['name'])` αφαιρείται· η μεταβλητή που τροφοδοτεί το filename
+  γίνεται το ίδιο `$reportName`, περνώντας από το ήδη υπάρχον sanitization
+  pipeline (`transliterateGreek()` → strip μη-αλφαριθμητικών → space→underscore).
+  Το `'Report'` fallback (όταν δεν υπάρχει ούτε τίτλος project — πρακτικά
+  αδύνατο, αφού κάθε project έχει τίτλο) παραμένει ως τελευταία γραμμή άμυνας.
+- Το default email `$subject` (γραμμή 365, `'Αναφορά Έργου - ' . $project['title']`)
+  ενημερώνεται ώστε να χρησιμοποιεί `$reportName` αντί για `$project['title']`,
+  για συνέπεια μεταξύ τίτλου PDF, filename και θέματος email.
+
+### Edge cases — υπότιτλος (σύνοψη)
+
+| Περίπτωση | Συμπεριφορά |
+|---|---|
+| Κενό πεδίο υπότιτλου | Ίδιο ακριβώς με σήμερα — τίτλος = μόνο project title, filename αμετάβλητο |
+| Υπότιτλος με ειδικούς χαρακτήρες (π.χ. `/`, `"`) | Ελεύθερος στον εμφανιζόμενο τίτλο (μόνο `htmlspecialchars`)· στο filename περνάει από το ίδιο sanitization pipeline που ήδη καθαρίζει το project title σήμερα |
+| Πολύ μακρύς υπότιτλος | Δεν μπαίνει όριο μήκους στο MVP — απλό text input, χωρίς `maxlength` |
+| Συνδυασμός με επιλογή εργασιών (§1-5) | Ανεξάρτητα features — ο υπότιτλος είναι καθαρά αισθητικός/αναγνωριστικός, δεν επηρεάζει ποια δεδομένα συγκεντρώνονται |
+
+---
+
+## 7. Εκτός scope
 
 - **CSRF gap σε `ProjectReportController::generate()`:** ο controller δεν καλεί
   `validateCsrfToken()` καθόλου, παρότι η φόρμα στέλνει CSRF token (προϋπάρχον
@@ -225,12 +320,13 @@ private function getTasks($projectId, $fromDate = null, $toDate = null, $taskIds
 - Search/φιλτράρισμα κειμένου μέσα στη λίστα εργασιών του modal (αποφασίστηκε να
   μείνει εκτός για τώρα).
 - Οποιαδήποτε αλλαγή στο tab «Εργασίες» του project ή στα δικά του φίλτρα.
-- Persistence της επιλογής μεταξύ ανοιγμάτων του modal (κάθε άνοιγμα ξεκινάει
-  από την προεπιλογή: όλα τσεκαρισμένα).
+- Persistence της επιλογής εργασιών ή του υπότιτλου μεταξύ ανοιγμάτων του modal
+  (κάθε άνοιγμα ξεκινάει από τις προεπιλογές: όλα τσεκαρισμένα, υπότιτλος κενός).
+- Bumping version/tag/release — αυτό γίνεται ξεχωριστά, μετά την υλοποίηση.
 
 ---
 
-## 7. Testing plan
+## 8. Testing plan
 
 Δεν υπάρχει αυτοματοποιημένο test coverage για το reporting flow (επιβεβαιωμένο
 από το `tobefixed.md` / audit — `testing/` έχει μόνο exploratory Playwright).
@@ -250,15 +346,31 @@ private function getTasks($projectId, $fromDate = null, $toDate = null, $taskIds
    generate PDF δουλεύει όπως πριν.
 7. Send-by-email path με επιλεγμένο υποσύνολο εργασιών → επιβεβαίωση ότι το PDF
    που φτάνει στο email αντανακλά το ίδιο υποσύνολο.
+8. Κενός υπότιτλος → τίτλος PDF και filename ίδια με σήμερα (project title μόνο).
+9. Υπότιτλος «Γραφεία» σε project «Creta Maris» → τίτλος PDF «Creta Maris -
+   Γραφεία», filename `Anafora_Ergou_Creta_Maris_Grafeia_<ημερομηνία>.pdf`
+   (ελληνικά transliterated, όπως ήδη γίνεται με τον τίτλο project σήμερα).
+10. Υπότιτλος + send-by-email → θέμα email αντανακλά επίσης το συνδυασμένο όνομα.
 
 ---
 
-## 8. Αρχεία που επηρεάζονται
+## 9. Αρχεία που επηρεάζονται
 
-- `views/projects/show.php` — νέο section στο `#reportModal` (~γραμμή 1240-1260),
-  νέο JS (`updateTaskVisibility`, select all/none, counter, submit guard) κοντά
-  στο υπάρχον `<script>` block του modal (~γραμμή 1362-1429), νέο data-fetch
-  block πριν το modal (κοντά στη γραμμή 414-420, ίδιο pattern με `$otherProjects`).
-- `controllers/ProjectReportController.php` — `generate()` (parsing `task_ids`),
-  `getTasks()`, `getAggregatedMaterials()`, `getAggregatedLabor()` (νέα
-  παράμετρος `$taskIds` + `AND pt.id IN (...)` clause).
+- `views/projects/show.php`:
+  - Νέο πεδίο υπότιτλου + live preview στην κορυφή του `#reportModal`.
+  - Νέο section επιλογής εργασιών (~γραμμή 1240-1260).
+  - Νέο JS (`updateTaskVisibility`, select all/none, μετρητής, submit guard,
+    live preview υπότιτλου) κοντά στο υπάρχον `<script>` block του modal
+    (~γραμμή 1362-1429).
+  - Νέο data-fetch block πριν το modal (κοντά στη γραμμή 414-420, ίδιο pattern
+    με `$otherProjects`) για τη λίστα εργασιών.
+- `controllers/ProjectReportController.php`:
+  - `generate()` — parsing `task_ids` και `report_subtitle`, υπολογισμός
+    `$reportName`.
+  - `getTasks()`, `getAggregatedMaterials()`, `getAggregatedLabor()` — νέα
+    παράμετρος `$taskIds` + `AND pt.id IN (...)` clause.
+  - `buildHTMLContent()` — δέχεται `$reportName` αντί να διαβάζει απευθείας
+    `$project['title']` για τον τίτλο.
+  - `generatePDF()` — υπολογισμός filename και στα δύο σημεία (download +
+    email) από `$reportName` αντί για το dead-code `$customerName` check· email
+    `$subject` default ενημερωμένο ομοίως.
