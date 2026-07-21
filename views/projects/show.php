@@ -1236,7 +1236,7 @@ if (!isset($reportTaskOptions)) {
 
                     <div class="mb-3">
                         <label for="report_subtitle" class="form-label"><strong>Υπότιτλος Αναφοράς (προαιρετικό)</strong></label>
-                        <input type="text" class="form-control" id="report_subtitle" name="report_subtitle" placeholder="π.χ. Γραφεία">
+                        <input type="text" class="form-control" id="report_subtitle" name="report_subtitle" placeholder="π.χ. Γραφεία" maxlength="80">
                         <small class="text-muted" id="reportNamePreview">Τίτλος αναφοράς: <?= htmlspecialchars($project['title']) ?></small>
                     </div>
 
