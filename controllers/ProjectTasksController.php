@@ -115,8 +115,15 @@ class ProjectTasksController extends BaseController {
      * POST /projects/{project_id}/tasks/add
      */
     private function store($projectId) {
-        // Validate CSRF token would go here
-        
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::store - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirectBack();
+            return;
+        }
+
         // Helper function to convert date formats (DD/MM/YYYY or YYYY-MM-DD to YYYY-MM-DD)
         $convertDate = function($dateStr) {
             if (empty($dateStr)) return null;
@@ -287,6 +294,15 @@ class ProjectTasksController extends BaseController {
      * POST /projects/{project_id}/tasks/edit/{id}
      */
     private function update($projectId, $taskId) {
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::update - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirectBack();
+            return;
+        }
+
         // Helper function to convert date formats (DD/MM/YYYY or YYYY-MM-DD to YYYY-MM-DD)
         $convertDate = function($dateStr) {
             if (empty($dateStr)) return null;
@@ -437,15 +453,29 @@ class ProjectTasksController extends BaseController {
      */
     public function copy($projectId, $taskId) {
         $this->checkAuth();
-        
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::copy - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirectBack();
+            return;
+        }
+
         $task = $this->taskModel->getById($taskId);
-        
+
         if (!$task || $task['project_id'] != $projectId) {
             $_SESSION['error'] = 'Η εργασία δεν βρέθηκε';
             $this->redirect('/projects/' . $projectId . '/tasks');
             return;
         }
-        
+
         // Copy with new date if provided
         $overrides = [];
         if (!empty($_POST['new_date'])) {
@@ -482,6 +512,20 @@ class ProjectTasksController extends BaseController {
      */
     public function move($projectId, $taskId) {
         $this->checkAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::move - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
 
         $task = $this->taskModel->getById($taskId);
 
@@ -527,9 +571,23 @@ class ProjectTasksController extends BaseController {
      */
     public function delete($projectId) {
         $this->checkAuth();
-        
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::delete - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects/' . $projectId . '/tasks');
+            return;
+        }
+
         $taskId = intval($_POST['task_id'] ?? 0);
-        
+
         if (!$taskId) {
             $_SESSION['error'] = 'Μη έγκυρο ID εργασίας';
             $this->redirect('/projects/' . $projectId . '/tasks');
@@ -576,7 +634,20 @@ class ProjectTasksController extends BaseController {
     public function apiCheckOverlap() {
         $this->checkAuth();
         header('Content-Type: application/json');
-        
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::apiCheckOverlap - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $projectId = intval($_POST['project_id'] ?? 0);
         $dateFrom = $_POST['date_from'] ?? '';
         $dateTo = $_POST['date_to'] ?? '';
@@ -604,7 +675,20 @@ class ProjectTasksController extends BaseController {
     public function apiCheckTechnicianOverlap() {
         $this->checkAuth();
         header('Content-Type: application/json');
-        
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::apiCheckTechnicianOverlap - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $technicianId = intval($_POST['technician_id'] ?? 0);
         $dateFrom = $_POST['date_from'] ?? '';
         $dateTo = $_POST['date_to'] ?? '';
@@ -871,15 +955,24 @@ class ProjectTasksController extends BaseController {
      */
     public function uploadPhoto($projectId, $taskId) {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::uploadPhoto - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+            return;
+        }
+
         require_once 'models/TaskPhoto.php';
         $photoModel = new TaskPhoto();
-        
+
         // Verify task exists
         $task = $this->taskModel->getById($taskId);
         if (!$task || $task['project_id'] != $projectId) {
@@ -941,15 +1034,24 @@ class ProjectTasksController extends BaseController {
      */
     public function deletePhoto($projectId, $taskId, $photoId) {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::deletePhoto - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects/' . $projectId . '/tasks/' . $taskId . '/photos');
+            return;
+        }
+
         require_once 'models/TaskPhoto.php';
         $photoModel = new TaskPhoto();
-        
+
         // Verify task exists
         $task = $this->taskModel->getById($taskId);
         if (!$task || $task['project_id'] != $projectId) {
@@ -973,15 +1075,24 @@ class ProjectTasksController extends BaseController {
      */
     public function updatePhotoDetails($projectId, $taskId, $photoId) {
         $this->checkAuth();
-        
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request']);
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectTasksController::updatePhotoDetails - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         require_once 'models/TaskPhoto.php';
         $photoModel = new TaskPhoto();
-        
+
         $data = [
             'photo_type' => $_POST['photo_type'] ?? null,
             'caption' => $_POST['caption'] ?? null

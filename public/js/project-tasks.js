@@ -500,11 +500,16 @@ function checkOverlap() {
     data.append('project_id', projectId);
     data.append('date_from', dateFrom);
     data.append('date_to', dateTo);
-    
+
     if (typeof taskId !== 'undefined') {
         data.append('exclude_task_id', taskId);
     }
-    
+
+    const csrfMetaOverlap = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMetaOverlap) {
+        data.append('csrf_token', csrfMetaOverlap.content);
+    }
+
     // AJAX request
     fetch(`${window.location.origin}/api/tasks/check-overlap`, {
         method: 'POST',
@@ -642,7 +647,12 @@ function checkTechnicianOverlap(technicianId, rowIndex) {
     if (typeof taskId !== 'undefined') {
         formData.append('exclude_task_id', taskId);
     }
-    
+
+    const csrfMetaTech = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMetaTech) {
+        formData.append('csrf_token', csrfMetaTech.content);
+    }
+
     // AJAX request
     fetch(`${BASE_URL}/api/tasks/check-technician-overlap`, {
         method: 'POST',

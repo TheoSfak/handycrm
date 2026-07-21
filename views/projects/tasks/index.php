@@ -315,17 +315,20 @@ if (!isset($isTabView)) {
 
 <!-- Copy Task Form (Hidden) -->
 <form id="copyTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/copy" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($this->generateCsrfToken()) ?>">
     <input type="hidden" name="task_id" id="copyTaskId">
 </form>
 
 <!-- Move Task Form (Hidden) -->
 <form id="moveTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/move" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($this->generateCsrfToken()) ?>">
     <input type="hidden" name="task_id" id="moveTaskId">
     <input type="hidden" name="target_project_id" id="moveTargetProjectId">
 </form>
 
 <!-- Delete Task Form (Hidden) -->
 <form id="deleteTaskForm" method="POST" action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/delete" style="display:none;">
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($this->generateCsrfToken()) ?>">
     <input type="hidden" name="task_id" id="deleteTaskId">
 </form>
 

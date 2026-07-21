@@ -310,9 +310,10 @@ require_once 'views/includes/header.php';
     <!-- Upload Section -->
     <div class="upload-section">
         <h4 class="mb-3"><i class="fas fa-cloud-upload-alt"></i> Ανέβασμα Φωτογραφιών</h4>
-        <form action="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks/<?= $task['id'] ?>/photos/upload" 
+        <form action="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks/<?= $task['id'] ?>/photos/upload"
               method="POST" enctype="multipart/form-data" id="uploadForm">
-            
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($this->generateCsrfToken()) ?>">
+
             <div class="row g-3 mb-3">
                 <div class="col-md-6">
                     <label class="form-label">Τύπος Φωτογραφίας</label>
@@ -384,9 +385,10 @@ require_once 'views/includes/header.php';
                     </a>
                     
                     <div class="photo-actions">
-                        <form action="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks/<?= $task['id'] ?>/photos/<?= $photo['id'] ?>/delete" 
-                              method="POST" style="display: inline;" 
+                        <form action="<?= BASE_URL ?>/projects/<?= $project_id ?>/tasks/<?= $task['id'] ?>/photos/<?= $photo['id'] ?>/delete"
+                              method="POST" style="display: inline;"
                               onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη φωτογραφία;');">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($this->generateCsrfToken()) ?>">
                             <button type="submit" class="photo-action-btn delete" title="Διαγραφή">
                                 <i class="fas fa-trash"></i>
                             </button>

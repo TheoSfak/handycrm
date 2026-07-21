@@ -222,11 +222,12 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                                                  onmouseover="this.style.transform='scale(1.1)'" 
                                                  onmouseout="this.style.transform='scale(1)'">
                                         </a>
-                                        <form action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos/<?= $photo['id'] ?>/delete" 
-                                              method="POST" 
+                                        <form action="<?= BASE_URL ?>/projects/<?= $project['id'] ?>/tasks/<?= $task['id'] ?>/photos/<?= $photo['id'] ?>/delete"
+                                              method="POST"
                                               class="photo-delete-form"
                                               onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη φωτογραφία;');">
-                                            <button type="submit" 
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($this->generateCsrfToken()) ?>">
+                                            <button type="submit"
                                                     class="btn btn-danger btn-sm"
                                                     title="Διαγραφή">
                                                 <i class="fas fa-trash" style="font-size: 10px;"></i>
