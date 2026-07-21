@@ -118,7 +118,14 @@ class ProjectReportController extends BaseController {
         if (!$project) {
             die('Project not found');
         }
-        
+
+        // Optional report subtitle — combined with the project title (e.g. "Creta Maris - Grafeia")
+        $reportSubtitle = isset($_POST['report_subtitle']) ? trim($_POST['report_subtitle']) : '';
+        $reportName = $project['title'];
+        if ($reportSubtitle !== '') {
+            $reportName .= ' - ' . $reportSubtitle;
+        }
+
         // Get customer data
         $customer = $this->getCustomer($project['customer_id']);
         
@@ -144,7 +151,7 @@ class ProjectReportController extends BaseController {
         $totals = $this->calculateTotals($materials, $labor);
         
         // Generate PDF
-        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal);
+        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal, $reportName);
     }
     
     private function getProject($projectId) {
@@ -364,17 +371,21 @@ class ProjectReportController extends BaseController {
         ];
     }
     
-    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null) {
+    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null, $reportName = null) {
+        if ($reportName === null) {
+            $reportName = $project['title'];
+        }
+
         // Create new PDF document with custom footer
         $pdf = new CustomPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-        
+
         // Pass settings to PDF for footer
         $pdf->setCompanySettings($settings);
-        
+
         // Set document information
         $pdf->SetCreator('HandyCRM');
         $pdf->SetAuthor($settings['company_name'] ?? 'HandyCRM');
-        $pdf->SetTitle(__('projects.project_report') . ' - ' . $project['title']);
+        $pdf->SetTitle(__('projects.project_report') . ' - ' . $reportName);
         
         // Remove default header
         $pdf->setPrintHeader(false);
@@ -390,7 +401,7 @@ class ProjectReportController extends BaseController {
         $pdf->SetFont('dejavusans', '', 10);
         
         // Build HTML content
-        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal);
+        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal, $reportName);
         
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
@@ -401,7 +412,7 @@ class ProjectReportController extends BaseController {
         if ($sendByEmail) {
             // Send PDF via email
             $recipientEmail = $_POST['recipient_email'] ?? '';
-            $subject = $_POST['email_subject'] ?? 'Αναφορά Έργου - ' . $project['title'];
+            $subject = $_POST['email_subject'] ?? 'Αναφορά Έργου - ' . $reportName;
             $message = $_POST['email_message'] ?? '';
             $sendCopy = isset($_POST['send_copy_to_me']);
             
@@ -413,12 +424,12 @@ class ProjectReportController extends BaseController {
             
             // Generate PDF to temp file
             // Transliterate Greek to Latin for filename compatibility
-            $customerName = !empty($customer['name']) ? $customer['name'] : (!empty($project['title']) ? $project['title'] : 'Report');
-            $customerName = $this->transliterateGreek($customerName);
-            $customerName = preg_replace('/[^a-zA-Z0-9\s]/', '', $customerName);
-            $customerName = str_replace(' ', '_', $customerName);
+            $filenameBase = !empty($reportName) ? $reportName : 'Report';
+            $filenameBase = $this->transliterateGreek($filenameBase);
+            $filenameBase = preg_replace('/[^a-zA-Z0-9\s]/', '', $filenameBase);
+            $filenameBase = str_replace(' ', '_', $filenameBase);
             $dateFormatted = date('d_m_Y');
-            $filename = 'Anafora_Ergou_' . $customerName . '_' . $dateFormatted . '.pdf';
+            $filename = 'Anafora_Ergou_' . $filenameBase . '_' . $dateFormatted . '.pdf';
             $tempPdfPath = sys_get_temp_dir() . '/' . $filename;
             
             $pdf->Output($tempPdfPath, 'F');
@@ -472,12 +483,12 @@ class ProjectReportController extends BaseController {
         } else {
             // Normal PDF download
             // Transliterate Greek to Latin for filename compatibility
-            $customerName = !empty($customer['name']) ? $customer['name'] : (!empty($project['title']) ? $project['title'] : 'Report');
-            $customerName = $this->transliterateGreek($customerName);
-            $customerName = preg_replace('/[^a-zA-Z0-9\s]/', '', $customerName);
-            $customerName = str_replace(' ', '_', $customerName);
+            $filenameBase = !empty($reportName) ? $reportName : 'Report';
+            $filenameBase = $this->transliterateGreek($filenameBase);
+            $filenameBase = preg_replace('/[^a-zA-Z0-9\s]/', '', $filenameBase);
+            $filenameBase = str_replace(' ', '_', $filenameBase);
             $dateFormatted = date('d_m_Y');
-            $filename = 'Anafora_Ergou_' . $customerName . '_' . $dateFormatted . '.pdf';
+            $filename = 'Anafora_Ergou_' . $filenameBase . '_' . $dateFormatted . '.pdf';
             $pdf->Output($filename, 'I');
         }
     }
@@ -521,7 +532,10 @@ class ProjectReportController extends BaseController {
         return $html;
     }
     
-    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null) {
+    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null, $reportName = null) {
+        if ($reportName === null) {
+            $reportName = $project['title'];
+        }
         // Always use HTML entity for euro to avoid server encoding issues
         // The database might have corrupted € character depending on server charset
         $currencySymbol = '&euro;';
@@ -688,7 +702,7 @@ class ProjectReportController extends BaseController {
         
         // Report Title and Date
         $html .= '<h1 class="text-center" style="margin-top: 30px; margin-bottom: 15px;">ΑΝΑΦΟΡΑ ΕΡΓΟΥ</h1>';
-        $html .= '<h2 class="text-center" style="border: none; margin-bottom: 15px; font-size: 20px;">' . htmlspecialchars($project['title']) . '</h2>';
+        $html .= '<h2 class="text-center" style="border: none; margin-bottom: 15px; font-size: 20px;">' . htmlspecialchars($reportName) . '</h2>';
         
         // Date info
         $html .= '<p class="text-center" style="color: #7f8c8d; font-size: 11px; margin-top: 15px; margin-bottom: 30px;">';

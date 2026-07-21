@@ -1233,7 +1233,15 @@ if (!isset($reportTaskOptions)) {
                         <i class="fas fa-info-circle me-2"></i>
                         <?= __('projects.report_filters') ?>
                     </div>
-                    
+
+                    <div class="mb-3">
+                        <label for="report_subtitle" class="form-label"><strong>Υπότιτλος Αναφοράς (προαιρετικό)</strong></label>
+                        <input type="text" class="form-control" id="report_subtitle" name="report_subtitle" placeholder="π.χ. Γραφεία">
+                        <small class="text-muted" id="reportNamePreview">Τίτλος αναφοράς: <?= htmlspecialchars($project['title']) ?></small>
+                    </div>
+
+                    <hr>
+
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="allDatesCheck" checked onchange="toggleDateInputs()">
                         <label class="form-check-label" for="allDatesCheck">
@@ -1577,6 +1585,19 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Επιλέξτε τουλάχιστον μία εργασία για την αναφορά.');
         }
     });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var subtitleInput = document.getElementById('report_subtitle');
+    var preview = document.getElementById('reportNamePreview');
+    var baseTitle = <?= json_encode($project['title']) ?>;
+
+    if (subtitleInput && preview) {
+        subtitleInput.addEventListener('input', function() {
+            var suffix = subtitleInput.value.trim();
+            preview.textContent = 'Τίτλος αναφοράς: ' + (suffix !== '' ? baseTitle + ' - ' + suffix : baseTitle);
+        });
+    }
 });
 
 
