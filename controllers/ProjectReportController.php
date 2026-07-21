@@ -72,7 +72,22 @@ class ProjectReportController extends BaseController {
             header('Location: ' . BASE_URL . '/auth/login');
             exit;
         }
-        
+
+        // Validate CSRF token. Deliberately unconditional (not the
+        // `if (!DEBUG_MODE) { ... }`-guarded pattern used elsewhere in this
+        // codebase): DEBUG_MODE is currently true in config/config.php, which
+        // would make that guard skip validation entirely and leave this
+        // endpoint exactly as forgeable as before. This can email a generated
+        // report to an attacker-controlled address, so it validates
+        // regardless of DEBUG_MODE.
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('ProjectReportController::generate - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/projects');
+        }
+
         // Get date filters
         $fromDate = isset($_POST['from_date']) && !empty($_POST['from_date']) ? $_POST['from_date'] : null;
         $toDate = isset($_POST['to_date']) && !empty($_POST['to_date']) ? $_POST['to_date'] : null;
