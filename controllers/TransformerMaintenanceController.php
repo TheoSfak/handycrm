@@ -464,6 +464,20 @@ class TransformerMaintenanceController extends BaseController {
      * Delete maintenance
      */
     public function delete($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('TransformerMaintenanceController::delete - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
         // Get maintenance info for logging
         $maintenance = $this->maintenanceModel->find($id);
         if (!$maintenance) {

@@ -231,6 +231,7 @@ $translations = require __DIR__ . '/../../languages/' . $lang . '.json';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
     const btnApplyUpdates = document.getElementById('btnApplyUpdates');
     const btnGithubUpdate = document.getElementById('btnGithubUpdate');
     const progressModal = new bootstrap.Modal(document.getElementById('updateProgressModal'));
@@ -249,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
             progressText.textContent = '<?= $lang == 'el' ? 'Εφαρμογή ενημερώσεων...' : 'Applying updates...' ?>';
             progressBar.style.width = '10%';
             try {
-                const response = await fetch('?route=/update/process', {
+                const response = await fetch('?route=/update/process&<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 });
@@ -291,6 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData();
                 formData.append('version', version);
                 formData.append('download_url', downloadUrl);
+                formData.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
                 const response = await fetch('?route=/update/install-github', {
                     method: 'POST',
                     body: formData

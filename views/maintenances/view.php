@@ -400,6 +400,7 @@ HandyCRM Team') ?></textarea>
 <!-- Delete Confirmation -->
 <form id="deleteForm" method="POST" style="display: none;">
     <input type="hidden" name="_method" value="DELETE">
+    <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
 </form>
 
 <script>

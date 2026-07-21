@@ -378,8 +378,21 @@ class MaterialsController extends BaseController {
      * Regenerate aliases for all materials (Admin tool)
      */
     public function regenerateAliases() {
-        $this->checkAuth();
-        
+        $this->requireAdmin();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $_SESSION['error'] = 'Μη έγκυρη μέθοδος αιτήματος';
+            $this->redirect('/materials');
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::regenerateAliases - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials');
+        }
+
         require_once 'classes/MaterialAliasGenerator.php';
         
         // Get all materials

@@ -273,6 +273,19 @@ class UpdateController extends BaseController {
     public function installGithubRelease() {
         header('Content-Type: application/json');
 
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρη μέθοδος αιτήματος.']);
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('UpdateController::installGithubRelease - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $version     = trim($_POST['version'] ?? '');
         $downloadUrl = trim($_POST['download_url'] ?? '');
 
@@ -293,7 +306,20 @@ class UpdateController extends BaseController {
      */
     public function process() {
         header('Content-Type: application/json');
-        
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρη μέθοδος αιτήματος.']);
+            return;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('UpdateController::process - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         try {
             $result = $this->applyUpdates();
             echo json_encode($result);
