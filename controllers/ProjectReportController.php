@@ -76,7 +76,16 @@ class ProjectReportController extends BaseController {
         // Get date filters
         $fromDate = isset($_POST['from_date']) && !empty($_POST['from_date']) ? $_POST['from_date'] : null;
         $toDate = isset($_POST['to_date']) && !empty($_POST['to_date']) ? $_POST['to_date'] : null;
-        
+
+        // Get selected task IDs (null = no restriction, empty array = nothing selected)
+        $taskIds = null;
+        if (isset($_POST['task_ids']) && is_array($_POST['task_ids'])) {
+            $taskIds = array_values(array_unique(array_filter(
+                array_map('intval', $_POST['task_ids']),
+                function($id) { return $id > 0; }
+            )));
+        }
+
         // Get hide prices options
         $hideLaborPrices     = isset($_POST['hide_labor_prices'])     && $_POST['hide_labor_prices']     === '1';
         $hideMaterialsPrices = isset($_POST['hide_materials_prices']) && $_POST['hide_materials_prices'] === '1';
@@ -117,18 +126,18 @@ class ProjectReportController extends BaseController {
         $settings = $this->getCompanySettings();
         
         // Get tasks with date filter
-        $tasks = $this->getTasks($projectId, $fromDate, $toDate);
-        
+        $tasks = $this->getTasks($projectId, $fromDate, $toDate, $taskIds);
+
         // Get aggregated materials (only if needed)
         $materials = [];
         if ($reportContent === 'both' || $reportContent === 'materials') {
-            $materials = $this->getAggregatedMaterials($projectId, $fromDate, $toDate);
+            $materials = $this->getAggregatedMaterials($projectId, $fromDate, $toDate, $taskIds);
         }
-        
+
         // Get aggregated labor (only if needed)
         $labor = [];
         if ($reportContent === 'both' || $reportContent === 'labor') {
-            $labor = $this->getAggregatedLabor($projectId, $fromDate, $toDate);
+            $labor = $this->getAggregatedLabor($projectId, $fromDate, $toDate, $taskIds);
         }
         
         // Calculate totals
@@ -166,7 +175,11 @@ class ProjectReportController extends BaseController {
         return $settings;
     }
     
-    private function getTasks($projectId, $fromDate = null, $toDate = null) {
+    private function getTasks($projectId, $fromDate = null, $toDate = null, $taskIds = null) {
+        if ($taskIds !== null && empty($taskIds)) {
+            return [];
+        }
+
         $pdo = $this->db->getPdo();
         $sql = "
             SELECT pt.*,
@@ -179,7 +192,7 @@ class ProjectReportController extends BaseController {
             WHERE pt.project_id = ? AND pt.deleted_at IS NULL
         ";
         $params = [$projectId];
-        
+
         if ($fromDate && $toDate) {
             $sql .= " AND (
                 (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
@@ -190,18 +203,28 @@ class ProjectReportController extends BaseController {
             $params[] = $toDate;
             $params[] = $fromDate;
         }
-        
+
+        if ($taskIds !== null) {
+            $placeholders = implode(',', array_fill(0, count($taskIds), '?'));
+            $sql .= " AND pt.id IN ($placeholders)";
+            $params = array_merge($params, $taskIds);
+        }
+
         $sql .= " GROUP BY pt.id ORDER BY CASE WHEN pt.task_type = 'single_day' THEN pt.task_date ELSE pt.date_from END ASC";
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
-    private function getAggregatedMaterials($projectId, $fromDate = null, $toDate = null) {
+    private function getAggregatedMaterials($projectId, $fromDate = null, $toDate = null, $taskIds = null) {
+        if ($taskIds !== null && empty($taskIds)) {
+            return [];
+        }
+
         $pdo = $this->db->getPdo();
         $sql = "
-            SELECT 
+            SELECT
                 tm.description as material_name,
                 tm.unit_type as unit,
                 SUM(tm.quantity) as total_quantity,
@@ -212,7 +235,7 @@ class ProjectReportController extends BaseController {
             WHERE pt.project_id = ? AND pt.deleted_at IS NULL
         ";
         $params = [$projectId];
-        
+
         if ($fromDate && $toDate) {
             $sql .= " AND (
                 (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
@@ -223,30 +246,40 @@ class ProjectReportController extends BaseController {
             $params[] = $toDate;
             $params[] = $fromDate;
         }
-        
+
+        if ($taskIds !== null) {
+            $placeholders = implode(',', array_fill(0, count($taskIds), '?'));
+            $sql .= " AND pt.id IN ($placeholders)";
+            $params = array_merge($params, $taskIds);
+        }
+
         $sql .= " GROUP BY tm.description, tm.unit_type ORDER BY tm.description";
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Debug: Log the materials
         error_log("=== MATERIALS QUERY DEBUG ===");
         error_log("Total materials found: " . count($results));
         foreach ($results as $mat) {
             error_log("Material: " . $mat['material_name'] . " | Unit: " . $mat['unit'] . " | Qty: " . $mat['total_quantity'] . " | Unit Price: " . $mat['unit_cost'] . " | Total: " . $mat['total_cost']);
         }
-        
+
         return $results;
     }
     
-    private function getAggregatedLabor($projectId, $fromDate = null, $toDate = null) {
+    private function getAggregatedLabor($projectId, $fromDate = null, $toDate = null, $taskIds = null) {
+        if ($taskIds !== null && empty($taskIds)) {
+            return [];
+        }
+
         $pdo = $this->db->getPdo();
-        
+
         // Check if technician_name column exists, otherwise use user_id with JOIN
         $checkColumn = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'technician_name'");
         $hasTechnicianName = $checkColumn->rowCount() > 0;
-        
+
         if ($hasTechnicianName) {
             // Use technician_name if column exists
             $workerNameField = "COALESCE(tl.technician_name, CONCAT(u.first_name, ' ', u.last_name))";
@@ -256,19 +289,19 @@ class ProjectReportController extends BaseController {
             $workerNameField = "CONCAT(u.first_name, ' ', u.last_name)";
             $groupByField = "tl.user_id";
         }
-        
+
         // Check if hours_worked column exists, otherwise use hours
         $checkHours = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'hours_worked'");
         $hasHoursWorked = $checkHours->rowCount() > 0;
         $hoursField = $hasHoursWorked ? "tl.hours_worked" : "tl.hours";
-        
+
         // Check which ID column to use for JOIN
         $checkTechId = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'technician_id'");
         $hasTechnicianId = $checkTechId->rowCount() > 0;
         $userIdField = $hasTechnicianId ? "tl.technician_id" : "tl.user_id";
-        
+
         $sql = "
-            SELECT 
+            SELECT
                 $workerNameField as worker_name,
                 SUM($hoursField) as total_hours,
                 CEIL(SUM($hoursField) / 8) as total_days,
@@ -281,7 +314,7 @@ class ProjectReportController extends BaseController {
             WHERE pt.project_id = ? AND pt.deleted_at IS NULL
         ";
         $params = [$projectId];
-        
+
         if ($fromDate && $toDate) {
             $sql .= " AND (
                 (pt.task_type = 'single_day' AND pt.task_date BETWEEN ? AND ?)
@@ -292,9 +325,15 @@ class ProjectReportController extends BaseController {
             $params[] = $toDate;
             $params[] = $fromDate;
         }
-        
+
+        if ($taskIds !== null) {
+            $placeholders = implode(',', array_fill(0, count($taskIds), '?'));
+            $sql .= " AND pt.id IN ($placeholders)";
+            $params = array_merge($params, $taskIds);
+        }
+
         $sql .= " GROUP BY $groupByField ORDER BY worker_name";
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

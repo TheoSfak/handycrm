@@ -1200,6 +1200,15 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Ensure the tab comment doesn't create spacing */
 </style>
 
+<?php
+if (!isset($reportTaskOptions)) {
+    require_once __DIR__ . '/../../models/ProjectTask.php';
+    $_ptm = new ProjectTask();
+    $reportTaskOptions = $_ptm->getByProject($project['id'], []);
+    unset($_ptm);
+}
+?>
+
 <!-- Report Modal -->
 <div class="modal fade" id="reportModal" tabindex="-1">
     <div class="modal-dialog">
@@ -1237,9 +1246,47 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </div>
                     </div>
-                    
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0"><strong>Επιλογή Εργασιών</strong></label>
+                            <?php if (!empty($reportTaskOptions)): ?>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllTasksBtn">Επιλογή Όλων</button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="selectNoneTasksBtn">Καμία</button>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <?php if (empty($reportTaskOptions)): ?>
+                            <div class="text-muted small">Το έργο δεν έχει καταχωρημένες εργασίες.</div>
+                        <?php else: ?>
+                            <div id="reportTasksList" style="max-height: 220px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                <?php foreach ($reportTaskOptions as $rto):
+                                    if (($rto['task_type'] ?? 'single_day') === 'date_range' && !empty($rto['date_from']) && !empty($rto['date_to'])) {
+                                        $rtoDisplayDate = date('d/m/Y', strtotime($rto['date_from'])) . ' έως ' . date('d/m/Y', strtotime($rto['date_to']));
+                                    } else {
+                                        $rtoDisplayDate = date('d/m/Y', strtotime($rto['task_date'] ?? $rto['date_from'] ?? 'now'));
+                                    }
+                                ?>
+                                <div class="form-check report-task-row"
+                                     data-type="<?= htmlspecialchars($rto['task_type'] ?? 'single_day') ?>"
+                                     data-date="<?= htmlspecialchars($rto['task_date'] ?? '') ?>"
+                                     data-date-from="<?= htmlspecialchars($rto['date_from'] ?? '') ?>"
+                                     data-date-to="<?= htmlspecialchars($rto['date_to'] ?? '') ?>">
+                                    <input class="form-check-input report-task-checkbox" type="checkbox"
+                                           name="task_ids[]" value="<?= (int)$rto['id'] ?>" checked>
+                                    <label class="form-check-label">
+                                        <?= htmlspecialchars($rtoDisplayDate) ?> — <?= htmlspecialchars($rto['description']) ?>
+                                    </label>
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <small class="text-muted" id="reportTasksCounter"></small>
+                        <?php endif; ?>
+                    </div>
+
                     <hr>
-                    
+
                     <div class="form-check mb-2">
                         <input class="form-check-input" type="checkbox" id="hideLaborPricesCheck" name="hide_labor_prices" value="1">
                         <label class="form-check-label" for="hideLaborPricesCheck">
@@ -1424,6 +1471,106 @@ function toggleEmailInput() {
         reportForm.setAttribute('target', '_blank');
     }
 }
+
+function getReportTaskRows() {
+    return Array.prototype.slice.call(document.querySelectorAll('.report-task-row'));
+}
+
+function taskRowMatchesDateFilter(row, allDates, fromDate, toDate) {
+    if (allDates || !fromDate || !toDate) {
+        return true;
+    }
+    var type = row.getAttribute('data-type');
+    if (type === 'date_range') {
+        var dFrom = row.getAttribute('data-date-from');
+        var dTo = row.getAttribute('data-date-to');
+        if (!dFrom || !dTo) return false;
+        return dFrom <= toDate && dTo >= fromDate;
+    }
+    var d = row.getAttribute('data-date');
+    if (!d) return false;
+    return d >= fromDate && d <= toDate;
+}
+
+function updateTaskVisibility() {
+    var allDatesCheck = document.getElementById('allDatesCheck');
+    var fromDateEl = document.getElementById('from_date');
+    var toDateEl = document.getElementById('to_date');
+    var allDates = allDatesCheck.checked;
+    var fromDate = fromDateEl.value;
+    var toDate = toDateEl.value;
+
+    getReportTaskRows().forEach(function(row) {
+        var visible = taskRowMatchesDateFilter(row, allDates, fromDate, toDate);
+        row.style.display = visible ? '' : 'none';
+    });
+    updateTaskCounter();
+}
+
+function updateTaskCounter() {
+    var counter = document.getElementById('reportTasksCounter');
+    if (!counter) return;
+    var rows = getReportTaskRows();
+    var visibleRows = rows.filter(function(row) { return row.style.display !== 'none'; });
+    var checkedVisible = visibleRows.filter(function(row) {
+        return row.querySelector('.report-task-checkbox').checked;
+    });
+    counter.textContent = checkedVisible.length + ' από ' + visibleRows.length + ' εργασίες επιλεγμένες';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var allDatesCheck = document.getElementById('allDatesCheck');
+    var fromDateEl = document.getElementById('from_date');
+    var toDateEl = document.getElementById('to_date');
+
+    if (allDatesCheck) allDatesCheck.addEventListener('change', updateTaskVisibility);
+    if (fromDateEl) fromDateEl.addEventListener('change', updateTaskVisibility);
+    if (toDateEl) toDateEl.addEventListener('change', updateTaskVisibility);
+
+    getReportTaskRows().forEach(function(row) {
+        row.querySelector('.report-task-checkbox').addEventListener('change', updateTaskCounter);
+    });
+
+    updateTaskVisibility();
+
+    var selectAllBtn = document.getElementById('selectAllTasksBtn');
+    var selectNoneBtn = document.getElementById('selectNoneTasksBtn');
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', function() {
+            getReportTaskRows().forEach(function(row) {
+                if (row.style.display !== 'none') {
+                    row.querySelector('.report-task-checkbox').checked = true;
+                }
+            });
+            updateTaskCounter();
+        });
+    }
+    if (selectNoneBtn) {
+        selectNoneBtn.addEventListener('click', function() {
+            getReportTaskRows().forEach(function(row) {
+                if (row.style.display !== 'none') {
+                    row.querySelector('.report-task-checkbox').checked = false;
+                }
+            });
+            updateTaskCounter();
+        });
+    }
+
+    var reportForm = document.getElementById('reportForm');
+    reportForm.addEventListener('submit', function(e) {
+        var rows = getReportTaskRows();
+        if (rows.length === 0) {
+            return; // project has no tasks at all — nothing to guard
+        }
+        var visibleChecked = rows.filter(function(row) {
+            return row.style.display !== 'none' && row.querySelector('.report-task-checkbox').checked;
+        });
+        if (visibleChecked.length === 0) {
+            e.preventDefault();
+            alert('Επιλέξτε τουλάχιστον μία εργασία για την αναφορά.');
+        }
+    });
+});
 
 
 </script>
