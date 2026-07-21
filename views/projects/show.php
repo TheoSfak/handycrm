@@ -1591,11 +1591,23 @@ document.addEventListener('DOMContentLoaded', function() {
     var subtitleInput = document.getElementById('report_subtitle');
     var preview = document.getElementById('reportNamePreview');
     var baseTitle = <?= json_encode($project['title']) ?>;
+    var emailSubjectInput = document.getElementById('email_subject');
+    var emailSubjectEditedManually = false;
+
+    if (emailSubjectInput) {
+        emailSubjectInput.addEventListener('input', function() {
+            emailSubjectEditedManually = true;
+        });
+    }
 
     if (subtitleInput && preview) {
         subtitleInput.addEventListener('input', function() {
             var suffix = subtitleInput.value.trim();
-            preview.textContent = 'Τίτλος αναφοράς: ' + (suffix !== '' ? baseTitle + ' - ' + suffix : baseTitle);
+            var combinedName = suffix !== '' ? baseTitle + ' - ' + suffix : baseTitle;
+            preview.textContent = 'Τίτλος αναφοράς: ' + combinedName;
+            if (emailSubjectInput && !emailSubjectEditedManually) {
+                emailSubjectInput.value = 'Αναφορά Έργου - ' + combinedName;
+            }
         });
     }
 });
