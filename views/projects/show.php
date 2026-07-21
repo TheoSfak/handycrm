@@ -1200,6 +1200,15 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Ensure the tab comment doesn't create spacing */
 </style>
 
+<style>
+.task-selection-chevron {
+    transition: transform 0.2s ease;
+}
+[aria-expanded="true"] .task-selection-chevron {
+    transform: rotate(180deg);
+}
+</style>
+
 <?php
 if (!isset($reportTaskOptions)) {
     require_once __DIR__ . '/../../models/ProjectTask.php';
@@ -1264,7 +1273,12 @@ if (!isset($reportTaskOptions)) {
 
                     <div class="mb-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="form-label mb-0"><strong>Επιλογή Εργασιών</strong></label>
+                            <a href="#taskSelectionCollapse" class="text-decoration-none text-body"
+                               data-bs-toggle="collapse" role="button"
+                               aria-expanded="false" aria-controls="taskSelectionCollapse">
+                                <strong>Επιλογή Εργασιών</strong>
+                                <i class="fas fa-chevron-down ms-1 small task-selection-chevron"></i>
+                            </a>
                             <?php if (!empty($reportTaskOptions)): ?>
                             <div>
                                 <button type="button" class="btn btn-sm btn-outline-secondary" id="selectAllTasksBtn">Επιλογή Όλων</button>
@@ -1272,32 +1286,34 @@ if (!isset($reportTaskOptions)) {
                             </div>
                             <?php endif; ?>
                         </div>
-                        <?php if (empty($reportTaskOptions)): ?>
-                            <div class="text-muted small">Το έργο δεν έχει καταχωρημένες εργασίες.</div>
-                        <?php else: ?>
-                            <div id="reportTasksList" style="max-height: 220px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
-                                <?php foreach ($reportTaskOptions as $rto):
-                                    if (($rto['task_type'] ?? 'single_day') === 'date_range' && !empty($rto['date_from']) && !empty($rto['date_to'])) {
-                                        $rtoDisplayDate = date('d/m/Y', strtotime($rto['date_from'])) . ' έως ' . date('d/m/Y', strtotime($rto['date_to']));
-                                    } else {
-                                        $rtoDisplayDate = date('d/m/Y', strtotime($rto['task_date'] ?? $rto['date_from'] ?? 'now'));
-                                    }
-                                ?>
-                                <div class="form-check report-task-row"
-                                     data-type="<?= htmlspecialchars($rto['task_type'] ?? 'single_day') ?>"
-                                     data-date="<?= htmlspecialchars($rto['task_date'] ?? '') ?>"
-                                     data-date-from="<?= htmlspecialchars($rto['date_from'] ?? '') ?>"
-                                     data-date-to="<?= htmlspecialchars($rto['date_to'] ?? '') ?>">
-                                    <input class="form-check-input report-task-checkbox" type="checkbox"
-                                           name="task_ids[]" value="<?= (int)$rto['id'] ?>" checked>
-                                    <label class="form-check-label">
-                                        <?= htmlspecialchars($rtoDisplayDate) ?> — <?= htmlspecialchars($rto['description']) ?>
-                                    </label>
+                        <div class="collapse" id="taskSelectionCollapse">
+                            <?php if (empty($reportTaskOptions)): ?>
+                                <div class="text-muted small">Το έργο δεν έχει καταχωρημένες εργασίες.</div>
+                            <?php else: ?>
+                                <div id="reportTasksList" style="max-height: 220px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 10px;">
+                                    <?php foreach ($reportTaskOptions as $rto):
+                                        if (($rto['task_type'] ?? 'single_day') === 'date_range' && !empty($rto['date_from']) && !empty($rto['date_to'])) {
+                                            $rtoDisplayDate = date('d/m/Y', strtotime($rto['date_from'])) . ' έως ' . date('d/m/Y', strtotime($rto['date_to']));
+                                        } else {
+                                            $rtoDisplayDate = date('d/m/Y', strtotime($rto['task_date'] ?? $rto['date_from'] ?? 'now'));
+                                        }
+                                    ?>
+                                    <div class="form-check report-task-row"
+                                         data-type="<?= htmlspecialchars($rto['task_type'] ?? 'single_day') ?>"
+                                         data-date="<?= htmlspecialchars($rto['task_date'] ?? '') ?>"
+                                         data-date-from="<?= htmlspecialchars($rto['date_from'] ?? '') ?>"
+                                         data-date-to="<?= htmlspecialchars($rto['date_to'] ?? '') ?>">
+                                        <input class="form-check-input report-task-checkbox" type="checkbox"
+                                               name="task_ids[]" value="<?= (int)$rto['id'] ?>" checked>
+                                        <label class="form-check-label">
+                                            <?= htmlspecialchars($rtoDisplayDate) ?> — <?= htmlspecialchars($rto['description']) ?>
+                                        </label>
+                                    </div>
+                                    <?php endforeach; ?>
                                 </div>
-                                <?php endforeach; ?>
-                            </div>
-                            <small class="text-muted" id="reportTasksCounter"></small>
-                        <?php endif; ?>
+                                <small class="text-muted" id="reportTasksCounter"></small>
+                            <?php endif; ?>
+                        </div>
                     </div>
 
                     <hr>
