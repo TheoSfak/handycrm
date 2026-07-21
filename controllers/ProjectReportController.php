@@ -865,65 +865,74 @@ class ProjectReportController extends BaseController {
         $showTotalCard = $showLaborCard && $showMaterialsCard && !($hideLaborPrices && $hideMaterialsPrices);
 
         $visibleCards = (int)$showMaterialsCard + (int)$showLaborCard + (int)$showTotalCard;
-        if ($visibleCards === 0) $visibleCards = 1;
-        $colWidth = $visibleCards >= 3 ? '33.33%' : ($visibleCards === 2 ? '50%' : '100%');
 
-        $html .= '<table style="margin-bottom: 20px; border: none;">';
-        $html .= '<tr>';
+        // Only emit the summary table when there's at least one card to show. An empty
+        // <tr> (zero <td> cells) makes TCPDF's HTML table renderer fail — it assumes every
+        // row has at least one cell and throws a cascade of undefined array key/variable
+        // warnings while computing cell positions, which corrupts output enough that the
+        // final PDF send fails ("Some data has already been output"). This is reachable
+        // whenever materials AND labor are both empty at once — e.g. a date range that
+        // excludes every currently-selected task.
+        if ($visibleCards > 0) {
+            $colWidth = $visibleCards >= 3 ? '33.33%' : ($visibleCards === 2 ? '50%' : '100%');
 
-        // Materials Card
-        if ($showMaterialsCard) {
-            $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
-            if ($hideMaterialsPrices) {
-                $html .= '<div style="font-size: 24px; font-weight: bold; color: white; margin-top: 5px;">' . $totals['total_materials'] . '</div>';
-                $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">είδη</div>';
-            } else {
-                $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-                $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-                $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_materials'] . ' είδη</div>';
+            $html .= '<table style="margin-bottom: 20px; border: none;">';
+            $html .= '<tr>';
+
+            // Materials Card
+            if ($showMaterialsCard) {
+                $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+                $html .= '<table style="width: 100%; background-color: #3498db; margin: 0; height: 80px;">';
+                $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+                $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΥΛΙΚΩΝ</div>';
+                if ($hideMaterialsPrices) {
+                    $html .= '<div style="font-size: 24px; font-weight: bold; color: white; margin-top: 5px;">' . $totals['total_materials'] . '</div>';
+                    $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">είδη</div>';
+                } else {
+                    $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['materials_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+                    $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+                    $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_materials'] . ' είδη</div>';
+                }
+                $html .= '</td></tr>';
+                $html .= '</table>';
+                $html .= '</td>';
             }
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-        }
 
-        // Labor Card — only when labor data exists
-        if ($showLaborCard) {
-            $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
-            if ($hideLaborPrices) {
-                $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
-                $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
-            } else {
-                $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-                $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-                $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+            // Labor Card — only when labor data exists
+            if ($showLaborCard) {
+                $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+                $html .= '<table style="width: 100%; background-color: #9b59b6; margin: 0; height: 80px;">';
+                $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+                $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
+                if ($hideLaborPrices) {
+                    $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+                    $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
+                } else {
+                    $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+                    $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+                    $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+                }
+                $html .= '</td></tr>';
+                $html .= '</table>';
+                $html .= '</td>';
             }
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-        }
 
-        // Grand Total Card
-        if ($showTotalCard) {
-            $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
-            $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
-            $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
-            $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';
-            $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
-            $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-            $html .= '</td></tr>';
-            $html .= '</table>';
-            $html .= '</td>';
-        }
+            // Grand Total Card
+            if ($showTotalCard) {
+                $html .= '<td style="width: ' . $colWidth . '; border: none; padding: 5px;">';
+                $html .= '<table style="width: 100%; background-color: #e74c3c; margin: 0; height: 80px;">';
+                $html .= '<tr><td style="border: none; padding: 12px; text-align: center; vertical-align: middle;">';
+                $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΓΕΝΙΚΟ ΣΥΝΟΛΟ</div>';
+                $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
+                $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
+                $html .= '</td></tr>';
+                $html .= '</table>';
+                $html .= '</td>';
+            }
 
-        $html .= '</tr>';
-        $html .= '</table>';
+            $html .= '</tr>';
+            $html .= '</table>';
+        }
         $html .= '</div>'; // end nobr summary cards
 
         // Project Total card — shown only when manually entered
