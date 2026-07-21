@@ -282,6 +282,14 @@ class QuoteExportController extends BaseController {
             exit;
         }
 
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('QuoteExportController::sendByEmail - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => 'Μη έγκυρο token ασφαλείας.']);
+            exit;
+        }
+
         $id            = (int)($_POST['id'] ?? 0);
         $toEmail       = trim($_POST['to_email'] ?? '');
         $customMessage = trim($_POST['custom_message'] ?? '');

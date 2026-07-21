@@ -297,6 +297,7 @@ function submitSendEmail() {
     alert.classList.add('d-none');
 
     const data = new FormData(form);
+    data.append('<?= CSRF_TOKEN_NAME ?>', <?= json_encode($this->generateCsrfToken()) ?>);
 
     fetch('<?= BASE_URL ?>/quotes/send-email', {
         method: 'POST',
