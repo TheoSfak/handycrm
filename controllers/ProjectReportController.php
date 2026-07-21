@@ -428,6 +428,7 @@ class ProjectReportController extends BaseController {
             $filenameBase = $this->transliterateGreek($filenameBase);
             $filenameBase = preg_replace('/[^a-zA-Z0-9\s]/', '', $filenameBase);
             $filenameBase = str_replace(' ', '_', $filenameBase);
+            $filenameBase = preg_replace('/_+/', '_', $filenameBase);
             $dateFormatted = date('d_m_Y');
             $filename = 'Anafora_Ergou_' . $filenameBase . '_' . $dateFormatted . '.pdf';
             $tempPdfPath = sys_get_temp_dir() . '/' . $filename;
@@ -487,6 +488,7 @@ class ProjectReportController extends BaseController {
             $filenameBase = $this->transliterateGreek($filenameBase);
             $filenameBase = preg_replace('/[^a-zA-Z0-9\s]/', '', $filenameBase);
             $filenameBase = str_replace(' ', '_', $filenameBase);
+            $filenameBase = preg_replace('/_+/', '_', $filenameBase);
             $dateFormatted = date('d_m_Y');
             $filename = 'Anafora_Ergou_' . $filenameBase . '_' . $dateFormatted . '.pdf';
             $pdf->Output($filename, 'I');
