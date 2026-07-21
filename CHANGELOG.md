@@ -1,5 +1,14 @@
 # HandyCRM - Change Log
 
+## [1.8.28] - 2026-07-21
+### Added
+- **Αναφορά Έργου — Σύμπτυξη Επιλογής Εργασιών**: The task-selection checklist in the report modal now starts collapsed and expands on click, keeping the modal shorter by default.
+### Fixed
+- **Αναφορά Έργου — Κατάρρευση PDF σε κενή αναφορά**: Fixed a crash ("Some data has already been output, can't send PDF file") when a date range excluded every selected task, leaving materials and labor both empty. The summary-cards table no longer emits an empty row in that case.
+- **Ασφάλεια — CSRF σε όλους τους controllers**: Added CSRF token validation to every controller action that was missing it: `ProjectReportController`, `DailyTaskController`, `PaymentsController`, `ProjectTasksController`, `MaterialsController`, `RoleController`, `QuoteExportController`, `DashboardController`, `UpdateController`, and `TransformerMaintenanceController`. Several of these (e.g. quote/report emailing to an attacker-controlled address, `UpdateController`'s release-install endpoint) were exploitable via a forged cross-site request with no user interaction beyond visiting a malicious page while logged in.
+- **Ασφάλεια — Μη περιορισμένα endpoints**: `UpdateController::process()`/`installGithubRelease()`, `TransformerMaintenanceController::delete()`, and `MaterialsController::regenerateAliases()` had no request-method restriction at all (reachable via plain GET). All three now require POST, admin role where appropriate, and a valid CSRF token.
+- **Ασφάλεια — Ορφανό script**: Removed `views/materials/regenerate_aliases.php`, an unreferenced standalone script that bypassed the app's routing/permission layer entirely and ran a bulk database update immediately on a bare GET request.
+
 ## [1.8.27] - 2026-07-21
 ### Added
 - **Αναφορά Έργου — Επιλογή Εργασιών**: Admins can now check/uncheck individual project tasks in the report modal, combined with the existing date-range filter. Selection scopes the entire report — the tasks table plus materials/labor totals and summary cards all recalculate around only the selected tasks.
