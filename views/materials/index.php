@@ -441,6 +441,8 @@ document.getElementById('perPageSelect').addEventListener('change', function() {
 </div>
 
 <script>
+const csrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
+
 function confirmDelete(materialId, materialName) {
     console.log('confirmDelete called with ID:', materialId, 'Name:', materialName);
     document.getElementById('deleteMaterialName').textContent = materialName;
@@ -571,7 +573,7 @@ function parseAndImportCSV(content) {
     }
     
     // Send to server
-    fetch('<?= BASE_URL ?>/materials/import', {
+    fetch('<?= BASE_URL ?>/materials/import?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -661,7 +663,7 @@ function bulkDelete() {
         return;
     }
     
-    fetch('<?= BASE_URL ?>/materials/bulk-delete', {
+    fetch('<?= BASE_URL ?>/materials/bulk-delete?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -691,7 +693,7 @@ function bulkActivate() {
         return;
     }
     
-    fetch('<?= BASE_URL ?>/materials/bulk-activate', {
+    fetch('<?= BASE_URL ?>/materials/bulk-activate?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -721,7 +723,7 @@ function bulkDeactivate() {
         return;
     }
     
-    fetch('<?= BASE_URL ?>/materials/bulk-deactivate', {
+    fetch('<?= BASE_URL ?>/materials/bulk-deactivate?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -816,6 +818,7 @@ function savePriceSearch() {
     data.append('id', _priceSearchId);
     data.append('price', price);
     data.append('note', note);
+    data.append('<?= CSRF_TOKEN_NAME ?>', csrfToken);
 
     fetch('<?= BASE_URL ?>/materials/save-search-price', { method: 'POST', body: data })
     .then(r => r.json())

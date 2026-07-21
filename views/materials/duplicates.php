@@ -146,6 +146,8 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+const csrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
+
 // Toggle select all for a specific group
 function toggleGroupSelectAll(checkbox, groupIndex) {
     const groupCheckboxes = document.querySelectorAll('.group-' + groupIndex);
@@ -176,7 +178,7 @@ function deleteSingle(id) {
         return;
     }
     
-    fetch('<?= BASE_URL ?>/materials/bulk-delete', {
+    fetch('<?= BASE_URL ?>/materials/bulk-delete?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -213,7 +215,7 @@ function bulkDeleteDuplicates() {
         return;
     }
     
-    fetch('<?= BASE_URL ?>/materials/bulk-delete', {
+    fetch('<?= BASE_URL ?>/materials/bulk-delete?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -271,7 +273,7 @@ function deleteAllDuplicatesKeepFirst() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Διαγραφή...';
     
-    fetch('<?= BASE_URL ?>/materials/bulk-delete', {
+    fetch('<?= BASE_URL ?>/materials/bulk-delete?<?= CSRF_TOKEN_NAME ?>=' + encodeURIComponent(csrfToken), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

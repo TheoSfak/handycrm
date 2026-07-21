@@ -62,6 +62,7 @@ $selectedUnit = class_exists('MaterialUnits')
 
     <!-- Form -->
     <form method="POST" action="<?= BASE_URL ?>/materials/<?= $isEdit ? $material['id'] . '/edit' : 'add' ?>" class="needs-validation" novalidate>
+        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
         <div class="row">
             <!-- Left Column -->
             <div class="col-lg-8">

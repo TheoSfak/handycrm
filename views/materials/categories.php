@@ -133,6 +133,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" id="categoryForm">
+                <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="categoryName" class="form-label">
@@ -185,6 +186,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
                 <form method="POST" id="deleteForm" style="display: inline;">
+                    <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                     <button type="submit" class="btn btn-danger" id="deleteButton">Διαγραφή</button>
                 </form>
             </div>

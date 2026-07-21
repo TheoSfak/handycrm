@@ -95,12 +95,21 @@ class MaterialsController extends BaseController {
      */
     public function store() {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials/add');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::store - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials/add');
+            return;
+        }
+
         // Validation
         $errors = [];
         
@@ -174,12 +183,21 @@ class MaterialsController extends BaseController {
      */
     public function update($id) {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials/' . $id . '/edit');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::update - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials/' . $id . '/edit');
+            return;
+        }
+
         // Validation
         $errors = [];
         
@@ -226,12 +244,21 @@ class MaterialsController extends BaseController {
      */
     public function delete($id) {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::delete - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials');
+            return;
+        }
+
         if ($this->materialModel->delete($id)) {
             $_SESSION['success'] = 'Το υλικό διαγράφηκε επιτυχώς';
         } else {
@@ -295,23 +322,32 @@ class MaterialsController extends BaseController {
      */
     public function addCategory() {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials/categories');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::addCategory - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials/categories');
+            return;
+        }
+
         if (empty($_POST['name'])) {
             $_SESSION['error'] = 'Το όνομα της κατηγορίας είναι υποχρεωτικό';
             $this->redirect('/materials/categories');
             return;
         }
-        
+
         $data = [
             'name' => trim($_POST['name']),
             'description' => trim($_POST['description'] ?? '')
         ];
-        
+
         if ($this->categoryModel->create($data)) {
             $_SESSION['success'] = 'Η κατηγορία προστέθηκε επιτυχώς';
         } else {
@@ -327,18 +363,27 @@ class MaterialsController extends BaseController {
      */
     public function updateCategory($id) {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials/categories');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::updateCategory - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials/categories');
+            return;
+        }
+
         if (empty($_POST['name'])) {
             $_SESSION['error'] = 'Το όνομα της κατηγορίας είναι υποχρεωτικό';
             $this->redirect('/materials/categories');
             return;
         }
-        
+
         $data = [
             'name' => trim($_POST['name']),
             'description' => trim($_POST['description'] ?? '')
@@ -359,12 +404,21 @@ class MaterialsController extends BaseController {
      */
     public function deleteCategory($id) {
         $this->checkAuth();
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/materials/categories');
             return;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::deleteCategory - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/materials/categories');
+            return;
+        }
+
         if ($this->categoryModel->delete($id)) {
             $_SESSION['success'] = 'Η κατηγορία διαγράφηκε επιτυχώς';
         } else {
@@ -500,7 +554,15 @@ class MaterialsController extends BaseController {
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::importCSV - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         // Get JSON data
         $input = file_get_contents('php://input');
         $data = json_decode($input, true);
@@ -593,15 +655,23 @@ class MaterialsController extends BaseController {
     public function bulkDelete() {
         $this->checkAuth();
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::bulkDelete - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true);
         $ids = $input['ids'] ?? [];
-        
+
         if (empty($ids) || !is_array($ids)) {
             echo json_encode(['success' => false, 'error' => 'Δεν δόθηκαν υλικά για διαγραφή']);
             exit;
@@ -637,15 +707,23 @@ class MaterialsController extends BaseController {
     public function bulkActivate() {
         $this->checkAuth();
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::bulkActivate - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true);
         $ids = $input['ids'] ?? [];
-        
+
         if (empty($ids) || !is_array($ids)) {
             echo json_encode(['success' => false, 'error' => 'Δεν δόθηκαν υλικά για ενεργοποίηση']);
             exit;
@@ -672,15 +750,23 @@ class MaterialsController extends BaseController {
     public function bulkDeactivate() {
         $this->checkAuth();
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'error' => 'Invalid request method']);
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::bulkDeactivate - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true);
         $ids = $input['ids'] ?? [];
-        
+
         if (empty($ids) || !is_array($ids)) {
             echo json_encode(['success' => false, 'error' => 'Δεν δόθηκαν υλικά για απενεργοποίηση']);
             exit;
@@ -743,6 +829,14 @@ class MaterialsController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'error' => 'Μη έγκυρη μέθοδος']);
             exit;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('MaterialsController::saveSearchPrice - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            return;
         }
 
         $id    = (int)($_POST['id'] ?? 0);
