@@ -484,7 +484,15 @@ class DashboardController extends BaseController {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->json(['success' => false, 'message' => 'Invalid request method'], 405);
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('DashboardController::markNotificationRead - Error: ' . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.'], 403);
+            return;
+        }
+
         $notificationId = $_POST['notification_id'] ?? null;
         
         if (!$notificationId) {
