@@ -1206,6 +1206,13 @@ if (!isset($reportTaskOptions)) {
     $_ptm = new ProjectTask();
     $reportTaskOptions = $_ptm->getByProject($project['id'], []);
     unset($_ptm);
+    // Match the PDF's own task ordering (oldest first, by task_date / date_from)
+    // so checking/unchecking here lines up with the order tasks appear in the report.
+    usort($reportTaskOptions, function($a, $b) {
+        $aDate = (($a['task_type'] ?? 'single_day') === 'date_range') ? ($a['date_from'] ?? '') : ($a['task_date'] ?? '');
+        $bDate = (($b['task_type'] ?? 'single_day') === 'date_range') ? ($b['date_from'] ?? '') : ($b['task_date'] ?? '');
+        return strcmp($aDate, $bDate);
+    });
 }
 ?>
 
