@@ -1,5 +1,12 @@
 # HandyCRM - Change Log
 
+## [1.8.27] - 2026-07-21
+### Added
+- **Αναφορά Έργου — Επιλογή Εργασιών**: Admins can now check/uncheck individual project tasks in the report modal, combined with the existing date-range filter. Selection scopes the entire report — the tasks table plus materials/labor totals and summary cards all recalculate around only the selected tasks.
+- **Αναφορά Έργου — Υπότιτλος Αναφοράς**: Optional subtitle field combines with the project title (e.g. "Creta Maris - Γραφεία") for the PDF's visible title, the downloaded/emailed filename, and the default email subject line.
+### Fixed
+- **Αναφορά Έργου — Ονομασία αρχείου**: Removed a dead customer-name check in the filename-generation logic and fixed a double-underscore artifact that could appear when a subtitle was set.
+
 ## [1.8.19] - 2026-06-11
 ### Added
 - **Dashboard — Εγκεκριμένες Συντηρήσεις**: New card showing all accepted maintenance offers (company, phone, transformers count, price, acceptance date) placed above the contracts section.
