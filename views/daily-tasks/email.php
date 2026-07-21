@@ -25,6 +25,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="<?= BASE_URL ?>/daily-tasks/send-email/<?= $task['id'] ?>">
+                        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Παραλήπτη <span class="text-danger">*</span></label>
                             <input type="email" class="form-control" id="email" name="email" 

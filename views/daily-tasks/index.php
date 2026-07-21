@@ -206,10 +206,11 @@
                                class="btn btn-warning" title="Επεξεργασία">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form method="POST" 
-                                  action="<?= BASE_URL ?>/daily-tasks/delete/<?= $task['id'] ?>" 
+                            <form method="POST"
+                                  action="<?= BASE_URL ?>/daily-tasks/delete/<?= $task['id'] ?>"
                                   style="display:inline;"
                                   onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την εργασία;');">
+                                <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                                 <button type="submit" class="btn btn-danger btn-sm" title="Διαγραφή">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -258,12 +259,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // AJAX Toggle for is_invoiced
+const dailyTaskCsrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
+
 document.querySelectorAll('.toggle-invoiced').forEach(toggle => {
     toggle.addEventListener('change', function() {
         const taskId = this.getAttribute('data-task-id');
         const isInvoiced = this.checked ? 1 : 0;
-        
-        fetch(`<?= BASE_URL ?>/daily-tasks/toggle-invoiced/${taskId}`, {
+
+        fetch(`<?= BASE_URL ?>/daily-tasks/toggle-invoiced/${taskId}?<?= CSRF_TOKEN_NAME ?>=${encodeURIComponent(dailyTaskCsrfToken)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

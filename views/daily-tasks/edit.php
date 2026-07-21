@@ -20,6 +20,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="<?= BASE_URL ?>/daily-tasks/update/<?= $task['id'] ?>" enctype="multipart/form-data" id="taskForm">
+                        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                         <div class="row">
                             <!-- Date -->
                             <div class="col-md-3 mb-3">
@@ -321,6 +322,8 @@
 </div>
 
 <script>
+const dailyTaskCsrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
+
 // Time mode toggle
 document.querySelectorAll('input[name="time_mode"]').forEach(radio => {
     radio.addEventListener('change', function() {
@@ -420,7 +423,7 @@ function deleteExistingPhoto(button, taskId, photoPath) {
         return;
     }
     
-    fetch(`<?= BASE_URL ?>/daily-tasks/delete-photo/${taskId}`, {
+    fetch(`<?= BASE_URL ?>/daily-tasks/delete-photo/${taskId}?<?= CSRF_TOKEN_NAME ?>=${encodeURIComponent(dailyTaskCsrfToken)}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

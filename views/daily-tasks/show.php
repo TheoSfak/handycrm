@@ -370,8 +370,9 @@
                             <i class="fas fa-print"></i> Εκτύπωση
                         </button>
 
-                        <form method="POST" action="<?= BASE_URL ?>/daily-tasks/delete/<?= $task['id'] ?>" 
+                        <form method="POST" action="<?= BASE_URL ?>/daily-tasks/delete/<?= $task['id'] ?>"
                               onsubmit="return confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή την εργασία;\n\nΑυτή η ενέργεια δεν μπορεί να αναιρεθεί.');">
+                            <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                             <button type="submit" class="btn btn-danger w-100">
                                 <i class="fas fa-trash"></i> Διαγραφή
                             </button>

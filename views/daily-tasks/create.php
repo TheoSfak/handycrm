@@ -20,6 +20,7 @@
                 </div>
                 <div class="card-body">
                     <form method="POST" action="<?= BASE_URL ?>/daily-tasks/store" enctype="multipart/form-data" id="taskForm">
+                        <input type="hidden" name="<?= CSRF_TOKEN_NAME ?>" value="<?= $this->generateCsrfToken() ?>">
                         <div class="row">
                             <!-- Date -->
                             <div class="col-md-3 mb-3">

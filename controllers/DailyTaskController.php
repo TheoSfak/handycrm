@@ -253,7 +253,16 @@ class DailyTaskController extends BaseController {
             header('Location: ' . BASE_URL . '/daily-tasks');
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('DailyTaskController::store - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/daily-tasks');
+            exit;
+        }
+
         // Handle photo uploads
         $photos = [];
         if (!empty($_FILES['photos']['name'][0])) {
@@ -433,7 +442,16 @@ class DailyTaskController extends BaseController {
             header('Location: ' . BASE_URL . '/daily-tasks');
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('DailyTaskController::update - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/daily-tasks/view/' . $id);
+            exit;
+        }
+
         $task = $this->taskModel->find($id);
         
         if (!$task) {
@@ -541,7 +559,16 @@ class DailyTaskController extends BaseController {
             header('Location: ' . BASE_URL . '/daily-tasks');
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('DailyTaskController::delete - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/daily-tasks');
+            exit;
+        }
+
         // Get task info for logging
         $task = $this->taskModel->find($id);
         if (!$task) {
@@ -573,11 +600,21 @@ class DailyTaskController extends BaseController {
      * Delete photo from task
      */
     public function deletePhoto($id) {
+        header('Content-Type: application/json');
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(['success' => false, 'message' => 'Method not allowed']);
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('DailyTaskController::deletePhoto - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            exit;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true);
         $photoPath = $input['photo'] ?? null;
         
@@ -649,7 +686,15 @@ class DailyTaskController extends BaseController {
             echo json_encode(['success' => false, 'message' => 'Method not allowed']);
             exit;
         }
-        
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('DailyTaskController::toggleInvoiced - Error: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'message' => 'Μη έγκυρο token ασφαλείας.']);
+            exit;
+        }
+
         $input = json_decode(file_get_contents('php://input'), true);
         $status = $input['status'] ?? null;
         
@@ -805,6 +850,15 @@ class DailyTaskController extends BaseController {
         
         // Handle POST request - send email
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $this->validateCsrfToken();
+            } catch (Exception $e) {
+                error_log('DailyTaskController::sendEmail - Error: ' . $e->getMessage());
+                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+                header('Location: ' . BASE_URL . '/daily-tasks/view/' . $id);
+                exit;
+            }
+
             try {
                 $recipientEmail = $_POST['email'] ?? '';
                 $subject = $_POST['subject'] ?? '';
