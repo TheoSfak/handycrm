@@ -1,5 +1,10 @@
 # HandyCRM - Change Log
 
+## [1.8.29] - 2026-08-11
+### Fixed
+- **Έργα — Το μενού (hamburger) δεν άνοιγε σε mobile στη σελίδα Έργα**: Not actually a menu bug — the projects list was crashing mid-render (`Database connection failed: SQLSTATE[HY000] [2002] Operation not permitted`) whenever the request's cumulative MySQL connections exceeded the host's limit. `classes/Database.php` calls `die()` on any connection failure, which killed the response before `footer.php` (jQuery, Bootstrap, `toggleSidebar()`) ever loaded — the hamburger button rendered but had no JS behind it. Root cause: `formatCurrencyWithVAT()` opened a brand-new, never-closed DB connection on every call, and the projects list calls it once per row (up to 20/page) — the only page that does this in a loop. Cached the VAT-settings lookup per request instead of per row, and made `Project::getPaginated()` reuse its model's existing connection instead of opening a redundant one. Verified on a like-for-like local copy: one page load dropped from 16 MySQL connections to 8, with identical currency/VAT output.
+- **Σημείωση**: μισή αλλαγή είναι στο `config/config.php`, το οποίο δεν παρακολουθείται από το git (περιέχει τα live στοιχεία της βάσης) — χρειάζεται να εφαρμοστεί το ίδιο fix με το χέρι σε κάθε deployment.
+
 ## [1.8.28] - 2026-07-21
 ### Added
 - **Αναφορά Έργου — Σύμπτυξη Επιλογής Εργασιών**: The task-selection checklist in the report modal now starts collapsed and expands on click, keeping the modal shorter by default.
