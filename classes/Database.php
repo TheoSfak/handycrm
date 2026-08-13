@@ -31,7 +31,13 @@ class Database {
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci"
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
+                    // Hostinger caps new MySQL connections at 20/sec per account; a fresh
+                    // connection per request/model (this app has ~90+ `new Database()` call
+                    // sites) can burst past that under load. Persistent connections let PHP
+                    // reuse an already-open connection from its pool instead of a fresh
+                    // TCP+auth handshake every time - Hostinger's own documented fix.
+                    PDO::ATTR_PERSISTENT => true
                 ];
                 
                 $this->pdo = new PDO($dsn, $this->username, $this->password, $options);

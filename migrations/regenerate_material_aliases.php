@@ -60,5 +60,10 @@ try {
     
 } catch (Exception $e) {
     echo "ERROR: " . $e->getMessage() . "\n";
-    exit(1);
+    // Throw instead of exit(1): when run standalone this still exits non-zero
+    // (PHP's default behavior for an uncaught exception), but when included
+    // from UpdateController::applyUpdate() (which wraps a DB transaction
+    // around this include) it lets the caller's catch/rollBack() run instead
+    // of killing the process mid-transaction.
+    throw $e;
 }
