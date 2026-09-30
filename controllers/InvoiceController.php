@@ -117,13 +117,11 @@ class InvoiceController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/invoices/create');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/invoices/create');
         }
         
         $user = $this->getCurrentUser();
@@ -300,13 +298,11 @@ class InvoiceController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/invoices/edit?id=' . $id);
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/invoices/edit?id=' . $id);
         }
         
         $user = $this->getCurrentUser();
@@ -375,13 +371,11 @@ class InvoiceController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/invoices');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/invoices');
         }
         
         $user = $this->getCurrentUser();
@@ -427,13 +421,11 @@ class InvoiceController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/invoices');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/invoices');
         }
         
         $invoiceId = (int)($_POST['invoice_id'] ?? 0);
@@ -499,13 +491,11 @@ class InvoiceController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/invoices');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/invoices');
         }
         
         $id = (int)($_POST['id'] ?? 0);

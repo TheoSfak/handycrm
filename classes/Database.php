@@ -11,6 +11,7 @@ class Database {
     private $password;
     private $charset;
     private $pdo;
+    private static ?PDO $sharedPdo = null;
     
     public function __construct() {
         $this->host = DB_HOST;
@@ -21,10 +22,25 @@ class Database {
     }
     
     /**
-     * Create database connection
+     * Get shared PDO connection (singleton per HTTP request)
+     */
+    public static function getSharedPdo(): PDO {
+        $instance = new self();
+        return $instance->connect();
+    }
+
+    /**
+     * Reset shared connection (e.g. for testing or long-running workers)
+     */
+    public static function resetConnection(): void {
+        self::$sharedPdo = null;
+    }
+
+    /**
+     * Create database connection (reuses shared connection across models)
      */
     public function connect() {
-        if ($this->pdo === null) {
+        if (self::$sharedPdo === null) {
             try {
                 $dsn = "mysql:host={$this->host};dbname={$this->db_name};charset=utf8mb4";
                 $options = [
@@ -32,19 +48,14 @@ class Database {
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                     PDO::ATTR_EMULATE_PREPARES => false,
                     PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
-                    // Hostinger caps new MySQL connections at 20/sec per account; a fresh
-                    // connection per request/model (this app has ~90+ `new Database()` call
-                    // sites) can burst past that under load. Persistent connections let PHP
-                    // reuse an already-open connection from its pool instead of a fresh
-                    // TCP+auth handshake every time - Hostinger's own documented fix.
-                    PDO::ATTR_PERSISTENT => true
+                    PDO::ATTR_PERSISTENT => false
                 ];
                 
-                $this->pdo = new PDO($dsn, $this->username, $this->password, $options);
+                self::$sharedPdo = new PDO($dsn, $this->username, $this->password, $options);
                 
                 // Extra safety: Execute SET NAMES after connection
-                $this->pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
-                $this->pdo->exec("SET CHARACTER SET utf8mb4");
+                self::$sharedPdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+                self::$sharedPdo->exec("SET CHARACTER SET utf8mb4");
                 
             } catch (PDOException $e) {
                 error_log("Database::connect - Connection failed: " . $e->getMessage());
@@ -56,6 +67,7 @@ class Database {
             }
         }
         
+        $this->pdo = self::$sharedPdo;
         return $this->pdo;
     }
     

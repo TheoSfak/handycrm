@@ -204,11 +204,13 @@
                         <i class="fas fa-edit"></i> <?= __('quotes.edit') ?>
                     </a>
                     
-                    <a href="<?= BASE_URL ?>/quotes/delete/<?= $quote['id'] ?>" 
-                       class="btn btn-danger"
-                       onclick="return confirm('<?= __('quotes.confirm_delete') ?>')">
-                        <i class="fas fa-trash"></i> <?= __('quotes.delete') ?>
-                    </a>
+                    <form method="POST" action="<?= BASE_URL ?>/quotes/delete" style="display:inline;" onsubmit="return confirm('<?= addslashes(__('quotes.confirm_delete')) ?>')">
+                        <input type="hidden" name="id" value="<?= $quote['id'] ?>">
+                        <input type="hidden" name="<?= defined('CSRF_TOKEN_NAME') ? CSRF_TOKEN_NAME : 'csrf_token' ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> <?= __('quotes.delete') ?>
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

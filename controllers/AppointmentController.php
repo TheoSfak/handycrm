@@ -162,14 +162,12 @@ class AppointmentController extends BaseController {
         $user = $this->getCurrentUser();
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log("AppointmentController::create - CSRF validation failed: " . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/appointments/create');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log("AppointmentController::create - CSRF validation failed: " . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/appointments/create');
         }
         
         // Validate input
@@ -299,14 +297,12 @@ class AppointmentController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log("AppointmentController::update - CSRF validation failed: " . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/appointments/edit?id=' . $id);
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log("AppointmentController::update - CSRF validation failed: " . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/appointments/edit?id=' . $id);
         }
         
         // Update appointment
@@ -344,14 +340,12 @@ class AppointmentController extends BaseController {
         }
         
         // Validate CSRF token
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log("AppointmentController::delete - CSRF validation failed: " . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/appointments');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log("AppointmentController::delete - CSRF validation failed: " . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/appointments');
         }
         
         $user = $this->getCurrentUser();

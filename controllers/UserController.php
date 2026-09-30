@@ -85,14 +85,12 @@ class UserController extends BaseController {
             $this->redirect('/users');
         }
         
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log('CSRF validation failed in UserController::create: ' . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/users/create');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('CSRF validation failed in UserController::create: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/users/create');
         }
         
         $errors = [];
@@ -213,14 +211,12 @@ class UserController extends BaseController {
             $this->redirect('/users');
         }
         
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log('CSRF validation failed in UserController::edit: ' . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/users/edit?id=' . $id);
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('CSRF validation failed in UserController::edit: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/users/edit?id=' . $id);
         }
         
         // Get role_id from role name
@@ -284,14 +280,12 @@ class UserController extends BaseController {
             $this->redirect('/users');
         }
         
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log('CSRF validation failed in UserController::delete: ' . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/users');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('CSRF validation failed in UserController::delete: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/users');
         }
         
         $id = $_POST['id'] ?? 0;
@@ -326,14 +320,12 @@ class UserController extends BaseController {
             $this->redirect('/users');
         }
         
-        if (!DEBUG_MODE) {
-            try {
-                $this->validateCsrfToken();
-            } catch (Exception $e) {
-                error_log('CSRF validation failed in UserController::toggleActive: ' . $e->getMessage());
-                $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
-                $this->redirect('/users');
-            }
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('CSRF validation failed in UserController::toggleActive: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/users');
         }
         
         $id = $_POST['id'] ?? 0;

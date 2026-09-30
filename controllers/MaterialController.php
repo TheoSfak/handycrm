@@ -70,15 +70,13 @@ class MaterialController extends BaseController {
             $this->redirect('/materials');
         }
         
-        if (!DEBUG_MODE) {
-            try {
+        try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
                 error_log("MaterialController::store - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/materials/create');
             }
-        }
         
         $user = $this->getCurrentUser();
         
@@ -162,15 +160,13 @@ class MaterialController extends BaseController {
             $this->redirect('/materials');
         }
         
-        if (!DEBUG_MODE) {
-            try {
+        try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
                 error_log("MaterialController::update - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/materials/edit?id=' . $id);
             }
-        }
         
         // Validation
         $errors = [];
@@ -218,15 +214,13 @@ class MaterialController extends BaseController {
             $this->redirect('/materials');
         }
         
-        if (!DEBUG_MODE) {
-            try {
+        try {
                 $this->validateCsrfToken();
             } catch (Exception $e) {
                 error_log("MaterialController::delete - Error: " . $e->getMessage());
                 $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
                 $this->redirect('/materials');
             }
-        }
         
         // Get ID from parameter or POST
         if (!$id) {

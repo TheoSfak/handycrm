@@ -145,12 +145,9 @@
                                    class="btn btn-sm btn-warning" title="<?= __('quotes.edit') ?>">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="<?= BASE_URL ?>/quotes/delete/<?= $quote['id'] ?>" 
-                                   class="btn btn-sm btn-danger" 
-                                   onclick="return confirm('<?= __('quotes.confirm_delete') ?>')" 
-                                   title="<?= __('quotes.delete') ?>">
+                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDeleteQuote(<?= $quote['id'] ?>)" title="<?= __('quotes.delete') ?>">
                                     <i class="fas fa-trash"></i>
-                                </a>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -194,3 +191,16 @@
 </div>
 
 
+
+<form id="deleteQuoteForm" method="POST" action="<?= BASE_URL ?>/quotes/delete" style="display:none;">
+    <input type="hidden" name="id" id="deleteQuoteId">
+    <input type="hidden" name="<?= defined('CSRF_TOKEN_NAME') ? CSRF_TOKEN_NAME : 'csrf_token' ?>" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+</form>
+<script>
+function confirmDeleteQuote(id) {
+    if (confirm('<?= addslashes(__('quotes.confirm_delete')) ?>')) {
+        document.getElementById('deleteQuoteId').value = id;
+        document.getElementById('deleteQuoteForm').submit();
+    }
+}
+</script>

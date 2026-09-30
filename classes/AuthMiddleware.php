@@ -111,26 +111,16 @@ class AuthMiddleware {
      * @return bool True if user has permission
      */
     public function can($permission) {
-        error_log("=== AuthMiddleware::can() called ===");
-        error_log("Permission: $permission");
-        error_log("User ID: " . ($_SESSION['user_id'] ?? 'NOT SET'));
-        error_log("Is Admin: " . ($this->isAdmin() ? 'YES' : 'NO'));
-        
-        if ($this->isAdmin()) {
-            error_log("Result: TRUE (admin)");
-            return true;
-        }
-        
-        $parts = explode('.', $permission);
-        if (count($parts) !== 2) {
-            error_log("Result: FALSE (invalid format)");
+        if (!isset($_SESSION['user_id'])) {
             return false;
         }
         
-        $result = $this->checkPermission($parts[0], $parts[1]);
-        error_log("Result: " . ($result ? 'TRUE' : 'FALSE'));
+        if ($this->isAdmin()) {
+            return true;
+        }
         
-        return $result;
+        $permissions = $this->getUserPermissions();
+        return !empty($permissions[$permission]);
     }
     
     /**

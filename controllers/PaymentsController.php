@@ -525,12 +525,14 @@ class PaymentsController extends BaseController {
             $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
             
             // Debug logging
-            error_log("=== BULK PAYMENT DEBUG ===");
-            error_log("Week Start: $weekStart");
-            error_log("Week End: $weekEnd");
-            error_log("Found unpaid entries: " . count($entries));
-            foreach ($entries as $entry) {
-                error_log("Entry ID: {$entry['id']}, User: {$entry['first_name']} {$entry['last_name']}, Role: {$entry['role']}, Hours: {$entry['hours_worked']}");
+            if (DEBUG_MODE) {
+                error_log("=== BULK PAYMENT DEBUG ===");
+                error_log("Week Start: $weekStart");
+                error_log("Week End: $weekEnd");
+                error_log("Found unpaid entries: " . count($entries));
+                foreach ($entries as $entry) {
+                    error_log("Entry ID: {$entry['id']}, User: {$entry['first_name']} {$entry['last_name']}, Role: {$entry['role']}, Hours: {$entry['hours_worked']}");
+                }
             }
             
             if (empty($entries)) {

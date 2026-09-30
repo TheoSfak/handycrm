@@ -44,10 +44,8 @@ class AuthController extends BaseController {
         }
         
         try {
-            // Validate CSRF token (skip in debug mode for easier testing)
-            if (!DEBUG_MODE) {
-                $this->validateCsrfToken();
-            }
+            // Validate CSRF token unconditionally
+            $this->validateCsrfToken();
             
             // Sanitize input
             $username = $this->sanitize($_POST['username'] ?? '');
@@ -70,6 +68,9 @@ class AuthController extends BaseController {
             $user = $userModel->authenticate($username, $password);
             
             if ($user) {
+                // Prevent session fixation
+                session_regenerate_id(true);
+
                 // Set session variables
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['username'] = $user['username'];

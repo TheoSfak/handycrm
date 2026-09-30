@@ -497,8 +497,10 @@ function displaySelectedFiles() {
 }
 
 // Handle form submission with progress
-document.getElementById('photoUploadForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+const photoUploadFormEl = document.getElementById('uploadForm') || document.getElementById('photoUploadForm');
+if (photoUploadFormEl) {
+    photoUploadFormEl.addEventListener('submit', function(e) {
+        e.preventDefault();
     
     const formData = new FormData(this);
     const uploadBtn = document.getElementById('uploadBtn');
@@ -548,7 +550,8 @@ document.getElementById('photoUploadForm').addEventListener('submit', function(e
     
     xhr.open('POST', this.action);
     xhr.send(formData);
-});
+    });
+}
 
 // Lightbox configuration
 lightbox.option({

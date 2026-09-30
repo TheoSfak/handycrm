@@ -361,16 +361,21 @@ class QuoteController extends BaseController {
     public function delete() {
         $user = $this->getCurrentUser();
         
-        // Accept both GET and POST for testing
-        $isPost = $_SERVER['REQUEST_METHOD'] === 'POST';
-        
-        // Skip CSRF validation in debug mode or GET requests
-        if ($isPost && !DEBUG_MODE) {
-            $this->validateCsrfToken();
+        // Enforce POST method for destructive delete action
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/quotes');
         }
         
-        // Get ID from POST or GET
-        $id = $isPost ? ($_POST['id'] ?? 0) : ($_GET['id'] ?? 0);
+        // Validate CSRF token unconditionally
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            $this->redirect('/quotes');
+        }
+        
+        // Get ID from POST
+        $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
         
         if (!$id) {
             $_SESSION['error'] = 'Μη έγκυρο αναγνωριστικό προσφοράς';
@@ -378,14 +383,7 @@ class QuoteController extends BaseController {
         }
         
         $quoteModel = new Quote();
-        
-        // Debug: Log the delete attempt
-        error_log("Attempting to delete quote with ID: " . $id);
-        
         $success = $quoteModel->delete($id);
-        
-        // Debug: Log the result
-        error_log("Delete result: " . ($success ? 'SUCCESS' : 'FAILED'));
         
         if ($success) {
             $_SESSION['success'] = 'Η προσφορά διαγράφηκε με επιτυχία';

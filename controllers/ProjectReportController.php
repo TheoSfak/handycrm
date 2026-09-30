@@ -282,10 +282,12 @@ class ProjectReportController extends BaseController {
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Debug: Log the materials
-        error_log("=== MATERIALS QUERY DEBUG ===");
-        error_log("Total materials found: " . count($results));
-        foreach ($results as $mat) {
-            error_log("Material: " . $mat['material_name'] . " | Unit: " . $mat['unit'] . " | Qty: " . $mat['total_quantity'] . " | Unit Price: " . $mat['unit_cost'] . " | Total: " . $mat['total_cost']);
+        if (DEBUG_MODE) {
+            error_log("=== MATERIALS QUERY DEBUG ===");
+            error_log("Total materials found: " . count($results));
+            foreach ($results as $mat) {
+                error_log("Material: " . $mat['material_name'] . " | Unit: " . $mat['unit'] . " | Qty: " . $mat['total_quantity'] . " | Unit Price: " . $mat['unit_cost'] . " | Total: " . $mat['total_cost']);
+            }
         }
 
         return $results;
