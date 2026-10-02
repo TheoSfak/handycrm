@@ -61,6 +61,7 @@ class CustomPDF extends TCPDF {
 }
 
 class ProjectReportController extends BaseController {
+    private static ?array $taskLaborColumnsCache = null;
     
     public function __construct() {
         parent::__construct();
@@ -300,9 +301,28 @@ class ProjectReportController extends BaseController {
 
         $pdo = $this->db->getPdo();
 
-        // Check if technician_name column exists, otherwise use user_id with JOIN
-        $checkColumn = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'technician_name'");
-        $hasTechnicianName = $checkColumn->rowCount() > 0;
+        // Check task_labor columns once and cache results
+        if (self::$taskLaborColumnsCache === null) {
+            try {
+                $stmt = $pdo->query("SHOW COLUMNS FROM task_labor");
+                $cols = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN, 0) : [];
+                self::$taskLaborColumnsCache = [
+                    'hasTechnicianName' => in_array('technician_name', $cols),
+                    'hasHoursWorked' => in_array('hours_worked', $cols),
+                    'hasTechnicianId' => in_array('technician_id', $cols)
+                ];
+            } catch (Exception $e) {
+                self::$taskLaborColumnsCache = [
+                    'hasTechnicianName' => false,
+                    'hasHoursWorked' => true,
+                    'hasTechnicianId' => true
+                ];
+            }
+        }
+
+        $hasTechnicianName = self::$taskLaborColumnsCache['hasTechnicianName'];
+        $hasHoursWorked = self::$taskLaborColumnsCache['hasHoursWorked'];
+        $hasTechnicianId = self::$taskLaborColumnsCache['hasTechnicianId'];
 
         if ($hasTechnicianName) {
             // Use technician_name if column exists
@@ -314,14 +334,7 @@ class ProjectReportController extends BaseController {
             $groupByField = "tl.user_id";
         }
 
-        // Check if hours_worked column exists, otherwise use hours
-        $checkHours = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'hours_worked'");
-        $hasHoursWorked = $checkHours->rowCount() > 0;
         $hoursField = $hasHoursWorked ? "tl.hours_worked" : "tl.hours";
-
-        // Check which ID column to use for JOIN
-        $checkTechId = $pdo->query("SHOW COLUMNS FROM task_labor LIKE 'technician_id'");
-        $hasTechnicianId = $checkTechId->rowCount() > 0;
         $userIdField = $hasTechnicianId ? "tl.technician_id" : "tl.user_id";
 
         $sql = "

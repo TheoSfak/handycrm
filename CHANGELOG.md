@@ -1,5 +1,28 @@
 # HandyCRM - Change Log
 
+## [1.8.32] - 2026-10-02
+### Security
+- **Hardening CSRF & Headers**: Ενίσχυση της συνάρτησης `BaseController::validateCsrfToken()` με υποστήριξη των HTTP headers `X-CSRF-TOKEN` / `X-CSRFTOKEN` εκτός των `$_POST`/`$_GET` και ασφαλή σύγκριση μέσω `hash_equals()`. Προσθήκη ελέγχου CSRF σε διαγραφές και μαζικές εισαγωγές CSV (`CustomerController`, `ProjectController`, `DailyTaskController`).
+- **Ασφάλεια Συνεδρίας & Cookies**: Αυστηροποίηση cookies στο `config/config.php` με `HttpOnly=true`, `SameSite=Lax` και αυτόματη ενεργοποίηση του `Secure` flag σε HTTPS συνδέσεις.
+- **Αποτροπή Εκτέλεσης Script στο Uploads**: Προσθήκη προστασίας `.htaccess` στον κατάλογο `uploads/` (`php_flag engine off` και απαγόρευση εκτέλεσης `.php`, `.phtml`, `.phar`, `.exe`, `.cgi`).
+- **Προστασία API & Script Συντήρησης**: Απαίτηση αυθεντικοποιημένης συνεδρίας στο `api/check-updates.php`. Μεταφορά των βοηθητικών εργαλείων composer από το web root στον προστατευμένο κατάλογο `scripts/`.
+- **Έλεγχος Δικαιωμάτων (RBAC) & Αποτροπή Privilege Escalation**: Πλήρης εναρμόνιση ελέγχων δικαιωμάτων (`AuthMiddleware::can()`) σε `CustomerController`, `ProjectController`, και `DailyTaskController`. Προστασία του `UserController` ώστε μη διαχειριστές να μην μπορούν να εκχωρήσουν τον ρόλο του διαχειριστή και αποτροπή ακούσιας απενεργοποίησης του τρέχοντος λογαριασμού διαχειριστή.
+
+### Added
+- **Κεντρική Υπηρεσία Διαχείρισης Εικόνων (`PhotoService`)**: Δημιουργία της υπηρεσίας `classes/PhotoService.php` που υποστηρίζει βελτιστοποίηση και αναπροσαρμογή μεγέθους για JPEG, PNG, GIF, WEBP με διατήρηση διαφάνειας. Ενοποίηση της διαχείρισης εικόνων και αφαίρεση επαναλαμβανόμενου κώδικα GD από `DailyTaskController`, `TransformerMaintenanceController`, `TaskPhoto` και `SettingsController`.
+- **Κεντρική Υπηρεσία Εξαγωγής CSV (`CsvExportService`)**: Δημιουργία της υπηρεσίας `classes/CsvExportService.php` για άμεση ροή (streaming) αρχείων CSV με UTF-8 BOM για πλήρη συμβατότητα με Microsoft Excel. Ενοποίηση εξαγωγών σε `CustomerController`, `MaterialController`, `MaterialsController`, `PaymentExportController`, `ProjectController` και `ProjectTasksController`.
+- **Υπηρεσία Εξαγωγής & Ανάλυσης Συμβολαίων (`ContractParserService`)**: Εξαγωγή της λογικής ανάγνωσης PDF, OCR fallback, ελληνικών κωδικοποιήσεων και NLP εξαγωγής πεδίων από το `models/UploadedContract.php` στην αυτόνομη υπηρεσία `classes/ContractParserService.php`.
+
+### Fixed
+- **Ακεραιότητα Συναλλαγών Προσφορών**: Προσθήκη ατομικών συναλλαγών βάσης δεδομένων (Database Transactions with rollback) στο `QuoteController::store()` και `update()`, αποτρέποντας την απώλεια στοιχείων προσφοράς κατά την αποθήκευση.
+- **Μοντέλο Βάσης (BaseModel Update)**: Διόρθωση του σφάλματος όπου ενημέρωση εγγραφής με ίδια δεδομένα (MySQL `rowCount = 0`) επέστρεφε αποτυχία (`false`).
+- **Διαγραφή & Κάδος Ανακύκλωσης (Soft Delete)**: Προσθήκη φίλτρων `deleted_at IS NULL` σε όλες τις ερωτήσεις του `models/Project.php` και `models/DailyTask.php`, και εναρμόνιση των διαγραφών με το σύστημα Κάδου Απορριμμάτων.
+- **Επιδόσεις Εκκίνησης (AutoMigration Caching)**: Βελτιστοποίηση του `index.php` με έλεγχο χρονοσήμανσης (mtime cache) των αρχείων migrations, εξαλείφοντας πολλαπλά DDL queries (`CREATE TABLE IF NOT EXISTS`, `SHOW COLUMNS`) σε κάθε φόρτωση σελίδας.
+- **Βελτιστοποίηση Ερωτημάτων**: Αποθήκευση στη μνήμη (static cache) του ελέγχου στηλών στο `ProjectReportController` και αντικατάσταση του `SHOW TABLES LIKE 'quotes'` στο `DashboardController`.
+- **Βάση Δεδομένων**: Αφαίρεση της διπλότυπης στήλης `language` στον ορισμό του πίνακα `users` στο `database/handycrm.sql`.
+- **Ομοιόμορφη Σελίδα 404**: Αντικατάσταση των ακατέργαστων μηνυμάτων 404 στο `index.php` με το πρότυπο `views/errors/404.php`.
+- **Ενημέρωση composer.json**: Προσθήκη περιγραφής, άδειας MIT, περιορισμού έκδοσης PHP (>=8.0), require-dev για PHPUnit και PSR classmap autoloading.
+
 ## [1.8.31] - 2026-09-30
 ### Fixed
 - **Βάση Δεδομένων — Request-scoped Singleton & Τερματισμός Persistent Connections**: Αντικατάσταση της προσωρινής persistent σύνδεσης (`ATTR_PERSISTENT => false`) με ένα καθαρό request-scoped singleton pattern (`Database::$sharedPdo`) στο `classes/Database.php`. Όλα τα μοντέλα που καλούνται στον κύκλο ζωής ενός HTTP request μοιράζονται πλέον την ίδια ακριβώς σύνδεση PDO, αποτρέποντας την εξάντληση του pool συνδέσεων της MySQL (`max_connections`) και διασφαλίζοντας το σωστό κλείσιμο των συνδέσεων.

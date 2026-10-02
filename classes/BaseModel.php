@@ -80,7 +80,7 @@ class BaseModel {
         
         $stmt = $this->db->execute($sql, $params);
         
-        return $this->db->rowCount($stmt) > 0;
+        return $stmt !== false;
     }
     
     /**

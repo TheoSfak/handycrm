@@ -233,72 +233,8 @@ class SettingsController extends BaseController {
      * Resize and optimize logo image
      */
     private function resizeImageLogo($sourcePath, $destinationPath, $maxWidth = 800, $maxHeight = 600, $keepTransparency = false) {
-        $imageInfo = getimagesize($sourcePath);
-        if (!$imageInfo) {
-            return false;
-        }
-        
-        list($origWidth, $origHeight, $imageType) = $imageInfo;
-        
-        // Calculate new dimensions maintaining aspect ratio
-        $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
-        
-        if ($ratio >= 1) {
-            $newWidth = $origWidth;
-            $newHeight = $origHeight;
-        } else {
-            $newWidth = round($origWidth * $ratio);
-            $newHeight = round($origHeight * $ratio);
-        }
-        
-        // Create image resource
-        switch ($imageType) {
-            case IMAGETYPE_JPEG:
-                $sourceImage = imagecreatefromjpeg($sourcePath);
-                break;
-            case IMAGETYPE_PNG:
-                $sourceImage = imagecreatefrompng($sourcePath);
-                break;
-            case IMAGETYPE_GIF:
-                $sourceImage = imagecreatefromgif($sourcePath);
-                break;
-            case IMAGETYPE_WEBP:
-                $sourceImage = imagecreatefromwebp($sourcePath);
-                break;
-            default:
-                return false;
-        }
-        
-        if (!$sourceImage) {
-            return false;
-        }
-        
-        // Create new image
-        $newImage = imagecreatetruecolor($newWidth, $newHeight);
-        
-        // Preserve transparency if needed (for logos)
-        if ($keepTransparency) {
-            imagealphablending($newImage, false);
-            imagesavealpha($newImage, true);
-            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
-            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
-        }
-        
-        // Resize
-        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
-        
-        // Save as PNG if transparency, otherwise JPEG
-        $result = false;
-        if ($keepTransparency) {
-            $result = imagepng($newImage, $destinationPath, 9);
-        } else {
-            $result = imagejpeg($newImage, $destinationPath, 90);
-        }
-        
-        imagedestroy($sourceImage);
-        imagedestroy($newImage);
-        
-        return $result;
+        require_once __DIR__ . '/../classes/PhotoService.php';
+        return PhotoService::resize($sourcePath, $destinationPath, $maxWidth, $maxHeight, 90, $keepTransparency);
     }
     
     /**

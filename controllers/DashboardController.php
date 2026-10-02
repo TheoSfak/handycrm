@@ -177,12 +177,11 @@ class DashboardController extends BaseController {
             
             $stats['overdue_invoices'] = 0;
             
-            // Pending quotes (draft and sent) - check if table exists
-            $checkQuotes = $db->query("SHOW TABLES LIKE 'quotes'");
-            if ($checkQuotes->rowCount() > 0) {
+            // Pending quotes (draft and sent)
+            try {
                 $stmt = $db->query("SELECT COUNT(*) as total FROM quotes WHERE status IN ('draft', 'sent')");
-                $stats['pending_quotes'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-            } else {
+                $stats['pending_quotes'] = (int)($stmt->fetch(PDO::FETCH_ASSOC)['total'] ?? 0);
+            } catch (Exception $e) {
                 $stats['pending_quotes'] = 0;
             }
             

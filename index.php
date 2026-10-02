@@ -36,29 +36,50 @@ try {
     $db = new Database();
     $connection = $db->connect();
     
-    // Check if tables exist
-    $stmt = $connection->query("SHOW TABLES LIKE 'users'");
-    if ($stmt->rowCount() === 0) {
-        // Database not properly set up - redirect to installation
-        header('Location: install.php');
-        exit;
-    }
-    
-    // Auto-run pending migrations (silent, non-blocking)
-    require_once 'classes/AutoMigration.php';
-    $autoMigration = new AutoMigration($db);
-    $migrationResults = $autoMigration->checkAndRun();
-    
-    // Log migration results if any were executed
-    if ($migrationResults['executed'] > 0) {
-        error_log("HandyCRM: Auto-executed {$migrationResults['executed']} pending migrations");
-    }
-    
-    // Log errors if any (but don't block application)
-    if (!empty($migrationResults['errors'])) {
-        foreach ($migrationResults['errors'] as $error) {
-            error_log("HandyCRM Migration Error ({$error['file']}): {$error['error']}");
+    // Check installation status once per setup/cache to avoid SHOW TABLES on every request
+    $installCacheFile = __DIR__ . '/storage/installed.cache';
+    if (!file_exists($installCacheFile)) {
+        $stmt = $connection->query("SHOW TABLES LIKE 'users'");
+        if ($stmt->rowCount() === 0) {
+            header('Location: install.php');
+            exit;
         }
+        @file_put_contents($installCacheFile, '1');
+    }
+    
+    // Auto-run pending migrations only when migrations directory changes or on first run
+    $migrationDir = __DIR__ . '/migrations';
+    $cacheFile = __DIR__ . '/storage/migrations.cache';
+    $dirMtime = is_dir($migrationDir) ? filemtime($migrationDir) : 0;
+    $shouldCheckMigrations = false;
+
+    if (!file_exists($cacheFile)) {
+        $shouldCheckMigrations = true;
+    } else {
+        $lastCheck = @file_get_contents($cacheFile);
+        if ($lastCheck === false || (int)$lastCheck < $dirMtime) {
+            $shouldCheckMigrations = true;
+        }
+    }
+
+    if ($shouldCheckMigrations) {
+        require_once 'classes/AutoMigration.php';
+        $autoMigration = new AutoMigration($db);
+        $migrationResults = $autoMigration->checkAndRun();
+        
+        // Log migration results if any were executed
+        if ($migrationResults['executed'] > 0) {
+            error_log("HandyCRM: Auto-executed {$migrationResults['executed']} pending migrations");
+        }
+        
+        // Log errors if any (but don't block application)
+        if (!empty($migrationResults['errors'])) {
+            foreach ($migrationResults['errors'] as $error) {
+                error_log("HandyCRM Migration Error ({$error['file']}): {$error['error']}");
+            }
+        }
+
+        @file_put_contents($cacheFile, (string)time());
     }
     
 } catch (Exception $e) {
@@ -986,7 +1007,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     } else {
         // 404 for settings
         header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 - Settings page not found</h1>";
+        include 'views/errors/404.php';
+        exit;
     }
     
 } elseif (strpos($currentRoute, '/trash') === 0) {
@@ -1016,7 +1038,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
     } else {
         // 404 for trash
         header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 - Trash page not found</h1>";
+        include 'views/errors/404.php';
+        exit;
     }
     
 } else {

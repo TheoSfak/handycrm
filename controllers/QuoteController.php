@@ -167,50 +167,53 @@ class QuoteController extends BaseController {
             'created_by' => $user['id']
         ];
         
-        $quoteModel = new Quote();
-        $quoteId = $quoteModel->create($quoteData);
+        $database = new Database();
+        $db = $database->connect();
         
-        if ($quoteId) {
+        try {
+            $db->beginTransaction();
+
+            $quoteModel = new Quote();
+            $quoteId = $quoteModel->create($quoteData);
+            
+            if (!$quoteId) {
+                throw new Exception('Σφάλμα κατά τη δημιουργία της προσφοράς');
+            }
+            
             // Generate slug from quote_number
             $quoteModel->generateSlug($quoteId, $quoteData['quote_number']);
 
             // Save quote items if provided
             if (!empty($_POST['items'])) {
-                $database = new Database();
-                $db = $database->connect();
+                $sql = "INSERT INTO quote_items (quote_id, item_type, description, quantity, unit_price, total_price, sort_order) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($sql);
                 
                 foreach ($_POST['items'] as $index => $item) {
                     if (!empty($item['description'])) {
-                        $itemData = [
-                            'quote_id' => $quoteId,
-                            'item_type' => $item['item_type'] ?? 'service',
-                            'description' => trim($item['description']),
-                            'quantity' => (float)($item['quantity'] ?? 1),
-                            'unit_price' => (float)($item['unit_price'] ?? 0),
-                            'total_price' => (float)($item['total_price'] ?? 0),
-                            'sort_order' => $index + 1
-                        ];
-                        
-                        $sql = "INSERT INTO quote_items (quote_id, item_type, description, quantity, unit_price, total_price, sort_order) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?)";
-                        $stmt = $db->prepare($sql);
                         $stmt->execute([
-                            $itemData['quote_id'],
-                            $itemData['item_type'],
-                            $itemData['description'],
-                            $itemData['quantity'],
-                            $itemData['unit_price'],
-                            $itemData['total_price'],
-                            $itemData['sort_order']
+                            $quoteId,
+                            $item['item_type'] ?? 'service',
+                            trim($item['description']),
+                            (float)($item['quantity'] ?? 1),
+                            (float)($item['unit_price'] ?? 0),
+                            (float)($item['total_price'] ?? 0),
+                            $index + 1
                         ]);
                     }
                 }
             }
             
+            $db->commit();
+            
             $_SESSION['success'] = 'Η προσφορά δημιουργήθηκε με επιτυχία';
             $this->redirect('/quotes/details?id=' . $quoteId);
-        } else {
-            $_SESSION['error'] = 'Σφάλμα κατά τη δημιουργία της προσφοράς';
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log('QuoteController::store error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Σφάλμα κατά τη δημιουργία της προσφοράς: ' . $e->getMessage();
             $_SESSION['old_input'] = $_POST;
             $this->redirect('/quotes/create');
         }
@@ -304,13 +307,15 @@ class QuoteController extends BaseController {
             'terms' => trim($_POST['terms'] ?? '')
         ];
         
-        $quoteModel = new Quote();
-        $success = $quoteModel->update($id, $quoteData);
+        $database = new Database();
+        $db = $database->connect();
         
-        if ($success) {
-            // Update quote items
-            $database = new Database();
-            $db = $database->connect();
+        try {
+            $db->beginTransaction();
+
+            $quoteModel = new Quote();
+            // Perform header update
+            $quoteModel->update($id, $quoteData);
             
             // Delete existing items
             $stmt = $db->prepare("DELETE FROM quote_items WHERE quote_id = ?");
@@ -318,38 +323,35 @@ class QuoteController extends BaseController {
             
             // Add new items
             if (!empty($_POST['items'])) {
+                $sql = "INSERT INTO quote_items (quote_id, item_type, description, quantity, unit_price, total_price, sort_order) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $db->prepare($sql);
+                
                 foreach ($_POST['items'] as $index => $item) {
                     if (!empty($item['description'])) {
-                        $itemData = [
-                            'quote_id' => $id,
-                            'item_type' => $item['item_type'] ?? 'service',
-                            'description' => trim($item['description']),
-                            'quantity' => (float)($item['quantity'] ?? 1),
-                            'unit_price' => (float)($item['unit_price'] ?? 0),
-                            'total_price' => (float)($item['total_price'] ?? 0),
-                            'sort_order' => $index + 1
-                        ];
-                        
-                        $sql = "INSERT INTO quote_items (quote_id, item_type, description, quantity, unit_price, total_price, sort_order) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?)";
-                        $stmt = $db->prepare($sql);
                         $stmt->execute([
-                            $itemData['quote_id'],
-                            $itemData['item_type'],
-                            $itemData['description'],
-                            $itemData['quantity'],
-                            $itemData['unit_price'],
-                            $itemData['total_price'],
-                            $itemData['sort_order']
+                            $id,
+                            $item['item_type'] ?? 'service',
+                            trim($item['description']),
+                            (float)($item['quantity'] ?? 1),
+                            (float)($item['unit_price'] ?? 0),
+                            (float)($item['total_price'] ?? 0),
+                            $index + 1
                         ]);
                     }
                 }
             }
             
+            $db->commit();
+            
             $_SESSION['success'] = 'Η προσφορά ενημερώθηκε με επιτυχία';
             $this->redirect('/quotes/details?id=' . $id);
-        } else {
-            $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση της προσφοράς';
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            error_log('QuoteController::update error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση της προσφοράς: ' . $e->getMessage();
             $_SESSION['old_input'] = $_POST;
             $this->redirect('/quotes/edit?id=' . $id);
         }

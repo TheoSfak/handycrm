@@ -803,19 +803,9 @@ class ProjectTasksController extends BaseController {
             $task['labor'] = $this->taskModel->getLabor($task['id']);
         }
         
-        // Set headers for CSV download
         $filename = $this->sanitizeFilename($project['title']) . '_' . date('Y-m-d_H-i-s') . '.csv';
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
         
-        // Open output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for Excel UTF-8 compatibility
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Write header row
-        fputcsv($output, [
+        $headers = [
             'Ημερομηνία',
             'Τύπος',
             'Περιγραφή',
@@ -827,11 +817,10 @@ class ProjectTasksController extends BaseController {
             'Σύνολο Ωρών',
             'Υλικά - Λεπτομέρειες',
             'Εργατικά - Λεπτομέρειες'
-        ]);
+        ];
         
-        // Write data rows
+        $rows = [];
         foreach ($tasks as $task) {
-            // Calculate task info
             $taskType = $task['task_type'] === 'single_day' ? 'Μονοήμερη' : 'Πολυήμερη';
             $taskDate = $task['task_type'] === 'single_day' 
                 ? date('d/m/Y', strtotime($task['task_date']))
@@ -839,7 +828,6 @@ class ProjectTasksController extends BaseController {
             
             $totalDays = $this->taskModel->getTotalDays($task);
             
-            // Get technicians list
             $technicians = [];
             $totalHours = 0;
             foreach ($task['labor'] as $labor) {
@@ -850,7 +838,6 @@ class ProjectTasksController extends BaseController {
             }
             $techniciansStr = implode(', ', array_unique($technicians));
             
-            // Get materials details
             $materialsDetails = [];
             foreach ($task['materials'] as $material) {
                 $materialsDetails[] = $material['description'] . ' (' . 
@@ -861,7 +848,6 @@ class ProjectTasksController extends BaseController {
             }
             $materialsStr = implode('; ', $materialsDetails);
             
-            // Get labor details
             $laborDetails = [];
             foreach ($task['labor'] as $labor) {
                 $laborDetails[] = ($labor['technician_name'] ?: 'Άλλο') . ' - ' . 
@@ -871,8 +857,7 @@ class ProjectTasksController extends BaseController {
             }
             $laborStr = implode('; ', $laborDetails);
             
-            // Write row
-            fputcsv($output, [
+            $rows[] = [
                 $taskDate,
                 $taskType,
                 $task['description'],
@@ -884,11 +869,11 @@ class ProjectTasksController extends BaseController {
                 number_format($totalHours, 1),
                 $materialsStr,
                 $laborStr
-            ]);
+            ];
         }
         
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream($filename, $headers, $rows);
     }
     
     /**

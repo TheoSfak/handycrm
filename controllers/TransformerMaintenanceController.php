@@ -555,94 +555,10 @@ class TransformerMaintenanceController extends BaseController {
     
     /**
      * Resize and optimize image
-     * Max dimensions: 1920x1080, JPEG quality: 85%
      */
     private function resizeImage($sourcePath, $destinationPath, $maxWidth = 1920, $maxHeight = 1080, $quality = 85) {
-        // Get image info
-        $imageInfo = getimagesize($sourcePath);
-        if (!$imageInfo) {
-            return false;
-        }
-        
-        list($origWidth, $origHeight, $imageType) = $imageInfo;
-        
-        // Calculate new dimensions maintaining aspect ratio
-        $ratio = min($maxWidth / $origWidth, $maxHeight / $origHeight);
-        
-        // If image is already smaller than max dimensions, just copy with optimization
-        if ($ratio >= 1) {
-            $newWidth = $origWidth;
-            $newHeight = $origHeight;
-        } else {
-            $newWidth = round($origWidth * $ratio);
-            $newHeight = round($origHeight * $ratio);
-        }
-        
-        // Create image resource from source
-        switch ($imageType) {
-            case IMAGETYPE_JPEG:
-                $sourceImage = imagecreatefromjpeg($sourcePath);
-                break;
-            case IMAGETYPE_PNG:
-                $sourceImage = imagecreatefrompng($sourcePath);
-                break;
-            case IMAGETYPE_GIF:
-                $sourceImage = imagecreatefromgif($sourcePath);
-                break;
-            default:
-                return false;
-        }
-        
-        if (!$sourceImage) {
-            return false;
-        }
-        
-        // Create new image
-        $newImage = imagecreatetruecolor($newWidth, $newHeight);
-        
-        // Preserve transparency for PNG and GIF
-        if ($imageType == IMAGETYPE_PNG || $imageType == IMAGETYPE_GIF) {
-            imagealphablending($newImage, false);
-            imagesavealpha($newImage, true);
-            $transparent = imagecolorallocatealpha($newImage, 255, 255, 255, 127);
-            imagefilledrectangle($newImage, 0, 0, $newWidth, $newHeight, $transparent);
-        }
-        
-        // Resize
-        imagecopyresampled($newImage, $sourceImage, 0, 0, 0, 0, $newWidth, $newHeight, $origWidth, $origHeight);
-        
-        // Save optimized image (always save as JPEG for smaller file size, except PNG with transparency)
-        $result = false;
-        if ($imageType == IMAGETYPE_PNG) {
-            // Check if PNG has transparency
-            $hasTransparency = false;
-            for ($x = 0; $x < $origWidth; $x++) {
-                for ($y = 0; $y < $origHeight; $y++) {
-                    $rgba = imagecolorat($sourceImage, $x, $y);
-                    $alpha = ($rgba & 0x7F000000) >> 24;
-                    if ($alpha > 0) {
-                        $hasTransparency = true;
-                        break 2;
-                    }
-                }
-            }
-            
-            if ($hasTransparency) {
-                $result = imagepng($newImage, $destinationPath, 9);
-            } else {
-                // Convert to JPEG for better compression
-                $result = imagejpeg($newImage, $destinationPath, $quality);
-            }
-        } else {
-            // Save as JPEG
-            $result = imagejpeg($newImage, $destinationPath, $quality);
-        }
-        
-        // Free memory
-        imagedestroy($sourceImage);
-        imagedestroy($newImage);
-        
-        return $result;
+        require_once __DIR__ . '/../classes/PhotoService.php';
+        return PhotoService::resize($sourcePath, $destinationPath, $maxWidth, $maxHeight, $quality, true);
     }
     
     /**

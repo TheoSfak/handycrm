@@ -611,17 +611,19 @@ class ProjectController extends BaseController {
             $this->redirect('/projects');
         }
         
+        $this->validateCsrfToken();
+        
         $user = $this->getCurrentUser();
         
-        $id = $_POST['id'] ?? 0;
+        $id = (int)($_POST['id'] ?? 0);
         
         if (!$id) {
             $_SESSION['error'] = 'Μη έγκυρο αναγνωριστικό έργου';
             $this->redirect('/projects');
         }
         
-        // Only admins can delete projects
-        if ($user['role'] !== 'admin') {
+        // Check permission (admin or projects.delete permission)
+        if (!$this->isAdmin() && !can('projects.delete')) {
             $_SESSION['error'] = 'Δεν έχετε δικαίωμα διαγραφής έργων';
             $this->redirect('/projects');
         }
@@ -777,18 +779,7 @@ class ProjectController extends BaseController {
         $projectModel = new Project();
         $projects = $projectModel->getAll();
         
-        // Set headers for CSV download
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="projects_' . date('Y-m-d_H-i-s') . '.csv"');
-        
-        // Create output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for UTF-8 Excel compatibility
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Add CSV headers
-        fputcsv($output, [
+        $headers = [
             'ID',
             'Title',
             'Description',
@@ -806,9 +797,9 @@ class ProjectController extends BaseController {
             'Location',
             'Notes',
             'Created At'
-        ]);
+        ];
         
-        // Add project data
+        $rows = [];
         foreach ($projects as $project) {
             $customerName = $project['customer_type'] == 'company' 
                 ? $project['customer_company_name']
@@ -816,7 +807,7 @@ class ProjectController extends BaseController {
             
             $technicianName = ($project['tech_first_name'] ?? '') . ' ' . ($project['tech_last_name'] ?? '');
             
-            fputcsv($output, [
+            $rows[] = [
                 $project['id'] ?? '',
                 $project['title'] ?? '',
                 $project['description'] ?? '',
@@ -834,29 +825,18 @@ class ProjectController extends BaseController {
                 $project['location'] ?? '',
                 $project['notes'] ?? '',
                 $project['created_at'] ?? ''
-            ]);
+            ];
         }
         
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream('projects_' . date('Y-m-d_H-i-s') . '.csv', $headers, $rows);
     }
     
     /**
      * Download demo CSV file with sample project data
      */
     public function downloadDemoCsv() {
-        // Set headers for CSV download
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="projects_demo.csv"');
-        
-        // Create output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for UTF-8 Excel compatibility
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Add CSV headers (without ID - will be auto-generated)
-        fputcsv($output, [
+        $headers = [
             'Title',
             'Description',
             'Customer ID',
@@ -871,9 +851,8 @@ class ProjectController extends BaseController {
             'Labor Cost',
             'Location',
             'Notes'
-        ]);
+        ];
         
-        // Add sample data
         $samples = [
             [
                 'Εγκατάσταση Ηλεκτρικού Πίνακα',
@@ -905,8 +884,8 @@ class ProjectController extends BaseController {
                 '80.00',
                 '120.00',
                 'Θεσσαλονίκη',
-                ''
-            ],
+                '']
+            ,
             [
                 'Συντήρηση Κλιματιστικών',
                 'Ετήσιο service κλιματιστικών μονάδων',
@@ -925,19 +904,21 @@ class ProjectController extends BaseController {
             ]
         ];
         
-        foreach ($samples as $sample) {
-            fputcsv($output, $sample);
-        }
-        
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream('projects_demo.csv', $headers, $samples);
     }
     
     /**
      * Import projects from CSV file
      */
     public function importCsv() {
+        if (!$this->isSupervisor() && !can('projects.create')) {
+            $this->redirect('/projects?error=unauthorized');
+        }
+
         try {
+            $this->validateCsrfToken();
+
             // Check if file was uploaded
             if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
                 $_SESSION['error'] = __('projects.csv_file_required');

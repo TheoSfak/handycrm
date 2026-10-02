@@ -299,7 +299,7 @@ class DailyTask extends BaseModel {
                 FROM {$this->table} dt
                 LEFT JOIN users u ON dt.technician_id = u.id
                 LEFT JOIN users creator ON dt.created_by = creator.id
-                WHERE dt.id = ?";
+                WHERE dt.id = ? AND dt.deleted_at IS NULL";
         
         $task = $this->db->fetchOne($sql, [$id]);
         
@@ -315,18 +315,28 @@ class DailyTask extends BaseModel {
     }
     
     /**
-     * Delete task
+     * Soft delete task
      */
-    public function delete($id) {
-        // Get photos before deletion
-        $task = $this->find($id);
+    public function delete($id, $userId = null) {
+        $userId = $userId ?? ($_SESSION['user_id'] ?? null);
+        $sql = "UPDATE {$this->table} SET deleted_at = NOW(), deleted_by = ? WHERE id = ?";
+        return $this->db->execute($sql, [$userId, $id]);
+    }
+
+    /**
+     * Permanently delete task and its photo files
+     */
+    public function permanentDelete($id) {
+        $task = $this->db->fetchOne("SELECT * FROM {$this->table} WHERE id = ?", [$id]);
         
-        // Delete photo files
         if ($task && !empty($task['photos'])) {
-            foreach ($task['photos'] as $photo) {
-                $photoPath = __DIR__ . '/../' . $photo;
-                if (file_exists($photoPath)) {
-                    unlink($photoPath);
+            $photos = json_decode($task['photos'], true);
+            if (is_array($photos)) {
+                foreach ($photos as $photo) {
+                    $photoPath = __DIR__ . '/../' . $photo;
+                    if (file_exists($photoPath)) {
+                        unlink($photoPath);
+                    }
                 }
             }
         }
@@ -343,7 +353,7 @@ class DailyTask extends BaseModel {
                 CONCAT(u.first_name, ' ', u.last_name) as technician_name
                 FROM {$this->table} dt
                 LEFT JOIN users u ON dt.technician_id = u.id
-                WHERE dt.technician_id = ?
+                WHERE dt.technician_id = ? AND dt.deleted_at IS NULL
                 ORDER BY dt.date DESC
                 LIMIT ?";
         
@@ -358,7 +368,7 @@ class DailyTask extends BaseModel {
                 CONCAT(u.first_name, ' ', u.last_name) as technician_name
                 FROM {$this->table} dt
                 LEFT JOIN users u ON dt.technician_id = u.id
-                WHERE dt.date = CURDATE()
+                WHERE dt.date = CURDATE() AND dt.deleted_at IS NULL
                 ORDER BY dt.created_at DESC";
         
         return $this->db->fetchAll($sql);
@@ -376,7 +386,7 @@ class DailyTask extends BaseModel {
      * Get statistics
      */
     public function getStats($userId = null) {
-        $where = $userId ? "WHERE technician_id = ?" : "";
+        $where = $userId ? "WHERE technician_id = ? AND deleted_at IS NULL" : "WHERE deleted_at IS NULL";
         $params = $userId ? [$userId] : [];
         
         $sql = "SELECT 

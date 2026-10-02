@@ -164,7 +164,6 @@ class BaseController {
         // Make sure session data is written before redirect
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
-            session_start(); // Restart to keep session available
         }
         
         if (strpos($url, 'http') !== 0) {
@@ -249,9 +248,15 @@ class BaseController {
      * Validate CSRF token
      */
     protected function validateCsrfToken() {
-        $token = $_POST[CSRF_TOKEN_NAME] ?? $_GET[CSRF_TOKEN_NAME] ?? '';
+        $token = $_POST[CSRF_TOKEN_NAME] 
+            ?? $_SERVER['HTTP_X_CSRF_TOKEN'] 
+            ?? $_SERVER['HTTP_X_CSRFTOKEN'] 
+            ?? $_GET[CSRF_TOKEN_NAME] 
+            ?? '';
         
-        if (empty($token) || !isset($_SESSION['csrf_token']) || $token !== $_SESSION['csrf_token']) {
+        $sessionToken = $_SESSION['csrf_token'] ?? '';
+        
+        if (empty($token) || empty($sessionToken) || !hash_equals((string)$sessionToken, (string)$token)) {
             throw new Exception("Invalid CSRF token");
         }
     }
@@ -267,7 +272,7 @@ class BaseController {
     }
     
     /**
-     * Sanitize input data
+     * Sanitize input data (trim and normalize; HTML escaping is handled at view render time)
      */
     protected function sanitize($data) {
         if (is_array($data)) {
@@ -278,7 +283,7 @@ class BaseController {
             return $sanitized;
         }
         
-        return trim(htmlspecialchars($data, ENT_QUOTES, 'UTF-8'));
+        return is_string($data) ? trim(str_replace("\0", '', $data)) : $data;
     }
     
     /**
@@ -289,7 +294,8 @@ class BaseController {
         
         foreach ($required as $field) {
             if (empty($data[$field])) {
-                $errors[$field] = "Το πεδίο είναι υποχρεωτικό";
+                $msg = function_exists('__') ? __('validation.required') : '';
+                $errors[$field] = !empty($msg) ? $msg : "Το πεδίο είναι υποχρεωτικό";
             }
         }
         
@@ -327,6 +333,7 @@ class BaseController {
         }
         
         $allowedTypes = $allowedTypes ?: explode(',', ALLOWED_FILE_TYPES);
+        $allowedTypes = array_map('strtolower', array_map('trim', $allowedTypes));
         $maxSize = $maxSize ?: MAX_FILE_SIZE;
         
         // Check file size
@@ -334,14 +341,30 @@ class BaseController {
             throw new Exception("File too large. Maximum size: " . ($maxSize / 1024 / 1024) . "MB");
         }
         
-        // Check file type
+        // Strict blacklist for executable extensions
+        $disallowed = ['php', 'phtml', 'php3', 'php4', 'php5', 'php7', 'phps', 'phar', 'cgi', 'pl', 'exe', 'sh', 'bat', 'cmd', 'js', 'py', 'vbs'];
         $fileExt = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (!in_array($fileExt, $allowedTypes)) {
+        
+        if (in_array($fileExt, $disallowed, true) || !in_array($fileExt, $allowedTypes, true)) {
             throw new Exception("File type not allowed. Allowed types: " . implode(', ', $allowedTypes));
+        }
+
+        // Verify MIME type using finfo if available
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $mimeType = finfo_file($finfo, $file['tmp_name']);
+                finfo_close($finfo);
+                
+                $disallowedMimes = ['text/x-php', 'application/x-php', 'application/x-httpd-php', 'application/x-httpd-php-source', 'application/x-executable', 'text/x-shellscript'];
+                if (in_array($mimeType, $disallowedMimes, true)) {
+                    throw new Exception("Invalid file content type");
+                }
+            }
         }
         
         // Generate unique filename
-        $filename = uniqid() . '_' . time() . '.' . $fileExt;
+        $filename = uniqid('file_', true) . '_' . time() . '.' . $fileExt;
         $uploadPath = UPLOAD_PATH . $filename;
         
         // Create upload directory if it doesn't exist

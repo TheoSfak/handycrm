@@ -497,16 +497,7 @@ class MaterialsController extends BaseController {
         // Prepare CSV
         $filename = 'materials_export_' . date('Y-m-d_His') . '.csv';
         
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        
-        $output = fopen('php://output', 'w');
-        
-        // UTF-8 BOM for Excel compatibility
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Headers
-        fputcsv($output, [
+        $headers = [
             'ID',
             'Όνομα',
             'Περιγραφή',
@@ -518,11 +509,11 @@ class MaterialsController extends BaseController {
             'Προμηθευτής',
             'Κωδικός Προμηθευτή',
             'Κατάσταση'
-        ]);
+        ];
         
-        // Data rows
+        $rows = [];
         foreach ($materials as $material) {
-            fputcsv($output, [
+            $rows[] = [
                 $material['id'],
                 $material['name'],
                 $material['description'] ?? '',
@@ -534,11 +525,11 @@ class MaterialsController extends BaseController {
                 $material['supplier'] ?? '',
                 $material['supplier_code'] ?? '',
                 $material['is_active'] ? 'Ενεργό' : 'Ανενεργό'
-            ]);
+            ];
         }
         
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream($filename, $headers, $rows);
     }
     
     /**

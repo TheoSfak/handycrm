@@ -27,20 +27,7 @@ class PaymentExportController extends BaseController {
         // Get all entries for the period (no pagination)
         $entries = $this->getEntriesForExport($dateFrom, $dateTo, $paidStatus, $technicianId);
         
-        // Set headers for CSV download
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename=payments_' . date('Y-m-d_His') . '.csv');
-        header('Pragma: no-cache');
-        header('Expires: 0');
-        
-        // Open output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for UTF-8 (helps Excel recognize Greek characters)
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Write header row
-        fputcsv($output, [
+        $headers = [
             'Ημερομηνία',
             'Τεχνικός',
             'Πελάτης',
@@ -52,25 +39,19 @@ class PaymentExportController extends BaseController {
             'Κατάσταση',
             'Ημ/νία Πληρωμής',
             'Πληρώθηκε από'
-        ], ';'); // Use semicolon for better Excel compatibility
+        ];
         
-        // Write data rows
+        $rows = [];
         foreach ($entries as $entry) {
-            // Format status
             $status = $entry['paid_at'] ? 'Πληρωμένο' : 'Απλήρωτο';
-            
-            // Format paid date
             $paidDate = $entry['paid_at'] ? date('d/m/Y H:i', strtotime($entry['paid_at'])) : '-';
-            
-            // Format paid by
             $paidBy = $entry['paid_by_name'] ?? '-';
             
-            // Get task date (either task_date or date_from depending on task_type)
             $taskDate = $entry['task_type'] === 'single_day' 
                 ? $entry['task_date'] 
                 : $entry['date_from'];
             
-            fputcsv($output, [
+            $rows[] = [
                 date('d/m/Y', strtotime($taskDate)),
                 $entry['technician_name'],
                 $entry['customer_name'] ?? '-',
@@ -82,11 +63,11 @@ class PaymentExportController extends BaseController {
                 $status,
                 $paidDate,
                 $paidBy
-            ], ';');
+            ];
         }
         
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream('payments_' . date('Y-m-d_His') . '.csv', $headers, $rows, ';');
     }
     
     /**

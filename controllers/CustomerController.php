@@ -45,6 +45,10 @@ class CustomerController extends BaseController {
      * Show create customer form
      */
     public function create() {
+        if (!$this->isAdmin() && !can('customers.create')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         $data = [
             'title' => __('customers.new_customer') . ' - ' . APP_NAME,
             'csrf_token' => $this->generateCsrfToken(),
@@ -58,6 +62,10 @@ class CustomerController extends BaseController {
      * Store new customer
      */
     public function store() {
+        if (!$this->isAdmin() && !can('customers.create')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/customers/create');
         }
@@ -163,6 +171,10 @@ class CustomerController extends BaseController {
      * Show customer details
      */
     public function show($id) {
+        if (!$this->isAdmin() && !can('customers.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         // Support both slug and ID
         $slug = $_GET['slug'] ?? '';
         
@@ -189,6 +201,10 @@ class CustomerController extends BaseController {
      * Show edit customer form
      */
     public function edit($id) {
+        if (!$this->isAdmin() && !can('customers.edit')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         $customer = $this->customerModel->find($id);
         
         if (!$customer) {
@@ -209,6 +225,10 @@ class CustomerController extends BaseController {
      * Update customer
      */
     public function update($id) {
+        if (!$this->isAdmin() && !can('customers.edit')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/customers/edit?id=' . $id);
         }
@@ -311,6 +331,10 @@ class CustomerController extends BaseController {
      * Delete customer
      */
     public function delete($id) {
+        if (!$this->isAdmin() && !can('customers.delete')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->redirect('/customers');
         }
@@ -482,42 +506,22 @@ class CustomerController extends BaseController {
      * Export all customers to CSV
      */
     public function exportCsv() {
+        if (!$this->isAdmin() && !can('customers.view')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         // Get all customers without pagination
         $customers = $this->customerModel->getAll();
         
-        // Set headers for CSV download
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="customers_' . date('Y-m-d_H-i-s') . '.csv"');
+        $headers = [
+            'ID', 'Type', 'First Name', 'Last Name', 'Company Name',
+            'Email', 'Phone', 'Mobile', 'Address', 'City',
+            'Postal Code', 'Country', 'Tax ID', 'Status', 'Notes', 'Created At'
+        ];
         
-        // Create output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for UTF-8 Excel compatibility
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Add CSV headers
-        fputcsv($output, [
-            'ID',
-            'Type',
-            'First Name',
-            'Last Name',
-            'Company Name',
-            'Email',
-            'Phone',
-            'Mobile',
-            'Address',
-            'City',
-            'Postal Code',
-            'Country',
-            'Tax ID',
-            'Status',
-            'Notes',
-            'Created At'
-        ]);
-        
-        // Add customer data
+        $rows = [];
         foreach ($customers as $customer) {
-            fputcsv($output, [
+            $rows[] = [
                 $customer['id'],
                 $customer['customer_type'] ?? '',
                 $customer['first_name'] ?? '',
@@ -534,46 +538,27 @@ class CustomerController extends BaseController {
                 $customer['is_active'] == 1 ? 'active' : 'inactive',
                 $customer['notes'] ?? '',
                 $customer['created_at'] ?? ''
-            ]);
+            ];
         }
         
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream('customers_' . date('Y-m-d_H-i-s') . '.csv', $headers, $rows);
     }
     
     /**
      * Download demo CSV file with sample data
      */
     public function downloadDemoCsv() {
-        // Set headers for CSV download
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="customers_demo.csv"');
+        if (!$this->isAdmin() && !can('customers.create')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
+        $headers = [
+            'Type', 'First Name', 'Last Name', 'Company Name',
+            'Email', 'Phone', 'Mobile', 'Address', 'City',
+            'Postal Code', 'Country', 'Tax ID', 'Status', 'Notes'
+        ];
         
-        // Create output stream
-        $output = fopen('php://output', 'w');
-        
-        // Add BOM for UTF-8 Excel compatibility
-        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
-        
-        // Add CSV headers
-        fputcsv($output, [
-            'Type',
-            'First Name',
-            'Last Name',
-            'Company Name',
-            'Email',
-            'Phone',
-            'Mobile',
-            'Address',
-            'City',
-            'Postal Code',
-            'Country',
-            'Tax ID',
-            'Status',
-            'Notes'
-        ]);
-        
-        // Add sample data
         $samples = [
             [
                 'individual',
@@ -625,19 +610,21 @@ class CustomerController extends BaseController {
             ]
         ];
         
-        foreach ($samples as $sample) {
-            fputcsv($output, $sample);
-        }
-        
-        fclose($output);
-        exit;
+        require_once __DIR__ . '/../classes/CsvExportService.php';
+        CsvExportService::stream('customers_demo.csv', $headers, $samples);
     }
     
     /**
      * Import customers from CSV file
      */
     public function importCsv() {
+        if (!$this->isAdmin() && !can('customers.create')) {
+            $this->redirect('/dashboard?error=unauthorized');
+        }
+
         try {
+            $this->validateCsrfToken();
+
             // Check if file was uploaded
             if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
                 $_SESSION['error'] = __('customers.csv_file_required');

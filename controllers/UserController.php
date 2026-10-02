@@ -125,6 +125,14 @@ class UserController extends BaseController {
         if (!$roleData) {
             $_SESSION['error'] = 'Μη έγκυρος ρόλος';
             $this->redirect('/users/create');
+            return;
+        }
+
+        // Prevent privilege escalation: only admins can create admin users
+        if ($roleName === 'admin' && !$this->isAdmin()) {
+            $_SESSION['error'] = 'Μόνο διαχειριστές μπορούν να εκχωρήσουν τον ρόλο διαχειριστή';
+            $this->redirect('/users/create');
+            return;
         }
         
         $userData = [
@@ -233,6 +241,29 @@ class UserController extends BaseController {
             $this->redirect('/users/edit?id=' . $id);
             return;
         }
+
+        // Prevent privilege escalation: only admins can assign admin role
+        if ($roleName === 'admin' && !$this->isAdmin()) {
+            $_SESSION['error'] = 'Μόνο διαχειριστές μπορούν να εκχωρήσουν τον ρόλο διαχειριστή';
+            $this->redirect('/users/edit?id=' . $id);
+            return;
+        }
+
+        $isActive = isset($_POST['is_active']) ? 1 : 0;
+
+        // Prevent self-lockout: cannot deactivate own account
+        if ($id == $_SESSION['user_id'] && !$isActive) {
+            $_SESSION['error'] = 'Δεν μπορείτε να απενεργοποιήσετε τον δικό σας λογαριασμό';
+            $this->redirect('/users/edit?id=' . $id);
+            return;
+        }
+
+        // Prevent self-demotion: admin cannot remove their own admin role
+        if ($id == $_SESSION['user_id'] && $this->isAdmin() && $roleName !== 'admin') {
+            $_SESSION['error'] = 'Δεν μπορείτε να αφαιρέσετε τον ρόλο διαχειριστή από τον εαυτό σας';
+            $this->redirect('/users/edit?id=' . $id);
+            return;
+        }
         
         $userData = [
             'username' => trim($_POST['username']),
@@ -242,7 +273,7 @@ class UserController extends BaseController {
             'phone' => trim($_POST['phone'] ?? ''),
             'role_id' => $roleData['id'],
             'hourly_rate' => floatval($_POST['hourly_rate'] ?? 0),
-            'is_active' => isset($_POST['is_active']) ? 1 : 0
+            'is_active' => $isActive
         ];
         
         // Update password only if provided

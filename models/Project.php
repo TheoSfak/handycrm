@@ -208,6 +208,7 @@ class Project extends BaseModel {
                     WHERE pt.deleted_at IS NULL
                     GROUP BY pt.project_id
                 ) costs ON p.id = costs.project_id
+                WHERE p.deleted_at IS NULL
                 ORDER BY p.created_at DESC";
         
         return $this->db->fetchAll($sql);
@@ -238,7 +239,7 @@ class Project extends BaseModel {
         $sql = "SELECT p.*, u.first_name, u.last_name 
                 FROM {$this->table} p 
                 JOIN users u ON p.assigned_technician = u.id 
-                WHERE p.customer_id = ? 
+                WHERE p.customer_id = ? AND p.deleted_at IS NULL
                 ORDER BY p.created_at DESC";
         return $this->db->fetchAll($sql, [$customerId]);
     }
@@ -250,7 +251,7 @@ class Project extends BaseModel {
         $stats = [];
         
         // Project status breakdown
-        $sql = "SELECT status, COUNT(*) as count FROM {$this->table} GROUP BY status";
+        $sql = "SELECT status, COUNT(*) as count FROM {$this->table} WHERE deleted_at IS NULL GROUP BY status";
         $statusBreakdown = $this->db->fetchAll($sql);
         $stats['status_breakdown'] = [];
         foreach ($statusBreakdown as $item) {
@@ -258,7 +259,7 @@ class Project extends BaseModel {
         }
         
         // Category breakdown
-        $sql = "SELECT category, COUNT(*) as count FROM {$this->table} GROUP BY category";
+        $sql = "SELECT category, COUNT(*) as count FROM {$this->table} WHERE deleted_at IS NULL GROUP BY category";
         $categoryBreakdown = $this->db->fetchAll($sql);
         $stats['category_breakdown'] = [];
         foreach ($categoryBreakdown as $item) {
@@ -268,13 +269,14 @@ class Project extends BaseModel {
         // This month's revenue
         $sql = "SELECT SUM(total_cost) as total FROM {$this->table} 
                 WHERE status = 'completed' 
+                AND deleted_at IS NULL
                 AND MONTH(completion_date) = MONTH(CURRENT_DATE()) 
                 AND YEAR(completion_date) = YEAR(CURRENT_DATE())";
         $result = $this->db->fetchOne($sql);
         $stats['revenue_month'] = $result['total'] ?? 0;
         
         // Active projects
-        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE status IN ('new', 'in_progress')";
+        $sql = "SELECT COUNT(*) as count FROM {$this->table} WHERE status IN ('new', 'in_progress') AND deleted_at IS NULL";
         $result = $this->db->fetchOne($sql);
         $stats['active_projects'] = $result['count'];
         
@@ -292,6 +294,7 @@ class Project extends BaseModel {
                        c.customer_type
                 FROM {$this->table} p 
                 JOIN customers c ON p.customer_id = c.id 
+                WHERE p.deleted_at IS NULL
                 ORDER BY p.created_at DESC 
                 LIMIT ?";
         return $this->db->fetchAll($sql, [$limit]);
@@ -357,7 +360,7 @@ class Project extends BaseModel {
                 JOIN customers c ON p.customer_id = c.id 
                 JOIN users t ON p.assigned_technician = t.id 
                 JOIN users creator ON p.created_by = creator.id 
-                WHERE p.slug = ?";
+                WHERE p.slug = ? AND p.deleted_at IS NULL";
         
         $project = $this->db->fetchOne($sql, [$slug]);
         
@@ -380,6 +383,15 @@ class Project extends BaseModel {
         }
         
         return $project;
+    }
+    
+    /**
+     * Soft delete project
+     */
+    public function delete($id, $userId = null) {
+        $userId = $userId ?? ($_SESSION['user_id'] ?? null);
+        $sql = "UPDATE {$this->table} SET deleted_at = NOW(), deleted_by = ? WHERE id = ?";
+        return $this->db->execute($sql, [$userId, $id]);
     }
     
     /**
