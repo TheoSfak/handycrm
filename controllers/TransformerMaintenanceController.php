@@ -109,6 +109,8 @@ class TransformerMaintenanceController extends BaseController {
         $totalCount = $this->maintenanceModel->getTotalCount($search, $dateFrom, $dateTo, $isInvoiced, $reportSent, $upcoming);
         $totalPages = ceil($totalCount / $perPage);
         
+        $maintenanceCustomers = $this->isAdmin() ? $this->maintenanceModel->getMaintenanceCustomers() : [];
+
         $this->view('maintenances/index', [
             'maintenances' => $maintenances,
             'search' => $search,
@@ -119,7 +121,8 @@ class TransformerMaintenanceController extends BaseController {
             'upcoming' => $upcoming,
             'currentPage' => $page,
             'totalPages' => $totalPages,
-            'totalCount' => $totalCount
+            'totalCount' => $totalCount,
+            'maintenanceCustomers' => $maintenanceCustomers
         ]);
     }
     
@@ -131,8 +134,22 @@ class TransformerMaintenanceController extends BaseController {
         $userModel = new User();
         $users = $userModel->getAllActive();
         
+        $maintenanceCustomers = $this->maintenanceModel->getMaintenanceCustomers();
+        
+        $prefill = null;
+        if (!empty($_GET['renew_id'])) {
+            $renewId = (int)$_GET['renew_id'];
+            $prefill = $this->maintenanceModel->find($renewId);
+            if ($prefill) {
+                $prefill['is_renewal'] = true;
+                $prefill['previous_id'] = $renewId;
+            }
+        }
+        
         $this->view('maintenances/create', [
-            'users' => $users
+            'users' => $users,
+            'maintenanceCustomers' => $maintenanceCustomers,
+            'prefill' => $prefill
         ]);
     }
     
@@ -244,11 +261,12 @@ class TransformerMaintenanceController extends BaseController {
             'transformers_data' => json_encode($transformersData),
             'created_by' => $_POST['created_by'] ?? $_SESSION['user_id'],
             // Additional technicians (optional)
-            'additional_technicians' => !empty($_POST['additional_technicians']) ? $_POST['additional_technicians'] : []
+            'additional_technicians' => !empty($_POST['additional_technicians']) ? $_POST['additional_technicians'] : [],
+            'previous_id' => !empty($_POST['previous_id']) ? (int)$_POST['previous_id'] : null
         ];
         
         if ($this->maintenanceModel->create($data)) {
-            $_SESSION['success'] = 'Η συντήρηση δημιουργήθηκε επιτυχώς';
+            $_SESSION['success'] = 'Η συντήρηση δημιουργήθηκε επιτυχώς και συνδέθηκε με το ιστορικό του πελάτη.';
             header('Location: ' . BASE_URL . '/maintenances');
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά τη δημιουργία της συντήρησης';
@@ -278,8 +296,11 @@ class TransformerMaintenanceController extends BaseController {
             $maintenance['photos'] = [];
         }
         
+        $history = $this->maintenanceModel->getMaintenanceHistory($id);
+
         $this->view('maintenances/view', [
-            'maintenance' => $maintenance
+            'maintenance' => $maintenance,
+            'history' => $history
         ]);
     }
     
@@ -308,9 +329,12 @@ class TransformerMaintenanceController extends BaseController {
         $userModel = new User();
         $users = $userModel->getAllActive();
         
+        $maintenanceCustomers = $this->maintenanceModel->getMaintenanceCustomers();
+
         $this->view('maintenances/edit', [
             'maintenance' => $maintenance,
-            'users' => $users
+            'users' => $users,
+            'maintenanceCustomers' => $maintenanceCustomers
         ]);
     }
     
@@ -1552,4 +1576,71 @@ class TransformerMaintenanceController extends BaseController {
         
         exit;
     }
+
+    /**
+     * Merge duplicate maintenance customers (Admin only)
+     */
+    public function mergeCustomers() {
+        if (!$this->isAdmin()) {
+            $_SESSION['error'] = 'Μόνο οι διαχειριστές μπορούν να συγχωνεύσουν πελάτες συντηρήσεων.';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+        
+        $this->validateCsrfToken();
+        
+        $source = trim($_POST['source_customer'] ?? '');
+        $target = trim($_POST['target_customer'] ?? '');
+        
+        if (empty($source) || empty($target)) {
+            $_SESSION['error'] = 'Πρέπει να επιλέξετε και τον εσφαλμένο και τον σωστό πελάτη.';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+        
+        if (mb_strtolower($source) === mb_strtolower($target)) {
+            $_SESSION['error'] = 'Δεν μπορείτε να συγχωνεύσετε έναν πελάτη με τον εαυτό του.';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+        
+        $result = $this->maintenanceModel->mergeCustomers($source, $target);
+        
+        if ($result !== false && $result > 0) {
+            $_SESSION['success'] = "Επιτυχής συγχώνευση! {$result} συντηρήσεις του πελάτη '{$source}' μεταφέρθηκαν στον πελάτη '{$target}' και το ιστορικό τους αναδιατάχθηκε.";
+        } elseif ($result === 0) {
+            $_SESSION['error'] = "Δεν βρέθηκαν συντηρήσεις για συγχώνευση από τον πελάτη '{$source}'.";
+        } else {
+            $_SESSION['error'] = 'Σφάλμα κατά τη συγχώνευση πελατών.';
+        }
+        
+        header('Location: ' . BASE_URL . '/maintenances');
+        exit;
+    }
+
+    /**
+     * Manually mark a maintenance as renewed / completed
+     */
+    public function markRenewed($id) {
+        $this->validateCsrfToken();
+        
+        $id = (int)$id;
+        $maintenance = $this->maintenanceModel->find($id);
+        
+        if (!$maintenance) {
+            $_SESSION['error'] = 'Η συντήρηση δεν βρέθηκε.';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+        
+        if ($this->maintenanceModel->markAsRenewed($id)) {
+            $_SESSION['success'] = "Η συντήρηση του πελάτη '{$maintenance['customer_name']}' σημειώθηκε ως ανανεωμένη και αρχειοθετήθηκε.";
+        } else {
+            $_SESSION['error'] = 'Σφάλμα κατά την ενημέρωση της συντήρησης.';
+        }
+        
+        header('Location: ' . BASE_URL . '/maintenances');
+        exit;
+    }
 }
+

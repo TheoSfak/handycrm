@@ -12,14 +12,21 @@
                 </div>
                 <div class="card-body">
                     <form id="maintenanceForm" method="POST" action="<?= BASE_URL ?>/maintenances/update/<?= $maintenance['id'] ?>" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                        <input type="hidden" name="previous_id" value="<?= htmlspecialchars((string)($maintenance['previous_id'] ?? '')) ?>">
                         
                         <!-- Section 1: Customer Info -->
                         <h5 class="mb-3 text-primary"><i class="fas fa-user"></i> Στοιχεία Πελάτη</h5>
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label">Όνομα Πελάτη <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="customer_name" 
+                                <input type="text" class="form-control" name="customer_name" list="maintenanceCustomersList"
                                        value="<?= htmlspecialchars($maintenance['customer_name']) ?>" required>
+                                <datalist id="maintenanceCustomersList">
+                                    <?php foreach ($maintenanceCustomers ?? [] as $mc): ?>
+                                        <option value="<?= htmlspecialchars($mc['customer_name']) ?>">
+                                    <?php endforeach; ?>
+                                </datalist>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Τηλέφωνο</label>

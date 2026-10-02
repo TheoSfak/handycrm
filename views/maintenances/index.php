@@ -3,7 +3,12 @@
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex justify-content-end align-items-center">
+            <div class="d-flex justify-content-end align-items-center gap-2">
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mergeCustomersModal">
+                        <i class="fas fa-code-merge me-1"></i> Συγχώνευση Πελατών
+                    </button>
+                <?php endif; ?>
                 <a href="<?= BASE_URL ?>/maintenances/create" class="btn btn-primary">
                     <i class="fas fa-plus"></i> Νέα Συντήρηση
                 </a>
@@ -190,13 +195,20 @@
                                         ?>
                                     </td>
                                     <td>
-                                        <span class="badge bg-<?= $isPast ? 'danger' : ($isUpcoming ? 'warning' : 'success') ?>">
-                                            <?= date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) ?>
-                                        </span>
-                                        <?php if ($isPast): ?>
-                                            <small class="text-danger d-block">Καθυστερημένη</small>
-                                        <?php elseif ($isUpcoming): ?>
-                                            <small class="text-warning d-block">Σε <?= $daysUntil ?> ημέρες</small>
+                                        <?php if (!empty($maintenance['is_renewed'])): ?>
+                                            <span class="badge bg-secondary mb-1">
+                                                <i class="fas fa-check-circle me-1"></i>Ανανεώθηκε
+                                            </span>
+                                            <small class="text-muted d-block"><?= date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) ?></small>
+                                        <?php else: ?>
+                                            <span class="badge bg-<?= $isPast ? 'danger' : ($isUpcoming ? 'warning' : 'success') ?>">
+                                                <?= date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) ?>
+                                            </span>
+                                            <?php if ($isPast): ?>
+                                                <small class="text-danger d-block fw-semibold">⚠️ Καθυστερημένη</small>
+                                            <?php elseif ($isUpcoming): ?>
+                                                <small class="text-warning d-block fw-semibold">⏰ Σε <?= $daysUntil ?> ημέρες</small>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
@@ -232,6 +244,10 @@
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
+                                            <a href="<?= BASE_URL ?>/maintenances/create?renew_id=<?= $maintenance['id'] ?>" 
+                                               class="btn btn-success" title="Εκτέλεση Φετινής Συντήρησης (Ανανέωση)">
+                                                <i class="fas fa-sync-alt"></i>
+                                            </a>
                                             <a href="<?= BASE_URL ?>/maintenances/view/<?= $maintenance['id'] ?>" 
                                                class="btn btn-info" title="Προβολή">
                                                 <i class="fas fa-eye"></i>
@@ -455,3 +471,56 @@ function toggleStatus(id, type, checked) {
     th:last-child, td:last-child { display: none !important; }
 }
 </style>
+
+<!-- Modal Συγχώνευσης Πελατών Συντηρήσεων (Admin only) -->
+<?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin'): ?>
+<div class="modal fade" id="mergeCustomersModal" tabindex="-1" aria-labelledby="mergeCustomersModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <form method="POST" action="<?= BASE_URL ?>/maintenances/merge-customers">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="mergeCustomersModalLabel">
+                        <i class="fas fa-code-merge me-2"></i>Συγχώνευση Πελατών Συντηρήσεων
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small mb-3">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Μεταφέρετε όλες τις συντηρήσεις από έναν <strong>εσφαλμένο/διπλότυπο</strong> πελάτη σε έναν <strong>σωστό κύριο</strong> πελάτη. Το ιστορικό συνδέεται αυτόματα και το εσφαλμένο όνομα αφαιρείται από το dropdown.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-danger">Εσφαλμένος Πελάτης (Προς Κατάργηση) <span class="text-danger">*</span></label>
+                        <select class="form-select" name="source_customer" id="sourceCustomerSelect" required>
+                            <option value="">-- Επιλέξτε εσφαλμένο πελάτη --</option>
+                            <?php foreach ($maintenanceCustomers ?? [] as $c): ?>
+                                <option value="<?= htmlspecialchars($c['customer_name']) ?>">
+                                    <?= htmlspecialchars($c['customer_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-success">Σωστός / Κύριος Πελάτης (Προορισμός) <span class="text-danger">*</span></label>
+                        <select class="form-select" name="target_customer" id="targetCustomerSelect" required>
+                            <option value="">-- Επιλέξτε σωστό πελάτη --</option>
+                            <?php foreach ($maintenanceCustomers ?? [] as $c): ?>
+                                <option value="<?= htmlspecialchars($c['customer_name']) ?>">
+                                    <?= htmlspecialchars($c['customer_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Είστε βέβαιοι ότι θέλετε να συγχωνεύσετε όλες τις συντηρήσεις στον επιλεγμένο πελάτη; Αυτή η ενέργεια δεν αναιρείται.')">
+                        <i class="fas fa-check me-1"></i>Εκτέλεση Συγχώνευσης
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>

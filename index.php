@@ -416,13 +416,18 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->deletePhoto($matches[1]);
     } elseif (preg_match('/\/maintenances\/toggle-status\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->toggleStatus($matches[1]);
+    } elseif ($currentRoute === '/maintenances/merge-customers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->mergeCustomers();
+    } elseif (preg_match('/\/maintenances\/mark-renewed\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->markRenewed($matches[1]);
     } elseif (preg_match('/\/maintenances\/exportPDF\/(\d+)/', $currentRoute, $matches)) {
         $controller->exportPDF($matches[1]);
     } elseif (preg_match('/\/maintenances\/exportExcel\/(\d+)/', $currentRoute, $matches)) {
         $controller->exportExcel($matches[1]);
     } else {
         header('HTTP/1.0 404 Not Found');
-        echo "<h1>404 - Maintenance page not found</h1>";
+        include 'views/errors/404.php';
+        exit;
     }
     
 } elseif (strpos($currentRoute, '/uploaded-contracts') === 0) {

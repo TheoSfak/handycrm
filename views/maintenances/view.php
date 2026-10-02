@@ -17,9 +17,9 @@
                 </div>
                 <div class="card-body py-1">
                     
-                    <!-- Export Buttons -->
-                    <div class="row mb-1">
-                        <div class="col-12">
+                    <!-- Export & Action Buttons -->
+                    <div class="row mb-2">
+                        <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
                             <div class="btn-group">
                                 <a href="<?= BASE_URL ?>/maintenances/exportPDF/<?= $maintenance['id'] ?>" class="btn btn-primary btn-sm" target="_blank">
                                     <i class="fas fa-file-word"></i> <?= __('maintenances.issue_certificate') ?>
@@ -31,6 +31,23 @@
                                     <i class="fas fa-envelope"></i> <?= __('maintenances.send_by_email', 'Αποστολή με Email') ?>
                                 </button>
                             </div>
+
+                            <a href="<?= BASE_URL ?>/maintenances/create?renew_id=<?= $maintenance['id'] ?>" class="btn btn-success btn-sm">
+                                <i class="fas fa-sync-alt me-1"></i> Εκτέλεση Νέας Ετήσιας Συντήρησης
+                            </a>
+
+                            <?php if (empty($maintenance['is_renewed'])): ?>
+                                <form method="POST" action="<?= BASE_URL ?>/maintenances/mark-renewed/<?= $maintenance['id'] ?>" class="d-inline" onsubmit="return confirm('Σίγουρα θέλετε να σημειώσετε αυτή τη συντήρηση ως ολοκληρωμένη/ανανεωμένη;');">
+                                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Σήμανση ότι έχει εκτελεστεί η επόμενη συντήρηση">
+                                        <i class="fas fa-check-circle me-1"></i> Σήμανση ως Ανανεωμένη
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <span class="badge bg-secondary p-2">
+                                    <i class="fas fa-check-circle text-success me-1"></i> Ανανεώθηκε
+                                </span>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -69,21 +86,28 @@
                         </div>
                         <div class="col-md-4">
                             <strong><?= __('maintenances.next_maintenance_date') ?>:</strong>
-                            <?php
-                            $nextDate = new DateTime($maintenance['next_maintenance_date']);
-                            $today = new DateTime();
-                            $interval = $today->diff($nextDate);
-                            $daysUntil = $interval->days;
-                            $isUpcoming = !$interval->invert && $daysUntil <= 30;
-                            $isPast = $interval->invert;
-                            ?>
-                            <span class="badge bg-<?= $isPast ? 'danger' : ($isUpcoming ? 'warning' : 'success') ?>">
-                                <?= date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) ?>
-                            </span>
-                            <?php if ($isPast): ?>
-                                <small class="text-danger d-block">⚠️ <?= __('maintenances.overdue_label') ?></small>
-                            <?php elseif ($isUpcoming): ?>
-                                <small class="text-warning d-block">⏰ <?= __('maintenances.in_days', ['days' => $daysUntil]) ?></small>
+                            <?php if (!empty($maintenance['is_renewed'])): ?>
+                                <span class="badge bg-secondary">
+                                    <?= date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) ?>
+                                </span>
+                                <small class="text-muted d-block"><i class="fas fa-check-circle text-success me-1"></i>Ανανεώθηκε από νεότερη συντήρηση</small>
+                            <?php else: ?>
+                                <?php
+                                $nextDate = new DateTime($maintenance['next_maintenance_date']);
+                                $today = new DateTime();
+                                $interval = $today->diff($nextDate);
+                                $daysUntil = $interval->days;
+                                $isUpcoming = !$interval->invert && $daysUntil <= 30;
+                                $isPast = $interval->invert;
+                                ?>
+                                <span class="badge bg-<?= $isPast ? 'danger' : ($isUpcoming ? 'warning' : 'success') ?>">
+                                    <?= date('d/m/Y', strtotime($maintenance['next_maintenance_date'])) ?>
+                                </span>
+                                <?php if ($isPast): ?>
+                                    <small class="text-danger d-block">⚠️ <?= __('maintenances.overdue_label') ?></small>
+                                <?php elseif ($isUpcoming): ?>
+                                    <small class="text-warning d-block">⏰ <?= __('maintenances.in_days', ['days' => $daysUntil]) ?></small>
+                                <?php endif; ?>
                             <?php endif; ?>
                         </div>
                         <div class="col-md-4">
@@ -120,7 +144,74 @@
                             endif;
                         endif;
                     endif; 
-                    ?>                    <hr class="my-1">
+                    ?>
+
+                    <!-- History Timeline Box -->
+                    <?php if (!empty($history) && count($history) > 1): ?>
+                    <div class="card bg-light border mb-2 mt-2 shadow-sm">
+                        <div class="card-header bg-white py-1 px-3 d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-primary" style="font-size: 0.85rem;">
+                                <i class="fas fa-history me-1"></i> Ιστορικό Ετήσιων Συντηρήσεων (<?= count($history) ?>)
+                            </span>
+                            <small class="text-muted"><?= htmlspecialchars($maintenance['customer_name']) ?></small>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0" style="font-size: 0.82rem;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Ημερομηνία Συντήρησης</th>
+                                            <th>Επόμενη Προγραμματισμένη</th>
+                                            <th>Τεχνικός</th>
+                                            <th>Κατάσταση</th>
+                                            <th class="text-end">Ενέργεια</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($history as $h): ?>
+                                            <tr class="<?= !empty($h['is_current']) ? 'table-primary fw-semibold' : '' ?>">
+                                                <td>
+                                                    <i class="fas fa-calendar-day me-1 text-muted"></i>
+                                                    <?= date('d/m/Y', strtotime($h['maintenance_date'])) ?>
+                                                    <?php if (!empty($h['is_current'])): ?>
+                                                        <span class="badge bg-primary ms-1" style="font-size: 0.68rem;">Τρέχουσα</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td><?= date('d/m/Y', strtotime($h['next_maintenance_date'])) ?></td>
+                                                <td><?= htmlspecialchars($h['technician_name'] ?? '-') ?></td>
+                                                <td>
+                                                    <?php if (!empty($h['is_renewed'])): ?>
+                                                        <span class="badge bg-secondary"><i class="fas fa-check-circle me-1"></i>Ανανεώθηκε</span>
+                                                    <?php else: ?>
+                                                        <?php 
+                                                        $hNext = new DateTime($h['next_maintenance_date']);
+                                                        $hDiff = (new DateTime())->diff($hNext);
+                                                        $hOverdue = $hDiff->invert;
+                                                        ?>
+                                                        <span class="badge bg-<?= $hOverdue ? 'danger' : 'success' ?>">
+                                                            <?= $hOverdue ? 'Εκκρεμεί / Ληξιπρόθεσμη' : 'Ενεργή' ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="text-end">
+                                                    <?php if (empty($h['is_current'])): ?>
+                                                        <a href="<?= BASE_URL ?>/maintenances/view/<?= $h['id'] ?>" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                                                            <i class="fas fa-eye me-1"></i>Προβολή
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <span class="text-muted small">Ανοιχτή</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <hr class="my-1">
 
                     <!-- Section 3: Transformers Data -->
                     <?php
