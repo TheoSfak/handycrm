@@ -244,6 +244,37 @@ class ProjectReportController extends BaseController {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
+    /**
+     * Per-task, per-technician hours and 8-hour days (ημερομίσθια), keyed by task id.
+     * Technician rows with no name are skipped, matching the tech_count in getTasks().
+     */
+    private function getTaskTechnicians(array $taskIds) {
+        if (empty($taskIds)) {
+            return [];
+        }
+
+        $pdo = $this->db->getPdo();
+        $placeholders = implode(',', array_fill(0, count($taskIds), '?'));
+        $stmt = $pdo->prepare("
+            SELECT tl.task_id,
+                   tl.technician_name,
+                   COALESCE(SUM(tl.hours_worked), 0) as hours,
+                   COALESCE(SUM(CEIL(tl.hours_worked / 8)), 0) as days
+            FROM task_labor tl
+            WHERE tl.task_id IN ($placeholders)
+              AND tl.technician_name IS NOT NULL AND tl.technician_name <> ''
+            GROUP BY tl.task_id, tl.technician_name
+            ORDER BY tl.task_id, tl.technician_name
+        ");
+        $stmt->execute(array_map('intval', $taskIds));
+
+        $byTask = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $byTask[(int)$row['task_id']][] = $row;
+        }
+        return $byTask;
+    }
+
     private function getAggregatedMaterials($projectId, $fromDate = null, $toDate = null, $taskIds = null) {
         if ($taskIds !== null && empty($taskIds)) {
             return [];
@@ -819,6 +850,42 @@ class ProjectReportController extends BaseController {
             $html .= '</table>';
         }
         
+        // Technicians per day — shown when task descriptions are hidden but technician names are requested
+        if (!$showTasks && $showTechnicianNames && !empty($labor) && !empty($tasks)) {
+            $techByTask = $this->getTaskTechnicians(array_column($tasks, 'id'));
+
+            $html .= '<h2><i class="fas fa-users"></i> ΤΕΧΝΙΚΟΙ ΑΝΑ ΗΜΕΡΑ</h2>';
+            $html .= '<table>';
+            $html .= '<thead nobr="true">';
+            $html .= '<tr nobr="true"><th style="width: 22%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 44%; text-align: left;">ΤΕΧΝΙΚΟΣ</th><th style="width: 17%; text-align: center;">ΩΡΕΣ</th><th style="width: 17%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
+            $html .= '</thead>';
+            $html .= '<tbody>';
+            foreach ($tasks as $task) {
+                $rows = $techByTask[(int)$task['id']] ?? [];
+                if (empty($rows)) {
+                    continue;
+                }
+
+                if (($task['task_type'] ?? 'single_day') === 'date_range' && !empty($task['date_from']) && !empty($task['date_to'])) {
+                    $dateCell = date('d/m/Y', strtotime($task['date_from'])) . '<br><span style="font-size:9px; color:#7f8c8d;">έως ' . date('d/m/Y', strtotime($task['date_to'])) . '</span>';
+                } else {
+                    $dateCell = date('d/m/Y', strtotime($task['display_date'] ?? ($task['task_date'] ?? $task['date_from'])));
+                }
+
+                // One row per technician; the date is shown only on the first row of the day
+                foreach ($rows as $i => $row) {
+                    $html .= '<tr nobr="true">';
+                    $html .= '<td style="width: 22%;">' . ($i === 0 ? $dateCell : '') . '</td>';
+                    $html .= '<td style="width: 44%;">' . htmlspecialchars($row['technician_name']) . '</td>';
+                    $html .= '<td style="width: 17%; text-align: center;">' . number_format((float)$row['hours'], 2, ',', '.') . 'h</td>';
+                    $html .= '<td style="width: 17%; text-align: center;">' . (int)$row['days'] . '</td>';
+                    $html .= '</tr>';
+                }
+            }
+            $html .= '</tbody>';
+            $html .= '</table>';
+        }
+
         // Materials Section
         if (!empty($materials)) {
             $html .= '<h2><i class="fas fa-box"></i> ΥΛΙΚΑ (ΣΥΓΚΕΝΤΡΩΤΙΚΑ)</h2>';
