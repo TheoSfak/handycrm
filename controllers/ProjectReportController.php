@@ -117,6 +117,9 @@ class ProjectReportController extends BaseController {
         // Show tasks section (dates + descriptions table)
         $showTasks = isset($_POST['show_tasks']) && $_POST['show_tasks'] === '1';
 
+        // Show technician names (instead of just a count) in the tasks table
+        $showTechnicianNames = isset($_POST['show_technician_names']) && $_POST['show_technician_names'] === '1';
+
         // Optional project total (shown only when materials-only + hide material prices)
         $projectTotal = null;
         if (isset($_POST['project_total']) && $_POST['project_total'] !== '') {
@@ -167,9 +170,9 @@ class ProjectReportController extends BaseController {
         $totals = $this->calculateTotals($materials, $labor);
         
         // Generate PDF
-        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal, $reportName);
+        $this->generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal, $reportName, $showTechnicianNames);
     }
-    
+
     private function getProject($projectId) {
         $pdo = $this->db->getPdo();
         $stmt = $pdo->prepare("
@@ -208,6 +211,7 @@ class ProjectReportController extends BaseController {
             SELECT pt.*,
                    CASE WHEN pt.task_type = 'single_day' THEN pt.task_date ELSE pt.date_from END as display_date,
                    COUNT(DISTINCT tl.technician_name) as tech_count,
+                   GROUP_CONCAT(DISTINCT tl.technician_name ORDER BY tl.technician_name SEPARATOR '||') as tech_names,
                    COALESCE(SUM(tl.hours_worked), 0) as task_total_hours,
                    COALESCE(SUM(CEIL(tl.hours_worked / 8)), 0) as task_hmeromisthia
             FROM project_tasks pt
@@ -401,7 +405,7 @@ class ProjectReportController extends BaseController {
         ];
     }
     
-    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null, $reportName = null) {
+    private function generatePDF($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null, $reportName = null, $showTechnicianNames = false) {
         if ($reportName === null) {
             $reportName = $project['title'];
         }
@@ -431,8 +435,8 @@ class ProjectReportController extends BaseController {
         $pdf->SetFont('dejavusans', '', 10);
         
         // Build HTML content
-        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal, $reportName);
-        
+        $html = $this->buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices, $hideMaterialsPrices, $reportNotes, $showTasks, $projectTotal, $reportName, $showTechnicianNames);
+
         // Output HTML content
         $pdf->writeHTML($html, true, false, true, false, '');
         
@@ -564,7 +568,7 @@ class ProjectReportController extends BaseController {
         return $html;
     }
     
-    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null, $reportName = null) {
+    private function buildHTMLContent($project, $customer, $settings, $tasks, $materials, $labor, $totals, $fromDate, $toDate, $hideLaborPrices = false, $hideMaterialsPrices = false, $reportNotes = null, $showTasks = true, $projectTotal = null, $reportName = null, $showTechnicianNames = false) {
         if ($reportName === null) {
             $reportName = $project['title'];
         }
@@ -752,7 +756,10 @@ class ProjectReportController extends BaseController {
             $html .= '<h2><i class="fas fa-tasks"></i> ΕΡΓΑΣΙΕΣ</h2>';
             $html .= '<table>';
             $html .= '<thead nobr="true">';
-            if ($showLaborColumn) {
+            $namesColumn = $showLaborColumn && $showTechnicianNames;
+            if ($namesColumn) {
+                $html .= '<tr nobr="true"><th style="width: 16%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 44%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 24%; text-align: left;">ΤΕΧΝΙΚΟΙ</th><th style="width: 16%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
+            } elseif ($showLaborColumn) {
                 $html .= '<tr nobr="true"><th style="width: 20%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 55%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 25%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
             } else {
                 $html .= '<tr nobr="true"><th style="width: 25%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 75%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th></tr>';
@@ -770,7 +777,22 @@ class ProjectReportController extends BaseController {
                 } else {
                     $dateCell = date('d/m/Y', strtotime($displayDate));
                 }
-                if ($showLaborColumn) {
+                if ($namesColumn) {
+                    $names = array_filter(explode('||', (string)($task['tech_names'] ?? '')), 'strlen');
+                    $namesCell = !empty($names)
+                        ? implode('<br>', array_map('htmlspecialchars', $names))
+                        : '-';
+                    $daysCell = $taskDays > 0 ? $taskDays : '-';
+
+                    $html .= '<td style="width: 16%;">' . $dateCell . '</td>';
+                    $html .= '<td style="width: 44%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
+                    if (!empty($task['notes'])) {
+                        $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
+                    }
+                    $html .= '</td>';
+                    $html .= '<td style="width: 24%; font-size: 9px;">' . $namesCell . '</td>';
+                    $html .= '<td style="width: 16%; text-align: center; font-size: 9px;">' . $daysCell . '</td>';
+                } elseif ($showLaborColumn) {
                     if ($techCount > 0) {
                         $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $taskDays . ' (8ωρα)</span>';
                     } else {

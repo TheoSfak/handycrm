@@ -1369,6 +1369,15 @@ if (!isset($reportTaskOptions)) {
                         </label>
                     </div>
 
+                    <div class="form-check mb-3 ms-3">
+                        <input class="form-check-input" type="checkbox" id="showTechnicianNamesCheck" name="show_technician_names" value="1">
+                        <label class="form-check-label" for="showTechnicianNamesCheck">
+                            <strong>Ονόματα τεχνικών ανά εργασία</strong>
+                            <br>
+                            <small class="text-muted">Σε κάθε ημέρα εμφανίζονται τα ονόματα των τεχνικών σε διπλανή στήλη, αντί για απλό αριθμό (ισχύει όταν περιλαμβάνονται Εργατικά)</small>
+                        </label>
+                    </div>
+
                     <div id="projectTotalWrapper" class="mb-3" style="display:none;">
                         <hr>
                         <label for="project_total" class="form-label"><strong>Σύνολο Έργου</strong></label>
