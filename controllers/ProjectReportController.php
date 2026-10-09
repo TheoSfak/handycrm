@@ -212,8 +212,7 @@ class ProjectReportController extends BaseController {
                    CASE WHEN pt.task_type = 'single_day' THEN pt.task_date ELSE pt.date_from END as display_date,
                    COUNT(DISTINCT tl.technician_name) as tech_count,
                    GROUP_CONCAT(DISTINCT tl.technician_name ORDER BY tl.technician_name SEPARATOR '||') as tech_names,
-                   COALESCE(SUM(tl.hours_worked), 0) as task_total_hours,
-                   COALESCE(SUM(CEIL(tl.hours_worked / 8)), 0) as task_hmeromisthia
+                   COALESCE(SUM(tl.hours_worked), 0) as task_total_hours
             FROM project_tasks pt
             LEFT JOIN task_labor tl ON tl.task_id = pt.id
             WHERE pt.project_id = ? AND pt.deleted_at IS NULL
@@ -258,8 +257,7 @@ class ProjectReportController extends BaseController {
         $stmt = $pdo->prepare("
             SELECT tl.task_id,
                    tl.technician_name,
-                   COALESCE(SUM(tl.hours_worked), 0) as hours,
-                   COALESCE(SUM(CEIL(tl.hours_worked / 8)), 0) as days
+                   COALESCE(SUM(tl.hours_worked), 0) as hours
             FROM task_labor tl
             WHERE tl.task_id IN ($placeholders)
               AND tl.technician_name IS NOT NULL AND tl.technician_name <> ''
@@ -411,6 +409,13 @@ class ProjectReportController extends BaseController {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
     
+    /**
+     * Ημερομίσθια are fractional (hours / 8), e.g. 2h -> 0,25. Max 2 decimals, trailing zeros trimmed.
+     */
+    private function formatDays($days) {
+        return rtrim(rtrim(number_format((float)$days, 2, ',', '.'), '0'), ',');
+    }
+
     private function calculateTotals($materials, $labor) {
         $materialsCost = 0;
         foreach ($materials as $material) {
@@ -423,7 +428,7 @@ class ProjectReportController extends BaseController {
             $laborCost += $worker['total_cost'];
             $totalHours += $worker['total_hours'];
         }
-        $totalDays = (int) ceil($totalHours / 8);
+        $totalDays = $totalHours / 8;
         
         return [
             'materials_cost' => $materialsCost,
@@ -800,7 +805,7 @@ class ProjectReportController extends BaseController {
             foreach ($tasks as $task) {
                 $displayDate = $task['display_date'] ?? ($task['task_date'] ?? $task['date_from']);
                 $techCount = (int)($task['tech_count'] ?? 0);
-                $taskDays = (int)($task['task_hmeromisthia'] ?? 0);
+                $taskDays = (float)($task['task_total_hours'] ?? 0) / 8;
 
                 $html .= '<tr nobr="true">';
                 if (($task['task_type'] ?? 'single_day') === 'date_range' && !empty($task['date_from']) && !empty($task['date_to'])) {
@@ -813,7 +818,7 @@ class ProjectReportController extends BaseController {
                     $namesCell = !empty($names)
                         ? implode('<br>', array_map('htmlspecialchars', $names))
                         : '-';
-                    $daysCell = $taskDays > 0 ? $taskDays : '-';
+                    $daysCell = $taskDays > 0 ? $this->formatDays($taskDays) : '-';
 
                     $html .= '<td style="width: 16%;">' . $dateCell . '</td>';
                     $html .= '<td style="width: 44%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
@@ -825,7 +830,7 @@ class ProjectReportController extends BaseController {
                     $html .= '<td style="width: 16%; text-align: center; font-size: 9px;">' . $daysCell . '</td>';
                 } elseif ($showLaborColumn) {
                     if ($techCount > 0) {
-                        $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $taskDays . ' (8ωρα)</span>';
+                        $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $this->formatDays($taskDays) . ' (8ωρα)</span>';
                     } else {
                         $laborCell = 'Τεχνικοί: -';
                     }
@@ -878,7 +883,7 @@ class ProjectReportController extends BaseController {
                     $html .= '<td style="width: 22%;">' . ($i === 0 ? $dateCell : '') . '</td>';
                     $html .= '<td style="width: 44%;">' . htmlspecialchars($row['technician_name']) . '</td>';
                     $html .= '<td style="width: 17%; text-align: center;">' . number_format((float)$row['hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td style="width: 17%; text-align: center;">' . (int)$row['days'] . '</td>';
+                    $html .= '<td style="width: 17%; text-align: center;">' . $this->formatDays((float)$row['hours'] / 8) . '</td>';
                     $html .= '</tr>';
                 }
             }
@@ -1010,11 +1015,11 @@ class ProjectReportController extends BaseController {
                 $html .= '<div style="font-size: 10px; color: white; opacity: 0.9;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΑΣ</div>';
                 if ($hideLaborPrices) {
                     $html .= '<div style="font-size: 20px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
-                    $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $totals['total_days'] . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
+                    $html .= '<div style="font-size: 9px; color: white; opacity: 0.8; margin-top: 3px;">' . $this->formatDays($totals['total_days']) . ' ημερομίσθια | ' . $totals['total_workers'] . ' τεχνικοί</div>';
                 } else {
                     $html .= '<div style="font-size: 18px; font-weight: bold; color: white; margin-top: 5px;">' . number_format($totals['labor_cost'], 2, ',', '.') . ' ' . $currencySymbol . '</div>';
                     $html .= '<div style="font-size: 8px; color: white; opacity: 0.8; margin-top: 3px;">(χωρίς ΦΠΑ)</div>';
-                    $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $totals['total_days'] . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
+                    $html .= '<div style="font-size: 8px; color: white; opacity: 0.7; margin-top: 2px;">' . $totals['total_workers'] . ' τεχνικοί | ' . $this->formatDays($totals['total_days']) . ' ημερομίσθια | ' . number_format($totals['total_hours'], 2, ',', '.') . ' ώρες</div>';
                 }
                 $html .= '</td></tr>';
                 $html .= '</table>';
