@@ -794,7 +794,7 @@ class ProjectReportController extends BaseController {
             $html .= '<thead nobr="true">';
             $namesColumn = $showLaborColumn && $showTechnicianNames;
             if ($namesColumn) {
-                $html .= '<tr nobr="true"><th style="width: 16%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 44%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 24%; text-align: left;">ΤΕΧΝΙΚΟΙ</th><th style="width: 16%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
+                $html .= '<tr nobr="true"><th style="width: 15%; text-align: left; font-size: 8px;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 41%; text-align: left; padding-left: 8px; font-size: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 24%; text-align: left; font-size: 8px;">ΤΕΧΝΙΚΟΙ</th><th style="width: 20%; text-align: center; font-size: 8px;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
             } elseif ($showLaborColumn) {
                 $html .= '<tr nobr="true"><th style="width: 20%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 55%; text-align: left; padding-left: 8px;">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΑΣ</th><th style="width: 25%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
             } else {
@@ -820,14 +820,14 @@ class ProjectReportController extends BaseController {
                         : '-';
                     $daysCell = $taskDays > 0 ? $this->formatDays($taskDays) : '-';
 
-                    $html .= '<td style="width: 16%;">' . $dateCell . '</td>';
-                    $html .= '<td style="width: 44%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
+                    $html .= '<td style="width: 15%;">' . $dateCell . '</td>';
+                    $html .= '<td style="width: 41%; word-wrap: break-word; white-space: normal;"><strong>' . htmlspecialchars($task['description'] ?? '') . '</strong>';
                     if (!empty($task['notes'])) {
                         $html .= '<br><span style="color: #7f8c8d; font-size: 9px;">' . htmlspecialchars($task['notes']) . '</span>';
                     }
                     $html .= '</td>';
                     $html .= '<td style="width: 24%; font-size: 9px;">' . $namesCell . '</td>';
-                    $html .= '<td style="width: 16%; text-align: center; font-size: 9px;">' . $daysCell . '</td>';
+                    $html .= '<td style="width: 20%; text-align: center; font-size: 9px;">' . $daysCell . '</td>';
                 } elseif ($showLaborColumn) {
                     if ($techCount > 0) {
                         $laborCell = 'Τεχνικοί: ' . $techCount . '<br><span style="font-size:9px; color:#7f8c8d;">Ημερομίσθια: ' . $this->formatDays($taskDays) . ' (8ωρα)</span>';
@@ -862,7 +862,7 @@ class ProjectReportController extends BaseController {
             $html .= '<h2><i class="fas fa-users"></i> ΤΕΧΝΙΚΟΙ ΑΝΑ ΗΜΕΡΑ</h2>';
             $html .= '<table>';
             $html .= '<thead nobr="true">';
-            $html .= '<tr nobr="true"><th style="width: 22%; text-align: left;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 44%; text-align: left;">ΤΕΧΝΙΚΟΣ</th><th style="width: 17%; text-align: center;">ΩΡΕΣ</th><th style="width: 17%; text-align: center;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
+            $html .= '<tr nobr="true"><th style="width: 20%; text-align: left; font-size: 8px;">ΗΜΕΡΟΜΗΝΙΑ</th><th style="width: 40%; text-align: left; font-size: 8px;">ΤΕΧΝΙΚΟΣ</th><th style="width: 17%; text-align: center; font-size: 8px;">ΩΡΕΣ</th><th style="width: 23%; text-align: center; font-size: 8px;">ΗΜΕΡΟΜΙΣΘΙΑ</th></tr>';
             $html .= '</thead>';
             $html .= '<tbody>';
             foreach ($tasks as $task) {
@@ -880,10 +880,10 @@ class ProjectReportController extends BaseController {
                 // One row per technician; the date is shown only on the first row of the day
                 foreach ($rows as $i => $row) {
                     $html .= '<tr nobr="true">';
-                    $html .= '<td style="width: 22%;">' . ($i === 0 ? $dateCell : '') . '</td>';
-                    $html .= '<td style="width: 44%;">' . htmlspecialchars($row['technician_name']) . '</td>';
+                    $html .= '<td style="width: 20%;">' . ($i === 0 ? $dateCell : '') . '</td>';
+                    $html .= '<td style="width: 40%;">' . htmlspecialchars($row['technician_name']) . '</td>';
                     $html .= '<td style="width: 17%; text-align: center;">' . number_format((float)$row['hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td style="width: 17%; text-align: center;">' . $this->formatDays((float)$row['hours'] / 8) . '</td>';
+                    $html .= '<td style="width: 23%; text-align: center;">' . $this->formatDays((float)$row['hours'] / 8) . '</td>';
                     $html .= '</tr>';
                 }
             }
