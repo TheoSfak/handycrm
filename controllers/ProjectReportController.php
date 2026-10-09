@@ -879,11 +879,13 @@ class ProjectReportController extends BaseController {
 
                 // One row per technician; the date is shown only on the first row of the day
                 foreach ($rows as $i => $row) {
+                    // The first row of each day (the one carrying the date) gets a light yellow background
+                    $bg = $i === 0 ? 'background-color: #fff6d6;' : 'background-color: #ffffff;';
                     $html .= '<tr nobr="true">';
-                    $html .= '<td style="width: 20%;">' . ($i === 0 ? $dateCell : '') . '</td>';
-                    $html .= '<td style="width: 40%;">' . htmlspecialchars($row['technician_name']) . '</td>';
-                    $html .= '<td style="width: 17%; text-align: center;">' . number_format((float)$row['hours'], 2, ',', '.') . 'h</td>';
-                    $html .= '<td style="width: 23%; text-align: center;">' . $this->formatDays((float)$row['hours'] / 8) . '</td>';
+                    $html .= '<td style="width: 20%; ' . $bg . '">' . ($i === 0 ? '<strong>' . $dateCell . '</strong>' : '') . '</td>';
+                    $html .= '<td style="width: 40%; ' . $bg . '">' . htmlspecialchars($row['technician_name']) . '</td>';
+                    $html .= '<td style="width: 17%; text-align: center; ' . $bg . '">' . number_format((float)$row['hours'], 2, ',', '.') . 'h</td>';
+                    $html .= '<td style="width: 23%; text-align: center; ' . $bg . '">' . $this->formatDays((float)$row['hours'] / 8) . '</td>';
                     $html .= '</tr>';
                 }
             }
