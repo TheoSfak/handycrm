@@ -1,6 +1,7 @@
 <?php
 
 require_once 'models/MaintenanceOffer.php';
+require_once __DIR__ . '/../models/Settings.php';
 
 // Load TCPDF only once
 if (!class_exists('TCPDF')) {
@@ -12,21 +13,56 @@ if (!class_exists('TCPDF')) {
  */
 if (!class_exists('CustomOfferPDF')) {
     class CustomOfferPDF extends TCPDF {
-        public static $footerText = '';
+        public string $logoPath = '';
+        public string $companyFooterHtml = '';
+        public string $companyFooterCompactHtml = '';
+        public static string $staticFooterHtml = '';
+        public static string $staticFooterCompactHtml = '';
+
+        public function Header() {
+            if ($this->page > 1) {
+                if ($this->logoPath && file_exists($this->logoPath)) {
+                    $this->Image($this->logoPath, 20, 10, 52, 0, 'JPEG');
+                }
+                // "ΠΡΟΣΦΟΡΑ" box at top-right
+                $this->SetXY(158, 12);
+                $this->SetFont('dejavusans', 'B', 9);
+                $this->SetTextColor(30, 30, 30);
+                $this->SetDrawColor(80, 80, 80);
+                $this->SetLineWidth(0.3);
+                $this->Cell(32, 6.5, 'ΠΡΟΣΦΟΡΑ', 1, 0, 'C');
+            }
+        }
+
         public function Footer() {
-            $this->SetY(-15);
+            $this->SetY(-22);
             $this->SetFont('dejavusans', '', 8);
-            $this->SetFillColor(240, 240, 240);
-            $this->Rect(0, $this->GetY(), $this->getPageWidth(), 15, 'F');
-            $this->SetLineWidth(0.5);
-            $this->SetDrawColor(0, 102, 204);
-            $this->Line(10, $this->GetY(), $this->getPageWidth() - 10, $this->GetY());
-            $this->SetY(-12);
-            $this->SetTextColor(60, 60, 60);
-            $this->Cell(0, 5, self::$footerText, 0, 1, 'C');
-            $this->SetY(-8);
-            $this->SetFont('dejavusans', 'I', 7);
-            $this->Cell(0, 3, 'Σελίδα ' . $this->getAliasNumPage() . ' από ' . $this->getAliasNbPages(), 0, 0, 'C');
+            $this->SetTextColor(50, 50, 50);
+
+            $footerFull    = !empty($this->companyFooterHtml) ? $this->companyFooterHtml : self::$staticFooterHtml;
+            $footerCompact = !empty($this->companyFooterCompactHtml) ? $this->companyFooterCompactHtml : (self::$staticFooterCompactHtml ?: $footerFull);
+
+            if ($this->page === 1) {
+                // Page 1 footer: centered company info from settings, no page number
+                if (!empty($footerFull)) {
+                    $this->writeHTMLCell(170, 0, 20, 274, $footerFull, 0, 0, false, true, 'C');
+                }
+            } else {
+                if ($this->page === 3 || $this->page === 4) {
+                    // Page 3 (ISO cert) and Page 4 (Tasks): Page number on right
+                    $this->SetXY(150, 280);
+                    $this->SetFont('dejavusans', 'B', 8.5);
+                    $this->Cell(40, 5, 'Σελίδα: ' . $this->getAliasNumPage() . ' / ' . $this->getAliasNbPages(), 0, 0, 'R');
+                } else {
+                    // Pages 2, 5, 6: Compact company info from settings on left/center + Page number on right
+                    if (!empty($footerCompact)) {
+                        $this->writeHTMLCell(135, 0, 20, 275, $footerCompact, 0, 0, false, true, 'C');
+                    }
+                    $this->SetXY(155, 280);
+                    $this->SetFont('dejavusans', 'B', 8.5);
+                    $this->Cell(35, 5, 'Σελίδα: ' . $this->getAliasNumPage() . ' / ' . $this->getAliasNbPages(), 0, 0, 'R');
+                }
+            }
         }
     }
 }
@@ -36,15 +72,98 @@ class MaintenanceOfferController extends BaseController {
     private MaintenanceOffer $offerModel;
     private const ITEMS_PER_PAGE = 20;
 
+    public function getCompanySettings(): array {
+        $keys = [
+            'company_name'         => '',
+            'company_display_name' => '',
+            'company_address'      => '',
+            'company_phone'        => '',
+            'company_email'        => '',
+            'company_tax_id'       => '',
+            'company_website'      => '',
+            'company_logo'         => ''
+        ];
+
+        $settings = [];
+        foreach ($keys as $key => $defaultVal) {
+            try {
+                if (class_exists('Settings')) {
+                    $val = Settings::get($key, $defaultVal);
+                    $settings[$key] = ($val !== null && $val !== '') ? (string)$val : $defaultVal;
+                } else {
+                    $settings[$key] = $defaultVal;
+                }
+            } catch (\Throwable $e) {
+                $settings[$key] = $defaultVal;
+            }
+        }
+        return $settings;
+    }
+
+    public static function buildCompanyFooterHtml(array $settings, bool $compact = false): string {
+        $name = trim($settings['company_name'] ?? '');
+        if ($name === '') {
+            $name = trim($settings['company_display_name'] ?? '');
+        }
+
+        $addr  = trim($settings['company_address'] ?? '');
+        $taxId = trim($settings['company_tax_id'] ?? '');
+        $phone = trim($settings['company_phone'] ?? '');
+
+        $lines = [];
+
+        // Line 1: Company Name
+        if ($name !== '') {
+            $lines[] = '<b>' . htmlspecialchars($name) . '</b>';
+        }
+
+        // Line 2: Address and/or Tax ID (ΑΦΜ)
+        $line2Parts = [];
+        if ($addr !== '') {
+            $addrText = preg_match('/^(Έδρα|Εδρα|Διεύθυνση)/iu', $addr) ? $addr : ('Έδρα: ' . $addr);
+            $line2Parts[] = htmlspecialchars($addrText);
+        }
+        if ($taxId !== '' && stripos($addr, $taxId) === false) {
+            $taxText = preg_match('/^ΑΦΜ/iu', $taxId) ? $taxId : ('ΑΦΜ: ' . $taxId);
+            $line2Parts[] = htmlspecialchars($taxText);
+        }
+        if (!empty($line2Parts)) {
+            $lines[] = implode(' - ', $line2Parts);
+        }
+
+        // Line 3: Phone / Mobile / Contact
+        $contactParts = [];
+        if ($phone !== '') {
+            $phoneText = preg_match('/^(Τηλ|Τηλέφωνο)/iu', $phone) ? $phone : ('Τηλέφωνο: ' . $phone);
+            $contactParts[] = htmlspecialchars($phoneText);
+        }
+        if (empty($contactParts) && !empty($settings['company_email'])) {
+            $contactParts[] = 'Email: ' . htmlspecialchars($settings['company_email']);
+        }
+        if (!empty($contactParts)) {
+            $lines[] = implode(' - ', $contactParts);
+        }
+
+        if (empty($lines)) {
+            return '';
+        }
+
+        $fontSize = $compact ? '7.5pt' : '8pt';
+        $lineHeight = $compact ? '1.35' : '1.4';
+
+        return '<div style="text-align:center; font-size:' . $fontSize . '; line-height:' . $lineHeight . '; color:#333333;">'
+            . implode('<br/>', $lines)
+            . '</div>';
+    }
+
     private static function buildPdfFooterText(): string {
         try {
-            $name    = Settings::get('company_name',    'ECOWATT Ενεργειακές Λύσεις');
-            $website = Settings::get('company_website', 'ecowatt-energy.gr');
-            $email   = Settings::get('company_email',   'info@ecowatt-energy.gr');
+            $name    = Settings::get('company_name',    '');
+            $website = Settings::get('company_website', '');
+            $email   = Settings::get('company_email',   '');
             $phone   = Settings::get('company_phone',   '');
         } catch (\Exception $e) {
-            $name = 'ECOWATT Ενεργειακές Λύσεις'; $website = 'ecowatt-energy.gr';
-            $email = 'info@ecowatt-energy.gr'; $phone = '';
+            $name = ''; $website = ''; $email = ''; $phone = '';
         }
         $parts = array_filter([$name, $website, $email, $phone]);
         return implode(' | ', $parts);
@@ -331,7 +450,7 @@ class MaintenanceOfferController extends BaseController {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // EXPORT PDF (TCPDF — full template layout with images)
+    // EXPORT PDF (TCPDF — 6-page template matching exact original design)
     // ──────────────────────────────────────────────────────────────────────────
     public function exportPDF(int $id): void {
         $offer = $this->offerModel->find($id);
@@ -341,231 +460,284 @@ class MaintenanceOfferController extends BaseController {
             exit;
         }
 
-        CustomOfferPDF::$footerText = self::buildPdfFooterText();
-        $pdf = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-        $pdf->SetCreator('HandyCRM');
-        $pdf->SetAuthor('ECOWATT - Κώστας Γ. Σφακιανάκης & ΣΙΑ Ο.Ε.');
-        $pdf->SetTitle('Οικονομική Προσφορά ' . $offer['offer_number']);
-        $pdf->SetPrintHeader(false);
-        $pdf->SetFont('dejavusans', '', 10, '', true);
-        $pdf->SetMargins(20, 15, 20);
-        $pdf->SetFooterMargin(15);
-        $pdf->SetAutoPageBreak(true, 20);
-        $pdf->AddPage();
-        $pdf->writeHTML($this->generateOfferHTML($offer), true, false, true, false, '');
-
+        $pdf = $this->buildOfferPDF($offer);
         $filename = 'Prosfora_Sintirisis_' . preg_replace('/[^a-zA-Z0-9_-]/u', '_', $offer['offer_number']) . '.pdf';
-        $pdf->Output($filename, 'D');
+        
+        $mode = isset($_GET['download']) ? 'D' : 'I';
+        $pdf->Output($filename, $mode);
         exit;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Generate HTML content matching the Word template layout (with images)
+    // Build 6-page Offer PDF matching the target template layout and images
     // ──────────────────────────────────────────────────────────────────────────
-    private function generateOfferHTML(array $offer): string {
-        $company    = htmlspecialchars($offer['company_name']);
-        $offerNum   = htmlspecialchars($offer['offer_number']);
-        $today      = date('d/m/Y');
-        $expiry     = $offer['offer_expiry_date'] ? date('d/m/Y', strtotime($offer['offer_expiry_date'])) : '-';
-        $transCount = (int)$offer['transformers_count'];
-        $priceNum   = number_format((float)$offer['price'], 2, ',', '.') . ' €';
-        $notes      = nl2br(htmlspecialchars($offer['notes'] ?? ''));
+    public function buildOfferPDF(array $offer): CustomOfferPDF {
+        $co = $this->getCompanySettings();
 
-        // Load company info from settings (with fallback)
-        try {
-            $coName    = Settings::get('company_name',         'ΚΩΣΤΑΣ Γ. ΣΦΑΚΙΑΝΑΚΗΣ & ΣΙΑ Ο.Ε.');
-            $coDisplay = Settings::get('company_display_name', $coName);
-            $coEmail   = Settings::get('company_email',        'info@ecowatt-energy.gr');
-            $coPhone   = Settings::get('company_phone',        '');
-            $coWebsite = Settings::get('company_website',      'ecowatt-energy.gr');
-            $coTaxId   = Settings::get('company_tax_id',       '');
-            $coAddress = Settings::get('company_address',      '');
-        } catch (\Exception $e) {
-            $coName = $coDisplay = 'ΚΩΣΤΑΣ Γ. ΣΦΑΚΙΑΝΑΚΗΣ & ΣΙΑ Ο.Ε.';
-            $coEmail = 'info@ecowatt-energy.gr'; $coPhone = ''; $coWebsite = 'ecowatt-energy.gr';
-            $coTaxId = ''; $coAddress = '';
+        $company    = htmlspecialchars($offer['company_name'] ?? '');
+        $offerNum   = htmlspecialchars($offer['offer_number'] ?? '');
+        $today      = !empty($offer['created_at']) ? date('d/m/Y', strtotime($offer['created_at'])) : date('d/m/Y');
+        $transCount = max(1, (int)($offer['transformers_count'] ?? 1));
+        $priceVal   = (float)($offer['price'] ?? 0);
+        $priceWithVat = $priceVal * 1.24;
+        $notes      = trim($offer['notes'] ?? '');
+
+        // Resolve images with robust fallback
+        $imgDirUploads   = __DIR__ . '/../uploads/template_images/';
+        $imgDirTemplates = __DIR__ . '/../templates/docx_images/';
+
+        if (!is_dir($imgDirUploads)) {
+            @mkdir($imgDirUploads, 0755, true);
         }
 
-        $coInfoLines = [];
-        if ($coDisplay) $coInfoLines[] = '<b>' . htmlspecialchars($coDisplay) . '</b>';
-        if ($coAddress) $coInfoLines[] = htmlspecialchars($coAddress);
-        if ($coPhone)   $coInfoLines[] = 'Τηλ: ' . htmlspecialchars($coPhone);
-        if ($coEmail)   $coInfoLines[] = 'Email: ' . htmlspecialchars($coEmail);
-        if ($coWebsite) $coInfoLines[] = 'Web: ' . htmlspecialchars($coWebsite);
-        if ($coTaxId)   $coInfoLines[] = 'ΑΦΜ: ' . htmlspecialchars($coTaxId);
-        $coInfoHtml = '<div style="font-size:8pt;color:#1a3c6e;line-height:1.6;text-align:right;">' . implode('<br/>', $coInfoLines) . '</div>';
+        $getImage = function(string $filename, ?string $fallback = null) use ($imgDirUploads, $imgDirTemplates): string {
+            if (file_exists($imgDirUploads . $filename)) {
+                return $imgDirUploads . $filename;
+            }
+            if (file_exists($imgDirTemplates . $filename)) {
+                @copy($imgDirTemplates . $filename, $imgDirUploads . $filename);
+                return $imgDirTemplates . $filename;
+            }
+            if ($fallback && file_exists($imgDirUploads . $fallback)) {
+                return $imgDirUploads . $fallback;
+            }
+            if ($fallback && file_exists($imgDirTemplates . $fallback)) {
+                return $imgDirTemplates . $fallback;
+            }
+            return '';
+        };
 
-        // Auto-extract images from .docx template if not already present
-        $imgDir = __DIR__ . '/../uploads/template_images/';
-        if (!is_dir($imgDir) || !file_exists($imgDir . 'image1.jpeg')) {
-            $templateDocx = __DIR__ . '/../templates/maintenance_offer_template.docx';
-            if (file_exists($templateDocx)) {
-                if (!is_dir($imgDir)) {
-                    mkdir($imgDir, 0755, true);
-                }
+        // Logo: use uploaded company logo from settings if available, otherwise template logo
+        $logoPath = '';
+        if (!empty($co['company_logo'])) {
+            $candidateLogo = __DIR__ . '/../' . ltrim($co['company_logo'], '/');
+            if (file_exists($candidateLogo)) {
+                $logoPath = $candidateLogo;
+            }
+        }
+        if (!$logoPath) {
+            $logoPath = $getImage('image1.jpeg');
+        }
+
+        $transPath   = $getImage('image2.jpeg');
+        $isoCertPath = $getImage('iso_certificate_greek.jpeg', 'image5.jpeg');
+        $signPath    = $getImage('image6.jpeg');
+
+        // Extract Greek ISO certificate if not already present
+        if (!$isoCertPath || !file_exists($isoCertPath)) {
+            $certDocx = __DIR__ . '/../templates/maintenance certificate template.docx';
+            if (file_exists($certDocx)) {
                 $zip = new \ZipArchive();
-                if ($zip->open($templateDocx) === true) {
-                    for ($i = 0; $i < $zip->numFiles; $i++) {
-                        $name = $zip->getNameIndex($i);
-                        if (strpos($name, 'word/media/') === 0) {
-                            file_put_contents($imgDir . basename($name), $zip->getFromName($name));
-                        }
+                if ($zip->open($certDocx) === true) {
+                    $certData = $zip->getFromName('word/media/image4.jpeg');
+                    if ($certData) {
+                        file_put_contents($imgDirUploads . 'iso_certificate_greek.jpeg', $certData);
+                        $isoCertPath = $imgDirUploads . 'iso_certificate_greek.jpeg';
                     }
                     $zip->close();
                 }
             }
         }
 
-        $logoSrc  = file_exists($imgDir . 'image1.jpeg')
-            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image1.jpeg')) : '';
-        $isoSrc   = file_exists($imgDir . 'image3.png')
-            ? 'data:image/png;base64,'  . base64_encode(file_get_contents($imgDir . 'image3.png'))  : '';
-        $transSrc = file_exists($imgDir . 'image2.jpeg')
-            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image2.jpeg')) : '';
-        $signSrc  = file_exists($imgDir . 'image6.jpeg')
-            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imgDir . 'image6.jpeg')) : '';
+        $footerHtml        = self::buildCompanyFooterHtml($co, false);
+        $footerCompactHtml = self::buildCompanyFooterHtml($co, true);
 
-        $logoImg  = $logoSrc  ? '<img src="' . $logoSrc  . '" width="170" />' : '<b>ECOWATT energy</b>';
-        $isoImg   = $isoSrc   ? '<img src="' . $isoSrc   . '" width="70" />'  : '';
-        $transImg = $transSrc ? '<img src="' . $transSrc . '" width="130" />' : '';
-        $signImg  = $signSrc  ? '<img src="' . $signSrc  . '" width="90" />'  : '';
+        $pdf = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->logoPath                  = $logoPath;
+        $pdf->companyFooterHtml         = $footerHtml;
+        $pdf->companyFooterCompactHtml  = $footerCompactHtml;
+        CustomOfferPDF::$staticFooterHtml        = $footerHtml;
+        CustomOfferPDF::$staticFooterCompactHtml = $footerCompactHtml;
 
-        $notesSection = !empty($offer['notes'])
-            ? '<p style="font-size:9pt; color:#444; margin-top:4px;"><b>Παρατηρήσεις:</b> ' . $notes . '</p>'
-            : '';
+        $coAuthorName = !empty($co['company_name']) ? $co['company_name'] : (!empty($co['company_display_name']) ? $co['company_display_name'] : 'HandyCRM');
+        $pdf->SetCreator('HandyCRM');
+        $pdf->SetAuthor($coAuthorName);
+        $pdf->SetTitle('Οικονομική Προσφορά ' . $offerNum);
 
-        return '
-<style>
-    body { font-family: dejavusans; font-size: 9.5pt; color: #1a1a1a; }
-    h1   { font-size: 15pt; text-align: center; color: #1a3c6e; letter-spacing: 1px; margin: 5px 0; }
-    .sec  { background-color: #1a3c6e; color: #ffffff; font-size: 10pt; font-weight: bold; padding: 4px 8px; }
-    .sub  { background-color: #dce6f5; color: #1a3c6e; font-size: 9.5pt; font-weight: bold; padding: 3px 6px; margin: 6px 0 2px 0; }
-    table { font-size: 9.5pt; }
-    .ct th { background-color: #1a3c6e; color: #ffffff; padding: 5px 8px; text-align: center; border: 1px solid #1a3c6e; }
-    .ct td { border: 1px solid #aaaaaa; padding: 5px 8px; }
-    .ctot  { background-color: #dce6f5; font-weight: bold; font-size: 10.5pt; }
-</style>
+        $pdf->SetMargins(20, 25, 20);
+        $pdf->SetHeaderMargin(10);
+        $pdf->SetFooterMargin(20);
+        $pdf->SetAutoPageBreak(false);
 
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
-  <tr>
-    <td width="50%" valign="middle">' . $logoImg . '</td>
-    <td width="50%" align="right" valign="middle">
-      ' . $coInfoHtml . '
-      ' . ($isoImg ? '<div style="margin-top:4px;text-align:right;">' . $isoImg . '</div>' : '') . '
-    </td>
-  </tr>
-</table>
-<hr style="border:2px solid #1a3c6e; margin:0 0 8px 0;" />
+        // ================= PAGE 1: COVER =================
+        $pdf->AddPage();
+        if ($logoPath && file_exists($logoPath)) {
+            $pdf->Image($logoPath, 20, 16, 68, 0, 'JPEG');
+        }
 
-<h1>ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</h1>
-<p style="text-align:center; font-size:10pt; margin:2px 0 6px 0;">Συντήρηση υποσταθμού μέσης τάσης &nbsp;—&nbsp; <b>' . $company . '</b></p>
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:10px;">
-  <tr>
-    <td style="font-size:8pt; color:#666;">ISO 9001 : 2008 &nbsp;&nbsp; OHSAS 18001 : 2007</td>
-    <td align="right" style="font-size:9pt;"><b>Ημερομηνία:</b> ' . $today . ' &nbsp;&nbsp; <b>Αρ. Προσφοράς:</b> ' . $offerNum . '</td>
-  </tr>
-</table>
+        $pdf->SetY(48);
+        $pdf->SetFont('dejavusans', 'B', 13);
+        $pdf->Cell(0, 8, 'ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ', 0, 1, 'C');
 
-<table width="100%" cellpadding="0" cellspacing="6" style="margin-bottom:10px;">
-  <tr>
-    <td width="63%" valign="top" style="font-size:9pt; line-height:1.55;">
-      <p>Αγαπητοί κύριοι,</p>
-      <p>Θα θέλαμε να σας ευχαριστήσουμε για το ενδιαφέρον σας σχετικά με τις παρεχόμενες υπηρεσίες της εταιρείας μας και να σας διαβεβαιώσουμε ότι θα είμαστε πάντα διαθέσιμοι για να σας προσφέρουμε υψηλής ποιότητας λύσεις.</p>
-      <p>Σε συνέχεια των επαφών που είχαμε, σας αποστέλλουμε την οικονομική προσφορά για <b>Συντήρηση υποσταθμού μέσης τάσης ' . $company . '</b>.</p>
-      <p>Η περιγραφή προέκυψε βάσει της πολυετούς εμπειρίας και τεχνογνωσίας της εταιρίας μας στους υποσταθμούς Μ.Τ..</p>
-    </td>
-    <td width="37%" valign="top" align="center">' . $transImg . '</td>
-  </tr>
-</table>
+        // Contacts at top of Page 1 from Settings
+        $topWeb   = !empty($co['company_website']) ? $co['company_website'] : 'https://ecowatt-energy.gr';
+        $topEmail = !empty($co['company_email']) ? $co['company_email'] : 'info@ecowatt-energy.gr';
+        $p1MetaHtml = '
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td width="65%" style="font-size:8.5pt; line-height:1.5;">
+              ' . htmlspecialchars($topWeb) . ' - email: ' . htmlspecialchars($topEmail) . '<br/>
+              <b>ΑΡΙΘΜΟΣ ΠΡΟΣΦΟΡΑΣ : ' . $offerNum . '</b>
+            </td>
+            <td width="35%" align="right" style="font-size:8.5pt;">
+              <b>ΗΜΕΡΟΜΗΝΙΑ: ' . $today . '</b>
+            </td>
+          </tr>
+        </table>';
+        $pdf->writeHTMLCell(170, 0, 20, 60, $p1MetaHtml, 0, 1, false, true, '');
 
-<p class="sub">ΠΕΛΑΤΟΛΟΓΙΟ</p>
-<p style="font-size:9pt; margin:3px 0 2px 0;">Η <b>ΚΩΣΤΑΣ Γ. ΣΦΑΚΙΑΝΑΚΗΣ ΚΑΙ ΣΙΑ ΟΕ</b> σας παρουσιάζει ένα μέρος από το πελατολόγιο της:</p>
-<table width="100%" cellpadding="0" cellspacing="0" style="font-size:8.5pt; margin-bottom:8px;">
-  <tr>
-    <td width="50%">1. ΤΕΑΒ ΑΕ &nbsp; 2. ΧΑΛΚΙΑΔΑΚΗΣ &nbsp; 3. DAIOS HOTELS &nbsp; 4. LYTOS<br/>5. IKAROS RESORT HOTEL &nbsp; 6. ΔΕΥΑ ΗΡΑΚΛΕΙΟΥ &nbsp; 7. ENEL &nbsp; 8. ENERCON</td>
-    <td width="50%">9. KOSTA MARE &nbsp; 10. ΔΕΗ &nbsp; 11. ΔΕΥΑ ΧΕΡΣΟΝΗΣΟΥ &nbsp; 12. ΟΤΕ<br/>13. BLUE BAY &nbsp; 14. CRETA MARIS &nbsp; 15. GALAXY &nbsp; 16. CANDIA MARIS</td>
-  </tr>
-</table>
-<p style="font-size:8.5pt; color:#444; margin-bottom:10px;">Θα θέλαμε να σας κάνουμε γνωστό ότι είμαστε στη διάθεσή σας για οποιαδήποτε ερώτηση – διευκρίνιση.</p>
+        if ($transPath && file_exists($transPath)) {
+            $pdf->Image($transPath, 52.5, 82, 105, 0, 'JPEG');
+        }
 
-<p class="sec">ΕΡΓΑΣΙΕΣ ΣΥΝΤΗΡΗΣΗΣ</p>
+        $scenarioHtml = '<p style="text-align:center; font-size:9.5pt;">Σενάριο: Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)</p>';
+        $pdf->writeHTMLCell(170, 0, 20, 190, $scenarioHtml, 0, 1, false, true, '');
 
-<p class="sub">1. ΓΕΝΙΚΗ ΣΥΝΤΗΡΗΣΗ</p>
-<ul style="font-size:9pt; margin:2px 0 5px 0;">
-  <li>Καθαριότητα στους χώρους Μ/Σ, κυψέλης Μ.Τ.</li>
-  <li>Έλεγχος ύπαρξης πυροσβεστήρων στο χώρο του Υ/Σ</li>
-  <li>Έλεγχος αερισμού Υ/Σ</li>
-  <li>Έλεγχος φωτισμού στον χώρο του Υ/Σ</li>
-  <li>Έλεγχος ύπαρξης πινακίδων κινδύνου</li>
-</ul>
+        // ================= PAGE 2: LETTER =================
+        $pdf->AddPage();
+        $p2Html = '
+        <div style="font-family:dejavusans; font-size:9.5pt; line-height:1.65; color:#1a1a1a;">
+          <p>Αγαπητοί κύριοι,</p>
+          <br/>
+          <p>θα ήθελαν να σας ευχαριστήσουμε για το ενδιαφέρον σας σχετικά τις παρεχόμενες υπηρεσίες και εξοπλισμό της εταιρείας και να σας διαβεβαιώσουν ότι θα είναι πάντα διαθέσιμοι για να σας προσφέρουν υψηλής ποιότητας και προηγμένης τεχνολογίας λύσεις.</p>
+          <br/>
+          <p><b>Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)</b></p>
+          <br/>
+          <p>Η περιγραφή που ακολουθεί προέκυψε βάσει της πολυετής εμπειρίας και της τεχνογνωσίας που έχει η εταιρία μας πάνω στους υποσταθμούς Μ.Τ.. Ωστόσο, θα πρέπει να γνωρίζετε ότι μελετάμε, σχεδιάζουμε και υλοποιούμε κάθε έργο σύμφωνα τις ιδιαιτερότητές του.</p>
+        </div>';
+        $pdf->writeHTMLCell(170, 0, 20, 38, $p2Html, 0, 1, false, true, '');
 
-<p class="sub">2. ΣΥΝΤΗΡΗΣΗ ΣΤΗ ΜΕΣΗ ΤΑΣΗ – ΚΥΨΕΛΗ</p>
-<ul style="font-size:9pt; margin:2px 0 5px 0;">
-  <li>Έλεγχος ακροκιβωτίων εσωτερικού χώρου</li>
-  <li>Έλεγχος μονωτήρων κυψέλης, καθαρισμός</li>
-  <li>Καθαρισμός εξαρτημάτων, επαφών, συσφίξεις ακροδεκτών</li>
-  <li>Έλεγχος λειτουργίας αφύγρανσης κυψέλης</li>
-  <li>Μέτρηση μονώσεων καλωδίων Μ.Τ.</li>
-</ul>
+        // ================= PAGE 3: CERTIFICATE =================
+        $pdf->AddPage();
+        if ($isoCertPath && file_exists($isoCertPath)) {
+            $pdf->Image($isoCertPath, 30, 28, 150, 0, 'JPEG');
+        }
 
-<p class="sub">3. ΣΥΝΤΗΡΗΣΗ ΣΤΟ ΜΕΤΑΣΧΗΜΑΤΙΣΤΗ</p>
-<ul style="font-size:9pt; margin:2px 0 5px 0;">
-  <li>Έλεγχος θερμοκρασίας Μ/Σ</li>
-  <li>Έλεγχος μονωτήρων Μ.Τ. - Χ.Τ., καθαρισμός</li>
-  <li>Έλεγχος ακροκιβωτίων</li>
-  <li>Έλεγχος καλής κατάστασης κελύφους Μ/Σ</li>
-  <li>Καθαρισμός εξαρτημάτων, συσφίξεις ακροδεκτών</li>
-  <li>Μέτρηση τυλιγμάτων Μ/Σ</li>
-  <li>Μέτρηση μονώσεων Μ/Σ</li>
-  <li>Μέτρηση διηλεκτρικής αντοχής ελαίου</li>
-</ul>
+        // ================= PAGE 4: MAINTENANCE TASKS =================
+        $pdf->AddPage();
+        $p4Html = '
+        <div style="font-family:dejavusans; font-size:9pt; line-height:1.45; color:#1a1a1a;">
+          <p style="text-align:center; font-weight:bold; font-size:10.5pt; margin-bottom:12px;">ΕΡΓΑΣΙΕΣ ΣΥΝΤΗΡΗΣΗΣ</p>
 
-<p class="sub">4. ΓΕΙΩΣΕΙΣ - ΠΡΟΣΤΑΣΙΑ</p>
-<ul style="font-size:9pt; margin:2px 0 10px 0;">
-  <li>Μέτρηση γείωσης (εφόσον είναι εφικτή η μέτρηση)</li>
-  <li>Έλεγχος λειτουργίας αυτοματισμού προστασίας</li>
-</ul>
+          <p style="font-weight:bold; font-size:9.5pt; margin-bottom:4px;">1. ΓΕΝΙΚΗ ΣΥΝΤΗΡΗΣΗ</p>
+          <ul style="list-style-type:disc; margin-left:15px; margin-top:2px; margin-bottom:12px;">
+            <li>Καθαριότητα στους χώρους Μ/Σ, κυψέλης Μ.Τ</li>
+            <li>Έλεγχος ύπαρξης πυροσβεστήρων στο χώρο του Υ/Σ</li>
+            <li>Έλεγχος αερισμού Υ/Σ</li>
+            <li>Έλεγχος φωτισμού στον χώρο του Υ/Σ</li>
+            <li>Έλεγχος ύπαρξης πινακίδων κινδύνου</li>
+          </ul>
 
-<p class="sec">ΚΟΣΤΟΛΟΓΗΣΗ</p>
-<table class="ct" width="100%" cellpadding="0" cellspacing="0" style="margin-top:4px; border-collapse:collapse;">
-  <tr>
-    <th width="8%">Α/Α</th>
-    <th width="57%">ΠΕΡΙΓΡΑΦΗ ΕΞΟΠΛΙΣΜΟΥ - ΕΡΓΑΣΙΕΣ</th>
-    <th width="15%">ΤΕΜ / ΜΕΤΡΑ</th>
-    <th width="20%">ΤΙΜΗ</th>
-  </tr>
-  <tr>
-    <td align="center">1</td>
-    <td>Συντήρηση υποσταθμού μέσης τάσης<br/><span style="font-size:8.5pt;">Μετασχηματιστής</span></td>
-    <td align="center">' . $transCount . '</td>
-    <td align="center" style="font-size:11pt; font-weight:bold;">' . $priceNum . '</td>
-  </tr>
-  <tr>
-    <td colspan="3" align="right" class="ctot" style="padding:5px 10px;">Σύνολο (χωρίς Φ.Π.Α.):</td>
-    <td align="center" class="ctot">' . $priceNum . '</td>
-  </tr>
-</table>
+          <p style="font-weight:bold; font-size:9.5pt; margin-bottom:4px;">2. ΣΥΝΤΗΡΗΣΗ ΣΤΗ ΜΕΣΗ ΤΑΣΗ – ΚΥΨΕΛΗ</p>
+          <ul style="list-style-type:disc; margin-left:15px; margin-top:2px; margin-bottom:12px;">
+            <li>Έλεγχος ακροκιβωτίων εσωτερικού χώρου</li>
+            <li>Έλεγχος μονωτήρων κυψέλης, καθαρισμός</li>
+            <li>Καθαρισμός εξαρτημάτων, επαφών, συσφίξεις ακροδεκτών</li>
+            <li>Έλεγχος λειτουργίας αφύγρανσης κυψέλης</li>
+            <li>Μέτρηση μονώσεων καλωδίων Μ.Τ.</li>
+          </ul>
 
-' . $notesSection . '
+          <p style="font-weight:bold; font-size:9.5pt; margin-bottom:4px;">3. ΣΥΝΤΗΡΗΣΗ ΣΤΟ ΜΕΤΑΣΧΗΜΑΤΙΣΤΗ</p>
+          <ul style="list-style-type:disc; margin-left:15px; margin-top:2px; margin-bottom:12px;">
+            <li>Έλεγχος θερμοκρασίας Μ/Σ</li>
+            <li>Έλεγχος μονωτήρων Μ.Τ. - Χ.Τ. , καθαρισμός</li>
+            <li>Έλεγχος ακροκιβωτίων</li>
+            <li>Έλεγχος καλής κατάστασης κελύφους Μ/Σ</li>
+            <li>Καθαρισμός εξαρτημάτων , συσφίξεις ακροδεκτών</li>
+            <li>Μέτρηση τυλιγμάτων Μ/Σ</li>
+            <li>Μέτρηση μονώσεων Μ/Σ</li>
+            <li>Μέτρηση διηλεκτρικής αντοχής ελαίου</li>
+          </ul>
 
-<p style="font-size:9pt; margin-top:10px;"><b>Οικονομικοί Όροι</b><br/>Στις παραπάνω τιμές δεν περιλαμβάνεται ο Φ.Π.Α. 24%</p>
-<p style="font-size:9pt;">Ελπίζουμε η προσφορά μας να ανταποκρίνεται στις απαιτήσεις σας. Για οποιαδήποτε περαιτέρω διευκρίνηση ή πληροφορία, παρακαλώ μη διστάσετε να επικοινωνήσετε μαζί μας.</p>
+          <p style="font-weight:bold; font-size:9.5pt; margin-bottom:4px;">4. ΓΕΙΩΣΕΙΣ- ΠΡΟΣΤΑΣΙΑ</p>
+          <ul style="list-style-type:disc; margin-left:15px; margin-top:2px; margin-bottom:12px;">
+            <li>Μέτρηση γείωσης( Εφόσον είναι εφικτή η μέτρηση)</li>
+            <li>Έλεγχος λειτουργίας αυτοματισμού προστασίας</li>
+          </ul>
+        </div>';
+        $pdf->writeHTMLCell(170, 0, 20, 32, $p4Html, 0, 1, false, true, '');
 
-<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">
-  <tr>
-    <td width="50%" valign="top" style="font-size:9pt;">
-      Με εκτίμηση,<br/><br/>
-      ' . $signImg . '<br/>
-      <b>Σφακιανάκης Κωνσταντίνος</b><br/>
-      Ηλεκτρολόγος Μηχανικός ΤΕ
-    </td>
-    <td width="50%" valign="bottom" style="font-size:9pt;">
-      <p style="margin-bottom:40px;">Ισχύς προσφοράς έως: <b>' . $expiry . '</b></p>
-      <p style="border-top:1px solid #555; padding-top:5px;">Σφραγίδα &amp; Υπογραφή <b>' . $company . '</b></p>
-    </td>
-  </tr>
-</table>
-';
+        // ================= PAGE 5: CLIENTS =================
+        $pdf->AddPage();
+        $p5IntroCo = !empty($co['company_name']) ? $co['company_name'] : (!empty($co['company_display_name']) ? $co['company_display_name'] : 'εταιρεία μας');
+        $p5Html = '
+        <div style="font-family:dejavusans; font-size:9.5pt; line-height:1.65; color:#1a1a1a;">
+          <p style="text-align:center; font-weight:bold; font-size:11pt; margin-bottom:20px;"><u>ΠΕΛΑΤΟΛΟΓΙΟ</u></p>
+
+          <p style="margin-bottom:14px;"><u>Η ' . htmlspecialchars($p5IntroCo) . ' σας παρουσιάζει ένα μέρος από το πελατολόγιο της.</u></p>
+
+          <p style="line-height:1.75;">
+            <u>1. ΤΕΑΒ ΑΕ</u><br/>
+            <u>2. ΧΑΛΚΙΑΔΑΚΗΣ</u><br/>
+            <u>3. DAIOS HOTELS</u><br/>
+            <u>4. LYTOS</u><br/>
+            <u>5. IKAROS RESORT HOTEL</u><br/>
+            <u>6. ΔΕΥΑ ΗΡΑΚΛΕΙΟΥ</u><br/>
+            <u>7. ENEL</u><br/>
+            <u>8. ENERCON</u><br/>
+            <u>9. KOSTA MARE</u><br/>
+            <u>10. ΔΕΗ</u><br/>
+            <u>11. ΔΕΥΑ ΧΕΡΣΟΝΗΣΟΥ</u><br/>
+            <u>12. ΟΤΕ</u><br/>
+            <u>13. BLUE BAY</u><br/>
+            <u>14. CRETA MARIS</u><br/>
+            <u>15. GALAXY</u><br/>
+            <u>16. CANDIA MARIS</u>
+          </p>
+          <br/>
+          <p><u>Θα θέλαμε να σας κάνουμε γνωστό ότι είμαστε στη διάθεσής σας για οποιαδήποτε ερώτηση – διευκρίνιση.</u></p>
+        </div>';
+        $pdf->writeHTMLCell(170, 0, 20, 32, $p5Html, 0, 1, false, true, '');
+
+        // ================= PAGE 6: FINANCIAL OFFER & SIGNATURES =================
+        $pdf->AddPage();
+        $notesHtml = $notes ? '<br/><br/><p style="font-size:9pt; color:#333;"><b>Παρατηρήσεις:</b> ' . nl2br(htmlspecialchars($notes)) . '</p>' : '';
+        $p6Html = '
+        <div style="font-family:dejavusans; font-size:9.5pt; color:#1a1a1a;">
+          <p style="text-align:center; font-weight:bold; font-size:11pt; margin-bottom:14px;">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</p>
+
+          <table border="1" cellpadding="6" cellspacing="0" width="100%" style="border-collapse:collapse; font-size:9.5pt; border:1px solid #000000;">
+            <tr style="font-weight:bold;">
+              <td width="75%">ΤΙΜΗ ΣΥΝΟΛΙΚΟΥ ΕΡΓΟΥ</td>
+              <td width="25%" align="center">ΤΙΜΗ</td>
+            </tr>
+            <tr>
+              <td>ΣΥΝΟΛΟ ΕΡΓΟΥ ΧΩΡΙΣ Φ.Π.Α</td>
+              <td align="right"><b>' . number_format($priceVal, 2, '.', '') . '</b></td>
+            </tr>
+            <tr>
+              <td>ΣΥΝΟΛΟ ΕΡΓΟΥ ΜΕ Φ.Π.Α</td>
+              <td align="right"><b>' . number_format($priceWithVat, 2, '.', '') . '</b></td>
+            </tr>
+          </table>
+
+          <br/><br/>
+          <p style="margin-bottom:8px;"><u>Οικονομικοί Όροι</u></p>
+          <br/>
+          <p>Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)</p>
+          ' . $notesHtml . '
+        </div>';
+        $pdf->writeHTMLCell(170, 0, 20, 32, $p6Html, 0, 1, false, true, '');
+
+        // Signatures block
+        $p6SignHtml = '
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-family:dejavusans; font-size:9pt; line-height:1.5;">
+          <tr>
+            <td width="55%" valign="top">
+              Με εκτίμηση,<br/><br/>
+              ' . ($signPath && file_exists($signPath) ? '<img src="' . $signPath . '" width="110" /><br/>' : '<br/><br/>') . '
+              <u>Σφακιανάκης Κωνσταντίνος</u><br/>
+              <u>Ηλεκτρολόγος Μηχανικός ΤΕ</u>
+            </td>
+            <td width="45%" valign="top" align="center">
+              <b>Αποδοχή προσφοράς</b><br/><br/><br/><br/><br/>
+              <b>Υπογραφή - Σφραγίδα</b>
+            </td>
+          </tr>
+        </table>';
+        $pdf->writeHTMLCell(170, 0, 20, 175, $p6SignHtml, 0, 1, false, true, '');
+
+        return $pdf;
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -640,18 +812,7 @@ class MaintenanceOfferController extends BaseController {
                 $pdfFilename    = 'Prosfora_Sintirisis_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $offer['offer_number']) . '.pdf';
                 $attachmentPath = sys_get_temp_dir() . '/' . $pdfFilename;
 
-                CustomOfferPDF::$footerText = self::buildPdfFooterText();
-                $pdfMail = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
-                $pdfMail->SetCreator('HandyCRM');
-                $pdfMail->SetAuthor('ECOWATT - Κώστας Γ. Σφακιανάκης & ΣΙΑ Ο.Ε.');
-                $pdfMail->SetTitle('Οικονομική Προσφορά ' . $offer['offer_number']);
-                $pdfMail->SetPrintHeader(false);
-                $pdfMail->SetFont('dejavusans', '', 10, '', true);
-                $pdfMail->SetMargins(20, 15, 20);
-                $pdfMail->SetFooterMargin(15);
-                $pdfMail->SetAutoPageBreak(true, 20);
-                $pdfMail->AddPage();
-                $pdfMail->writeHTML($this->generateOfferHTML($offer), true, false, true, false, '');
+                $pdfMail = $this->buildOfferPDF($offer);
                 $pdfMail->Output($attachmentPath, 'F');
 
                 if (!file_exists($attachmentPath)) {

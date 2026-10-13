@@ -3,6 +3,8 @@
  * System Settings Model
  * Handles system-wide configuration settings
  */
+require_once __DIR__ . '/../classes/Database.php';
+
 class Settings {
     private $db;
     private $table = 'settings';
