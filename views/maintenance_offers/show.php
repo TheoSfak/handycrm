@@ -91,6 +91,11 @@
                                     <?php else: ?>—<?php endif; ?>
                                 </dd>
 
+                                <?php if (!empty($offer['title'])): ?>
+                                <dt class="col-sm-4 text-muted">Τίτλος / Σενάριο</dt>
+                                <dd class="col-sm-8 fw-semibold text-primary"><?= htmlspecialchars($offer['title']) ?></dd>
+                                <?php endif; ?>
+
                                 <dt class="col-sm-4 text-muted">Email</dt>
                                 <dd class="col-sm-8">
                                     <?php if (!empty($offer['email'])): ?>
@@ -101,11 +106,23 @@
                         </div>
                     </div>
 
+                    <!-- Terms -->
+                    <?php if (!empty($offer['terms'])): ?>
+                    <div class="card mb-4 shadow-sm border-primary border-opacity-25">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="fas fa-file-invoice-dollar me-2 text-primary"></i>Οικονομικοί Όροι</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0"><?= nl2br(htmlspecialchars($offer['terms'])) ?></p>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Notes -->
                     <?php if (!empty($offer['notes'])): ?>
                     <div class="card shadow-sm">
                         <div class="card-header">
-                            <h6 class="mb-0"><i class="fas fa-sticky-note me-2 text-warning"></i>Σημειώσεις</h6>
+                            <h6 class="mb-0"><i class="fas fa-sticky-note me-2 text-warning"></i>Σημειώσεις / Παρατηρήσεις</h6>
                         </div>
                         <div class="card-body">
                             <p class="mb-0"><?= nl2br(htmlspecialchars($offer['notes'])) ?></p>

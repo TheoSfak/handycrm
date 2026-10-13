@@ -231,6 +231,7 @@ class MaintenanceOfferController extends BaseController {
 
         $data = [
             'offer_number'       => $this->offerModel->generateOfferNumber(),
+            'title'              => trim($_POST['title'] ?? '') ?: null,
             'company_name'       => trim($_POST['company_name'] ?? ''),
             'address'            => trim($_POST['address'] ?? ''),
             'phone'              => trim($_POST['phone'] ?? ''),
@@ -238,6 +239,7 @@ class MaintenanceOfferController extends BaseController {
             'transformers_count' => $count,
             'price'              => $price,
             'offer_expiry_date'  => $_POST['offer_expiry_date'] ?: null,
+            'terms'              => trim($_POST['terms'] ?? '') ?: null,
             'notes'              => trim($_POST['notes'] ?? ''),
             'sent_at'            => date('Y-m-d H:i:s'),
             'created_by'         => $_SESSION['user_id'],
@@ -327,6 +329,7 @@ class MaintenanceOfferController extends BaseController {
         $price = $customPrice ?? MaintenanceOffer::calculatePrice($count);
 
         $data = [
+            'title'              => trim($_POST['title'] ?? '') ?: null,
             'company_name'       => trim($_POST['company_name'] ?? ''),
             'address'            => trim($_POST['address'] ?? ''),
             'phone'              => trim($_POST['phone'] ?? ''),
@@ -334,6 +337,7 @@ class MaintenanceOfferController extends BaseController {
             'transformers_count' => $count,
             'price'              => $price,
             'offer_expiry_date'  => $_POST['offer_expiry_date'] ?: null,
+            'terms'              => trim($_POST['terms'] ?? '') ?: null,
             'notes'              => trim($_POST['notes'] ?? ''),
         ];
 
@@ -450,6 +454,18 @@ class MaintenanceOfferController extends BaseController {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // Build clean download filename for offer exports including client company name
+    // ──────────────────────────────────────────────────────────────────────────
+    public function buildOfferFilename(array $offer, string $extension): string {
+        $cleanCompany = trim(preg_replace('/[^\p{L}\p{N}_-]+/u', '_', $offer['company_name'] ?? ''), '_');
+        $cleanNum     = preg_replace('/[^a-zA-Z0-9_-]/u', '_', $offer['offer_number'] ?? '');
+        $prefix       = 'Προσφορά_Συντήρησης';
+        return ($cleanCompany !== '')
+            ? "{$prefix}_{$cleanCompany}_{$cleanNum}.{$extension}"
+            : "{$prefix}_{$cleanNum}.{$extension}";
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // EXPORT PDF (TCPDF — 6-page template matching exact original design)
     // ──────────────────────────────────────────────────────────────────────────
     public function exportPDF(int $id): void {
@@ -461,7 +477,7 @@ class MaintenanceOfferController extends BaseController {
         }
 
         $pdf = $this->buildOfferPDF($offer);
-        $filename = 'Prosfora_Sintirisis_' . preg_replace('/[^a-zA-Z0-9_-]/u', '_', $offer['offer_number']) . '.pdf';
+        $filename = $this->buildOfferFilename($offer, 'pdf');
         
         $mode = isset($_GET['download']) ? 'D' : 'I';
         $pdf->Output($filename, $mode);
@@ -474,13 +490,28 @@ class MaintenanceOfferController extends BaseController {
     public function buildOfferPDF(array $offer): CustomOfferPDF {
         $co = $this->getCompanySettings();
 
-        $company    = htmlspecialchars($offer['company_name'] ?? '');
-        $offerNum   = htmlspecialchars($offer['offer_number'] ?? '');
-        $today      = !empty($offer['created_at']) ? date('d/m/Y', strtotime($offer['created_at'])) : date('d/m/Y');
-        $transCount = max(1, (int)($offer['transformers_count'] ?? 1));
-        $priceVal   = (float)($offer['price'] ?? 0);
+        $companyRaw  = trim($offer['company_name'] ?? '');
+        $company     = htmlspecialchars($companyRaw);
+        $offerNum    = htmlspecialchars($offer['offer_number'] ?? '');
+        $today       = !empty($offer['created_at']) ? date('d/m/Y', strtotime($offer['created_at'])) : date('d/m/Y');
+        $transCount  = max(1, (int)($offer['transformers_count'] ?? 1));
+        $priceVal    = (float)($offer['price'] ?? 0);
         $priceWithVat = $priceVal * 1.24;
-        $notes      = trim($offer['notes'] ?? '');
+        $notes       = trim($offer['notes'] ?? '');
+        $terms       = trim($offer['terms'] ?? '');
+
+        // Title / Scenario resolution with fallback & company inclusion
+        $customTitle = trim($offer['title'] ?? '');
+        if (!empty($customTitle)) {
+            // If custom title does not already contain the company name, append it
+            if ($companyRaw !== '' && mb_stripos($customTitle, $companyRaw) === false) {
+                $offerTitle = htmlspecialchars($customTitle . ' - ' . $companyRaw);
+            } else {
+                $offerTitle = htmlspecialchars($customTitle);
+            }
+        } else {
+            $offerTitle = 'Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)';
+        }
 
         // Resolve images with robust fallback
         $imgDirUploads   = __DIR__ . '/../uploads/template_images/';
@@ -552,7 +583,7 @@ class MaintenanceOfferController extends BaseController {
         $coAuthorName = !empty($co['company_name']) ? $co['company_name'] : (!empty($co['company_display_name']) ? $co['company_display_name'] : 'HandyCRM');
         $pdf->SetCreator('HandyCRM');
         $pdf->SetAuthor($coAuthorName);
-        $pdf->SetTitle('Οικονομική Προσφορά ' . $offerNum);
+        $pdf->SetTitle('Οικονομική Προσφορά ' . $offerNum . ($companyRaw !== '' ? ' - ' . $companyRaw : ''));
 
         $pdf->SetMargins(20, 25, 20);
         $pdf->SetHeaderMargin(10);
@@ -561,19 +592,22 @@ class MaintenanceOfferController extends BaseController {
 
         // ================= PAGE 1: COVER =================
         $pdf->AddPage();
+        $pdf->SetFont('dejavusans', '', 10);
         if ($logoPath && file_exists($logoPath)) {
             $pdf->Image($logoPath, 20, 16, 68, 0, 'JPEG');
         }
 
-        $pdf->SetY(48);
-        $pdf->SetFont('dejavusans', 'B', 13);
-        $pdf->Cell(0, 8, 'ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ', 0, 1, 'C');
+        $p1HeaderHtml = '<table width="100%" cellpadding="0" cellspacing="0" style="font-family:dejavusans;">'
+            . '<tr><td align="center" style="font-size:12.5pt; font-weight:bold; color:#1a1a1a;">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</td></tr>'
+            . (!empty($company) ? '<tr><td align="center" style="font-size:10.5pt; font-weight:bold; color:#184c78; padding-top:2px;">' . $company . '</td></tr>' : '')
+            . '</table>';
+        $pdf->writeHTMLCell(170, 0, 20, 44, $p1HeaderHtml, 0, 1, false, true, '');
 
         // Contacts at top of Page 1 from Settings
         $topWeb   = !empty($co['company_website']) ? $co['company_website'] : 'https://ecowatt-energy.gr';
         $topEmail = !empty($co['company_email']) ? $co['company_email'] : 'info@ecowatt-energy.gr';
         $p1MetaHtml = '
-        <table width="100%" cellpadding="0" cellspacing="0">
+        <table width="100%" cellpadding="0" cellspacing="0" style="font-family:dejavusans;">
           <tr>
             <td width="65%" style="font-size:8.5pt; line-height:1.5;">
               ' . htmlspecialchars($topWeb) . ' - email: ' . htmlspecialchars($topEmail) . '<br/>
@@ -590,7 +624,8 @@ class MaintenanceOfferController extends BaseController {
             $pdf->Image($transPath, 52.5, 82, 105, 0, 'JPEG');
         }
 
-        $scenarioHtml = '<p style="text-align:center; font-size:9.5pt;">Σενάριο: Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)</p>';
+        $scenarioPrefix = (mb_stripos($offerTitle, 'Σενάριο') === 0 || mb_stripos($offerTitle, 'Σεναριο') === 0) ? '' : 'Σενάριο: ';
+        $scenarioHtml   = '<p style="font-family:dejavusans; text-align:center; font-size:9.5pt;">' . $scenarioPrefix . $offerTitle . '</p>';
         $pdf->writeHTMLCell(170, 0, 20, 190, $scenarioHtml, 0, 1, false, true, '');
 
         // ================= PAGE 2: LETTER =================
@@ -601,7 +636,7 @@ class MaintenanceOfferController extends BaseController {
           <br/>
           <p>θα ήθελαν να σας ευχαριστήσουμε για το ενδιαφέρον σας σχετικά τις παρεχόμενες υπηρεσίες και εξοπλισμό της εταιρείας και να σας διαβεβαιώσουν ότι θα είναι πάντα διαθέσιμοι για να σας προσφέρουν υψηλής ποιότητας και προηγμένης τεχνολογίας λύσεις.</p>
           <br/>
-          <p><b>Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)</b></p>
+          <p><b>' . $offerTitle . '</b></p>
           <br/>
           <p>Η περιγραφή που ακολουθεί προέκυψε βάσει της πολυετής εμπειρίας και της τεχνογνωσίας που έχει η εταιρία μας πάνω στους υποσταθμούς Μ.Τ.. Ωστόσο, θα πρέπει να γνωρίζετε ότι μελετάμε, σχεδιάζουμε και υλοποιούμε κάθε έργο σύμφωνα τις ιδιαιτερότητές του.</p>
         </div>';
@@ -691,10 +726,14 @@ class MaintenanceOfferController extends BaseController {
 
         // ================= PAGE 6: FINANCIAL OFFER & SIGNATURES =================
         $pdf->AddPage();
+        $termsHtml = !empty($terms) ? '<p style="margin-top:6px; font-size:9pt; line-height:1.5; color:#1a1a1a;">' . nl2br(htmlspecialchars($terms)) . '</p>' : '';
         $notesHtml = $notes ? '<br/><br/><p style="font-size:9pt; color:#333;"><b>Παρατηρήσεις:</b> ' . nl2br(htmlspecialchars($notes)) . '</p>' : '';
         $p6Html = '
         <div style="font-family:dejavusans; font-size:9.5pt; color:#1a1a1a;">
-          <p style="text-align:center; font-weight:bold; font-size:11pt; margin-bottom:14px;">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+            <tr><td align="center" style="font-weight:bold; font-size:11pt; color:#1a1a1a;">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</td></tr>
+            ' . (!empty($company) ? '<tr><td align="center" style="font-weight:bold; font-size:9.5pt; color:#184c78; padding-top:2px;">' . $company . '</td></tr>' : '') . '
+          </table>
 
           <table border="1" cellpadding="6" cellspacing="0" width="100%" style="border-collapse:collapse; font-size:9.5pt; border:1px solid #000000;">
             <tr style="font-weight:bold;">
@@ -714,7 +753,8 @@ class MaintenanceOfferController extends BaseController {
           <br/><br/>
           <p style="margin-bottom:8px;"><u>Οικονομικοί Όροι</u></p>
           <br/>
-          <p>Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο ' . $company . ' (' . $transCount . 'Μ/Σ)</p>
+          <p>' . $offerTitle . '</p>
+          ' . $termsHtml . '
           ' . $notesHtml . '
         </div>';
         $pdf->writeHTMLCell(170, 0, 20, 32, $p6Html, 0, 1, false, true, '');
@@ -735,7 +775,12 @@ class MaintenanceOfferController extends BaseController {
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(170, 0, 20, 175, $p6SignHtml, 0, 1, false, true, '');
+        $currentY = $pdf->GetY();
+        $signY = max(175, $currentY + 6);
+        if ($signY > 215) {
+            $signY = 215;
+        }
+        $pdf->writeHTMLCell(170, 0, 20, $signY, $p6SignHtml, 0, 1, false, true, '');
 
         return $pdf;
     }
@@ -770,10 +815,11 @@ class MaintenanceOfferController extends BaseController {
         $processor->setValue('ADDRESS',      $offer['address'] ?? '');
         $processor->setValue('PHONE',        $offer['phone'] ?? '');
 
-        $filename = 'Προσφορά_Συντήρησης_' . preg_replace('/[^a-zA-Z0-9_-]/u', '_', $offer['company_name']) . '_' . $offer['offer_number'] . '.docx';
+        $filename = $this->buildOfferFilename($offer, 'docx');
+        $encodedFilename = rawurlencode($filename);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Content-Disposition: attachment; filename="' . $encodedFilename . '"; filename*=UTF-8\'\'' . $encodedFilename);
         header('Cache-Control: max-age=0');
 
         $processor->saveAs('php://output');
@@ -809,8 +855,8 @@ class MaintenanceOfferController extends BaseController {
                 }
 
                 // Generate PDF attachment via TCPDF
-                $pdfFilename    = 'Prosfora_Sintirisis_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $offer['offer_number']) . '.pdf';
-                $attachmentPath = sys_get_temp_dir() . '/' . $pdfFilename;
+                $pdfFilename    = $this->buildOfferFilename($offer, 'pdf');
+                $attachmentPath = sys_get_temp_dir() . '/offer_' . preg_replace('/[^a-zA-Z0-9_-]/', '_', $offer['offer_number']) . '.pdf';
 
                 $pdfMail = $this->buildOfferPDF($offer);
                 $pdfMail->Output($attachmentPath, 'F');

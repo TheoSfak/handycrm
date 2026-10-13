@@ -24,6 +24,15 @@
                                        value="<?= htmlspecialchars($_POST['company_name'] ?? '') ?>"
                                        placeholder="π.χ. ABC Ενεργειακή Α.Ε." required>
                             </div>
+                            <div class="col-md-12">
+                                <label class="form-label">
+                                    Τίτλος / Σενάριο Προσφοράς <small class="text-muted fw-normal">(προαιρετικό - αν μείνει κενό, παράγεται αυτόματα από την επωνυμία και τους Μ/Σ)</small>
+                                </label>
+                                <input type="text" class="form-control" name="title"
+                                       value="<?= htmlspecialchars($_POST['title'] ?? '') ?>"
+                                       placeholder="π.χ. Προσφορά ΣΥΝΤΗΡΗΣΗΣ Υ/Σ Μέσης Τάσης στο Cretan Village (1Μ/Σ)">
+                                <div class="form-text">Εμφανίζεται σε 3 σημεία στο PDF: Εξώφυλλο (Σενάριο), Συνοδευτική Επιστολή & Οικονομικοί Όροι.</div>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label">Διεύθυνση</label>
                                 <input type="text" class="form-control" name="address"
@@ -84,11 +93,21 @@
                             <span class="text-muted small ms-2" id="customPriceNote"></span>
                         </div>
 
+                        <!-- Economic Terms -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                Οικονομικοί Όροι <small class="text-muted fw-normal">(προαιρετικό - εμφανίζεται στην τελευταία σελίδα του PDF)</small>
+                            </label>
+                            <textarea class="form-control" name="terms" rows="3"
+                                      placeholder="Ειδικοί όροι πληρωμής, παραδόσεων κ.λπ..."><?= htmlspecialchars($_POST['terms'] ?? '') ?></textarea>
+                            <div class="form-text">Εμφανίζεται στην 6η σελίδα (Οικονομική Προσφορά) κάτω από τον τίτλο της προσφοράς.</div>
+                        </div>
+
                         <!-- Notes -->
                         <div class="mb-4">
-                            <label class="form-label">Σημειώσεις</label>
+                            <label class="form-label">Σημειώσεις / Παρατηρήσεις</label>
                             <textarea class="form-control" name="notes" rows="3"
-                                      placeholder="Τυχόν ειδικοί όροι ή παρατηρήσεις..."><?= htmlspecialchars($_POST['notes'] ?? '') ?></textarea>
+                                      placeholder="Τυχόν παρατηρήσεις..."><?= htmlspecialchars($_POST['notes'] ?? '') ?></textarea>
                         </div>
 
                         <div class="d-flex gap-2">
