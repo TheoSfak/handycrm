@@ -1,5 +1,17 @@
 # HandyCRM - Change Log
 
+## [1.8.41] - 2026-10-14
+### Added
+- **Πεδίο «Ισχύς (kVA)» Μετασχηματιστών**:
+  - Προσθήκη πεδίου `transformer_power` στις φόρμες δημιουργίας, επεξεργασίας και προβολής προσφορών συντήρησης υποσταθμού (`/maintenance-offers`).
+  - Εμφάνιση της ισχύος (kVA) στο εξώφυλλο του PDF προσφοράς και στην καρτέλα προβολής της προσφοράς.
+  - Migration: `migrations/027_add_transformer_power_to_maintenance_offers.sql`.
+- **In-Memory Headless Chromium (Puppeteer) PDF Generator με TCPDF Fallback**:
+  - Ενσωμάτωση μηχανής παραγωγής PDF μέσω Puppeteer / Headless Chromium (`scripts/generate_pdf_puppeteer.js`) για εκτυπωτική ποιότητα pixel-perfect και πλήρη υποστήριξη σύγχρονου CSS styling.
+  - Αυτόματο fallback στην κλάση TCPDF (`buildOfferPDF`) σε περιβάλλοντα shared hosting χωρίς Node/Chromium, εξασφαλίζοντας 100% αδιάλειπτη συμβατότητα.
+  - Εμπλουτισμός visual branding με εταιρική παλέτα Ecowatt (πορτοκαλί/lime accents, badges και modern layout).
+  - Προσθήκη νέου hero mockup asset υποσταθμού (`templates/docx_images/substation_hero_mockup.jpeg`).
+
 ## [1.8.40] - 2026-10-13
 ### Added
 - **Προαιρετικό Πεδίο «Τίτλος / Σενάριο Προσφοράς»**: Προσθήκη προαιρετικού πεδίου στη φόρμα δημιουργίας και επεξεργασίας προσφορών συντήρησης υποσταθμού (`/maintenance-offers`). Ο τίτλος εμφανίζεται σε 3 σημεία στο PDF (Εξώφυλλο, Συνοδευτική Επιστολή και Οικονομικοί Όροι), ενώ αν παραμείνει κενός παράγεται αυτόματα βάσει της επωνυμίας και του αριθμού Μ/Σ.

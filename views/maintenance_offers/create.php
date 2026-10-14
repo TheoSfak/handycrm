@@ -59,15 +59,22 @@
                         </h6>
 
                         <div class="row g-3 mb-4">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold">Αριθμός Μετασχηματιστών <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" name="transformers_count"
                                        id="transformersCount"
                                        value="<?= (int)($_POST['transformers_count'] ?? 1) ?>"
                                        min="1" max="99" required>
-                                <div class="form-text">1 Μ/Σ = 400€ | 2 = 600€ | 3 = 900€ | 4+ = 1.200€ (+300€/επιπλέον)</div>
+                                <div class="form-text">1 Μ/Σ = 400€ | 2 = 600€...</div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Ισχύς (kVA)</label>
+                                <input type="text" class="form-control" name="transformer_power"
+                                       value="<?= htmlspecialchars($_POST['transformer_power'] ?? '') ?>"
+                                       placeholder="π.χ. 630 kVA ή 500 kVA & 630 kVA">
+                                <div class="form-text">Εμφανίζεται στο εξώφυλλο (Ισχύς)</div>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-bold">Τιμή (€)</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" name="custom_price"
@@ -77,9 +84,9 @@
                                            placeholder="Αυτόματη">
                                     <span class="input-group-text">€</span>
                                 </div>
-                                <div class="form-text">Αφήστε κενό για αυτόματη τιμή βάσει αρ. Μ/Σ</div>
+                                <div class="form-text">Αυτόματη βάσει Μ/Σ αν κενό</div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Λήξη Προσφοράς</label>
                                 <input type="date" class="form-control" name="offer_expiry_date"
                                        value="<?= htmlspecialchars($_POST['offer_expiry_date'] ?? date('Y-m-d', strtotime('+30 days'))) ?>">

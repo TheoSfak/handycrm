@@ -38,3 +38,8 @@ composer.phar
 # Environment files
 .env
 .env.local
+
+# Node & scratch files
+/node_modules/
+scratch_*.pdf
+

@@ -146,6 +146,13 @@
                                     <span class="badge bg-info fs-6"><?= (int)$offer['transformers_count'] ?></span>
                                 </dd>
 
+                                <?php if (!empty($offer['transformer_power'])): ?>
+                                <dt class="col-sm-7 text-muted">Ισχύς (kVA)</dt>
+                                <dd class="col-sm-5 fw-semibold text-primary">
+                                    <?= htmlspecialchars($offer['transformer_power']) ?>
+                                </dd>
+                                <?php endif; ?>
+
                                 <dt class="col-sm-7 text-muted">Τιμή Προσφοράς</dt>
                                 <dd class="col-sm-5 fw-bold text-success fs-5">
                                     <?= number_format((float)$offer['price'], 2, ',', '.') ?> €
