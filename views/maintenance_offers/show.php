@@ -150,9 +150,50 @@
                                 </dd>
                                 <?php endif; ?>
 
-                                <dt class="col-sm-7 text-muted">Τιμή Προσφοράς</dt>
-                                <dd class="col-sm-5 fw-bold text-success fs-5">
+                                <dt class="col-sm-7 text-muted">Τιμή Συντήρησης Μ/Σ</dt>
+                                <dd class="col-sm-5 fw-bold text-dark">
                                     <?= number_format((float)$offer['price'], 2, ',', '.') ?> €
+                                </dd>
+
+                                <?php
+                                $extraName  = trim($offer['extra_service_name'] ?? '');
+                                $extraPrice = (float)($offer['extra_service_price'] ?? 0);
+                                $extraQty   = max(1, (int)($offer['extra_service_qty'] ?? 1));
+                                $hasExtra   = !empty($extraName) && $extraPrice > 0;
+                                $extraTotal = $hasExtra ? ($extraPrice * $extraQty) : 0;
+                                $subtotal   = (float)$offer['price'] + $extraTotal;
+                                $vat        = $subtotal * 0.24;
+                                $grandTotal = $subtotal + $vat;
+                                ?>
+
+                                <?php if ($hasExtra): ?>
+                                <dt class="col-sm-7 text-muted border-top pt-2">Επιπλέον Υπηρεσία</dt>
+                                <dd class="col-sm-5 border-top pt-2 fw-semibold text-primary">
+                                    <?= htmlspecialchars($extraName) ?>
+                                    <?php if ($extraQty > 1): ?>
+                                        <div class="small text-muted fw-normal"><?= $extraQty ?> &times; <?= number_format($extraPrice, 2, ',', '.') ?> €</div>
+                                    <?php endif; ?>
+                                </dd>
+
+                                <dt class="col-sm-7 text-muted">Αξία Επιπλέον Υπηρεσίας</dt>
+                                <dd class="col-sm-5 fw-bold text-dark">
+                                    <?= number_format($extraTotal, 2, ',', '.') ?> €
+                                </dd>
+
+                                <dt class="col-sm-7 text-muted border-top pt-2">Σύνολο προ Φ.Π.Α.</dt>
+                                <dd class="col-sm-5 border-top pt-2 fw-bold text-dark">
+                                    <?= number_format($subtotal, 2, ',', '.') ?> €
+                                </dd>
+                                <?php endif; ?>
+
+                                <dt class="col-sm-7 text-muted">Φ.Π.Α. (24%)</dt>
+                                <dd class="col-sm-5 text-muted">
+                                    <?= number_format($vat, 2, ',', '.') ?> €
+                                </dd>
+
+                                <dt class="col-sm-7 text-muted border-top pt-2 fs-6">Τελικό Σύνολο</dt>
+                                <dd class="col-sm-5 border-top pt-2 fw-bold text-success fs-5">
+                                    <?= number_format($grandTotal, 2, ',', '.') ?> €
                                 </dd>
                             </dl>
                         </div>

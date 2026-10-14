@@ -259,21 +259,30 @@ class MaintenanceOfferController extends BaseController {
             : null;
         $price = $customPrice ?? MaintenanceOffer::calculatePrice($count);
 
+        $extraName  = trim($_POST['extra_service_name'] ?? '');
+        $extraQty   = max(1, (int)($_POST['extra_service_qty'] ?? 1));
+        $extraPrice = (isset($_POST['extra_service_price']) && $_POST['extra_service_price'] !== '')
+            ? (float)$_POST['extra_service_price']
+            : null;
+
         $data = [
-            'offer_number'       => $this->offerModel->generateOfferNumber(),
-            'title'              => trim($_POST['title'] ?? '') ?: null,
-            'company_name'       => trim($_POST['company_name'] ?? ''),
-            'address'            => trim($_POST['address'] ?? ''),
-            'phone'              => trim($_POST['phone'] ?? ''),
-            'email'              => trim($_POST['email'] ?? ''),
-            'transformers_count' => $count,
-            'transformer_power'  => trim($_POST['transformer_power'] ?? '') ?: null,
-            'price'              => $price,
-            'offer_expiry_date'  => $_POST['offer_expiry_date'] ?: null,
-            'terms'              => trim($_POST['terms'] ?? '') ?: null,
-            'notes'              => trim($_POST['notes'] ?? ''),
-            'sent_at'            => date('Y-m-d H:i:s'),
-            'created_by'         => $_SESSION['user_id'],
+            'offer_number'        => $this->offerModel->generateOfferNumber(),
+            'title'               => trim($_POST['title'] ?? '') ?: null,
+            'company_name'        => trim($_POST['company_name'] ?? ''),
+            'address'             => trim($_POST['address'] ?? ''),
+            'phone'               => trim($_POST['phone'] ?? ''),
+            'email'               => trim($_POST['email'] ?? ''),
+            'transformers_count'  => $count,
+            'transformer_power'   => trim($_POST['transformer_power'] ?? '') ?: null,
+            'price'               => $price,
+            'extra_service_name'  => $extraName ?: null,
+            'extra_service_qty'   => $extraQty,
+            'extra_service_price' => $extraPrice,
+            'offer_expiry_date'   => $_POST['offer_expiry_date'] ?: null,
+            'terms'               => trim($_POST['terms'] ?? '') ?: null,
+            'notes'               => trim($_POST['notes'] ?? ''),
+            'sent_at'             => date('Y-m-d H:i:s'),
+            'created_by'          => $_SESSION['user_id'],
         ];
 
         if (empty($data['company_name'])) {
@@ -359,18 +368,27 @@ class MaintenanceOfferController extends BaseController {
             : null;
         $price = $customPrice ?? MaintenanceOffer::calculatePrice($count);
 
+        $extraName  = trim($_POST['extra_service_name'] ?? '');
+        $extraQty   = max(1, (int)($_POST['extra_service_qty'] ?? 1));
+        $extraPrice = (isset($_POST['extra_service_price']) && $_POST['extra_service_price'] !== '')
+            ? (float)$_POST['extra_service_price']
+            : null;
+
         $data = [
-            'title'              => trim($_POST['title'] ?? '') ?: null,
-            'company_name'       => trim($_POST['company_name'] ?? ''),
-            'address'            => trim($_POST['address'] ?? ''),
-            'phone'              => trim($_POST['phone'] ?? ''),
-            'email'              => trim($_POST['email'] ?? ''),
-            'transformers_count' => $count,
-            'transformer_power'  => trim($_POST['transformer_power'] ?? '') ?: null,
-            'price'              => $price,
-            'offer_expiry_date'  => $_POST['offer_expiry_date'] ?: null,
-            'terms'              => trim($_POST['terms'] ?? '') ?: null,
-            'notes'              => trim($_POST['notes'] ?? ''),
+            'title'               => trim($_POST['title'] ?? '') ?: null,
+            'company_name'        => trim($_POST['company_name'] ?? ''),
+            'address'             => trim($_POST['address'] ?? ''),
+            'phone'               => trim($_POST['phone'] ?? ''),
+            'email'               => trim($_POST['email'] ?? ''),
+            'transformers_count'  => $count,
+            'transformer_power'   => trim($_POST['transformer_power'] ?? '') ?: null,
+            'price'               => $price,
+            'extra_service_name'  => $extraName ?: null,
+            'extra_service_qty'   => $extraQty,
+            'extra_service_price' => $extraPrice,
+            'offer_expiry_date'   => $_POST['offer_expiry_date'] ?: null,
+            'terms'               => trim($_POST['terms'] ?? '') ?: null,
+            'notes'               => trim($_POST['notes'] ?? ''),
         ];
 
         if (empty($data['company_name'])) {
@@ -581,9 +599,19 @@ class MaintenanceOfferController extends BaseController {
         $offerNum     = htmlspecialchars($offer['offer_number'] ?? '');
         $today        = !empty($offer['created_at']) ? date('d/m/Y', strtotime($offer['created_at'])) : date('d/m/Y');
         $transCount   = max(1, (int)($offer['transformers_count'] ?? 1));
-        $priceVal     = (float)($offer['price'] ?? 0);
-        $vatVal       = $priceVal * 0.24;
-        $priceWithVat = $priceVal + $vatVal;
+        $basePrice    = (float)($offer['price'] ?? 0);
+        $extraNameRaw = trim($offer['extra_service_name'] ?? '');
+        $extraName    = htmlspecialchars($extraNameRaw);
+        $extraQty     = max(1, (int)($offer['extra_service_qty'] ?? 1));
+        $extraPrice   = (isset($offer['extra_service_price']) && $offer['extra_service_price'] !== null && $offer['extra_service_price'] !== '')
+            ? (float)$offer['extra_service_price']
+            : 0.0;
+        $hasExtra     = !empty($extraNameRaw) && ($extraPrice > 0);
+        $extraTotal   = $hasExtra ? ($extraPrice * $extraQty) : 0.0;
+        $subtotal     = $basePrice + $extraTotal;
+        $vatVal       = $subtotal * 0.24;
+        $priceWithVat = $subtotal + $vatVal;
+        $priceVal     = $basePrice;
         $notes        = trim($offer['notes'] ?? '');
         $terms        = trim($offer['terms'] ?? '');
 
@@ -1384,32 +1412,32 @@ class MaintenanceOfferController extends BaseController {
   /* PAGE 6: FINANCIAL & SIGNATURE */
   .finance-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
   .pricing-table-card {
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
     border: 1px solid #cbd5e1;
     box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
-    margin-bottom: 22px;
+    margin-bottom: 16px;
   }
   .pricing-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13.5px;
+    font-size: 13px;
   }
   .pricing-table th {
     background: #0f172a;
     color: #ffffff;
     font-weight: 700;
-    padding: 16px 20px;
+    padding: 12px 18px;
     text-align: left;
-    font-size: 12.5px;
+    font-size: 12px;
     letter-spacing: 0.5px;
   }
   .pricing-table th:last-child { text-align: right; }
   .pricing-table td {
-    padding: 16px 20px;
+    padding: 11px 18px;
     border-bottom: 1px solid #e2e8f0;
     color: #1e293b;
   }
@@ -1426,12 +1454,12 @@ class MaintenanceOfferController extends BaseController {
   .grand-total-banner {
     background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
     color: #ffffff;
-    padding: 18px 22px;
+    padding: 14px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-radius: 12px;
-    margin-bottom: 26px;
+    margin-bottom: 20px;
     box-shadow: 0 6px 18px rgba(234, 88, 12, 0.25);
   }
   .grand-total-label {
@@ -2017,15 +2045,38 @@ class MaintenanceOfferController extends BaseController {
       <table class="pricing-table">
         <thead>
           <tr>
-            <th>ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΩΝ ΣΥΝΤΗΡΗΣΗΣ</th>
+            <th>ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΩΝ</th>
             <th>ΚΑΘΑΡΗ ΑΞΙΑ</th>
           </tr>
         </thead>
         <tbody>
+        <?php if ($hasExtra): ?>
+          <tr>
+            <td>
+              <strong style="color: #0f172a;">1. Εργασίες Συντήρησης Υποσταθμού &amp; Μετασχηματιστών Μ.Τ.</strong>
+              <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Πλήρης ετήσια συντήρηση βάσει τεχνικών προδιαγραφών (<?= $transCount ?> Μ/Σ)</div>
+            </td>
+            <td><?= number_format($basePrice, 2, ',', '.') ?> €</td>
+          </tr>
+          <tr>
+            <td>
+              <strong style="color: #0f172a;">2. <?= $extraName ?></strong>
+              <?php if ($extraQty > 1): ?>
+                <div style="font-size: 12px; color: #64748b; margin-top: 2px;">Ποσότητα: <?= $extraQty ?> &times; <?= number_format($extraPrice, 2, ',', '.') ?> €</div>
+              <?php endif; ?>
+            </td>
+            <td><?= number_format($extraTotal, 2, ',', '.') ?> €</td>
+          </tr>
+          <tr style="background: #f8fafc; font-weight: 700; border-top: 2px solid #cbd5e1;">
+            <td style="color: #0f172a;">Σύνολο Καθαρής Αξίας (χωρίς Φ.Π.Α.)</td>
+            <td><?= number_format($subtotal, 2, ',', '.') ?> €</td>
+          </tr>
+        <?php else: ?>
           <tr>
             <td>Σύνολο Εργασιών Συντήρησης Υ/Σ (χωρίς Φ.Π.Α.)</td>
-            <td><?= number_format($priceVal, 2, ',', '.') ?> €</td>
+            <td><?= number_format($basePrice, 2, ',', '.') ?> €</td>
           </tr>
+        <?php endif; ?>
           <tr class="vat-row">
             <td>Φ.Π.Α. (24%)</td>
             <td><?= number_format($vatVal, 2, ',', '.') ?> €</td>
@@ -2125,9 +2176,19 @@ class MaintenanceOfferController extends BaseController {
         $offerNum    = htmlspecialchars($offer['offer_number'] ?? '');
         $today       = !empty($offer['created_at']) ? date('d/m/Y', strtotime($offer['created_at'])) : date('d/m/Y');
         $transCount  = max(1, (int)($offer['transformers_count'] ?? 1));
-        $priceVal    = (float)($offer['price'] ?? 0);
-        $vatVal       = $priceVal * 0.24;
-        $priceWithVat = $priceVal + $vatVal;
+        $basePrice    = (float)($offer['price'] ?? 0);
+        $extraNameRaw = trim($offer['extra_service_name'] ?? '');
+        $extraName    = htmlspecialchars($extraNameRaw);
+        $extraQty     = max(1, (int)($offer['extra_service_qty'] ?? 1));
+        $extraPrice   = (isset($offer['extra_service_price']) && $offer['extra_service_price'] !== null && $offer['extra_service_price'] !== '')
+            ? (float)$offer['extra_service_price']
+            : 0.0;
+        $hasExtra     = !empty($extraNameRaw) && ($extraPrice > 0);
+        $extraTotal   = $hasExtra ? ($extraPrice * $extraQty) : 0.0;
+        $subtotal     = $basePrice + $extraTotal;
+        $vatVal       = $subtotal * 0.24;
+        $priceWithVat = $subtotal + $vatVal;
+        $priceVal     = $basePrice;
         $notes        = trim($offer['notes'] ?? '');
         $terms        = trim($offer['terms'] ?? '');
 
@@ -2566,15 +2627,33 @@ class MaintenanceOfferController extends BaseController {
 
         // Executive Pricing Table with integrated Grand Total orange row
         $p6PricingHtml = '
-        <table border="1" cellpadding="7" cellspacing="0" width="100%" style="font-family:dejavusans; border-collapse:collapse; font-size:8.5pt; border:1px solid #cbd5e1;">
+        <table border="1" cellpadding="6" cellspacing="0" width="100%" style="font-family:dejavusans; border-collapse:collapse; font-size:8.5pt; border:1px solid #cbd5e1;">
           <tr style="background-color:#0f172a; color:#ffffff; font-weight:bold;">
-            <td width="70%">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΩΝ ΣΥΝΤΗΡΗΣΗΣ</td>
+            <td width="70%">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΩΝ</td>
             <td width="30%" align="right">ΚΑΘΑΡΗ ΑΞΙΑ</td>
+          </tr>';
+        if ($hasExtra) {
+            $p6PricingHtml .= '
+          <tr>
+            <td style="color:#1e293b;"><b>1. Εργασίες Συντήρησης Υ/Σ &amp; Μ/Σ Μ.Τ.</b></td>
+            <td align="right" style="color:#0f172a; font-weight:bold;">' . number_format($basePrice, 2, ',', '.') . ' €</td>
           </tr>
           <tr>
-            <td style="color:#1e293b;">ΣΥΝΟΛΟ ΕΡΓΑΣΙΩΝ ΣΥΝΤΗΡΗΣΗΣ Υ/Σ (χωρίς Φ.Π.Α.)</td>
-            <td align="right" style="color:#0f172a; font-weight:bold;">' . number_format($priceVal, 2, ',', '.') . ' €</td>
+            <td style="color:#1e293b;"><b>2. ' . $extraName . '</b>' . ($extraQty > 1 ? '<br/><span style="font-size:7.5pt; color:#64748b;">Ποσότητα: ' . $extraQty . ' &times; ' . number_format($extraPrice, 2, ',', '.') . ' €</span>' : '') . '</td>
+            <td align="right" style="color:#0f172a; font-weight:bold;">' . number_format($extraTotal, 2, ',', '.') . ' €</td>
           </tr>
+          <tr style="background-color:#f1f5f9; font-weight:bold;">
+            <td style="color:#0f172a;">Σύνολο Καθαρής Αξίας (χωρίς Φ.Π.Α.)</td>
+            <td align="right" style="color:#0f172a; font-weight:bold;">' . number_format($subtotal, 2, ',', '.') . ' €</td>
+          </tr>';
+        } else {
+            $p6PricingHtml .= '
+          <tr>
+            <td style="color:#1e293b;">Σύνολο Εργασιών Συντήρησης Υ/Σ (χωρίς Φ.Π.Α.)</td>
+            <td align="right" style="color:#0f172a; font-weight:bold;">' . number_format($basePrice, 2, ',', '.') . ' €</td>
+          </tr>';
+        }
+        $p6PricingHtml .= '
           <tr style="background-color:#f8fafc;">
             <td style="color:#64748b;">Φ.Π.Α. (24%)</td>
             <td align="right" style="color:#64748b; font-weight:bold;">' . number_format($vatVal, 2, ',', '.') . ' €</td>

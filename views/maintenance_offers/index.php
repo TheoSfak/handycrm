@@ -91,7 +91,19 @@
                                         <span class="badge bg-info"><?= (int)$offer['transformers_count'] ?></span>
                                     </td>
                                     <td class="text-center fw-bold">
-                                        <?= number_format((float)$offer['price'], 2, ',', '.') ?> €
+                                        <?php
+                                        $extraQty   = max(1, (int)($offer['extra_service_qty'] ?? 1));
+                                        $extraPrice = (float)($offer['extra_service_price'] ?? 0);
+                                        $hasExtra   = !empty($offer['extra_service_name']) && $extraPrice > 0;
+                                        $extraTotal = $hasExtra ? ($extraPrice * $extraQty) : 0;
+                                        $netTotal   = (float)$offer['price'] + $extraTotal;
+                                        ?>
+                                        <?= number_format($netTotal, 2, ',', '.') ?> €
+                                        <?php if ($hasExtra): ?>
+                                            <div class="text-muted small fw-normal" style="font-size: 0.72rem;" title="<?= htmlspecialchars($offer['extra_service_name']) ?>: <?= number_format($extraTotal, 2, ',', '.') ?> €">
+                                                <i class="fas fa-plus text-primary"></i> <?= number_format($extraTotal, 2, ',', '.') ?> €
+                                            </div>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($offer['offer_expiry_date']): ?>

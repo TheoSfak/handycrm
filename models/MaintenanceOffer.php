@@ -100,7 +100,8 @@ class MaintenanceOffer extends BaseModel {
     public function getAcceptedList(): array {
         $db = $this->db->connect();
         $stmt = $db->query("
-            SELECT id, offer_number, company_name, phone, transformers_count, price, accepted_at
+            SELECT id, offer_number, company_name, phone, transformers_count, transformer_power, price,
+                   extra_service_name, extra_service_qty, extra_service_price, accepted_at
             FROM maintenance_offers
             WHERE deleted_at IS NULL AND accepted = 1
             ORDER BY accepted_at DESC
@@ -114,7 +115,8 @@ class MaintenanceOffer extends BaseModel {
     public function getScheduledFutureList(): array {
         $db = $this->db->connect();
         $stmt = $db->query("
-            SELECT id, offer_number, company_name, transformers_count, price, scheduled_date
+            SELECT id, offer_number, company_name, transformers_count, transformer_power, price,
+                   extra_service_name, extra_service_qty, extra_service_price, scheduled_date
             FROM maintenance_offers
             WHERE deleted_at IS NULL
               AND scheduled_date IS NOT NULL

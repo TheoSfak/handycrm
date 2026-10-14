@@ -75,7 +75,7 @@
                                 <div class="form-text">Εμφανίζεται στο εξώφυλλο (Ισχύς)</div>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Τιμή (€)</label>
+                                <label class="form-label fw-bold">Τιμή Συντήρησης (€)</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" name="custom_price"
                                            id="customPrice"
@@ -93,11 +93,47 @@
                             </div>
                         </div>
 
+                        <!-- Δεύτερη / Επιπλέον Υπηρεσία (Προαιρετικό) -->
+                        <h6 class="text-primary mb-3 border-bottom pb-2">
+                            <i class="fas fa-plus-circle me-1"></i> Δεύτερη / Επιπλέον Υπηρεσία <small class="text-muted fw-normal">(προαιρετικό - π.χ. καθαρισμός κυψέλης Χ.Τ.)</small>
+                        </h6>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Περιγραφή Υπηρεσίας</label>
+                                <input type="text" class="form-control" name="extra_service_name" id="extraServiceName"
+                                       value="<?= htmlspecialchars($_POST['extra_service_name'] ?? '') ?>"
+                                       placeholder="π.χ. Καθαρισμός Κυψέλης Χαμηλής Τάσης (Χ.Τ.)">
+                                <div class="form-text">Εμφανίζεται ως 2η γραμμή στον πίνακα της 6ης σελίδας.</div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Ποσότητα</label>
+                                <input type="number" class="form-control" name="extra_service_qty" id="extraServiceQty"
+                                       value="<?= (int)($_POST['extra_service_qty'] ?? 1) ?>"
+                                       min="1" max="999">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Τιμή Μονάδας χωρίς Φ.Π.Α. (€)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="extra_service_price" id="extraServicePrice"
+                                           value="<?= htmlspecialchars($_POST['extra_service_price'] ?? '') ?>"
+                                           min="0" step="0.01"
+                                           placeholder="π.χ. 250">
+                                    <span class="input-group-text">€</span>
+                                </div>
+                                <div class="form-text">Αφήστε κενό αν δεν υπάρχει επιπλέον υπηρεσία</div>
+                            </div>
+                        </div>
+
                         <!-- Calculated price preview -->
                         <div class="alert alert-light border mb-4" id="pricePreview">
-                            <i class="fas fa-calculator me-1 text-primary"></i>
-                            Υπολογιζόμενη τιμή: <strong id="calcPrice">400,00 €</strong>
-                            <span class="text-muted small ms-2" id="customPriceNote"></span>
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fas fa-calculator me-2 text-primary fs-5"></i>
+                                <span class="fw-bold">Οικονομική Σύνοψη Προσφοράς</span>
+                            </div>
+                            <div id="pricePreviewContent" class="ms-4 small">
+                                <!-- Populated dynamically by JS -->
+                            </div>
                         </div>
 
                         <!-- Economic Terms -->
@@ -150,15 +186,46 @@ function updatePricePreview() {
     const customRaw   = document.getElementById('customPrice').value.trim();
     const custom      = customRaw !== '' ? parseFloat(customRaw) : null;
     const autoPrice   = getAutoPrice(count);
-    const displayPrice = custom !== null && !isNaN(custom) ? custom : autoPrice;
+    const displayPrice = (custom !== null && !isNaN(custom)) ? custom : autoPrice;
 
-    document.getElementById('calcPrice').textContent = formatEuro(displayPrice);
-    document.getElementById('customPriceNote').textContent =
-        (custom !== null && !isNaN(custom)) ? '(custom τιμή)' : '(βάσει ' + count + ' Μ/Σ)';
+    // Extra service calculation
+    const extraNameElem  = document.getElementById('extraServiceName');
+    const extraQtyElem   = document.getElementById('extraServiceQty');
+    const extraPriceElem = document.getElementById('extraServicePrice');
+
+    const extraName   = extraNameElem ? extraNameElem.value.trim() : '';
+    const extraQty    = extraQtyElem ? (parseInt(extraQtyElem.value) || 1) : 1;
+    const extraRaw    = extraPriceElem ? extraPriceElem.value.trim() : '';
+    const extraPrice  = extraRaw !== '' ? parseFloat(extraRaw) : 0;
+    const hasExtra    = (extraName !== '' || extraPrice > 0) && !isNaN(extraPrice) && extraPrice > 0;
+    const extraTotal  = hasExtra ? (extraPrice * Math.max(1, extraQty)) : 0;
+
+    const subtotal    = displayPrice + extraTotal;
+    const vat         = subtotal * 0.24;
+    const grandTotal  = subtotal + vat;
+
+    let lines = [];
+    let baseNote = (custom !== null && !isNaN(custom)) ? '(χειροκίνητη τιμή)' : '(αυτόματη βάσει ' + count + ' Μ/Σ)';
+    lines.push('<div>&bull; Συντήρηση Υ/Σ (' + count + ' Μ/Σ): <strong>' + formatEuro(displayPrice) + '</strong> <span class="text-muted">' + baseNote + '</span></div>');
+
+    if (hasExtra) {
+        let label = extraName || 'Επιπλέον Υπηρεσία';
+        let qtyText = extraQty > 1 ? ' (' + extraQty + ' &times; ' + formatEuro(extraPrice) + ')' : '';
+        lines.push('<div>&bull; ' + label + qtyText + ': <strong>' + formatEuro(extraTotal) + '</strong></div>');
+        lines.push('<div class="mt-1 pt-1 border-top fw-bold text-dark">&bull; Σύνολο Καθαρής Αξίας: ' + formatEuro(subtotal) + '</div>');
+    }
+
+    lines.push('<div>&bull; Φ.Π.Α. (24%): <span class="text-muted">' + formatEuro(vat) + '</span></div>');
+    lines.push('<div class="mt-1 text-success fw-bold fs-6">&bull; Τελικό Σύνολο με Φ.Π.Α.: ' + formatEuro(grandTotal) + '</div>');
+
+    document.getElementById('pricePreviewContent').innerHTML = lines.join('');
 }
 
 document.getElementById('transformersCount').addEventListener('input', updatePricePreview);
 document.getElementById('customPrice').addEventListener('input', updatePricePreview);
+document.getElementById('extraServiceName').addEventListener('input', updatePricePreview);
+document.getElementById('extraServiceQty').addEventListener('input', updatePricePreview);
+document.getElementById('extraServicePrice').addEventListener('input', updatePricePreview);
 
 // Init on load
 updatePricePreview();
