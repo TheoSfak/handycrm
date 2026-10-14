@@ -675,6 +675,9 @@ class MaintenanceOfferController extends BaseController {
 <head>
 <meta charset="UTF-8">
 <title>Οικονομική Προσφορά <?= $offerNum ?> - <?= $company ?></title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   @page {
     size: A4 portrait;
@@ -682,6 +685,29 @@ class MaintenanceOfferController extends BaseController {
   }
   @media print {
     .no-print { display: none !important; }
+    body {
+      background: #ffffff !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .page {
+      margin: 0 !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      page-break-after: always !important;
+      break-after: page !important;
+    }
+  }
+  @media screen {
+    body {
+      background-color: #e2e8f0;
+      padding: 24px 0 60px 0;
+    }
+    .page {
+      margin: 0 auto 30px auto;
+      box-shadow: 0 14px 40px rgba(10, 25, 47, 0.16), 0 2px 10px rgba(10, 25, 47, 0.08);
+      border-radius: 4px;
+    }
   }
   * {
     box-sizing: border-box;
@@ -693,7 +719,6 @@ class MaintenanceOfferController extends BaseController {
     padding: 0;
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
     color: #1e293b;
-    background-color: #ffffff;
     font-size: 13px;
     line-height: 1.5;
   }
@@ -1364,9 +1389,12 @@ class MaintenanceOfferController extends BaseController {
 </head>
 <body>
 
-<div class="no-print" style="position:fixed; top:16px; right:20px; z-index:99999; display:flex; gap:10px; font-family:'Segoe UI',sans-serif;">
-  <button onclick="window.print()" style="background:#ea580c; color:#ffffff; border:none; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(234,88,12,0.35); display:flex; align-items:center; gap:8px;">
+<div class="no-print" style="position:fixed; top:18px; right:24px; z-index:99999; display:flex; gap:10px; font-family:'Segoe UI',sans-serif;">
+  <button onclick="window.print()" style="background:#ea580c; color:#ffffff; border:none; padding:11px 22px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(234,88,12,0.45); display:flex; align-items:center; gap:8px;">
     🖨️ Εκτύπωση / Αποθήκευση σε PDF
+  </button>
+  <button onclick="window.close()" style="background:#334155; color:#ffffff; border:none; padding:11px 18px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+    ✕ Κλείσιμο
   </button>
 </div>
 
@@ -1905,7 +1933,7 @@ class MaintenanceOfferController extends BaseController {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // EXPORT PDF (In-Memory Puppeteer with fallback to TCPDF)
+    // VIEW & PRINT OFFER (6-Page High-Fidelity Document -> Print to PDF)
     // ──────────────────────────────────────────────────────────────────────────
     public function exportPDF(int $id): void {
         $offer = $this->offerModel->find($id);
@@ -1917,31 +1945,9 @@ class MaintenanceOfferController extends BaseController {
 
         $html = $this->buildOfferHtml($offer);
 
-        // Support direct HTML preview in browser via ?html=1
-        if (isset($_GET['html'])) {
-            header('Content-Type: text/html; charset=utf-8');
-            echo $html;
-            exit;
-        }
-
-        $filename = $this->buildOfferFilename($offer, 'pdf');
-        $mode     = isset($_GET['download']) ? 'attachment' : 'inline';
-
-        $pdfBinary = $this->generateOfferPdfWithPuppeteer($html);
-        if ($pdfBinary !== null && strlen($pdfBinary) > 1000) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: ' . $mode . '; filename="' . $filename . '"');
-            header('Content-Length: ' . strlen($pdfBinary));
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-            echo $pdfBinary;
-            exit;
-        }
-
-        // Safety fallback to TCPDF
-        $pdf = $this->buildOfferPDF($offer);
-        $pdfMode = isset($_GET['download']) ? 'D' : 'I';
-        $pdf->Output($filename, $pdfMode);
+        header('Content-Type: text/html; charset=utf-8');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        echo $html;
         exit;
     }
 

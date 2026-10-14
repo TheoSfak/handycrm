@@ -176,15 +176,10 @@
                                                class="btn btn-outline-warning" title="Επεξεργασία">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <!-- Export PDF -->
+                                            <!-- Print Offer (HTML -> PDF) -->
                                             <a href="<?= BASE_URL ?>/maintenance-offers/export-pdf/<?= $offer['id'] ?>"
-                                               class="btn btn-outline-danger" title="Λήψη PDF" target="_blank">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </a>
-                                            <!-- Export Word -->
-                                            <a href="<?= BASE_URL ?>/maintenance-offers/export-word/<?= $offer['id'] ?>"
-                                               class="btn btn-outline-primary" title="Λήψη Word">
-                                                <i class="fas fa-file-word"></i>
+                                               class="btn btn-outline-danger" title="Προβολή & Εκτύπωση Προσφοράς" target="_blank">
+                                                <i class="fas fa-print"></i>
                                             </a>
                                             <!-- Send Email -->
                                             <button type="button" class="btn btn-outline-success btn-send-email"
