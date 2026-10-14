@@ -1,5 +1,13 @@
 # HandyCRM - Change Log
 
+## [1.8.44] - 2026-10-14
+### Fixed
+- **Εξάλειψη Κενής 7ης Σελίδας κατά την Εκτύπωση/Εξαγωγή σε PDF**:
+  - Προσθήκη κανόνων CSS `.page:last-child, .page:last-of-type { page-break-after: avoid !important; break-after: avoid !important; }` ώστε να αποτρέπεται ο αναγκαστικός διαχωρισμός σελίδας μετά την 6η σελίδα.
+  - Ρύθμιση ύψους των σελίδων (`height` και `max-height`) στα `295.5mm` (αντί για 297mm) και ορισμός `@page { margin: 0 !important; }` για την αποφυγή υπερχείλισης από στρογγυλοποίηση υπο-pixels (subpixel rounding) στις μηχανές εκτύπωσης των browsers (Chromium/WebKit).
+  - Καθαρισμός trailing whitespace μεταξύ του τελευταίου block σελίδας και του `</body>`.
+  - Προσθήκη καθοδηγητικού badge στην αιωρούμενη μπάρα ενεργειών: «💡 Tip εκτύπωσης: Επιλέξτε Περιθώρια: Κανένα (None)».
+
 ## [1.8.43] - 2026-10-14
 ### Changed
 - **Αποκλειστική Χρήση του Επίσημου Mockup μέσω HTML Εκτύπωσης σε PDF**:

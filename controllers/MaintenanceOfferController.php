@@ -684,18 +684,41 @@ class MaintenanceOfferController extends BaseController {
     margin: 0;
   }
   @media print {
-    .no-print { display: none !important; }
-    body {
+    @page {
+      size: A4 portrait;
+      margin: 0 !important;
+    }
+    html, body {
       background: #ffffff !important;
       padding: 0 !important;
       margin: 0 !important;
+      width: 210mm !important;
+      height: auto !important;
+      overflow: visible !important;
     }
+    .no-print { display: none !important; }
     .page {
       margin: 0 !important;
       box-shadow: none !important;
       border-radius: 0 !important;
       page-break-after: always !important;
       break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      height: 295.5mm !important;
+      max-height: 295.5mm !important;
+    }
+    .page:last-child,
+    .page:last-of-type {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+    .page-cover {
+      height: 295.5mm !important;
+      max-height: 295.5mm !important;
+      padding: 0 !important;
     }
   }
   @media screen {
@@ -724,8 +747,8 @@ class MaintenanceOfferController extends BaseController {
   }
   .page {
     width: 210mm;
-    height: 296mm;
-    max-height: 296mm;
+    height: 295.5mm;
+    max-height: 295.5mm;
     overflow: hidden;
     position: relative;
     background: #ffffff;
@@ -733,11 +756,16 @@ class MaintenanceOfferController extends BaseController {
     break-after: page;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    padding: 13mm 18mm 12mm 18mm;
+    padding: 12mm 18mm 12mm 18mm;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     box-sizing: border-box;
+  }
+  .page:last-child,
+  .page:last-of-type {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
   
   /* Running Header */
@@ -815,7 +843,8 @@ class MaintenanceOfferController extends BaseController {
     background: #ffffff;
     display: block;
     width: 210mm;
-    height: 297mm;
+    height: 295.5mm;
+    max-height: 295.5mm;
     font-family: 'Montserrat', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   }
   .cover-bg-svg {
@@ -823,7 +852,7 @@ class MaintenanceOfferController extends BaseController {
     top: 0;
     left: 0;
     width: 210mm;
-    height: 297mm;
+    height: 100%;
     pointer-events: none;
     z-index: 1;
   }
@@ -1389,7 +1418,10 @@ class MaintenanceOfferController extends BaseController {
 </head>
 <body>
 
-<div class="no-print" style="position:fixed; top:18px; right:24px; z-index:99999; display:flex; gap:10px; font-family:'Segoe UI',sans-serif;">
+<div class="no-print" style="position:fixed; top:18px; right:24px; z-index:99999; display:flex; align-items:center; gap:10px; font-family:'Segoe UI',sans-serif;">
+  <div style="background:#0f172a; color:#f8fafc; padding:9px 14px; border-radius:8px; font-size:12.5px; box-shadow:0 4px 12px rgba(0,0,0,0.15); border:1px solid #334155;">
+    💡 <strong>Tip εκτύπωσης:</strong> Επιλέξτε <em>Περιθώρια: Κανένα (None)</em>
+  </div>
   <button onclick="window.print()" style="background:#ea580c; color:#ffffff; border:none; padding:11px 22px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(234,88,12,0.45); display:flex; align-items:center; gap:8px;">
     🖨️ Εκτύπωση / Αποθήκευση σε PDF
   </button>
@@ -1924,9 +1956,7 @@ class MaintenanceOfferController extends BaseController {
     </div>
     <div class="footer-page">Σελίδα 6 από 6</div>
   </div>
-</div>
-
-</body>
+</div></body>
 </html>
         <?php
         return ob_get_clean();
