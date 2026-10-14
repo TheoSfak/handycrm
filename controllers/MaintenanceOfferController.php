@@ -14,6 +14,7 @@ if (!class_exists('TCPDF')) {
 if (!class_exists('CustomOfferPDF')) {
     class CustomOfferPDF extends TCPDF {
         public string $logoPath = '';
+        public string $offerDate = '';
         public string $companyFooterHtml = '';
         public string $companyFooterCompactHtml = '';
         public static string $staticFooterHtml = '';
@@ -24,6 +25,15 @@ if (!class_exists('CustomOfferPDF')) {
                 if ($this->logoPath && file_exists($this->logoPath)) {
                     $this->Image($this->logoPath, 20, 8, 52, 0, 'JPEG');
                 }
+
+                // Date on top right of pages > 1
+                if (!empty($this->offerDate)) {
+                    $this->SetXY(112, 10);
+                    $this->SetFont('dejavusans', 'B', 8);
+                    $this->SetTextColor(100, 116, 139);
+                    $this->Cell(40, 6.5, 'Ημ/νία: ' . $this->offerDate, 0, 0, 'R');
+                }
+
                 // "ΠΡΟΣΦΟΡΑ" badge with Ecowatt brand colors
                 $this->SetXY(156, 10);
                 $this->SetFont('dejavusans', 'B', 8.5);
@@ -811,6 +821,38 @@ class MaintenanceOfferController extends BaseController {
     border-radius: 20px;
     text-transform: uppercase;
   }
+  .header-meta-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-date-pill {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 3.5px 12px;
+    font-size: 10.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .header-date-label {
+    color: #64748b;
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .header-date-text {
+    color: #0f172a;
+    font-weight: 800;
+  }
+  .footer-date {
+    color: #475569;
+    font-weight: 700;
+    margin-right: 4px;
+  }
 
   /* Running Footer */
   .footer-bar {
@@ -882,6 +924,44 @@ class MaintenanceOfferController extends BaseController {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    width: 100%;
+  }
+  .cover-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+  }
+  .cover-top-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 2px;
+  }
+  .cover-top-date-badge {
+    background: #ffffff;
+    border: 1px solid #fed7aa;
+    border-left: 4px solid #ea580c;
+    box-shadow: 0 4px 14px rgba(10, 25, 47, 0.08);
+    border-radius: 8px;
+    padding: 6px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .cover-top-date-label {
+    font-size: 8.5px;
+    font-weight: 800;
+    color: #ea580c;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1.2;
+  }
+  .cover-top-date-val {
+    font-size: 13.5px;
+    font-weight: 900;
+    color: #0a192f;
+    line-height: 1.25;
   }
   .cover-top-logo {
     display: flex;
@@ -1496,16 +1576,24 @@ class MaintenanceOfferController extends BaseController {
   </svg>
 
   <div class="cover-content">
-    <!-- Header Block: Top Logo + Titles grouped towards the top -->
+    <!-- Header Block: Top Logo + Date + Titles grouped towards the top -->
     <div class="cover-header-group">
-      <div class="cover-top-logo">
-        <?php if (!empty($logoBase64)): ?>
-          <img src="<?= $logoBase64 ?>" class="cover-logo-img" alt="<?= htmlspecialchars($coDisplayName) ?>">
-        <?php else: ?>
-          <div class="cover-logo-title-row">
-            <span class="cover-logo-navy"><?= htmlspecialchars($coDisplayName) ?></span>
+      <div class="cover-top-row">
+        <div class="cover-top-logo">
+          <?php if (!empty($logoBase64)): ?>
+            <img src="<?= $logoBase64 ?>" class="cover-logo-img" alt="<?= htmlspecialchars($coDisplayName) ?>">
+          <?php else: ?>
+            <div class="cover-logo-title-row">
+              <span class="cover-logo-navy"><?= htmlspecialchars($coDisplayName) ?></span>
+            </div>
+          <?php endif; ?>
+        </div>
+        <div class="cover-top-meta">
+          <div class="cover-top-date-badge">
+            <span class="cover-top-date-label">ΗΜΕΡΟΜΗΝΙΑ</span>
+            <span class="cover-top-date-val"><?= $today ?></span>
           </div>
-        <?php endif; ?>
+        </div>
       </div>
 
       <!-- Titles -->
@@ -1573,7 +1661,13 @@ class MaintenanceOfferController extends BaseController {
     <?php else: ?>
       <strong><?= htmlspecialchars($coName) ?></strong>
     <?php endif; ?>
-    <div class="header-badge">ΠΡΟΣΦΟΡΑ <?= $offerNum ?></div>
+    <div class="header-meta-group">
+      <div class="header-date-pill">
+        <span class="header-date-label">ΗΜ/ΝΙΑ:</span>
+        <span class="header-date-text"><?= $today ?></span>
+      </div>
+      <div class="header-badge">ΠΡΟΣΦΟΡΑ <?= $offerNum ?></div>
+    </div>
   </div>
 
   <div style="flex: 1; padding: 22px 0 10px 0; display: flex; flex-direction: column; justify-content: space-between;">
@@ -1617,7 +1711,7 @@ class MaintenanceOfferController extends BaseController {
     <div class="footer-co">
       <?= $runningFooterHtml ?>
     </div>
-    <div class="footer-page">Σελίδα 2 από 6</div>
+    <div class="footer-page"><span class="footer-date"><?= $today ?></span> &bull; Σελίδα 2 από 6</div>
   </div>
 </div>
 
@@ -1629,7 +1723,13 @@ class MaintenanceOfferController extends BaseController {
     <?php else: ?>
       <strong><?= htmlspecialchars($coDisplayName ?: $coName) ?></strong>
     <?php endif; ?>
-    <div class="header-badge">ΠΙΣΤΟΠΟΙΗΣΗ ΠΟΙΟΤΗΤΑΣ</div>
+    <div class="header-meta-group">
+      <div class="header-date-pill">
+        <span class="header-date-label">ΗΜ/ΝΙΑ:</span>
+        <span class="header-date-text"><?= $today ?></span>
+      </div>
+      <div class="header-badge">ΠΙΣΤΟΠΟΙΗΣΗ ΠΟΙΟΤΗΤΑΣ</div>
+    </div>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; padding: 10px 0;">
@@ -1650,7 +1750,7 @@ class MaintenanceOfferController extends BaseController {
     <div class="footer-co">
       <?= $runningFooterHtml ?>
     </div>
-    <div class="footer-page">Σελίδα 3 από 6</div>
+    <div class="footer-page"><span class="footer-date"><?= $today ?></span> &bull; Σελίδα 3 από 6</div>
   </div>
 </div>
 
@@ -1662,7 +1762,13 @@ class MaintenanceOfferController extends BaseController {
     <?php else: ?>
       <strong><?= htmlspecialchars($coDisplayName ?: $coName) ?></strong>
     <?php endif; ?>
-    <div class="header-badge">ΤΕΧΝΙΚΕΣ ΕΡΓΑΣΙΕΣ</div>
+    <div class="header-meta-group">
+      <div class="header-date-pill">
+        <span class="header-date-label">ΗΜ/ΝΙΑ:</span>
+        <span class="header-date-text"><?= $today ?></span>
+      </div>
+      <div class="header-badge">ΤΕΧΝΙΚΕΣ ΕΡΓΑΣΙΕΣ</div>
+    </div>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 0 4px 0;">
@@ -1825,7 +1931,7 @@ class MaintenanceOfferController extends BaseController {
     <div class="footer-co">
       <?= $runningFooterHtml ?>
     </div>
-    <div class="footer-page">Σελίδα 4 από 6</div>
+    <div class="footer-page"><span class="footer-date"><?= $today ?></span> &bull; Σελίδα 4 από 6</div>
   </div>
 </div>
 
@@ -1837,7 +1943,13 @@ class MaintenanceOfferController extends BaseController {
     <?php else: ?>
       <strong><?= htmlspecialchars($coDisplayName ?: $coName) ?></strong>
     <?php endif; ?>
-    <div class="header-badge">ΕΜΠΕΙΡΙΑ & ΑΞΙΟΠΙΣΤΙΑ</div>
+    <div class="header-meta-group">
+      <div class="header-date-pill">
+        <span class="header-date-label">ΗΜ/ΝΙΑ:</span>
+        <span class="header-date-text"><?= $today ?></span>
+      </div>
+      <div class="header-badge">ΕΜΠΕΙΡΙΑ & ΑΞΙΟΠΙΣΤΙΑ</div>
+    </div>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; padding: 12px 0;">
@@ -1875,7 +1987,7 @@ class MaintenanceOfferController extends BaseController {
     <div class="footer-co">
       <?= $runningFooterHtml ?>
     </div>
-    <div class="footer-page">Σελίδα 5 από 6</div>
+    <div class="footer-page"><span class="footer-date"><?= $today ?></span> &bull; Σελίδα 5 από 6</div>
   </div>
 </div>
 
@@ -1887,7 +1999,13 @@ class MaintenanceOfferController extends BaseController {
     <?php else: ?>
       <strong><?= htmlspecialchars($coName) ?></strong>
     <?php endif; ?>
-    <div class="header-badge">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</div>
+    <div class="header-meta-group">
+      <div class="header-date-pill">
+        <span class="header-date-label">ΗΜ/ΝΙΑ:</span>
+        <span class="header-date-text"><?= $today ?></span>
+      </div>
+      <div class="header-badge">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</div>
+    </div>
   </div>
 
   <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between; padding: 16px 0 8px 0;">
@@ -1970,7 +2088,7 @@ class MaintenanceOfferController extends BaseController {
     <div class="footer-co">
       <?= $runningFooterHtml ?>
     </div>
-    <div class="footer-page">Σελίδα 6 από 6</div>
+    <div class="footer-page"><span class="footer-date"><?= $today ?></span> &bull; Σελίδα 6 από 6</div>
   </div>
 </div></body>
 </html>
@@ -2109,6 +2227,7 @@ class MaintenanceOfferController extends BaseController {
 
         $pdf = new CustomOfferPDF('P', 'mm', 'A4', true, 'UTF-8', false);
         $pdf->logoPath                  = $logoPath;
+        $pdf->offerDate                 = $today;
         $pdf->companyFooterHtml         = $footerHtml;
         $pdf->companyFooterCompactHtml  = $footerCompactHtml;
         CustomOfferPDF::$staticFooterHtml        = $footerHtml;
