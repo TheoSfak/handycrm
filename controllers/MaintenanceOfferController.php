@@ -720,11 +720,17 @@ class MaintenanceOfferController extends BaseController {
       max-height: 295.5mm !important;
       padding: 0 !important;
     }
+    .cover-photo-card {
+      width: 100% !important;
+      height: 110mm !important;
+      max-height: 110mm !important;
+      box-sizing: border-box !important;
+    }
   }
   @media screen {
     body {
       background-color: #e2e8f0;
-      padding: 24px 0 60px 0;
+      padding: 72px 0 60px 0;
     }
     .page {
       margin: 0 auto 30px auto;
@@ -859,11 +865,12 @@ class MaintenanceOfferController extends BaseController {
   .cover-content {
     position: relative;
     z-index: 2;
-    padding: 8mm 22mm 14mm 22mm;
+    padding: 10mm 15mm 12mm 15mm;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    box-sizing: border-box;
   }
 
   /* Header Group: Logo & Titles grouped towards the top */
@@ -926,16 +933,19 @@ class MaintenanceOfferController extends BaseController {
     letter-spacing: -0.2px;
   }
 
-  /* Photo Frame: 9px white border, 20px radius, soft corporate shadow */
+  /* Photo Frame: matches mockup identically with 110mm height, rounded white border, corporate shadow */
   .cover-photo-card {
     background: #ffffff;
     border-radius: 20px;
-    padding: 9px;
+    padding: 4.5mm;
     box-shadow: 0 14px 34px rgba(10, 25, 47, 0.13);
     border: 1px solid rgba(226, 232, 240, 0.9);
-    height: 395px;
+    width: 100%;
+    height: 110mm;
+    max-height: 110mm;
     display: flex;
     overflow: hidden;
+    box-sizing: border-box;
   }
   .cover-photo-card img {
     width: 100%;
@@ -952,8 +962,10 @@ class MaintenanceOfferController extends BaseController {
     border-radius: 18px;
     border: 1px solid #e2e8f0;
     box-shadow: 0 6px 20px rgba(10, 25, 47, 0.04);
-    padding: 18px 24px;
+    padding: 16px 24px;
     margin-top: 6px;
+    width: 100%;
+    box-sizing: border-box;
   }
   .cover-client-title {
     font-size: 22px;
@@ -1418,14 +1430,14 @@ class MaintenanceOfferController extends BaseController {
 </head>
 <body>
 
-<div class="no-print" style="position:fixed; top:18px; right:24px; z-index:99999; display:flex; align-items:center; gap:10px; font-family:'Segoe UI',sans-serif;">
-  <div style="background:#0f172a; color:#f8fafc; padding:9px 14px; border-radius:8px; font-size:12.5px; box-shadow:0 4px 12px rgba(0,0,0,0.15); border:1px solid #334155;">
+<div class="no-print" style="position:fixed; top:12px; right:20px; z-index:99999; display:flex; align-items:center; gap:10px; font-family:'Segoe UI',sans-serif; background:rgba(15, 23, 42, 0.92); backdrop-filter:blur(8px); padding:8px 14px; border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.15);">
+  <div style="background:#0f172a; color:#f8fafc; padding:8px 12px; border-radius:8px; font-size:12px; border:1px solid #334155;">
     💡 <strong>Tip εκτύπωσης:</strong> Επιλέξτε <em>Περιθώρια: Κανένα (None)</em>
   </div>
-  <button onclick="window.print()" style="background:#ea580c; color:#ffffff; border:none; padding:11px 22px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 6px 20px rgba(234,88,12,0.45); display:flex; align-items:center; gap:8px;">
+  <button onclick="window.print()" style="background:#ea580c; color:#ffffff; border:none; padding:10px 20px; border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; box-shadow:0 6px 16px rgba(234,88,12,0.45); display:flex; align-items:center; gap:7px;">
     🖨️ Εκτύπωση / Αποθήκευση σε PDF
   </button>
-  <button onclick="window.close()" style="background:#334155; color:#ffffff; border:none; padding:11px 18px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+  <button onclick="window.close()" style="background:#334155; color:#ffffff; border:none; padding:10px 16px; border-radius:8px; font-size:13.5px; font-weight:600; cursor:pointer; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
     ✕ Κλείσιμο
   </button>
 </div>
