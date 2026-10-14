@@ -42,4 +42,6 @@ composer.phar
 # Node & scratch files
 /node_modules/
 scratch_*.pdf
+scratch_*.html
+scratch_preview.html
 

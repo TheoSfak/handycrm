@@ -680,6 +680,9 @@ class MaintenanceOfferController extends BaseController {
     size: A4 portrait;
     margin: 0;
   }
+  @media print {
+    .no-print { display: none !important; }
+  }
   * {
     box-sizing: border-box;
     -webkit-print-color-adjust: exact !important;
@@ -1361,6 +1364,12 @@ class MaintenanceOfferController extends BaseController {
 </head>
 <body>
 
+<div class="no-print" style="position:fixed; top:16px; right:20px; z-index:99999; display:flex; gap:10px; font-family:'Segoe UI',sans-serif;">
+  <button onclick="window.print()" style="background:#ea580c; color:#ffffff; border:none; padding:10px 20px; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; box-shadow:0 6px 18px rgba(234,88,12,0.35); display:flex; align-items:center; gap:8px;">
+    🖨️ Εκτύπωση / Αποθήκευση σε PDF
+  </button>
+</div>
+
 <!-- ==================== PAGE 1: COVER ==================== -->
 <div class="page page-cover">
   <!-- Exact Geometry matching mockup with Lime Green & Orange Accents -->
@@ -2022,7 +2031,7 @@ class MaintenanceOfferController extends BaseController {
             $logoPath = $getImage('image1.jpeg');
         }
 
-        $transPath   = $getImage('image2.jpeg');
+        $transPath   = $getImage('substation_hero_mockup.jpeg', 'image2.jpeg');
         $isoCertPath = $getImage('iso_certificate_greek.jpeg', 'image5.jpeg');
         $signPath    = $getImage('image6.jpeg');
 
@@ -2067,11 +2076,11 @@ class MaintenanceOfferController extends BaseController {
         $topEmail = !empty($co['company_email']) ? $co['company_email'] : 'info@ecowatt-energy.gr';
         $topPhone = !empty($co['company_phone']) ? $co['company_phone'] : '2811 113851';
 
-        // ================= PAGE 1: COVER =================
+        // ================= PAGE 1: COVER (MODERN MOCKUP ALIGNED) =================
         $pdf->AddPage();
         $pdf->SetFont('dejavusans', '', 10);
         if ($logoPath && file_exists($logoPath)) {
-            $pdf->Image($logoPath, 20, 13, 56, 0, 'JPEG');
+            $pdf->Image($logoPath, 20, 9, 62, 0, 'JPEG');
         }
 
         // Top-right clean meta block
@@ -2089,25 +2098,25 @@ class MaintenanceOfferController extends BaseController {
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(90, 0, 100, 14, $p1TopMetaHtml, 0, 1, false, true, 'R');
+        $pdf->writeHTMLCell(90, 0, 100, 10, $p1TopMetaHtml, 0, 1, false, true, 'R');
 
-        // Clean subtle two-tone divider line at Y=28
+        // Clean subtle two-tone divider line at Y=23
         $pdf->SetDrawColor(132, 204, 22); // Lime #84cc16
         $pdf->SetLineWidth(0.6);
-        $pdf->Line(20, 28, 105, 28);
+        $pdf->Line(20, 23, 105, 23);
         $pdf->SetDrawColor(249, 115, 22); // Orange #f97316
-        $pdf->Line(105, 28, 190, 28);
+        $pdf->Line(105, 23, 190, 23);
 
-        // Centered Main Title
+        // Prominent Modern Title Header towards top (Y=26)
         $p1HeaderHtml = '
         <table width="100%" cellpadding="0" cellspacing="0" style="font-family:dejavusans; text-align:center;">
           <tr>
-            <td style="font-size:14pt; font-weight:bold; color:#0f172a; letter-spacing:0.5px;">
+            <td style="font-size:13.5pt; font-weight:bold; color:#0f172a; letter-spacing:0.5px;">
               ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ
             </td>
           </tr>
           <tr>
-            <td style="font-size:11pt; font-weight:bold; color:#ea580c; padding-top:3px;">
+            <td style="font-size:11.5pt; font-weight:bold; color:#ea580c; padding-top:2px;">
               ' . $company . '
             </td>
           </tr>
@@ -2117,14 +2126,18 @@ class MaintenanceOfferController extends BaseController {
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(170, 0, 20, 36, $p1HeaderHtml, 0, 1, false, true, '');
+        $pdf->writeHTMLCell(170, 0, 20, 26, $p1HeaderHtml, 0, 1, false, true, '');
 
-        // Un-distorted Transformer Image centered at original aspect ratio (height=0 auto, width=100)
+        // Large High-Impact Transformer Hero Photo Card (centered at Y=49, width 142mm)
         if ($transPath && file_exists($transPath)) {
-            $pdf->Image($transPath, 55, 68, 100, 0, 'JPEG');
+            $pdf->SetDrawColor(226, 232, 240); // Soft border #e2e8f0
+            $pdf->SetLineWidth(0.4);
+            $pdf->SetFillColor(248, 250, 252);
+            $pdf->RoundedRect(32, 47, 146, 88, 3, '1111', 'DF');
+            $pdf->Image($transPath, 34, 49, 142, 0, 'JPEG');
         }
 
-        // Scenario / Offer Title Callout below image (Y=176)
+        // Scenario / Offer Title Callout below image (Y=143)
         $scenarioPrefix = (mb_stripos($offerTitle, 'Σενάριο') === 0 || mb_stripos($offerTitle, 'Σεναριο') === 0) ? '' : 'Σενάριο: ';
         $scenarioHtml = '
         <table width="100%" cellpadding="6" cellspacing="0" style="font-family:dejavusans; background-color:#f8fafc; border-left:4px solid #ea580c; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">
@@ -2134,9 +2147,9 @@ class MaintenanceOfferController extends BaseController {
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(170, 0, 20, 176, $scenarioHtml, 0, 1, false, true, '');
+        $pdf->writeHTMLCell(170, 0, 20, 143, $scenarioHtml, 0, 1, false, true, '');
 
-        // Clean 2-column Metadata below scenario (Y=192)
+        // Clean 2-column Metadata below scenario (Y=160)
         $p1MetaHtml = '
         <table width="100%" cellpadding="6" cellspacing="0" style="font-family:dejavusans; background-color:#ffffff; border:1px solid #e2e8f0; font-size:8.5pt; line-height:1.45; color:#1e293b;">
           <tr>
@@ -2152,26 +2165,26 @@ class MaintenanceOfferController extends BaseController {
               <b>Αρ. Προσφοράς:</b> ' . $offerNum . '<br/>
               <b>Ημερομηνία:</b> ' . $today . '<br/>
               <b>Εξοπλισμός:</b> ' . $transCount . ' Μετασχηματιστής/ές Μ.Τ.<br/>
-              <b>Ισχύς:</b> ' . htmlspecialchars($transPower) . '<br/>
+              <b>Ισχύς (kVA):</b> ' . htmlspecialchars($transPower) . '<br/>
               <b>Ισχύς Προσφοράς:</b> ' . (!empty($offer['offer_expiry_date']) ? date('d/m/Y', strtotime($offer['offer_expiry_date'])) : '30 ημέρες') . '
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(170, 0, 20, 192, $p1MetaHtml, 0, 1, false, true, '');
+        $pdf->writeHTMLCell(170, 0, 20, 160, $p1MetaHtml, 0, 1, false, true, '');
 
         // ================= PAGE 2: LETTER =================
         $pdf->AddPage();
         $pdf->SetFont('dejavusans', '', 10);
         $p2Html = '
-        <div style="font-family:dejavusans; font-size:9pt; line-height:1.6; color:#1e293b;">
-          <p style="font-size:10pt; font-weight:bold; color:#0f172a; margin-bottom:10px;">Αξιότιμοι κύριοι,</p>
+        <div style="font-family:dejavusans; font-size:9pt; line-height:1.65; color:#1e293b;">
+          <p style="font-size:10.5pt; font-weight:bold; color:#0f172a; margin-bottom:14px;">Αξιότιμοι κύριοι,</p>
           
-          <p style="margin-bottom:12px;">
+          <p style="margin-bottom:16px;">
             Θα θέλαμε να σας ευχαριστήσουμε θερμά για το ενδιαφέρον σας σχετικά με τις παρεχόμενες τεχνικές υπηρεσίες και τον εξοπλισμό της εταιρείας μας. Σας διαβεβαιώνουμε ότι παραμένουμε πάντα στη διάθεσή σας για να σας προσφέρουμε υψηλής ποιότητας, ασφαλείς και προηγμένης τεχνολογίας λύσεις.
           </p>
 
           <!-- Title Callout Box with Orange Accent -->
-          <table width="100%" cellpadding="8" cellspacing="0" style="background-color:#f8fafc; border-left:4px solid #ea580c; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; margin-bottom:14px;">
+          <table width="100%" cellpadding="8" cellspacing="0" style="background-color:#f8fafc; border-left:4px solid #ea580c; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; margin-bottom:18px;">
             <tr>
               <td>
                 <span style="font-size:7.5pt; color:#ea580c; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">ΑΝΤΙΚΕΙΜΕΝΟ ΤΕΧΝΙΚΗΣ ΠΡΟΣΦΟΡΑΣ</span><br/>
@@ -2180,22 +2193,22 @@ class MaintenanceOfferController extends BaseController {
             </tr>
           </table>
 
-          <p style="margin-bottom:14px;">
+          <p style="margin-bottom:20px;">
             Η περιγραφή των εργασιών που ακολουθεί συντάχθηκε βάσει της πολυετούς εμπειρίας και της εξειδικευμένης τεχνογνωσίας που διαθέτει η εταιρεία μας στους Υποσταθμούς Μέσης Τάσης (Μ.Τ.). Μελετούμε, σχεδιάζουμε και υλοποιούμε κάθε έργο σύμφωνα με τις ιδιαίτερες τεχνικές απαιτήσεις και τις προδιαγραφές ασφαλείας της εγκατάστασής σας.
           </p>
 
           <!-- 3 Pillars of Excellence -->
-          <table width="100%" cellpadding="6" cellspacing="4" style="margin-top:12px;">
+          <table width="100%" cellpadding="8" cellspacing="5" style="margin-top:16px;">
             <tr>
-              <td width="33%" style="background-color:#f8fafc; border-top:3px solid #65a30d; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-size:7.5pt; line-height:1.4;">
+              <td width="33%" style="background-color:#f8fafc; border-top:3px solid #65a30d; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-size:7.5pt; line-height:1.45;">
                 <b style="color:#0f172a; font-size:8.5pt;">✔ Εξειδίκευση Μ.Τ.</b><br/>
                 <span style="color:#64748b;">Πολυετής εμπειρία &amp; βαθιά τεχνογνωσία σε βιομηχανικούς υποσταθμούς.</span>
               </td>
-              <td width="34%" style="background-color:#f8fafc; border-top:3px solid #ea580c; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-size:7.5pt; line-height:1.4;">
+              <td width="34%" style="background-color:#f8fafc; border-top:3px solid #ea580c; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-size:7.5pt; line-height:1.45;">
                 <b style="color:#0f172a; font-size:8.5pt;">✔ Πιστοποίηση ISO</b><br/>
                 <span style="color:#64748b;">Τυποποιημένες διαδικασίες ελέγχου βάσει διεθνούς προτύπου ISO 9001:2015.</span>
               </td>
-              <td width="33%" style="background-color:#f8fafc; border-top:3px solid #65a30d; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-size:7.5pt; line-height:1.4;">
+              <td width="33%" style="background-color:#f8fafc; border-top:3px solid #65a30d; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; font-size:7.5pt; line-height:1.45;">
                 <b style="color:#0f172a; font-size:8.5pt;">✔ Σύγχρονος Έλεγχος</b><br/>
                 <span style="color:#64748b;">Διακριβωμένα όργανα μετρήσεων υψηλής ακρίβειας.</span>
               </td>
@@ -2237,7 +2250,7 @@ class MaintenanceOfferController extends BaseController {
         $pdf->writeHTMLCell(170, 0, 20, 25, $p4HeaderHtml, 0, 1, false, true, '');
 
         $p4GridHtml = '
-        <table width="100%" cellpadding="5" cellspacing="6" style="font-family:dejavusans; font-size:8pt; line-height:1.45;">
+        <table width="100%" cellpadding="6" cellspacing="6" style="font-family:dejavusans; font-size:8pt; line-height:1.45;">
           <!-- ROW 1 -->
           <tr>
             <td width="50%" valign="top" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-top:3px solid #ea580c;">
@@ -2305,7 +2318,7 @@ class MaintenanceOfferController extends BaseController {
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(170, 0, 20, 126, $p4TrustHtml, 0, 1, false, true, '');
+        $pdf->writeHTMLCell(170, 0, 20, 134, $p4TrustHtml, 0, 1, false, true, '');
 
         // ================= PAGE 5: CLIENTS =================
         $pdf->AddPage();
@@ -2384,7 +2397,7 @@ class MaintenanceOfferController extends BaseController {
 
         // Executive Pricing Table with integrated Grand Total orange row
         $p6PricingHtml = '
-        <table border="1" cellpadding="6" cellspacing="0" width="100%" style="font-family:dejavusans; border-collapse:collapse; font-size:8.5pt; border:1px solid #cbd5e1;">
+        <table border="1" cellpadding="7" cellspacing="0" width="100%" style="font-family:dejavusans; border-collapse:collapse; font-size:8.5pt; border:1px solid #cbd5e1;">
           <tr style="background-color:#0f172a; color:#ffffff; font-weight:bold;">
             <td width="70%">ΠΕΡΙΓΡΑΦΗ ΕΡΓΑΣΙΩΝ ΣΥΝΤΗΡΗΣΗΣ</td>
             <td width="30%" align="right">ΚΑΘΑΡΗ ΑΞΙΑ</td>
@@ -2404,15 +2417,15 @@ class MaintenanceOfferController extends BaseController {
         </table>';
         $pdf->writeHTMLCell(170, 0, 20, 36, $p6PricingHtml, 0, 1, false, true, '');
 
-        $afterTableY = $pdf->GetY() + 4;
+        $afterTableY = $pdf->GetY() + 6;
 
         // Terms & Title Card
         $termsContent = !empty($terms) ? nl2br(htmlspecialchars($terms)) : 'Στις παραπάνω τιμές περιλαμβάνεται η εκτέλεση όλων των περιγραφόμενων εργασιών και η παράδοση πλήρους επίσημου πρωτοκόλλου συντήρησης.';
         $notesContent = $notes ? '<br/><br/><b>Παρατηρήσεις:</b> ' . nl2br(htmlspecialchars($notes)) : '';
         $p6TermsHtml = '
-        <table width="100%" cellpadding="6" cellspacing="0" style="font-family:dejavusans; background-color:#f8fafc; border-left:4px solid #65a30d; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">
+        <table width="100%" cellpadding="7" cellspacing="0" style="font-family:dejavusans; background-color:#f8fafc; border-left:4px solid #65a30d; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">
           <tr>
-            <td style="font-size:8pt; line-height:1.45; color:#1e293b;">
+            <td style="font-size:8pt; line-height:1.5; color:#1e293b;">
               <span style="font-size:8.5pt; font-weight:bold; color:#65a30d;">ΟΙΚΟΝΟΜΙΚΟΙ ΟΡΟΙ &amp; ΣΤΟΙΧΕΙΑ ΠΡΟΣΦΟΡΑΣ</span><br/>
               <b>Αντικείμενο:</b> ' . $offerTitle . '<br/><br/>
               ' . $termsContent . '
@@ -2424,9 +2437,9 @@ class MaintenanceOfferController extends BaseController {
 
         // Signatures block at dynamic Y position
         $currentY = $pdf->GetY();
-        $signY = max(140, $currentY + 6);
-        if ($signY > 200) {
-            $signY = 200;
+        $signY = max(152, $currentY + 8);
+        if ($signY > 205) {
+            $signY = 205;
         }
 
         $p6SignHtml = '

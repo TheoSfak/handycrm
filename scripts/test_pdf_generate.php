@@ -45,10 +45,11 @@ echo "Generating PDF with Puppeteer...\n";
 $pdfData = $controller->generateOfferPdfWithPuppeteer($html);
 
 if ($pdfData && strlen($pdfData) > 1000) {
-    file_put_contents(__DIR__ . '/../scratch_test_final.pdf', $pdfData);
-    echo "SUCCESS: scratch_test_final.pdf generated (" . strlen($pdfData) . " bytes)\n";
-} else {
-    echo "Puppeteer failed, falling back to TCPDF\n";
-    $pdf = $controller->buildOfferPDF($offer);
-    $pdf->Output(__DIR__ . '/../scratch_test_final.pdf', 'F');
+    file_put_contents(__DIR__ . '/../scratch_puppeteer_final.pdf', $pdfData);
+    echo "SUCCESS: scratch_puppeteer_final.pdf generated (" . strlen($pdfData) . " bytes)\n";
 }
+
+echo "Generating TCPDF fallback...\n";
+$pdf = $controller->buildOfferPDF($offer);
+$pdf->Output(__DIR__ . '/../scratch_tcpdf_final.pdf', 'F');
+echo "SUCCESS: scratch_tcpdf_final.pdf generated (" . filesize(__DIR__ . '/../scratch_tcpdf_final.pdf') . " bytes)\n";

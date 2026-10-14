@@ -16,8 +16,11 @@
                     <a href="<?= BASE_URL ?>/maintenance-offers/edit/<?= $offer['id'] ?>" class="btn btn-warning btn-sm">
                         <i class="fas fa-edit me-1"></i> Επεξεργασία
                     </a>
-                    <a href="<?= BASE_URL ?>/maintenance-offers/export-pdf/<?= $offer['id'] ?>" class="btn btn-danger btn-sm" target="_blank">
+                    <a href="<?= BASE_URL ?>/maintenance-offers/export-pdf/<?= $offer['id'] ?>" class="btn btn-danger btn-sm" target="_blank" title="Λήψη αρχείου PDF">
                         <i class="fas fa-file-pdf me-1"></i> PDF
+                    </a>
+                    <a href="<?= BASE_URL ?>/maintenance-offers/export-pdf/<?= $offer['id'] ?>?html=1" class="btn btn-outline-danger btn-sm" target="_blank" title="Προβολή & Εκτύπωση HTML υψηλής πιστότητας">
+                        <i class="fas fa-print me-1"></i> Προβολή HTML
                     </a>
                     <a href="<?= BASE_URL ?>/maintenance-offers/export-word/<?= $offer['id'] ?>" class="btn btn-primary btn-sm">
                         <i class="fas fa-file-word me-1"></i> Word
