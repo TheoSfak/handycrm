@@ -1626,14 +1626,12 @@ class MaintenanceOfferController extends BaseController {
         <div class="cover-meta-row">
           <span class="label-lime">Ημερομηνία:</span>
           <span class="val-text"><?= $today ?></span>
-          <span class="label-orange" style="margin-left: 10px;">| Ισχύς:</span>
-          <span class="val-text"><?= htmlspecialchars($transPower) ?></span>
+          <span class="label-orange" style="margin-left: 10px;">| Εξοπλισμός:</span>
+          <span class="val-text"><?= $transCount ?> Μετασχηματιστής/ές Μ.Τ.</span>
         </div>
         <div class="cover-meta-row">
           <span class="label-lime">Τοποθεσία:</span>
           <span class="val-text"><?= !empty($offer['address']) ? htmlspecialchars($offer['address']) : htmlspecialchars($coAddr) ?></span>
-          <span class="label-orange" style="margin-left: 10px;">| Εξοπλισμός:</span>
-          <span class="val-text"><?= $transCount ?> Μετασχηματιστής/ές Μ.Τ.</span>
         </div>
       </div>
     </div>
@@ -2337,7 +2335,6 @@ class MaintenanceOfferController extends BaseController {
               <b>Αρ. Προσφοράς:</b> ' . $offerNum . '<br/>
               <b>Ημερομηνία:</b> ' . $today . '<br/>
               <b>Εξοπλισμός:</b> ' . $transCount . ' Μετασχηματιστής/ές Μ.Τ.<br/>
-              <b>Ισχύς (kVA):</b> ' . htmlspecialchars($transPower) . '<br/>
               <b>Ισχύς Προσφοράς:</b> ' . (!empty($offer['offer_expiry_date']) ? date('d/m/Y', strtotime($offer['offer_expiry_date'])) : '30 ημέρες') . '
             </td>
           </tr>
