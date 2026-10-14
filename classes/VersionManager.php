@@ -227,6 +227,7 @@ class VersionManager {
                 'views/',
                 'public/',
                 'migrations/',
+                'templates/',
                 'helpers/',
                 'assets/',
                 'index.php',

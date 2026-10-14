@@ -611,12 +611,16 @@ class MaintenanceOfferController extends BaseController {
             $logoPath = $findImg('image1.jpeg');
         }
 
-        $transPath = $findImg('substation_hero_mockup.jpeg', 'image2.jpeg');
+        require_once __DIR__ . '/../classes/OfferTemplateAssets.php';
+        $transPath   = OfferTemplateAssets::ensureHeroPhotoOnDisk();
         $isoCertPath = $findImg('iso_certificate_greek.jpeg', 'image5.jpeg');
         $signPath    = $findImg('image6.jpeg');
 
         $logoBase64  = $this->getBase64Image($logoPath);
-        $transBase64 = $this->getBase64Image($transPath);
+        $transBase64 = OfferTemplateAssets::getHeroPhotoBase64();
+        if (empty($transBase64) && $transPath) {
+            $transBase64 = $this->getBase64Image($transPath);
+        }
         $certBase64  = $this->getBase64Image($isoCertPath);
         $signBase64  = $this->getBase64Image($signPath);
 
@@ -2079,7 +2083,8 @@ class MaintenanceOfferController extends BaseController {
             $logoPath = $getImage('image1.jpeg');
         }
 
-        $transPath   = $getImage('substation_hero_mockup.jpeg', 'image2.jpeg');
+        require_once __DIR__ . '/../classes/OfferTemplateAssets.php';
+        $transPath   = OfferTemplateAssets::ensureHeroPhotoOnDisk();
         $isoCertPath = $getImage('iso_certificate_greek.jpeg', 'image5.jpeg');
         $signPath    = $getImage('image6.jpeg');
 
