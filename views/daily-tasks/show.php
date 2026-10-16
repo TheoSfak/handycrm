@@ -221,12 +221,17 @@
                         <?php foreach ($task['photos'] as $index => $photo): ?>
                             <div class="col-md-3">
                                 <div class="position-relative">
-                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>" 
-                                         class="img-thumbnail w-100" 
-                                         style="height: 200px; object-fit: cover; cursor: pointer;"
-                                         onclick="openLightbox(<?= $index ?>)"
-                                         alt="Φωτογραφία <?= $index + 1 ?>">
-                                    <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-50 text-white px-2 py-1 small">
+                                    <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>"
+                                       data-lightbox="daily-task-<?= $task['id'] ?>"
+                                       data-title="<?= htmlspecialchars('Εργασία ' . $task['task_number']) ?>"
+                                       data-caption="<?= date('d/m/Y', strtotime($task['date'])) ?>"
+                                       class="d-block">
+                                        <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>"
+                                             class="img-thumbnail w-100"
+                                             style="height: 200px; object-fit: cover; cursor: pointer;"
+                                             alt="Φωτογραφία <?= $index + 1 ?>">
+                                    </a>
+                                    <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-50 text-white px-2 py-1 small" style="pointer-events: none;">
                                         #<?= $index + 1 ?>
                                     </div>
                                 </div>
@@ -384,77 +389,8 @@
     </div>
 </div>
 
-<!-- Lightbox Modal -->
-<div class="modal fade" id="lightboxModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content bg-dark">
-            <div class="modal-header border-0">
-                <h5 class="modal-title text-white" id="lightboxTitle">Φωτογραφία</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="lightboxImage" src="" class="img-fluid" style="max-height: 80vh;">
-            </div>
-            <div class="modal-footer border-0 justify-content-between">
-                <button type="button" class="btn btn-secondary" onclick="navigateLightbox(-1)">
-                    <i class="fas fa-chevron-left"></i> Προηγούμενη
-                </button>
-                <span class="text-white" id="lightboxCounter"></span>
-                <button type="button" class="btn btn-secondary" onclick="navigateLightbox(1)">
-                    Επόμενη <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
-// Lightbox functionality
-const photos = <?= json_encode($task['photos'] ?? []) ?>;
-let currentPhotoIndex = 0;
-
-function openLightbox(index) {
-    currentPhotoIndex = index;
-    updateLightbox();
-    const modal = new bootstrap.Modal(document.getElementById('lightboxModal'));
-    modal.show();
-}
-
-function navigateLightbox(direction) {
-    currentPhotoIndex += direction;
-    
-    // Loop around
-    if (currentPhotoIndex < 0) {
-        currentPhotoIndex = photos.length - 1;
-    } else if (currentPhotoIndex >= photos.length) {
-        currentPhotoIndex = 0;
-    }
-    
-    updateLightbox();
-}
-
-function updateLightbox() {
-    if (photos.length > 0) {
-        const photo = photos[currentPhotoIndex];
-        document.getElementById('lightboxImage').src = '<?= BASE_URL ?>/' + photo;
-        document.getElementById('lightboxTitle').textContent = `Φωτογραφία ${currentPhotoIndex + 1}`;
-        document.getElementById('lightboxCounter').textContent = `${currentPhotoIndex + 1} / ${photos.length}`;
-    }
-}
-
-// Keyboard navigation for lightbox
-document.addEventListener('keydown', function(e) {
-    const modal = bootstrap.Modal.getInstance(document.getElementById('lightboxModal'));
-    if (modal && modal._isShown) {
-        if (e.key === 'ArrowLeft') {
-            navigateLightbox(-1);
-        } else if (e.key === 'ArrowRight') {
-            navigateLightbox(1);
-        } else if (e.key === 'Escape') {
-            modal.hide();
-        }
-    }
-});
+// Photo popup (X, prev/next) is provided globally by assets/js/photo-lightbox.js via footer.php
 
 // Print styles
 const style = document.createElement('style');

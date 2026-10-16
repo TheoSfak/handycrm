@@ -246,10 +246,15 @@
                                     <?php foreach ($task['photos'] as $photo): ?>
                                         <div class="col-md-2" data-photo="<?= htmlspecialchars($photo) ?>">
                                             <div class="position-relative">
-                                                <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>" 
-                                                     class="img-thumbnail" 
-                                                     style="width: 100%; height: 150px; object-fit: cover;"
-                                                     onclick="viewImage('<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>')">
+                                                <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>"
+                                                   data-lightbox="daily-task-<?= $task['id'] ?>"
+                                                   data-title="<?= htmlspecialchars('Εργασία ' . $task['task_number']) ?>"
+                                                   data-caption="<?= date('d/m/Y', strtotime($task['date'])) ?>"
+                                                   class="d-block">
+                                                    <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo) ?>"
+                                                         class="img-thumbnail"
+                                                         style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;">
+                                                </a>
                                                 <button type="button" 
                                                         class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" 
                                                         onclick="deleteExistingPhoto(this, <?= $task['id'] ?>, '<?= htmlspecialchars($photo) ?>')">
@@ -301,21 +306,6 @@
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Image Viewer Modal -->
-<div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Προβολή Φωτογραφίας</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" class="img-fluid">
             </div>
         </div>
     </div>
@@ -447,13 +437,6 @@ function deleteExistingPhoto(button, taskId, photoPath) {
         alert('Σφάλμα κατά τη διαγραφή της φωτογραφίας');
         console.error('Error:', error);
     });
-}
-
-// View image in modal
-function viewImage(imageSrc) {
-    document.getElementById('modalImage').src = imageSrc;
-    const modal = new bootstrap.Modal(document.getElementById('imageModal'));
-    modal.show();
 }
 
 // Prevent main technician from being selected as additional
