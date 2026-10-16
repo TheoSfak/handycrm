@@ -368,6 +368,31 @@
                                 </div>
                             </div>
                             
+                            <!-- Standard Work Day -->
+                            <div class="mb-4 pb-4 border-bottom">
+                                <h5 class="mb-3"><i class="fas fa-clock"></i> Ωράριο Εργασίας</h5>
+                                <div class="row align-items-end">
+                                    <div class="col-md-3 mb-3">
+                                        <label for="work_day_start" class="form-label">Έναρξη</label>
+                                        <input type="time" class="form-control" id="work_day_start" name="work_day_start"
+                                               value="<?= htmlspecialchars(substr($settings['work_day_start'], 0, 5)) ?>" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="work_day_end" class="form-label">Λήξη</label>
+                                        <input type="time" class="form-control" id="work_day_end" name="work_day_end"
+                                               value="<?= htmlspecialchars(substr($settings['work_day_end'], 0, 5)) ?>" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Διάρκεια</label>
+                                        <input type="text" class="form-control" id="work_day_hours" readonly>
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    Προεπιλεγμένες ώρες και διάρκεια (ώρες) για τις νέες γραμμές εργατικών στις εργασίες έργων
+                                    και για τις ώρες τεχνικών στις ημερήσιες εργασίες. Δεν αλλάζει τις ήδη καταχωρημένες εργασίες.
+                                </small>
+                            </div>
+
                             <!-- Date Format & Items Per Page -->
                             <div class="row">
                                 <div class="col-md-6">
@@ -567,5 +592,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial preview
     updateVatPreview();
+
+    // Work day duration display
+    const workStart = document.getElementById('work_day_start');
+    const workEnd = document.getElementById('work_day_end');
+    const workHours = document.getElementById('work_day_hours');
+
+    function updateWorkDayHours() {
+        if (!workStart.value || !workEnd.value) {
+            workHours.value = '';
+            return;
+        }
+        const [sh, sm] = workStart.value.split(':').map(Number);
+        const [eh, em] = workEnd.value.split(':').map(Number);
+        let minutes = (eh * 60 + em) - (sh * 60 + sm);
+        if (minutes < 0) {
+            minutes += 24 * 60;
+        }
+        workHours.value = minutes > 0 ? parseFloat((minutes / 60).toFixed(2)) + ' ώρες' : '';
+    }
+
+    if (workStart && workEnd && workHours) {
+        workStart.addEventListener('input', updateWorkDayHours);
+        workEnd.addEventListener('input', updateWorkDayHours);
+        updateWorkDayHours();
+    }
 });
 </script>

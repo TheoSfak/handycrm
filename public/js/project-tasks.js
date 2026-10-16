@@ -156,6 +156,23 @@ function calculateMaterialsTotal() {
 // ============================================================================
 
 /**
+ * Standard work day (start, end, hours) from Settings, exposed by the page as `workDay`.
+ * Falls back to 07:30-15:30 (8h) if the page didn't provide it or the values are malformed.
+ */
+function getWorkDayDefaults() {
+    const fallback = { start: '07:30', end: '15:30', hours: 8 };
+    if (typeof workDay === 'undefined' || !workDay) {
+        return fallback;
+    }
+    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+    const hours = parseFloat(workDay.hours);
+    if (!timePattern.test(workDay.start) || !timePattern.test(workDay.end) || !(hours > 0)) {
+        return fallback;
+    }
+    return { start: workDay.start, end: workDay.end, hours: hours };
+}
+
+/**
  * Add a new labor row to the form
  * @param {Object} data - Optional prepopulated data for edit mode
  */
@@ -184,8 +201,11 @@ function addLaborRow(data = null) {
         });
     }
     
-    const defaultTimeFrom = data?.time_from ? data.time_from.substring(0, 5) : '08:00';
-    const defaultTimeTo   = data?.time_to   ? data.time_to.substring(0, 5)   : '16:00';
+    const workDayDefaults = getWorkDayDefaults();
+    const defaultTimeFrom = data?.time_from ? data.time_from.substring(0, 5) : workDayDefaults.start;
+    const defaultTimeTo   = data?.time_to   ? data.time_to.substring(0, 5)   : workDayDefaults.end;
+    // New rows start with the standard work day length; existing rows keep their saved hours
+    const defaultHours    = data ? (data.hours_worked || '') : workDayDefaults.hours;
     let techName = data?.technician_name || '';
     let techRoleId = data?.role_id || '';
     
@@ -239,8 +259,8 @@ function addLaborRow(data = null) {
                 <input type="number" 
                        class="form-control labor-hours" 
                        name="labor[${laborCounter}][hours_worked]" 
-                       value="${data?.hours_worked || ''}"
-                       step="any" 
+                       value="${defaultHours}"
+                       step="any"
                        min="0"
                        placeholder="0.0"
                        onchange="calculateTimeToFromHours(${laborCounter})"

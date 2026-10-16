@@ -172,4 +172,63 @@ class Settings {
     public static function getVatRate() {
         return (float)self::get('vat_rate', 24.00);
     }
+
+    const DEFAULT_WORK_DAY_START = '07:30';
+    const DEFAULT_WORK_DAY_END   = '15:30';
+
+    /**
+     * Helper: Check that a value is a valid HH:MM time (00:00 - 23:59)
+     */
+    public static function isValidTime($value) {
+        return is_string($value) && (bool)preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $value);
+    }
+
+    /**
+     * Helper: Get a HH:MM time setting, falling back to the default if missing or malformed
+     */
+    private static function getTimeSetting($key, $default) {
+        $value = substr(trim((string)self::get($key, $default)), 0, 5);
+        return self::isValidTime($value) ? $value : $default;
+    }
+
+    /**
+     * Helper: Standard work day start (HH:MM)
+     */
+    public static function getWorkDayStart() {
+        return self::getTimeSetting('work_day_start', self::DEFAULT_WORK_DAY_START);
+    }
+
+    /**
+     * Helper: Standard work day end (HH:MM)
+     */
+    public static function getWorkDayEnd() {
+        return self::getTimeSetting('work_day_end', self::DEFAULT_WORK_DAY_END);
+    }
+
+    /**
+     * Helper: Standard work day length in hours, derived from start/end
+     * (an end earlier than the start is treated as an overnight shift)
+     */
+    public static function getWorkDayHours() {
+        return self::workDayHours(self::getWorkDayStart(), self::getWorkDayEnd());
+    }
+
+    /**
+     * Helper: Standard work day as ['start' => 'HH:MM', 'end' => 'HH:MM', 'hours' => float]
+     */
+    public static function getWorkDay() {
+        $start = self::getWorkDayStart();
+        $end   = self::getWorkDayEnd();
+        return ['start' => $start, 'end' => $end, 'hours' => self::workDayHours($start, $end)];
+    }
+
+    private static function workDayHours($start, $end) {
+        list($sh, $sm) = array_map('intval', explode(':', $start));
+        list($eh, $em) = array_map('intval', explode(':', $end));
+        $minutes = ($eh * 60 + $em) - ($sh * 60 + $sm);
+        if ($minutes < 0) {
+            $minutes += 24 * 60;
+        }
+        return $minutes > 0 ? round($minutes / 60, 2) : 8.0;
+    }
 }

@@ -205,6 +205,8 @@ require_once __DIR__ . '/../../includes/header.php';
 <script>
 // Technicians data for dropdowns
 const technicians = <?= json_encode($technicians ?? []) ?>;
+// Standard work day from Settings (used for default labor times/hours)
+const workDay = <?= json_encode($workDay ?? null) ?>;
 const projectId = <?= $project['id'] ?>;
 const taskId = <?= $task['id'] ?>;
 

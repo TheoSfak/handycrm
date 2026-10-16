@@ -14,6 +14,7 @@ require_once 'models/ProjectTask.php';
 require_once 'models/TaskMaterial.php';
 require_once 'models/TaskLabor.php';
 require_once 'models/User.php';
+require_once 'models/Settings.php';
 require_once 'classes/MaterialUnits.php';
 
 class ProjectTasksController extends BaseController {
@@ -106,10 +107,11 @@ class ProjectTasksController extends BaseController {
         parent::view('projects/tasks/add', [
             'title' => 'Νέα Εργασία - ' . ($project['title'] ?? $project['name'] ?? 'Project'),
             'project' => $project,
-            'technicians' => $technicians
+            'technicians' => $technicians,
+            'workDay' => Settings::getWorkDay()
         ]);
     }
-    
+
     /**
      * Store new task
      * POST /projects/{project_id}/tasks/add
@@ -285,7 +287,8 @@ class ProjectTasksController extends BaseController {
             'task' => $task,
             'materials' => $task['materials'] ?? [],
             'labor' => $task['labor'] ?? [],
-            'technicians' => $technicians
+            'technicians' => $technicians,
+            'workDay' => Settings::getWorkDay()
         ]);
     }
     

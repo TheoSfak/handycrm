@@ -8,6 +8,7 @@ require_once 'classes/BaseController.php';
 require_once 'models/DailyTask.php';
 require_once 'models/DailyTaskMaterial.php';
 require_once 'models/DailyTaskTechnician.php';
+require_once 'models/Settings.php';
 
 // Load TCPDF library before using it
 if (!class_exists('TCPDF')) {
@@ -241,7 +242,8 @@ class DailyTaskController extends BaseController {
         $technicians = $userModel->getAllActive();
         
         $this->view('daily-tasks/create', [
-            'technicians' => $technicians
+            'technicians' => $technicians,
+            'workDay' => Settings::getWorkDay()
         ]);
     }
     
@@ -291,22 +293,23 @@ class DailyTaskController extends BaseController {
         ];
         
         $taskId = $this->taskModel->create($data);
-        
+
         if ($taskId) {
             // Save technicians with hours
             $technicianModel = new DailyTaskTechnician();
-            
+            $defaultHours = Settings::getWorkDayHours();
+
             // Save primary technician
             if (!empty($_POST['technician_id'])) {
                 $result = $technicianModel->create([
                     'daily_task_id' => $taskId,
                     'user_id' => $_POST['technician_id'],
-                    'hours_worked' => floatval($_POST['primary_technician_hours'] ?? 8),
+                    'hours_worked' => floatval($_POST['primary_technician_hours'] ?? $defaultHours),
                     'is_primary' => 1
                 ]);
                 if (DEBUG_MODE) {
                     error_log("DailyTaskController - Primary technician save: " . ($result ? 'SUCCESS' : 'FAILED'));
-                    error_log("DailyTaskController - Primary technician: taskId=$taskId, userId={$_POST['technician_id']}, hours=" . floatval($_POST['primary_technician_hours'] ?? 8));
+                    error_log("DailyTaskController - Primary technician: taskId=$taskId, userId={$_POST['technician_id']}, hours=" . floatval($_POST['primary_technician_hours'] ?? $defaultHours));
                 }
             }
             
@@ -318,7 +321,7 @@ class DailyTaskController extends BaseController {
                 }
                 foreach ($_POST['additional_technicians'] as $techId) {
                     if (!empty($techId)) {
-                        $hours = floatval($_POST['technician_hours'][$techId] ?? 8);
+                        $hours = floatval($_POST['technician_hours'][$techId] ?? $defaultHours);
                         $result = $technicianModel->create([
                             'daily_task_id' => $taskId,
                             'user_id' => $techId,
@@ -430,7 +433,8 @@ class DailyTaskController extends BaseController {
             'task' => $task,
             'technicians' => $technicians,
             'taskTechnicians' => $taskTechnicians,
-            'materials' => $materials
+            'materials' => $materials,
+            'workDay' => Settings::getWorkDay()
         ]);
     }
     
@@ -494,13 +498,14 @@ class DailyTaskController extends BaseController {
             // Update technicians - delete old and insert new
             $technicianModel = new DailyTaskTechnician();
             $technicianModel->deleteByDailyTask($id);
-            
+            $defaultHours = Settings::getWorkDayHours();
+
             // Save primary technician
             if (!empty($_POST['technician_id'])) {
                 $technicianModel->create([
                     'daily_task_id' => $id,
                     'user_id' => $_POST['technician_id'],
-                    'hours_worked' => floatval($_POST['primary_technician_hours'] ?? 8),
+                    'hours_worked' => floatval($_POST['primary_technician_hours'] ?? $defaultHours),
                     'is_primary' => 1
                 ]);
             }
@@ -509,7 +514,7 @@ class DailyTaskController extends BaseController {
             if (!empty($_POST['additional_technicians']) && is_array($_POST['additional_technicians'])) {
                 foreach ($_POST['additional_technicians'] as $techId) {
                     if (!empty($techId)) {
-                        $hours = floatval($_POST['technician_hours'][$techId] ?? 8);
+                        $hours = floatval($_POST['technician_hours'][$techId] ?? $defaultHours);
                         $technicianModel->create([
                             'daily_task_id' => $id,
                             'user_id' => $techId,

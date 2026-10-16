@@ -170,7 +170,8 @@
                         <?php 
                         // Create helper array for technician hours
                         $techHours = [];
-                        $primaryHours = 8;
+                        $defaultHours = $workDay['hours'] ?? 8;
+                        $primaryHours = $defaultHours;
                         foreach ($taskTechnicians as $tt) {
                             if ($tt['is_primary'] == 1) {
                                 $primaryHours = $tt['hours_worked'];
@@ -206,7 +207,7 @@
                                 <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;" id="additional_technicians_container">
                                     <?php foreach ($technicians as $tech): 
                                         $isChecked = in_array($tech['id'], $additionalTechs);
-                                        $hours = $techHours[$tech['id']] ?? 8;
+                                        $hours = $techHours[$tech['id']] ?? $defaultHours;
                                     ?>
                                         <div class="form-check mb-2">
                                             <div class="row align-items-center">
@@ -313,6 +314,8 @@
 
 <script>
 const dailyTaskCsrfToken = <?= json_encode($this->generateCsrfToken()) ?>;
+// Standard work day from Settings (default for the time range)
+const workDay = <?= json_encode($workDay ?? null) ?>;
 
 // Time mode toggle
 document.querySelectorAll('input[name="time_mode"]').forEach(radio => {
@@ -329,6 +332,12 @@ document.querySelectorAll('input[name="time_mode"]').forEach(radio => {
             document.getElementById('time_range_container').style.display = 'flex';
             // Clear manual hours
             document.getElementById('hours_worked').value = '';
+            // Pre-fill the standard work day if no range has been entered yet
+            if (workDay && !document.getElementById('time_from').value && !document.getElementById('time_to').value) {
+                document.getElementById('time_from').value = workDay.start;
+                document.getElementById('time_to').value = workDay.end;
+                calculateHours();
+            }
         }
     });
 });

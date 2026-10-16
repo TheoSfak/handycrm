@@ -4,6 +4,8 @@
  * Handles application settings (Admin only)
  */
 
+require_once __DIR__ . '/../models/Settings.php';
+
 class SettingsController extends BaseController {
     
     /**
@@ -41,6 +43,8 @@ class SettingsController extends BaseController {
             'currency_symbol' => '€',
             'date_format' => 'd/m/Y',
             'items_per_page' => '20',
+            'work_day_start' => '07:30',
+            'work_day_end' => '15:30',
             'maintenance_price_1_transformer' => '400.00',
             'maintenance_price_2_transformers' => '600.00',
             'maintenance_price_3_transformers' => '900.00'
@@ -81,12 +85,26 @@ class SettingsController extends BaseController {
                 $this->redirect('/settings');
             }
         
+        // Validate standard work day (HH:MM, start and end must differ) before writing anything
+        if (isset($_POST['work_day_start']) || isset($_POST['work_day_end'])) {
+            $workStart = trim($_POST['work_day_start'] ?? '');
+            $workEnd = trim($_POST['work_day_end'] ?? '');
+            if (!Settings::isValidTime($workStart) || !Settings::isValidTime($workEnd)) {
+                $_SESSION['error'] = 'Μη έγκυρη ώρα στο ωράριο εργασίας (μορφή ΩΩ:ΛΛ)';
+                $this->redirect('/settings');
+            }
+            if ($workStart === $workEnd) {
+                $_SESSION['error'] = 'Η ώρα έναρξης και λήξης του ωραρίου δεν μπορεί να είναι ίδια';
+                $this->redirect('/settings');
+            }
+        }
+
         $database = new Database();
         $db = $database->connect();
-        
+
         try {
             $db->beginTransaction();
-            
+
             // Handle logo upload
             $logoPath = null;
             if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] === UPLOAD_ERR_OK) {
@@ -117,7 +135,9 @@ class SettingsController extends BaseController {
                 'currency',
                 'currency_symbol',
                 'date_format',
-                'items_per_page'
+                'items_per_page',
+                'work_day_start',
+                'work_day_end'
             ];
             
             // Maintenance pricing settings (stored in smtp_settings table)

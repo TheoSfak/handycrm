@@ -169,7 +169,7 @@
                             <div class="col-md-2 mb-3">
                                 <label for="primary_technician_hours" class="form-label">Ώρες</label>
                                 <input type="number" class="form-control" id="primary_technician_hours" 
-                                       name="primary_technician_hours" value="8" min="0" max="24" step="0.5">
+                                       name="primary_technician_hours" value="<?= htmlspecialchars((string)($workDay['hours'] ?? 8)) ?>" min="0" max="24" step="0.5">
                             </div>
 
                             <!-- Additional Technicians -->
@@ -193,7 +193,7 @@
                                                     <input type="number" class="form-control form-control-sm" 
                                                            name="technician_hours[<?= $tech['id'] ?>]" 
                                                            id="hours_<?= $tech['id'] ?>"
-                                                           value="8" min="0" max="24" step="0.5" 
+                                                           value="<?= htmlspecialchars((string)($workDay['hours'] ?? 8)) ?>" min="0" max="24" step="0.5"
                                                            disabled style="display: none;">
                                                 </div>
                                             </div>
@@ -245,6 +245,9 @@
 </div>
 
 <script>
+// Standard work day from Settings (default for the time range)
+const workDay = <?= json_encode($workDay ?? null) ?>;
+
 // Time mode toggle
 document.querySelectorAll('input[name="time_mode"]').forEach(radio => {
     radio.addEventListener('change', function() {
@@ -260,6 +263,12 @@ document.querySelectorAll('input[name="time_mode"]').forEach(radio => {
             document.getElementById('time_range_container').style.display = 'flex';
             // Clear manual hours
             document.getElementById('hours_worked').value = '';
+            // Pre-fill the standard work day if no range has been entered yet
+            if (workDay && !document.getElementById('time_from').value && !document.getElementById('time_to').value) {
+                document.getElementById('time_from').value = workDay.start;
+                document.getElementById('time_to').value = workDay.end;
+                calculateHours();
+            }
         }
     });
 });
