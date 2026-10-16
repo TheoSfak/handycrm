@@ -137,6 +137,7 @@
                                 <th>Τιμολ.</th>
                                 <th>Τεχνικός</th>
                                 <th>Κατάσταση</th>
+                                <th class="text-center" title="Φωτογραφίες"><i class="fas fa-camera"></i></th>
                                 <th>Ενέργειες</th>
                             </tr>
                         </thead>
@@ -195,6 +196,18 @@
                         ];
                         echo $statusBadges[$task['status']] ?? '';
                         ?>
+                    </td>
+                    <td class="text-center text-nowrap">
+                        <?php
+                        $taskPhotos = !empty($task['photos']) ? json_decode($task['photos'], true) : [];
+                        $photoCount = is_array($taskPhotos) ? count($taskPhotos) : 0;
+                        ?>
+                        <?php if ($photoCount > 0): ?>
+                            <span class="text-success" title="<?= $photoCount ?> <?= $photoCount === 1 ? 'φωτογραφία' : 'φωτογραφίες' ?>">
+                                <i class="fas fa-camera"></i>
+                                <span class="badge bg-success"><?= $photoCount ?></span>
+                            </span>
+                        <?php endif; ?>
                     </td>
                     <td>
                         <div class="btn-group btn-group-sm">
