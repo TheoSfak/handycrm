@@ -807,8 +807,9 @@
                             <div class="col-md-3 col-sm-6">
                                 <div class="card">
                                     <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
-                                       data-lightbox="project-<?= $project['id'] ?>-<?= $type ?>"
-                                       data-title="<?= htmlspecialchars($photo['task_description']) ?>">
+                                       data-lightbox="project-<?= $project['id'] ?>"
+                                       data-title="<?= htmlspecialchars($label . ' — ' . $photo['task_description']) ?>"
+                                       data-caption="<?= htmlspecialchars($photo['caption'] ?? '') ?>">
                                         <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
                                              class="card-img-top" 
                                              alt="<?= htmlspecialchars($photo['caption']) ?>"

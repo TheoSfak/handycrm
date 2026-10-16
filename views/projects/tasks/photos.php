@@ -5,8 +5,6 @@
 require_once 'views/includes/header.php';
 ?>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/css/lightbox.min.css">
-
 <style>
 .photo-gallery {
     padding: 20px 0;
@@ -427,8 +425,6 @@ require_once 'views/includes/header.php';
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.3/js/lightbox.min.js"></script>
-
 <script>
 // Drag and drop functionality
 const dropzone = document.getElementById('dropzone');
@@ -553,12 +549,7 @@ if (photoUploadFormEl) {
     });
 }
 
-// Lightbox configuration
-lightbox.option({
-    'resizeDuration': 200,
-    'wrapAround': true,
-    'albumLabel': 'Φωτογραφία %1 από %2'
-});
+// Photo popup (X, prev/next) is provided globally by assets/js/photo-lightbox.js via footer.php
 </script>
 
 <?php require_once 'views/includes/footer.php'; ?>

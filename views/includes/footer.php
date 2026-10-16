@@ -403,5 +403,8 @@ define('FOOTER_RENDERED', true);
     
     <!-- Date Formatter - Converts all date inputs to dd/mm/yyyy format -->
     <script src="<?= BASE_URL ?>/assets/js/date-formatter.js"></script>
+
+    <!-- Photo lightbox - popup viewer (X, prev/next) for any <a data-lightbox="group"> -->
+    <script src="<?= BASE_URL ?>/assets/js/photo-lightbox.js?v=<?= @filemtime(__DIR__ . '/../../assets/js/photo-lightbox.js') ?: 1 ?>"></script>
 </body>
 </html>

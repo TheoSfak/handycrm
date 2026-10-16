@@ -213,8 +213,10 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                             <?php foreach ($recentPhotos as $photo): ?>
                                 <div class="col-2">
                                     <div class="photo-thumbnail-wrapper" style="position: relative;">
-                                        <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
-                                           target="_blank" 
+                                        <a href="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>"
+                                           data-lightbox="task-<?= $task['id'] ?>"
+                                           data-title="<?= htmlspecialchars($task['description']) ?>"
+                                           data-caption="<?= htmlspecialchars($photo['caption'] ?? '') ?>"
                                            style="display: block; aspect-ratio: 1; overflow: hidden; border-radius: 6px; border: 1px solid #e0e0e0;">
                                             <img src="<?= BASE_URL ?>/<?= htmlspecialchars($photo['file_path']) ?>" 
                                                  alt="<?= htmlspecialchars($photo['caption']) ?>"
