@@ -245,8 +245,12 @@
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
                                             <a href="<?= BASE_URL ?>/maintenances/create?renew_id=<?= $maintenance['id'] ?>" 
-                                               class="btn btn-success" title="Εκτέλεση Φετινής Συντήρησης (Ανανέωση)">
-                                                <i class="fas fa-sync-alt"></i>
+                                               class="btn btn-success btn-renew" 
+                                               data-id="<?= $maintenance['id'] ?>"
+                                               data-customer="<?= htmlspecialchars($maintenance['customer_name'], ENT_QUOTES) ?>"
+                                               data-date="<?= $maintenance['maintenance_date'] ?>"
+                                               title="Ετήσια Ανανέωση Συντήρησης (Δήλωση Επόμενης Χρονιάς)">
+                                                <i class="fas fa-arrow-right"></i>
                                             </a>
                                             <a href="<?= BASE_URL ?>/maintenances/view/<?= $maintenance['id'] ?>" 
                                                class="btn btn-info" title="Προβολή">
@@ -256,11 +260,13 @@
                                                class="btn btn-warning" title="Επεξεργασία">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" class="btn btn-danger" 
-                                                    onclick="confirmDelete(<?= $maintenance['id'] ?>)" 
-                                                    title="Διαγραφή">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <?php if (!empty($isAdmin)): ?>
+                                                <button type="button" class="btn btn-danger" 
+                                                        onclick="confirmDelete(<?= $maintenance['id'] ?>)" 
+                                                        title="Διαγραφή">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            <?php endif; ?>
                                         </div>
                                     </td>
                                 </tr>
@@ -316,6 +322,35 @@
     </div>
 </div>
 
+<!-- Modal Ελέγχου Ετήσιας Συντήρησης (Προειδοποίηση για πρόσφατη / ίδιας ημέρας συντήρηση) -->
+<div class="modal fade" id="renewWarningModal" tabindex="-1" aria-labelledby="renewWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-warning">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="renewWarningModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Έλεγχος Ετήσιας Συντήρησης
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="renewWarningModalText" class="mb-3"></div>
+                <div class="alert alert-light border small text-muted mb-0">
+                    <i class="fas fa-info-circle me-1 text-primary"></i>
+                    Αν πρόκειται πράγματι για τη συντήρηση της νέας/επόμενης χρονιάς, πατήστε <strong>Συνέχεια στην Ανανέωση</strong>.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Ακύρωση
+                </button>
+                <a href="#" id="renewWarningConfirmBtn" class="btn btn-success">
+                    <i class="fas fa-arrow-right me-1"></i>Ναι, Συνέχεια στην Ανανέωση
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <form id="deleteForm" method="POST" style="display: none;">
     <input type="hidden" name="_method" value="DELETE">
@@ -324,6 +359,59 @@
 
 <script>
 const BASE_URL_JS = <?= json_encode(isset($BASE_URL) ? $BASE_URL : (defined('BASE_URL') ? BASE_URL : '')) ?>;
+
+// Check before renewing if maintenance was performed today or recent
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-renew').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const maintDate = this.getAttribute('data-date');
+            const customerName = this.getAttribute('data-customer') || 'το επιλεγμένο εργοστάσιο';
+            const targetUrl = this.getAttribute('href');
+            
+            if (!maintDate) return;
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const recordDate = new Date(maintDate);
+            recordDate.setHours(0,0,0,0);
+            
+            const diffTime = today.getTime() - recordDate.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+            
+            // If maintenance was done today, in the future, or within the last 180 days (~6 months)
+            if (diffDays <= 180) {
+                e.preventDefault();
+                
+                const day = String(recordDate.getDate()).padStart(2, '0');
+                const month = String(recordDate.getMonth() + 1).padStart(2, '0');
+                const year = recordDate.getFullYear();
+                const formattedDate = `${day}/${month}/${year}`;
+                
+                let warningText = '';
+                if (diffDays === 0) {
+                    warningText = `<p class="fw-semibold text-danger mb-2">⚠️ Προσοχή: Πιθανή διπλή καταχώρηση την ίδια ημέρα!</p>
+                    <p>Έχετε ήδη καταχωρημένη συντήρηση <strong>σήμερα (${formattedDate})</strong> για το εργοστάσιο <strong>${customerName}</strong>.</p>
+                    <p>Οι συντηρήσεις είναι <strong>ετήσιες</strong>. Δεν μπορεί κανονικά να γίνουν δύο (2) συντηρήσεις την ίδια ημέρα στο ίδιο μέρος.</p>
+                    <p class="mb-0">Είστε σίγουροι ότι θέλετε να προχωρήσετε σε νέα συντήρηση;</p>`;
+                } else if (diffDays < 0) {
+                    warningText = `<p class="fw-semibold text-warning mb-2">⚠️ Προσοχή: Μελλοντική ημερομηνία!</p>
+                    <p>Η προηγούμενη συντήρηση για το εργοστάσιο <strong>${customerName}</strong> έχει μελλοντική ημερομηνία (${formattedDate}).</p>
+                    <p class="mb-0">Είστε σίγουροι ότι θέλετε να δηλώσετε νέα ετήσια συντήρηση;</p>`;
+                } else {
+                    warningText = `<p class="fw-semibold text-warning mb-2">⚠️ Προσοχή: Πρόσφατη συντήρηση!</p>
+                    <p>Η προηγούμενη συντήρηση για το εργοστάσιο <strong>${customerName}</strong> έγινε στις <strong>${formattedDate}</strong> (πριν από μόλις <strong>${diffDays} ημέρες</strong>).</p>
+                    <p>Οι συντηρήσεις είναι <strong>ετήσιες</strong> και κανονικά εκτελούνται μετά από 1 έτος.</p>
+                    <p class="mb-0">Είστε σίγουροι ότι θέλετε να δηλώσετε νέα ετήσια συντήρηση τόσο σύντομα;</p>`;
+                }
+                
+                document.getElementById('renewWarningModalText').innerHTML = warningText;
+                document.getElementById('renewWarningConfirmBtn').setAttribute('href', targetUrl);
+                const renewModal = new bootstrap.Modal(document.getElementById('renewWarningModal'));
+                renewModal.show();
+            }
+        });
+    });
+});
 
 function confirmDelete(id) {
     if (confirm('Είστε σίγουροι ότι θέλετε να διαγράψετε αυτή τη συντήρηση;')) {

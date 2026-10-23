@@ -6,6 +6,7 @@ $phone = $prefill['phone'] ?? '';
 $address = $prefill['address'] ?? '';
 $otherDetails = $prefill['other_details'] ?? '';
 $previousId = $prefill['previous_id'] ?? '';
+$previousMaintenanceDate = !empty($prefill['maintenance_date']) ? $prefill['maintenance_date'] : '';
 $maintenanceDate = date('Y-m-d');
 $nextMaintenanceDate = date('Y-m-d', strtotime('+1 year'));
 ?>
@@ -15,10 +16,10 @@ $nextMaintenanceDate = date('Y-m-d', strtotime('+1 year'));
         <div class="col-12">
             <?php if ($isRenewal): ?>
                 <div class="alert alert-success d-flex align-items-center mb-4 shadow-sm" role="alert">
-                    <i class="fas fa-sync-alt fa-2x me-3"></i>
+                    <i class="fas fa-arrow-right fa-2x me-3 text-success"></i>
                     <div>
-                        <h5 class="alert-heading mb-1">🔄 Ετήσια Ανανέωση Συντήρησης</h5>
-                        <span>Εκτελείται νέα συντήρηση για τον πελάτη <strong><?= htmlspecialchars($customerName) ?></strong>. Τα πάγια στοιχεία και οι μετασχηματιστές έχουν προ-συμπληρωθεί. Μόλις αποθηκεύσετε, η προηγούμενη συντήρηση θα αρχειοθετηθεί αυτόματα ως ανανεωμένη.</span>
+                        <h5 class="alert-heading mb-1">🔄 Ετήσια Ανανέωση Συντήρησης (Δήλωση Επόμενης Χρονιάς)</h5>
+                        <span>Εκτελείται νέα συντήρηση για το εργοστάσιο <strong><?= htmlspecialchars($customerName) ?></strong>. Τα πάγια στοιχεία και οι μετασχηματιστές έχουν προ-συμπληρωθεί. Συμπληρώστε τα νέα νούμερα μετρήσεων και τη νέα ημερομηνία. Μόλις αποθηκεύσετε, η προηγούμενη συντήρηση θα αρχειοθετηθεί αυτόματα ως ανανεωμένη.</span>
                     </div>
                 </div>
             <?php endif; ?>
@@ -349,7 +350,19 @@ window.addEventListener('beforeunload', function(e) {
     }
 });
 
-document.getElementById('maintenanceForm').addEventListener('submit', function() {
+const previousMaintenanceDate = <?= json_encode($previousMaintenanceDate) ?>;
+
+document.getElementById('maintenanceForm').addEventListener('submit', function(e) {
+    const selectedDate = document.querySelector('input[name="maintenance_date"]').value;
+    const prevId = document.getElementById('previous_id').value;
+    
+    if (prevId && previousMaintenanceDate && selectedDate === previousMaintenanceDate) {
+        const confirmed = confirm('⚠️ Προσοχή: Η ημερομηνία συντήρησης που δηλώνετε (' + selectedDate + ') συμπίπτει με την ημερομηνία της προηγούμενης συντήρησης του εργοστασίου.\n\nΟι συντηρήσεις είναι ετήσιες. Είστε σίγουροι ότι θέλετε να καταχωρήσετε δεύτερη συντήρηση την ίδια ημέρα στο ίδιο μέρος;');
+        if (!confirmed) {
+            e.preventDefault();
+            return false;
+        }
+    }
     formChanged = false;
 });
 

@@ -122,7 +122,8 @@ class TransformerMaintenanceController extends BaseController {
             'currentPage' => $page,
             'totalPages' => $totalPages,
             'totalCount' => $totalCount,
-            'maintenanceCustomers' => $maintenanceCustomers
+            'maintenanceCustomers' => $maintenanceCustomers,
+            'isAdmin' => $this->isAdmin()
         ]);
     }
     
@@ -297,10 +298,13 @@ class TransformerMaintenanceController extends BaseController {
         }
         
         $history = $this->maintenanceModel->getMaintenanceHistory($id);
+        $maintenanceCustomers = $this->isAdmin() ? $this->maintenanceModel->getMaintenanceCustomers() : [];
 
         $this->view('maintenances/view', [
             'maintenance' => $maintenance,
-            'history' => $history
+            'history' => $history,
+            'maintenanceCustomers' => $maintenanceCustomers,
+            'isAdmin' => $this->isAdmin()
         ]);
     }
     
@@ -485,7 +489,7 @@ class TransformerMaintenanceController extends BaseController {
     }
     
     /**
-     * Delete maintenance
+     * Delete maintenance (System Admin only)
      */
     public function delete($id) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -502,7 +506,14 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
 
-        // Get maintenance info for logging
+        // STRICTLY SYSTEM ADMIN ONLY
+        if (!$this->isAdmin()) {
+            $_SESSION['error'] = 'Δεν έχετε δικαίωμα διαγραφής συντήρησης. Η ενέργεια επιτρέπεται αποκλειστικά στον γενικό διαχειριστή συστήματος.';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
+        // Get maintenance info for logging & rechaining
         $maintenance = $this->maintenanceModel->find($id);
         if (!$maintenance) {
             $_SESSION['error'] = 'Η συντήρηση δεν βρέθηκε';
@@ -510,6 +521,8 @@ class TransformerMaintenanceController extends BaseController {
             exit;
         }
         
+        $customerName = $maintenance['customer_name'] ?? '';
+
         // Soft delete the maintenance
         $userId = $_SESSION['user_id'];
         $db = new Database();
@@ -520,12 +533,102 @@ class TransformerMaintenanceController extends BaseController {
         $success = $stmt->execute([date('Y-m-d H:i:s'), $userId, $id]);
         
         if ($success) {
-            $_SESSION['success'] = 'Η συντήρηση μεταφέρθηκε στον κάδο απορριμμάτων';
+            // Re-chain remaining customer maintenances so chronological history stays consistent
+            if (!empty($customerName)) {
+                $this->maintenanceModel->rechainCustomerMaintenances($customerName);
+            }
+            $_SESSION['success'] = 'Η συντήρηση διαγράφηκε επιτυχώς και το ιστορικό του εργοστασίου ενημερώθηκε.';
         } else {
             $_SESSION['error'] = 'Σφάλμα κατά τη διαγραφή της συντήρησης';
         }
         
-        header('Location: ' . BASE_URL . '/maintenances');
+        $redirectTo = $_POST['redirect_to'] ?? '';
+        if (!empty($redirectTo) && strpos($redirectTo, BASE_URL) === 0) {
+            header('Location: ' . $redirectTo);
+        } else {
+            header('Location: ' . BASE_URL . '/maintenances');
+        }
+        exit;
+    }
+
+    /**
+     * Transfer or detach maintenance from customer history (System Admin only)
+     */
+    public function transfer($id) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
+        try {
+            $this->validateCsrfToken();
+        } catch (Exception $e) {
+            error_log('TransformerMaintenanceController::transfer - Error: ' . $e->getMessage());
+            $_SESSION['error'] = 'Μη έγκυρο token ασφαλείας';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
+        // STRICTLY SYSTEM ADMIN ONLY
+        if (!$this->isAdmin()) {
+            $_SESSION['error'] = 'Δεν έχετε δικαίωμα αποδέσμευσης ή μεταφοράς συντήρησης. Η ενέργεια επιτρέπεται αποκλειστικά στον γενικό διαχειριστή συστήματος.';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
+        $id = (int)$id;
+        $maintenance = $this->maintenanceModel->find($id);
+        if (!$maintenance) {
+            $_SESSION['error'] = 'Η συντήρηση δεν βρέθηκε';
+            header('Location: ' . BASE_URL . '/maintenances');
+            exit;
+        }
+
+        $actionType = $_POST['transfer_type'] ?? '';
+        $targetCustomer = '';
+
+        if ($actionType === 'standalone') {
+            $targetCustomer = trim($_POST['new_customer_name'] ?? '');
+            if (empty($targetCustomer)) {
+                $_SESSION['error'] = 'Παρακαλώ συμπληρώστε το νέο / σωστό όνομα του εργοστασίου για την αποδέσμευση.';
+                $this->redirect('/maintenances/view/' . $id);
+                return;
+            }
+        } elseif ($actionType === 'transfer_existing') {
+            $targetCustomer = trim($_POST['target_customer_name'] ?? '');
+            if (empty($targetCustomer)) {
+                $_SESSION['error'] = 'Παρακαλώ επιλέξτε την εταιρεία στην οποία θα μεταφερθεί η συντήρηση.';
+                $this->redirect('/maintenances/view/' . $id);
+                return;
+            }
+            if (mb_strtolower($targetCustomer) === mb_strtolower(trim($maintenance['customer_name'] ?? ''))) {
+                $_SESSION['error'] = 'Η συντήρηση ανήκει ήδη σε αυτή την εταιρεία.';
+                $this->redirect('/maintenances/view/' . $id);
+                return;
+            }
+        } else {
+            $_SESSION['error'] = 'Μη έγκυρη ενέργεια αποδέσμευσης / μεταφοράς.';
+            $this->redirect('/maintenances/view/' . $id);
+            return;
+        }
+
+        $result = $this->maintenanceModel->transferMaintenance($id, $actionType, $targetCustomer);
+        if ($result) {
+            if ($actionType === 'standalone') {
+                $_SESSION['success'] = "Η συντήρηση αποδεσμεύτηκε επιτυχώς και εμφανίζεται ως ξεχωριστή συντήρηση για το εργοστάσιο '{$targetCustomer}'.";
+            } else {
+                $_SESSION['success'] = "Η συντήρηση μεταφέρθηκε επιτυχώς στο ιστορικό της εταιρείας '{$targetCustomer}'.";
+            }
+        } else {
+            $_SESSION['error'] = 'Σφάλμα κατά την αποδέσμευση / μεταφορά της συντήρησης.';
+        }
+
+        $redirectTo = $_POST['redirect_to'] ?? '';
+        if (!empty($redirectTo) && strpos($redirectTo, BASE_URL) === 0) {
+            header('Location: ' . $redirectTo);
+        } else {
+            header('Location: ' . BASE_URL . '/maintenances/view/' . $id);
+        }
         exit;
     }
     

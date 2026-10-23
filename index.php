@@ -410,6 +410,8 @@ if ($currentRoute === '/' || $currentRoute === '/dashboard') {
         $controller->update($matches[1]);
     } elseif (preg_match('/\/maintenances\/delete\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->delete($matches[1]);
+    } elseif (preg_match('/\/maintenances\/transfer\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->transfer($matches[1]);
     } elseif (preg_match('/\/maintenances\/deletePhoto\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $controller->deletePhoto($matches[1]);
     } elseif (preg_match('/\/maintenances\/delete-photo\/(\d+)/', $currentRoute, $matches) && $_SERVER['REQUEST_METHOD'] === 'POST') {

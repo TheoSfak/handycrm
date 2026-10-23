@@ -238,6 +238,11 @@ class TransformerMaintenance extends BaseModel {
             }
         }
 
+        // Rechain customer maintenances to guarantee 100% consistent chronological chain
+        if (!empty($data['customer_name'])) {
+            $this->rechainCustomerMaintenances($data['customer_name']);
+        }
+
         return $newId;
     }
     
@@ -588,34 +593,122 @@ class TransformerMaintenance extends BaseModel {
             }
             
             // Re-chain chronological history for the unified customer
-            $allRecords = $this->db->fetchAll("
-                SELECT id, maintenance_date 
-                FROM {$this->table} 
-                WHERE customer_name = ? AND deleted_at IS NULL 
-                ORDER BY maintenance_date ASC, id ASC
-            ", [$target]);
-            
-            $totalRecords = count($allRecords);
-            for ($i = 0; $i < $totalRecords; $i++) {
-                $currId = $allRecords[$i]['id'];
-                $prevId = ($i > 0) ? $allRecords[$i - 1]['id'] : null;
-                $isLatest = ($i === $totalRecords - 1);
-                $nextId = (!$isLatest) ? $allRecords[$i + 1]['id'] : null;
-                $isRenewed = $isLatest ? 0 : 1;
-                $renewedAt = $isLatest ? null : date('Y-m-d H:i:s');
-                
-                $this->db->execute("
-                    UPDATE {$this->table} 
-                    SET previous_id = ?, renewed_by_id = ?, is_renewed = ?, renewed_at = ?
-                    WHERE id = ?
-                ", [$prevId, $nextId, $isRenewed, $renewedAt, $currId]);
-            }
+            $this->rechainCustomerMaintenances($target);
             
             $pdo->commit();
             return $movedCount;
         } catch (Exception $e) {
             $pdo->rollBack();
             error_log("Failed to merge maintenance customers: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Re-chain chronological history for a customer's non-deleted maintenance records.
+     * Ensures previous_id, renewed_by_id, is_renewed and renewed_at are correctly set.
+     *
+     * @param string $customerName
+     * @return bool
+     */
+    public function rechainCustomerMaintenances($customerName) {
+        $customer = trim((string)$customerName);
+        if (empty($customer)) {
+            return false;
+        }
+
+        try {
+            $allRecords = $this->db->fetchAll("
+                SELECT id, maintenance_date, renewed_at 
+                FROM {$this->table} 
+                WHERE customer_name = ? AND deleted_at IS NULL 
+                ORDER BY maintenance_date ASC, id ASC
+            ", [$customer]);
+
+            $totalRecords = count($allRecords);
+            if ($totalRecords === 0) {
+                return true;
+            }
+
+            for ($i = 0; $i < $totalRecords; $i++) {
+                $currId = (int)$allRecords[$i]['id'];
+                $prevId = ($i > 0) ? (int)$allRecords[$i - 1]['id'] : null;
+                $isLatest = ($i === $totalRecords - 1);
+                $nextId = (!$isLatest) ? (int)$allRecords[$i + 1]['id'] : null;
+                $isRenewed = $isLatest ? 0 : 1;
+                $renewedAt = $isLatest ? null : (!empty($allRecords[$i]['renewed_at']) ? $allRecords[$i]['renewed_at'] : date('Y-m-d H:i:s'));
+
+                $this->db->execute("
+                    UPDATE {$this->table} 
+                    SET previous_id = ?, renewed_by_id = ?, is_renewed = ?, renewed_at = ?
+                    WHERE id = ?
+                ", [$prevId, $nextId, $isRenewed, $renewedAt, $currId]);
+            }
+
+            return true;
+        } catch (Exception $e) {
+            error_log("Failed to rechain maintenances for customer '{$customer}': " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Transfer or detach a maintenance record from its current customer history.
+     *
+     * @param int $id The maintenance record ID
+     * @param string $action 'standalone' or 'transfer_existing'
+     * @param string $targetCustomerName New company name or target existing company name
+     * @return bool
+     */
+    public function transferMaintenance($id, $action, $targetCustomerName) {
+        $id = (int)$id;
+        $current = $this->find($id);
+        if (!$current) {
+            return false;
+        }
+
+        $oldCustomerName = trim((string)$current['customer_name']);
+        $newCustomerName = trim((string)$targetCustomerName);
+
+        if (empty($newCustomerName)) {
+            return false;
+        }
+
+        $pdo = $this->db->getPdo();
+        $pdo->beginTransaction();
+
+        try {
+            if ($action === 'standalone') {
+                // Detach from current customer history chain and become independent
+                $this->db->execute("
+                    UPDATE {$this->table} 
+                    SET customer_name = ?, previous_id = NULL, renewed_by_id = NULL, is_renewed = 0, renewed_at = NULL
+                    WHERE id = ?
+                ", [$newCustomerName, $id]);
+            } else {
+                // Transfer to another customer history
+                $this->db->execute("
+                    UPDATE {$this->table} 
+                    SET customer_name = ?
+                    WHERE id = ?
+                ", [$newCustomerName, $id]);
+            }
+
+            // Re-chain remaining records for old customer
+            if (!empty($oldCustomerName)) {
+                $this->rechainCustomerMaintenances($oldCustomerName);
+            }
+
+            // Re-chain records for new/target customer
+            if (!empty($newCustomerName)) {
+                $this->rechainCustomerMaintenances($newCustomerName);
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            error_log("Failed to transfer maintenance #{$id}: " . $e->getMessage());
             return false;
         }
     }

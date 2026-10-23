@@ -35,7 +35,9 @@ $expectedMethods = [
     'markAsRenewed',
     'mergeCustomers',
     'getOverdueCount',
-    'getUpcomingCount'
+    'getUpcomingCount',
+    'rechainCustomerMaintenances',
+    'transferMaintenance'
 ];
 
 foreach ($expectedMethods as $method) {
@@ -58,7 +60,9 @@ $expectedCtrlMethods = [
     'create',
     'store',
     'show',
-    'edit'
+    'edit',
+    'delete',
+    'transfer'
 ];
 
 foreach ($expectedCtrlMethods as $method) {
@@ -80,27 +84,27 @@ if (strpos($createView, 'maintenanceCustomersList') !== false && strpos($createV
 }
 
 $indexView = file_get_contents(__DIR__ . '/../views/maintenances/index.php');
-if (strpos($indexView, 'mergeCustomersModal') !== false && strpos($indexView, 'renew_id') !== false) {
-    echo " [PASS] views/maintenances/index.php has merge modal and renew_id button\n";
+if (strpos($indexView, 'renewWarningModal') !== false && strpos($indexView, 'btn-renew') !== false) {
+    echo " [PASS] views/maintenances/index.php has renewWarningModal and green arrow renew button\n";
 } else {
-    $errors[] = "views/maintenances/index.php missing merge modal or renew_id button";
-    echo " [FAIL] views/maintenances/index.php missing merge modal or renew_id button\n";
+    $errors[] = "views/maintenances/index.php missing renewWarningModal or renew button";
+    echo " [FAIL] views/maintenances/index.php missing renewWarningModal or renew button\n";
 }
 
 $viewView = file_get_contents(__DIR__ . '/../views/maintenances/view.php');
-if (strpos($viewView, 'Ιστορικό Ετήσιων Συντηρήσεων') !== false && strpos($viewView, 'renew_id') !== false) {
-    echo " [PASS] views/maintenances/view.php has history table and renewal button\n";
+if (strpos($viewView, 'Ιστορικό Ετήσιων Συντηρήσεων') !== false && strpos($viewView, 'deleteHistoryModal') !== false && strpos($viewView, 'transferMaintenanceModal') !== false) {
+    echo " [PASS] views/maintenances/view.php has history table, delete modal, and transfer modal\n";
 } else {
-    $errors[] = "views/maintenances/view.php missing history table or renewal button";
-    echo " [FAIL] views/maintenances/view.php missing history table or renewal button\n";
+    $errors[] = "views/maintenances/view.php missing history table, delete modal, or transfer modal";
+    echo " [FAIL] views/maintenances/view.php missing history elements or modals\n";
 }
 
 // 5. Verify index.php routing
 $indexPhp = file_get_contents(__DIR__ . '/../index.php');
-if (strpos($indexPhp, 'mergeCustomers') !== false && strpos($indexPhp, 'markRenewed') !== false) {
-    echo " [PASS] index.php routes merge-customers and mark-renewed\n";
+if (strpos($indexPhp, 'mergeCustomers') !== false && strpos($indexPhp, 'markRenewed') !== false && strpos($indexPhp, 'transfer') !== false) {
+    echo " [PASS] index.php routes merge-customers, mark-renewed, and transfer\n";
 } else {
-    $errors[] = "index.php missing merge-customers or mark-renewed routes";
+    $errors[] = "index.php missing merge-customers, mark-renewed, or transfer routes";
     echo " [FAIL] index.php missing routes\n";
 }
 

@@ -32,9 +32,28 @@
                                 </button>
                             </div>
 
-                            <a href="<?= BASE_URL ?>/maintenances/create?renew_id=<?= $maintenance['id'] ?>" class="btn btn-success btn-sm">
-                                <i class="fas fa-sync-alt me-1"></i> Εκτέλεση Νέας Ετήσιας Συντήρησης
+                            <a href="<?= BASE_URL ?>/maintenances/create?renew_id=<?= $maintenance['id'] ?>" 
+                               class="btn btn-success btn-sm btn-renew"
+                               data-id="<?= $maintenance['id'] ?>"
+                               data-customer="<?= htmlspecialchars($maintenance['customer_name'], ENT_QUOTES) ?>"
+                               data-date="<?= $maintenance['maintenance_date'] ?>">
+                                <i class="fas fa-arrow-right me-1"></i> Δήλωση Επόμενης Χρονιάς (Ανανέωση)
                             </a>
+
+                            <?php if (!empty($isAdmin)): ?>
+                                <button type="button" 
+                                        class="btn btn-outline-warning btn-sm" 
+                                        onclick="openTransferModal(<?= (int)$maintenance['id'] ?>, '<?= htmlspecialchars($maintenance['customer_name'], ENT_QUOTES) ?>', '<?= date('d/m/Y', strtotime($maintenance['maintenance_date'])) ?>', true)"
+                                        title="Αποδέσμευση ή Μεταφορά σε άλλο εργοστάσιο">
+                                    <i class="fas fa-exchange-alt me-1"></i> Αποδέσμευση / Μεταφορά
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-outline-danger btn-sm" 
+                                        onclick="confirmDeleteHistory(<?= (int)$maintenance['id'] ?>, '<?= date('d/m/Y', strtotime($maintenance['maintenance_date'])) ?>', '<?= htmlspecialchars($maintenance['customer_name'], ENT_QUOTES) ?>', true)"
+                                        title="Διαγραφή Συντήρησης">
+                                    <i class="fas fa-trash me-1"></i> Διαγραφή
+                                </button>
+                            <?php endif; ?>
 
                             <?php if (empty($maintenance['is_renewed'])): ?>
                                 <form method="POST" action="<?= BASE_URL ?>/maintenances/mark-renewed/<?= $maintenance['id'] ?>" class="d-inline" onsubmit="return confirm('Σίγουρα θέλετε να σημειώσετε αυτή τη συντήρηση ως ολοκληρωμένη/ανανεωμένη;');">
@@ -147,7 +166,7 @@
                     ?>
 
                     <!-- History Timeline Box -->
-                    <?php if (!empty($history) && count($history) > 1): ?>
+                    <?php if (!empty($history) && count($history) >= 1): ?>
                     <div class="card bg-light border mb-2 mt-2 shadow-sm">
                         <div class="card-header bg-white py-1 px-3 d-flex justify-content-between align-items-center">
                             <span class="fw-bold text-primary" style="font-size: 0.85rem;">
@@ -194,13 +213,32 @@
                                                     <?php endif; ?>
                                                 </td>
                                                 <td class="text-end">
-                                                    <?php if (empty($h['is_current'])): ?>
-                                                        <a href="<?= BASE_URL ?>/maintenances/view/<?= $h['id'] ?>" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
-                                                            <i class="fas fa-eye me-1"></i>Προβολή
-                                                        </a>
-                                                    <?php else: ?>
-                                                        <span class="text-muted small">Ανοιχτή</span>
-                                                    <?php endif; ?>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <?php if (empty($h['is_current'])): ?>
+                                                            <a href="<?= BASE_URL ?>/maintenances/view/<?= $h['id'] ?>" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.75rem;" title="Προβολή">
+                                                                <i class="fas fa-eye me-1"></i>Προβολή
+                                                            </a>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-light text-dark border align-self-center py-1 px-2" style="font-size: 0.75rem;">Ανοιχτή</span>
+                                                        <?php endif; ?>
+
+                                                        <?php if (!empty($isAdmin)): ?>
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-warning btn-sm py-0 px-2 ms-1" 
+                                                                    style="font-size: 0.75rem;" 
+                                                                    onclick="openTransferModal(<?= (int)$h['id'] ?>, '<?= htmlspecialchars($h['customer_name'], ENT_QUOTES) ?>', '<?= date('d/m/Y', strtotime($h['maintenance_date'])) ?>', <?= !empty($h['is_current']) ? 'true' : 'false' ?>)"
+                                                                    title="Αποδέσμευση ή Μεταφορά σε άλλο εργοστάσιο">
+                                                                <i class="fas fa-exchange-alt"></i>
+                                                            </button>
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-danger btn-sm py-0 px-2 ms-1" 
+                                                                    style="font-size: 0.75rem;" 
+                                                                    onclick="confirmDeleteHistory(<?= (int)$h['id'] ?>, '<?= date('d/m/Y', strtotime($h['maintenance_date'])) ?>', '<?= htmlspecialchars($h['customer_name'], ENT_QUOTES) ?>', <?= !empty($h['is_current']) ? 'true' : 'false' ?>)"
+                                                                    title="Διαγραφή">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
@@ -638,4 +676,243 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
+// Check before renewing if maintenance was performed today or recent
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-renew').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const maintDate = this.getAttribute('data-date');
+            const customerName = this.getAttribute('data-customer') || 'το επιλεγμένο εργοστάσιο';
+            const targetUrl = this.getAttribute('href');
+            
+            if (!maintDate) return;
+            
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const recordDate = new Date(maintDate);
+            recordDate.setHours(0,0,0,0);
+            
+            const diffTime = today.getTime() - recordDate.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+            
+            // If maintenance was done today, in the future, or within the last 180 days (~6 months)
+            if (diffDays <= 180) {
+                e.preventDefault();
+                
+                const day = String(recordDate.getDate()).padStart(2, '0');
+                const month = String(recordDate.getMonth() + 1).padStart(2, '0');
+                const year = recordDate.getFullYear();
+                const formattedDate = `${day}/${month}/${year}`;
+                
+                let warningText = '';
+                if (diffDays === 0) {
+                    warningText = `<p class="fw-semibold text-danger mb-2">⚠️ Προσοχή: Πιθανή διπλή καταχώρηση την ίδια ημέρα!</p>
+                    <p>Έχετε ήδη καταχωρημένη συντήρηση <strong>σήμερα (${formattedDate})</strong> για το εργοστάσιο <strong>${customerName}</strong>.</p>
+                    <p>Οι συντηρήσεις είναι <strong>ετήσιες</strong>. Δεν μπορεί κανονικά να γίνουν δύο (2) συντηρήσεις την ίδια ημέρα στο ίδιο μέρος.</p>
+                    <p class="mb-0">Είστε σίγουροι ότι θέλετε να προχωρήσετε σε νέα συντήρηση;</p>`;
+                } else if (diffDays < 0) {
+                    warningText = `<p class="fw-semibold text-warning mb-2">⚠️ Προσοχή: Μελλοντική ημερομηνία!</p>
+                    <p>Η προηγούμενη συντήρηση για το εργοστάσιο <strong>${customerName}</strong> έχει μελλοντική ημερομηνία (${formattedDate}).</p>
+                    <p class="mb-0">Είστε σίγουροι ότι θέλετε να δηλώσετε νέα ετήσια συντήρηση;</p>`;
+                } else {
+                    warningText = `<p class="fw-semibold text-warning mb-2">⚠️ Προσοχή: Πρόσφατη συντήρηση!</p>
+                    <p>Η προηγούμενη συντήρηση για το εργοστάσιο <strong>${customerName}</strong> έγινε στις <strong>${formattedDate}</strong> (πριν από μόλις <strong>${diffDays} ημέρες</strong>).</p>
+                    <p>Οι συντηρήσεις είναι <strong>ετήσιες</strong> και κανονικά εκτελούνται μετά από 1 έτος.</p>
+                    <p class="mb-0">Είστε σίγουροι ότι θέλετε να δηλώσετε νέα ετήσια συντήρηση τόσο σύντομα;</p>`;
+                }
+                
+                document.getElementById('renewWarningModalText').innerHTML = warningText;
+                document.getElementById('renewWarningConfirmBtn').setAttribute('href', targetUrl);
+                const renewModal = new bootstrap.Modal(document.getElementById('renewWarningModal'));
+                renewModal.show();
+            }
+        });
+    });
+});
+
+<?php if (!empty($isAdmin)): ?>
+function confirmDeleteHistory(id, dateStr, customerName, isCurrent) {
+    document.getElementById('deleteMaintDate').textContent = dateStr;
+    document.getElementById('deleteCustomerName').textContent = customerName;
+    const form = document.getElementById('deleteHistoryForm');
+    form.action = '<?= BASE_URL ?>/maintenances/delete/' + id;
+    document.getElementById('deleteRedirectTo').value = isCurrent ? '<?= BASE_URL ?>/maintenances' : '<?= BASE_URL ?>/maintenances/view/<?= $maintenance['id'] ?>';
+    const modal = new bootstrap.Modal(document.getElementById('deleteHistoryModal'));
+    modal.show();
+}
+
+function openTransferModal(id, customerName, dateStr, isCurrent) {
+    document.getElementById('transferMaintIdDisplay').textContent = id;
+    document.getElementById('transferMaintDateDisplay').textContent = dateStr;
+    document.getElementById('transferCurrentCustomerDisplay').textContent = customerName;
+    
+    const form = document.getElementById('transferMaintenanceForm');
+    form.action = '<?= BASE_URL ?>/maintenances/transfer/' + id;
+    document.getElementById('transferRedirectTo').value = isCurrent ? '<?= BASE_URL ?>/maintenances/view/' + id : '<?= BASE_URL ?>/maintenances/view/<?= $maintenance['id'] ?>';
+    
+    document.getElementById('transferTypeStandalone').checked = true;
+    document.getElementById('new_customer_name_input').value = customerName;
+    toggleTransferFields();
+    
+    const modal = new bootstrap.Modal(document.getElementById('transferMaintenanceModal'));
+    modal.show();
+}
+
+function toggleTransferFields() {
+    const isStandalone = document.getElementById('transferTypeStandalone').checked;
+    const standaloneBox = document.getElementById('standaloneFieldBox');
+    const existingBox = document.getElementById('existingFieldBox');
+    const newNameInput = document.getElementById('new_customer_name_input');
+    const targetSelect = document.getElementById('target_customer_name_select');
+    
+    if (isStandalone) {
+        standaloneBox.classList.remove('d-none');
+        existingBox.classList.add('d-none');
+        newNameInput.required = true;
+        targetSelect.required = false;
+    } else {
+        standaloneBox.classList.add('d-none');
+        existingBox.classList.remove('d-none');
+        newNameInput.required = false;
+        targetSelect.required = true;
+    }
+}
+<?php endif; ?>
 </script>
+
+<!-- Modal Ελέγχου Ετήσιας Συντήρησης (Προειδοποίηση για πρόσφατη / ίδιας ημέρας συντήρηση) -->
+<div class="modal fade" id="renewWarningModal" tabindex="-1" aria-labelledby="renewWarningModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-warning">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="renewWarningModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Έλεγχος Ετήσιας Συντήρησης
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="renewWarningModalText" class="mb-3"></div>
+                <div class="alert alert-light border small text-muted mb-0">
+                    <i class="fas fa-info-circle me-1 text-primary"></i>
+                    Αν πρόκειται πράγματι για τη συντήρηση της νέας/επόμενης χρονιάς, πατήστε <strong>Συνέχεια στην Ανανέωση</strong>.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Ακύρωση
+                </button>
+                <a href="#" id="renewWarningConfirmBtn" class="btn btn-success">
+                    <i class="fas fa-arrow-right me-1"></i>Ναι, Συνέχεια στην Ανανέωση
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php if (!empty($isAdmin)): ?>
+<!-- Modal Διαγραφής Συντήρησης από το Ιστορικό (Admin only) -->
+<div class="modal fade" id="deleteHistoryModal" tabindex="-1" aria-labelledby="deleteHistoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-danger">
+            <form id="deleteHistoryForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="redirect_to" id="deleteRedirectTo" value="">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteHistoryModalLabel">
+                        <i class="fas fa-trash me-2"></i>Διαγραφή Συντήρησης
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Είστε σίγουροι ότι θέλετε να διαγράψετε τη συντήρηση της <strong id="deleteMaintDate"></strong> για το εργοστάσιο <strong id="deleteCustomerName"></strong>;</p>
+                    <div class="alert alert-warning py-2 small mb-0">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Η ενέργεια θα διαγράψει τη συντήρηση και θα <strong>επανασυνδέσει αυτόματα το ιστορικό</strong> των υπόλοιπων συντηρήσεων του εργοστασίου.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Οριστική Διαγραφή
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Αποδέσμευσης / Μεταφοράς Συντήρησης (Admin only) -->
+<div class="modal fade" id="transferMaintenanceModal" tabindex="-1" aria-labelledby="transferMaintenanceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <form id="transferMaintenanceForm" method="POST" action="">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="redirect_to" id="transferRedirectTo" value="">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="transferMaintenanceModalLabel">
+                        <i class="fas fa-exchange-alt me-2"></i>Αποδέσμευση / Μεταφορά Συντήρησης
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-light border py-2 mb-3 small">
+                        <div><strong>Συντήρηση:</strong> #<span id="transferMaintIdDisplay"></span> (<span id="transferMaintDateDisplay"></span>)</div>
+                        <div><strong>Τρέχον Εργοστάσιο:</strong> <span id="transferCurrentCustomerDisplay" class="fw-bold text-primary"></span></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Επιλέξτε Ενέργεια <span class="text-danger">*</span></label>
+                        
+                        <div class="form-check p-3 border rounded mb-2 bg-light">
+                            <input class="form-check-input" type="radio" name="transfer_type" id="transferTypeStandalone" value="standalone" checked onchange="toggleTransferFields()">
+                            <label class="form-check-label fw-semibold" for="transferTypeStandalone">
+                                <i class="fas fa-unlink text-warning me-1"></i> Αποδέσμευση ως Ξεχωριστή Συντήρηση (Αυτόνομη)
+                            </label>
+                            <div class="text-muted small mt-1">
+                                Αποσυνδέει τη συντήρηση από το ιστορικό του τρέχοντος εργοστασίου και τη φέρνει ως ξεχωριστή αυτόνομη συντήρηση στην κύρια λίστα.
+                            </div>
+                        </div>
+
+                        <div class="form-check p-3 border rounded bg-light">
+                            <input class="form-check-input" type="radio" name="transfer_type" id="transferTypeExisting" value="transfer_existing" onchange="toggleTransferFields()">
+                            <label class="form-check-label fw-semibold" for="transferTypeExisting">
+                                <i class="fas fa-building text-primary me-1"></i> Μεταφορά στο Ιστορικό Άλλης Εταιρείας
+                            </label>
+                            <div class="text-muted small mt-1">
+                                Εντάσσει τη συντήρηση στο χρονολογικό ιστορικό μιας άλλης υπάρχουσας εταιρείας.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Field for Standalone Detach -->
+                    <div id="standaloneFieldBox" class="mb-3">
+                        <label class="form-label fw-semibold">Όνομα Νέου / Σωστού Εργοστασίου <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="new_customer_name" id="new_customer_name_input" placeholder="π.χ. Νέο Εργοστάσιο ΑΕ" required>
+                        <small class="text-muted">Πληκτρολογήστε την επωνυμία του εργοστασίου στο οποίο πράγματι ανήκει η συντήρηση.</small>
+                    </div>
+
+                    <!-- Field for Transfer to Existing Customer -->
+                    <div id="existingFieldBox" class="mb-3 d-none">
+                        <label class="form-label fw-semibold">Επιλογή Υπάρχοντος Εργοστασίου <span class="text-danger">*</span></label>
+                        <select class="form-select" name="target_customer_name" id="target_customer_name_select">
+                            <option value="">-- Επιλέξτε Εταιρεία / Εργοστάσιο --</option>
+                            <?php foreach ($maintenanceCustomers ?? [] as $mc): ?>
+                                <option value="<?= htmlspecialchars($mc['customer_name']) ?>">
+                                    <?= htmlspecialchars($mc['customer_name']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="text-muted">Η συντήρηση θα ενταχθεί αυτόματα στο ιστορικό της επιλεγμένης εταιρείας.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-check me-1"></i>Εκτέλεση
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
