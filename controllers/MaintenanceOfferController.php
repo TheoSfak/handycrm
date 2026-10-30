@@ -1370,6 +1370,41 @@ class MaintenanceOfferController extends BaseController {
   }
   .trust-banner strong { color: #0f172a; font-size: 12px; }
   .trust-banner span { color: #64748b; font-size: 10.5px; }
+  .scope-banner {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #65a30d;
+    border-radius: 10px;
+    padding: 13px 20px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .scope-banner-icon {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .scope-banner-icon svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
+  .scope-banner-text {
+    font-size: 11.2px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.45;
+    text-align: center;
+    letter-spacing: 0.1px;
+  }
 
   /* PAGE 5: CLIENTS */
   .clients-header {
@@ -1944,6 +1979,20 @@ class MaintenanceOfferController extends BaseController {
             <span>Σύνταξη &amp; έκδοση τεχνικού πρωτοκόλλου</span>
           </li>
         </ul>
+      </div>
+    </div>
+
+    <!-- Scope of Maintenance Bubble -->
+    <div class="scope-banner">
+      <div class="scope-banner-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#65a30d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+      </div>
+      <div class="scope-banner-text">
+        Η ΣΥΝΤΗΡΗΣΗ ΠΟΥ ΘΑ ΠΡΑΓΜΑΤΟΠΟΙΗΘΕΙ ΑΦΟΡΑ ΤΟ ΤΜΗΜΑ ΤΟΥ ΥΠΟΣΤΑΘΜΟΥ ΑΠΟ ΤΗΝ ΚΥΨΕΛΗ ΕΙΣΑΓΩΓΗΣ ΤΗΣ Μ.Τ. ΜΕΧΡΙ ΤΟΝ ΓΕΝΙΚΟ ΔΙΑΚΟΠΤΗ ΤΟΥ ΠΙΝΑΚΑ Χ.Τ.
       </div>
     </div>
 
@@ -2539,6 +2588,16 @@ class MaintenanceOfferController extends BaseController {
         </table>';
         $pdf->writeHTMLCell(170, 0, 20, 36, $p4GridHtml, 0, 1, false, true, '');
 
+        $p4ScopeHtml = '
+        <table width="100%" cellpadding="6" cellspacing="0" style="font-family:dejavusans; background-color:#f8fafc; border-left:4px solid #65a30d; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">
+          <tr>
+            <td align="center" style="font-size:8pt; font-weight:bold; color:#0f172a; line-height:1.4;">
+              Η ΣΥΝΤΗΡΗΣΗ ΠΟΥ ΘΑ ΠΡΑΓΜΑΤΟΠΟΙΗΘΕΙ ΑΦΟΡΑ ΤΟ ΤΜΗΜΑ ΤΟΥ ΥΠΟΣΤΑΘΜΟΥ ΑΠΟ ΤΗΝ ΚΥΨΕΛΗ ΕΙΣΑΓΩΓΗΣ ΤΗΣ Μ.Τ. ΜΕΧΡΙ ΤΟΝ ΓΕΝΙΚΟ ΔΙΑΚΟΠΤΗ ΤΟΥ ΠΙΝΑΚΑ Χ.Τ.
+            </td>
+          </tr>
+        </table>';
+        $pdf->writeHTMLCell(170, 0, 20, 132, $p4ScopeHtml, 0, 1, false, true, '');
+
         $p4TrustHtml = '
         <table width="100%" cellpadding="6" cellspacing="0" style="font-family:dejavusans; background-color:#f8fafc; border-left:4px solid #ea580c; border-top:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0;">
           <tr>
@@ -2548,7 +2607,7 @@ class MaintenanceOfferController extends BaseController {
             </td>
           </tr>
         </table>';
-        $pdf->writeHTMLCell(170, 0, 20, 134, $p4TrustHtml, 0, 1, false, true, '');
+        $pdf->writeHTMLCell(170, 0, 20, 150, $p4TrustHtml, 0, 1, false, true, '');
 
         // ================= PAGE 5: CLIENTS =================
         $pdf->AddPage();
