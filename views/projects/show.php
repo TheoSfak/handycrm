@@ -555,12 +555,12 @@
                         // Build per-tech display: name => [hours, hmeromisthia]
                         $techBreakdown = [];
                         foreach ($laborEntries as $e) {
-                            $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : ($e['technician_name'] ?? 'other');
+                            $key = !empty($e['technician_id']) ? 'id_'.$e['technician_id'] : 'tmp_' . ($e['technician_name'] ?: 'other');
                             if (!isset($techBreakdown[$key])) {
                                 if (!empty($e['last_name']) && !empty($e['first_name'])) {
                                     $displayName = $e['last_name'] . ' ' . $e['first_name'];
                                 } else {
-                                    $displayName = $e['technician_name'] ?? 'Άλλο';
+                                    $displayName = !empty($e['technician_name']) ? $e['technician_name'] : 'Άλλος Τεχνικός';
                                 }
                                 $techBreakdown[$key] = ['name' => $displayName, 'hours' => 0];
                             }
@@ -1050,7 +1050,8 @@ function exportLaborToCSV() {
             dateStr = 'Από ' + dateFrom.toLocaleDateString('el-GR') + ' έως ' + dateTo.toLocaleDateString('el-GR');
         }
         
-        const technicianName = (entry.last_name + ' ' + entry.first_name).trim();
+        const userFullName = [entry.last_name, entry.first_name].filter(Boolean).join(' ').trim();
+        const technicianName = (userFullName || entry.technician_name || 'Άλλος Τεχνικός').trim().replace(/"/g, '""');
         const hours = parseFloat(entry.hours).toFixed(1);
         
         csv += `"${dateStr}","${technicianName}",${hours}\n`;

@@ -223,29 +223,31 @@ class ProjectTasksController extends BaseController {
                 
                 // Only include labor if it has hours or rate
                 if ($hasHours || $hasRate) {
-                    $isTemporary = !empty($laborItem['is_temporary']) || empty($laborItem['technician_id']);
+                    $norm = TaskLabor::normalizeFields($laborItem);
+                    if ($norm['is_temporary'] && isset($laborItem['custom_technician_name']) && trim((string)$laborItem['custom_technician_name']) !== '') {
+                        $norm['technician_name'] = mb_substr(trim((string)$laborItem['custom_technician_name']), 0, 100);
+                    }
                     
                     // Calculate hours if time_from and time_to provided (and not 00:00)
-                    $hoursWorked = floatval($laborItem['hours_worked'] ?? 0);
-                    
-                    if (!empty($laborItem['time_from']) && !empty($laborItem['time_to']) 
-                        && $laborItem['time_from'] !== '00:00' && $laborItem['time_to'] !== '00:00') {
+                    $hoursWorked = $norm['hours_worked'];
+                    if ($norm['time_from'] !== null && $norm['time_to'] !== null 
+                        && $norm['time_from'] !== '00:00' && $norm['time_to'] !== '00:00') {
                         $hoursWorked = $this->laborModel->calculateHoursFromTime(
-                            $laborItem['time_from'], 
-                            $laborItem['time_to']
+                            $norm['time_from'], 
+                            $norm['time_to']
                         );
                     }
                     
                     $labor[] = [
-                        'technician_id' => !$isTemporary ? intval($laborItem['technician_id']) : null,
-                        'technician_name' => trim($laborItem['technician_name']),
-                        'role_id' => $laborItem['role_id'] ?? null,
-                        'is_temporary' => $isTemporary ? 1 : 0,
+                        'technician_id' => $norm['technician_id'],
+                        'technician_name' => $norm['technician_name'],
+                        'role_id' => $norm['role_id'],
+                        'is_temporary' => $norm['is_temporary'],
                         'hours_worked' => $hoursWorked,
-                        'time_from' => $laborItem['time_from'] ?? null,
-                        'time_to' => $laborItem['time_to'] ?? null,
-                        'hourly_rate' => floatval($laborItem['hourly_rate'] ?? 0),
-                        'notes' => trim($laborItem['notes'] ?? '')
+                        'time_from' => $norm['time_from'],
+                        'time_to' => $norm['time_to'],
+                        'hourly_rate' => $norm['hourly_rate'],
+                        'notes' => $norm['notes'] ?? ''
                     ];
                 }
             }

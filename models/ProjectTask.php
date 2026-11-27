@@ -131,7 +131,15 @@ class ProjectTask extends BaseModel {
      * @return array
      */
     public function getLabor($taskId) {
-        $sql = "SELECT * FROM task_labor WHERE task_id = ? ORDER BY id ASC";
+        $sql = "SELECT tl.*,
+                       COALESCE(NULLIF(TRIM(tl.technician_name), ''), NULLIF(TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))), '')) as technician_name,
+                       r.name as technician_role,
+                       r.display_name as technician_role_display
+                FROM task_labor tl
+                LEFT JOIN users u ON tl.technician_id = u.id
+                LEFT JOIN roles r ON tl.role_id = r.id
+                WHERE tl.task_id = ?
+                ORDER BY tl.id ASC";
         return $this->query($sql, [$taskId]);
     }
     
@@ -248,20 +256,20 @@ class ProjectTask extends BaseModel {
                  hours_worked, time_from, time_to, hourly_rate, subtotal, notes) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        $subtotal = $data['hours_worked'] * $data['hourly_rate'];
+        $norm = TaskLabor::normalizeFields($data);
         
         $stmt = $this->db->execute($sql, [
             $data['task_id'],
-            $data['technician_id'] ?? null,
-            $data['technician_name'],
-            $data['role_id'] ?? null,
-            $data['is_temporary'] ?? 0,
-            $data['hours_worked'],
-            $data['time_from'] ?? null,
-            $data['time_to'] ?? null,
-            $data['hourly_rate'],
-            $subtotal,
-            $data['notes'] ?? null
+            $norm['technician_id'],
+            $norm['technician_name'],
+            $norm['role_id'],
+            $norm['is_temporary'],
+            $norm['hours_worked'],
+            $norm['time_from'],
+            $norm['time_to'],
+            $norm['hourly_rate'],
+            $norm['subtotal'],
+            $norm['notes']
         ]);
         
         return $stmt !== false;

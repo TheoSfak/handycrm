@@ -161,9 +161,11 @@ $totalCost = $task['materials_total'] + $task['labor_total'];
                                                         <span class="badge bg-primary ms-2">
                                                             <?= htmlspecialchars($entry['technician_role_display']) ?>
                                                         </span>
+                                                    <?php elseif (!empty($entry['is_temporary']) || empty($entry['technician_id'])): ?>
+                                                        <span class="badge bg-secondary ms-2">Εξωτερικός / Προσωρινός</span>
                                                     <?php endif; ?>
                                                 <?php else: ?>
-                                                    <span class="text-muted">Άλλο Εργατικό</span>
+                                                    <span class="text-muted">Άλλος Τεχνικός</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td class="text-center">

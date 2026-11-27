@@ -26,6 +26,40 @@ class TaskLabor extends BaseModel {
     }
     
     /**
+     * Normalize labor fields so empty strings never fail strict integer/time columns.
+     */
+    public static function normalizeFields(array $data): array {
+        $technicianId = (!empty($data['technician_id']) && is_numeric($data['technician_id']) && intval($data['technician_id']) > 0)
+            ? intval($data['technician_id'])
+            : null;
+        $isTemporary = (!empty($data['is_temporary']) || $technicianId === null) ? 1 : 0;
+        if ($isTemporary) {
+            $technicianId = null;
+        }
+        $roleId = (!$isTemporary && !empty($data['role_id']) && is_numeric($data['role_id']) && intval($data['role_id']) > 0)
+            ? intval($data['role_id'])
+            : null;
+        $technicianName = trim((string)($data['technician_name'] ?? ''));
+        if ($technicianName === '') {
+            $technicianName = $isTemporary ? 'Άλλος Τεχνικός' : 'Τεχνικός';
+        }
+        $hoursWorked = (float)($data['hours_worked'] ?? 0);
+        $hourlyRate = (float)($data['hourly_rate'] ?? 0);
+        return [
+            'technician_id' => $technicianId,
+            'technician_name' => mb_substr($technicianName, 0, 100),
+            'role_id' => $roleId,
+            'is_temporary' => $isTemporary,
+            'hours_worked' => $hoursWorked,
+            'hourly_rate' => $hourlyRate,
+            'subtotal' => $hoursWorked * $hourlyRate,
+            'time_from' => !empty($data['time_from']) ? trim((string)$data['time_from']) : null,
+            'time_to' => !empty($data['time_to']) ? trim((string)$data['time_to']) : null,
+            'notes' => !empty($data['notes']) ? trim((string)$data['notes']) : null
+        ];
+    }
+
+    /**
      * Create labor entry
      * 
      * @param array $data Labor data
@@ -37,7 +71,7 @@ class TaskLabor extends BaseModel {
             $data['hours_worked'] = $this->calculateHoursFromTime($data['time_from'], $data['time_to']);
         }
         
-        $subtotal = $this->calculateSubtotal($data['hours_worked'], $data['hourly_rate']);
+        $norm = self::normalizeFields($data);
         
         $sql = "INSERT INTO {$this->table} 
                 (task_id, technician_id, technician_name, role_id, is_temporary, 
@@ -46,16 +80,16 @@ class TaskLabor extends BaseModel {
         
         $stmt = $this->db->execute($sql, [
             $data['task_id'],
-            $data['technician_id'] ?? null,
-            $data['technician_name'],
-            $data['role_id'] ?? null,
-            $data['is_temporary'] ?? 0,
-            $data['hours_worked'],
-            $data['time_from'] ?? null,
-            $data['time_to'] ?? null,
-            $data['hourly_rate'],
-            $subtotal,
-            $data['notes'] ?? null
+            $norm['technician_id'],
+            $norm['technician_name'],
+            $norm['role_id'],
+            $norm['is_temporary'],
+            $norm['hours_worked'],
+            $norm['time_from'],
+            $norm['time_to'],
+            $norm['hourly_rate'],
+            $norm['subtotal'],
+            $norm['notes']
         ]);
         
         return $stmt ? $this->db->lastInsertId() : false;
@@ -74,7 +108,7 @@ class TaskLabor extends BaseModel {
             $data['hours_worked'] = $this->calculateHoursFromTime($data['time_from'], $data['time_to']);
         }
         
-        $subtotal = $this->calculateSubtotal($data['hours_worked'], $data['hourly_rate']);
+        $norm = self::normalizeFields($data);
         
         $sql = "UPDATE {$this->table} 
                 SET technician_id = ?, technician_name = ?, role_id = ?, 
@@ -83,16 +117,16 @@ class TaskLabor extends BaseModel {
                 WHERE id = ?";
         
         $stmt = $this->db->execute($sql, [
-            $data['technician_id'] ?? null,
-            $data['technician_name'],
-            $data['role_id'] ?? null,
-            $data['is_temporary'] ?? 0,
-            $data['hours_worked'],
-            $data['time_from'] ?? null,
-            $data['time_to'] ?? null,
-            $data['hourly_rate'],
-            $subtotal,
-            $data['notes'] ?? null,
+            $norm['technician_id'],
+            $norm['technician_name'],
+            $norm['role_id'],
+            $norm['is_temporary'],
+            $norm['hours_worked'],
+            $norm['time_from'],
+            $norm['time_to'],
+            $norm['hourly_rate'],
+            $norm['subtotal'],
+            $norm['notes'],
             $id
         ]);
         

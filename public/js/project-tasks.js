@@ -172,6 +172,16 @@ function getWorkDayDefaults() {
     return { start: workDay.start, end: workDay.end, hours: hours };
 }
 
+function escapeHtmlAttr(value) {
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 /**
  * Add a new labor row to the form
  * @param {Object} data - Optional prepopulated data for edit mode
@@ -189,14 +199,16 @@ function addLaborRow(data = null) {
     row.className = 'labor-row border rounded p-3 mb-3 bg-light';
     row.dataset.index = laborCounter;
     
+    const isOtherTech = !data?.technician_id;
+
     // Build technician options
-    let technicianOptions = '<option value="">Άλλο Εργατικό (χωρίς τεχνικό)</option>';
+    let technicianOptions = `<option value="" ${isOtherTech ? 'selected' : ''}>Άλλος Τεχνικός (προσωρινός / εξωτερικός)</option>`;
     if (typeof technicians !== 'undefined' && technicians.length > 0) {
         technicians.forEach(tech => {
             const selected = data?.technician_id == tech.id ? 'selected' : '';
             const roleLabel = tech.role_display || tech.role || 'Χρήστης';
             technicianOptions += `<option value="${tech.id}" data-rate="${tech.hourly_rate}" data-role-id="${tech.role_id || ''}" ${selected}>
-                ${tech.name} (${roleLabel} - ${parseFloat(tech.hourly_rate).toFixed(2)}€/ώρα)
+                ${escapeHtmlAttr(tech.name)} (${escapeHtmlAttr(roleLabel)} - ${parseFloat(tech.hourly_rate).toFixed(2)}€/ώρα)
             </option>`;
         });
     }
@@ -208,19 +220,16 @@ function addLaborRow(data = null) {
     const defaultHours    = data ? (data.hours_worked || '') : workDayDefaults.hours;
     let techName = data?.technician_name || '';
     let techRoleId = data?.role_id || '';
+    let customNameValue = '';
     
-    // If we have a technician_id but no name, try to find it
-    if (data?.technician_id && !techName && typeof technicians !== 'undefined') {
+    if (!isOtherTech && typeof technicians !== 'undefined') {
         const tech = technicians.find(t => t.id == data.technician_id);
         if (tech) {
-            techName = tech.name;
-            techRoleId = tech.role_id;
+            if (!techName) techName = tech.name;
+            if (!techRoleId) techRoleId = tech.role_id || '';
         }
-    }
-    
-    // If still no name, use default
-    if (!techName && !data?.technician_id) {
-        techName = 'Άλλο Εργατικό';
+    } else if (isOtherTech) {
+        customNameValue = techName;
         techRoleId = '';
     }
     
@@ -233,14 +242,25 @@ function addLaborRow(data = null) {
                         onchange="loadTechnicianData(${laborCounter})">
                     ${technicianOptions}
                 </select>
+                <div class="custom-technician-wrapper mt-2" style="display: ${isOtherTech ? 'block' : 'none'};">
+                    <label class="form-label small mb-1">Όνομα Τεχνικού <span class="text-danger">*</span></label>
+                    <input type="text"
+                           class="form-control form-control-sm custom-technician-name"
+                           name="labor[${laborCounter}][custom_technician_name]"
+                           value="${escapeHtmlAttr(customNameValue)}"
+                           placeholder="Ονοματεπώνυμο τεχνικού (π.χ. εξωτερικός)"
+                           maxlength="100"
+                           oninput="syncCustomTechnicianName(${laborCounter})"
+                           ${isOtherTech ? 'required' : ''}>
+                </div>
                 <input type="hidden" 
                        name="labor[${laborCounter}][technician_name]" 
                        class="technician-name-hidden"
-                       value="${techName}">
+                       value="${escapeHtmlAttr(techName)}">
                 <input type="hidden" 
                        name="labor[${laborCounter}][role_id]" 
                        class="technician-role-hidden"
-                       value="${techRoleId}">
+                       value="${escapeHtmlAttr(techRoleId)}">
             </div>
             <div class="col-md-6 mb-2">
                 <label class="form-label small">Τιμή/Ώρα (€)</label>
@@ -334,7 +354,21 @@ function removeLaborRow(index) {
 }
 
 /**
- * Load technician data when selected (AJAX)
+ * Sync custom technician name input to hidden technician_name field
+ * @param {number} index - Row index
+ */
+function syncCustomTechnicianName(index) {
+    const row = document.querySelector(`.labor-row[data-index="${index}"]`);
+    if (!row) return;
+    const customInput = row.querySelector('.custom-technician-name');
+    const nameField = row.querySelector('.technician-name-hidden');
+    if (nameField && customInput) {
+        nameField.value = customInput.value.trim();
+    }
+}
+
+/**
+ * Load technician data when selected
  * @param {number} index - Row index
  */
 function loadTechnicianData(index) {
@@ -343,38 +377,37 @@ function loadTechnicianData(index) {
     
     const select = row.querySelector('.technician-select');
     const selectedOption = select.options[select.selectedIndex];
-    const rate = selectedOption.dataset.rate;
-    const roleId = selectedOption.dataset.roleId;
+    const rate = selectedOption ? selectedOption.dataset.rate : '';
     const techId = select.value;
     
-    // Find technician in the technicians array
-    let techName = '';
-    let techRoleId = '';
+    const nameField = row.querySelector('.technician-name-hidden');
+    const roleField = row.querySelector('.technician-role-hidden');
+    const customWrapper = row.querySelector('.custom-technician-wrapper');
+    const customInput = row.querySelector('.custom-technician-name');
     
     if (techId && typeof technicians !== 'undefined') {
         const tech = technicians.find(t => t.id == techId);
         if (tech) {
-            techName = tech.name;
-            techRoleId = tech.role_id;
+            if (nameField) nameField.value = tech.name;
+            if (roleField) roleField.value = tech.role_id || '';
         }
-    }
-    
-    // If no technician selected, use "Other"
-    if (!techName) {
-        techName = 'Άλλο Εργατικό';
-        techRoleId = '';
-    }
-    
-    // Update hidden fields
-    const nameField = row.querySelector('.technician-name-hidden');
-    const roleField = row.querySelector('.technician-role-hidden');
-    if (nameField) nameField.value = techName;
-    if (roleField) roleField.value = techRoleId;
-    
-    // Update hourly rate
-    if (rate) {
-        row.querySelector('.labor-rate').value = parseFloat(rate).toFixed(2);
-        calculateLaborSubtotal(index);
+        if (customWrapper) customWrapper.style.display = 'none';
+        if (customInput) customInput.required = false;
+        
+        // Update hourly rate for selected company technician
+        if (rate) {
+            row.querySelector('.labor-rate').value = parseFloat(rate).toFixed(2);
+            calculateLaborSubtotal(index);
+        }
+    } else {
+        // "Άλλος Τεχνικός": open custom name field and clear role_id
+        if (customWrapper) customWrapper.style.display = 'block';
+        if (customInput) {
+            customInput.required = true;
+            customInput.focus();
+        }
+        if (nameField) nameField.value = customInput ? customInput.value.trim() : '';
+        if (roleField) roleField.value = '';
     }
 }
 
@@ -570,27 +603,27 @@ function checkOverlap() {
  */
 function validateLaborBeforeSubmit() {
     document.querySelectorAll('.labor-row').forEach(row => {
-        const index = row.dataset.index;
         const nameField = row.querySelector('.technician-name-hidden');
         const roleField = row.querySelector('.technician-role-hidden');
+        const customInput = row.querySelector('.custom-technician-name');
         const select = row.querySelector('.technician-select');
-        
-        // If technician_name is empty, fill it from selected option
-        if (nameField && !nameField.value) {
-            const techId = select ? select.value : '';
-            
-            if (techId && typeof technicians !== 'undefined') {
-                const tech = technicians.find(t => t.id == techId);
-                if (tech) {
-                    nameField.value = tech.name;
-                    if (roleField) roleField.value = tech.role;
-                } else {
-                    nameField.value = 'Άλλο Εργατικό';
-                    if (roleField) roleField.value = 'other';
-                }
-            } else {
-                nameField.value = 'Άλλο Εργατικό';
-                if (roleField) roleField.value = 'other';
+        const techId = select ? select.value : '';
+
+        if (!techId) {
+            // Temporary / external technician: never send 'other' as role_id
+            if (roleField) roleField.value = '';
+            const customName = customInput ? customInput.value.trim() : '';
+            if (nameField) {
+                nameField.value = customName || 'Άλλος Τεχνικός';
+            }
+            return;
+        }
+
+        if (typeof technicians !== 'undefined') {
+            const tech = technicians.find(t => t.id == techId);
+            if (tech) {
+                if (nameField && !nameField.value.trim()) nameField.value = tech.name;
+                if (roleField) roleField.value = tech.role_id || '';
             }
         }
     });

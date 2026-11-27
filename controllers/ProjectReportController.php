@@ -207,14 +207,16 @@ class ProjectReportController extends BaseController {
         }
 
         $pdo = $this->db->getPdo();
+        $resolvedNameExpr = "NULLIF(TRIM(COALESCE(NULLIF(TRIM(tl.technician_name), ''), CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')))), '')";
         $sql = "
             SELECT pt.*,
                    CASE WHEN pt.task_type = 'single_day' THEN pt.task_date ELSE pt.date_from END as display_date,
-                   COUNT(DISTINCT tl.technician_name) as tech_count,
-                   GROUP_CONCAT(DISTINCT tl.technician_name ORDER BY tl.technician_name SEPARATOR '||') as tech_names,
+                   COUNT(DISTINCT $resolvedNameExpr) as tech_count,
+                   GROUP_CONCAT(DISTINCT $resolvedNameExpr ORDER BY $resolvedNameExpr SEPARATOR '||') as tech_names,
                    COALESCE(SUM(tl.hours_worked), 0) as task_total_hours
             FROM project_tasks pt
             LEFT JOIN task_labor tl ON tl.task_id = pt.id
+            LEFT JOIN users u ON tl.technician_id = u.id
             WHERE pt.project_id = ? AND pt.deleted_at IS NULL
         ";
         $params = [$projectId];
@@ -254,15 +256,17 @@ class ProjectReportController extends BaseController {
 
         $pdo = $this->db->getPdo();
         $placeholders = implode(',', array_fill(0, count($taskIds), '?'));
+        $resolvedNameExpr = "NULLIF(TRIM(COALESCE(NULLIF(TRIM(tl.technician_name), ''), CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')))), '')";
         $stmt = $pdo->prepare("
             SELECT tl.task_id,
-                   tl.technician_name,
+                   $resolvedNameExpr as technician_name,
                    COALESCE(SUM(tl.hours_worked), 0) as hours
             FROM task_labor tl
+            LEFT JOIN users u ON tl.technician_id = u.id
             WHERE tl.task_id IN ($placeholders)
-              AND tl.technician_name IS NOT NULL AND tl.technician_name <> ''
-            GROUP BY tl.task_id, tl.technician_name
-            ORDER BY tl.task_id, tl.technician_name
+              AND $resolvedNameExpr IS NOT NULL
+            GROUP BY tl.task_id, $resolvedNameExpr
+            ORDER BY tl.task_id, technician_name
         ");
         $stmt->execute(array_map('intval', $taskIds));
 
@@ -358,9 +362,9 @@ class ProjectReportController extends BaseController {
         $hasTechnicianId = self::$taskLaborColumnsCache['hasTechnicianId'];
 
         if ($hasTechnicianName) {
-            // Use technician_name if column exists
-            $workerNameField = "COALESCE(tl.technician_name, CONCAT(u.first_name, ' ', u.last_name))";
-            $groupByField = "tl.technician_name";
+            // Use technician_name if present and non-empty, otherwise fall back to users table
+            $workerNameField = "COALESCE(NULLIF(TRIM(tl.technician_name), ''), NULLIF(TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))), ''), 'Άλλος Τεχνικός')";
+            $groupByField = $workerNameField;
         } else {
             // Fall back to user_id with JOIN to users table
             $workerNameField = "CONCAT(u.first_name, ' ', u.last_name)";
