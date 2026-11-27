@@ -1,5 +1,11 @@
 # HandyCRM - Change Log
 
+## [1.8.57] - 2026-11-27
+### Fixed
+- **Επεξεργασία Εργασίας Έργου — Φόρτωση Ονόματος Εξωτερικού Τεχνικού**:
+  - Αφαιρέθηκε το διπλό SQL column alias `technician_name` από το `ProjectTask::getLabor()`, διατηρώντας αυτούσιο το `tl.technician_name` και εφαρμόζοντας fallback σε PHP μόνο όταν είναι κενό.
+  - Προστέθηκε ρητή ανάθεση τιμής DOM (`selectEl.value`, `customInputEl.value`, `hiddenNameEl.value`) με `autocomplete="off"` στο `addLaborRow()` ([public/js/project-tasks.js](public/js/project-tasks.js)), ασφαλέστερος έλεγχος `isOtherTech` (και για `'0'` / `is_temporary`) και `JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE` στο [edit.php](views/projects/tasks/edit.php).
+
 ## [1.8.56] - 2026-11-27
 ### Fixed
 - **Εργασίες Έργου — Αποθήκευση «Άλλος Τεχνικός» (`task_labor`)**:

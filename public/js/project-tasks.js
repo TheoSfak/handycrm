@@ -199,13 +199,13 @@ function addLaborRow(data = null) {
     row.className = 'labor-row border rounded p-3 mb-3 bg-light';
     row.dataset.index = laborCounter;
     
-    const isOtherTech = !data?.technician_id;
+    const isOtherTech = !data || !data.technician_id || data.technician_id === '0' || data.technician_id === 0 || Number(data.is_temporary) === 1;
 
     // Build technician options
     let technicianOptions = `<option value="" ${isOtherTech ? 'selected' : ''}>Άλλος Τεχνικός (προσωρινός / εξωτερικός)</option>`;
     if (typeof technicians !== 'undefined' && technicians.length > 0) {
         technicians.forEach(tech => {
-            const selected = data?.technician_id == tech.id ? 'selected' : '';
+            const selected = (!isOtherTech && data?.technician_id == tech.id) ? 'selected' : '';
             const roleLabel = tech.role_display || tech.role || 'Χρήστης';
             technicianOptions += `<option value="${tech.id}" data-rate="${tech.hourly_rate}" data-role-id="${tech.role_id || ''}" ${selected}>
                 ${escapeHtmlAttr(tech.name)} (${escapeHtmlAttr(roleLabel)} - ${parseFloat(tech.hourly_rate).toFixed(2)}€/ώρα)
@@ -218,7 +218,7 @@ function addLaborRow(data = null) {
     const defaultTimeTo   = data?.time_to   ? data.time_to.substring(0, 5)   : workDayDefaults.end;
     // New rows start with the standard work day length; existing rows keep their saved hours
     const defaultHours    = data ? (data.hours_worked || '') : workDayDefaults.hours;
-    let techName = data?.technician_name || '';
+    let techName = (data?.technician_name ?? '').toString().trim();
     let techRoleId = data?.role_id || '';
     let customNameValue = '';
     
@@ -250,6 +250,7 @@ function addLaborRow(data = null) {
                            value="${escapeHtmlAttr(customNameValue)}"
                            placeholder="Ονοματεπώνυμο τεχνικού (π.χ. εξωτερικός)"
                            maxlength="100"
+                           autocomplete="off"
                            oninput="syncCustomTechnicianName(${laborCounter})"
                            ${isOtherTech ? 'required' : ''}>
                 </div>
@@ -323,6 +324,22 @@ function addLaborRow(data = null) {
     `;
     
     container.appendChild(row);
+
+    // Ensure DOM values are explicitly populated after append
+    const selectEl = row.querySelector('.technician-select');
+    if (selectEl) {
+        selectEl.value = isOtherTech ? '' : String(data.technician_id);
+    }
+    const hiddenNameEl = row.querySelector('.technician-name-hidden');
+    if (hiddenNameEl) {
+        hiddenNameEl.value = techName;
+    }
+    if (isOtherTech) {
+        const customInputEl = row.querySelector('.custom-technician-name');
+        if (customInputEl) {
+            customInputEl.value = customNameValue;
+        }
+    }
     
     // If prepopulated data, trigger calculation
     if (data) {

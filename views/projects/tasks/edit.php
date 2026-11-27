@@ -204,17 +204,17 @@ require_once __DIR__ . '/../../includes/header.php';
 <!-- Include Project Tasks JavaScript -->
 <script>
 // Technicians data for dropdowns
-const technicians = <?= json_encode($technicians ?? []) ?>;
+const technicians = <?= json_encode($technicians ?? [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
 // Standard work day from Settings (used for default labor times/hours)
-const workDay = <?= json_encode($workDay ?? null) ?>;
+const workDay = <?= json_encode($workDay ?? null, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
 const projectId = <?= $project['id'] ?>;
 const taskId = <?= $task['id'] ?>;
 
 // Existing materials and labor data
 // Always use the current data from database, not pending data
 // The pending data materials/labor have wrong structure (POST array format)
-const existingMaterials = <?= json_encode($materials ?? []) ?>;
-const existingLabor = <?= json_encode($labor ?? []) ?>;
+const existingMaterials = <?= json_encode($materials ?? [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
+const existingLabor = <?= json_encode($labor ?? [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?>;
 
 // Material and Labor row counters
 let materialCounter = 0;

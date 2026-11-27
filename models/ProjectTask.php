@@ -132,7 +132,8 @@ class ProjectTask extends BaseModel {
      */
     public function getLabor($taskId) {
         $sql = "SELECT tl.*,
-                       COALESCE(NULLIF(TRIM(tl.technician_name), ''), NULLIF(TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))), '')) as technician_name,
+                       u.first_name as user_first_name,
+                       u.last_name as user_last_name,
                        r.name as technician_role,
                        r.display_name as technician_role_display
                 FROM task_labor tl
@@ -140,7 +141,18 @@ class ProjectTask extends BaseModel {
                 LEFT JOIN roles r ON tl.role_id = r.id
                 WHERE tl.task_id = ?
                 ORDER BY tl.id ASC";
-        return $this->query($sql, [$taskId]);
+        $rows = $this->query($sql, [$taskId]);
+        foreach ($rows as &$row) {
+            $storedName = trim((string)($row['technician_name'] ?? ''));
+            if ($storedName === '') {
+                $userFullName = trim(((string)($row['user_first_name'] ?? '')) . ' ' . ((string)($row['user_last_name'] ?? '')));
+                $row['technician_name'] = $userFullName;
+            } else {
+                $row['technician_name'] = $storedName;
+            }
+        }
+        unset($row);
+        return $rows;
     }
     
     /**
